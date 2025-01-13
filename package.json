@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-  "backend": "nodemon backend/server.js",
-  "frontend": "npm run dev --prefix frontend",
-  "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+    "backend": "nodemon backend/server.js",
+    "frontend": "npm run dev --prefix frontend",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
   },
   "keywords": [],
   "author": "",
