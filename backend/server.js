@@ -3,12 +3,12 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 const authRoutes = require('./routes/auth');
 
 const dotenv = require("dotenv");
-const cors = require("cors");
+const cors = require( "cors");
 
 const authMiddleware = require('./middleware/authMiddleware');
 
@@ -30,10 +30,10 @@ mongoose.connect('mongodb://localhost:27017/payroll_system', {
 .then(() => console.log('MongoDB connected successfully'))
 .catch((err) => console.error('MongoDB connection error:', err));
 
-// // Routes
-// app.get("/", (req, res) => {
-//   res.send("API is running...");
-// });
+// Routes
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
 
 // Start server
 app.listen(PORT, () => {  
