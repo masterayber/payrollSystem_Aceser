@@ -1,0 +1,110 @@
+/* Signup Form Container */
+.signup-container {
+    width: 600px;
+    height: auto;
+    max-width: 1000px;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.signup-form {
+    width: 100%;
+}
+
+/* Form Header */
+.signup-form h2 {
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.signup-form p {
+    margin-bottom: 40px;
+    text-align: left;
+    font-size: 14px;
+}
+
+/* Input Containers */
+.input-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.input-group-signup {
+    width: 100%;
+    flex: 1;
+    position: relative;
+    border: 1px solid #c4c4c4;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background-color: #fff;
+}
+
+.input-group-signup input {
+    flex: 1;
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: var(--border-radius);
+    outline: none;
+}
+
+.input-group-signup input::placeholder {
+    color: #999;
+    transition: color 0.3s ease;
+}
+
+.input-group-signup:focus-within {
+    border-color: var(--main-color-1);
+    box-shadow: 0 0 5px rgba(177, 205, 243, 1);
+}
+
+/* Button */
+.signup-button {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: var(--border-radius);
+    background-color: var(--default-button-color);
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.signup-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.sign-in {
+    margin-left: 5px;
+    display: block;
+    font-size: 14px;
+    color: #0000ff;
+    text-align: center;
+}
+
+.signin-links {
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.sign-in:hover {
+    text-decoration: underline;
+}
+
+.back-button {
+    cursor: pointer;
+    display: flex;
+    margin-bottom: 5px;
+}
