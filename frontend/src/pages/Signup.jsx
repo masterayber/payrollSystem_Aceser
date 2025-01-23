@@ -48,7 +48,12 @@ const Signup = () => {
         <div className="signup-container">
             <form className="signup-form" onSubmit={handleSignup}>
                 <div className="back-button" onClick={() => navigate('/')}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M5 12l14 0" />
+                        <path d="M5 12l6 6" />
+                        <path d="M5 12l6 -6" />
+                    </svg>
                 </div>
                 <h2>Sign up</h2>
                 <p>Sign up to Continue</p>
@@ -124,6 +129,15 @@ const Signup = () => {
                     </div>
                 </div>
 
+                <div className="terms-container">
+                    <div className="checkbox-container">
+                        <input type="checkbox" id="terms" className="terms" required />
+                    </div>
+                    <div>
+                        I agree to the Terms and Conditions
+                    </div>
+                </div>
+
                 <button type="submit" className="signup-button" disabled={loading}>
                     {loading ? 'Signing Up...' : 'Sign up'}
                 </button>
@@ -133,7 +147,7 @@ const Signup = () => {
                         Already have an account?
                     </div>
                     <div>
-                        <a href="http://localhost:5173/" className="sign-in">Sign In</a>
+                        <a href="/" className="sign-in">Sign In</a>
                     </div>
                 </div>
             </form>
