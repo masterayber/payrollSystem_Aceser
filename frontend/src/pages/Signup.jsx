@@ -27,14 +27,18 @@ const Signup = () => {
     const handleSignup = async (e) => {
         e.preventDefault();
 
+        // Validate passwords before proceeding
         if (formData.password !== formData.confirmPassword) {
             alert('Passwords do not match');
             return;
         }
 
+        // Remove confirmPassword before sending the request
+        const { confirmPassword, ...dataToSend } = formData;
+
         try {
             setLoading(true);
-            const response = await axios.post('http://localhost:5000/api/auth/signup', formData);
+            const response = await axios.post('http://localhost:5000/api/auth/signup', dataToSend);
             alert(response.data.message);
             navigate('/dashboard');
         } catch (error) {

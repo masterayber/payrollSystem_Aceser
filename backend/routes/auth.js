@@ -1,23 +1,45 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const User = require('../models/user');
+const Employee = require('../models/employees')
 
 const router = express.Router();
 const JWT_SECRET = 'your_jwt_secret_key_here';
 
 // Signup route
 router.post('/signup', async (req, res) => {
-  const { username, password, role } = req.body;
+  // Extract data from the request body
+  const { firstName, lastName, email, username, password, role } = req.body;
 
   try {
-    const existingUser = await User.findOne({ username });
+    // Check if email already exists
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'Username already exists' });
+      return res.status(400).json({ message: 'Email is already registered' });
     }
 
-    const user = new User({ username, password, role });
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+    // Create user in `users` collection
+    const user = new User({
+      firstName,
+      lastName,
+      email,
+      username,
+      password,
+      role, //Optional
+    });
     await user.save();
+
+// Create corresponding employee in 'employees' collection
+    const newEmployee = new Employee({
+      firstName,
+      lastName,
+      email,
+    })
+    await newEmployee.save();
 
     res.status(201).json({ message: 'User created successfully' });
   } catch (err) {
@@ -32,12 +54,12 @@ router.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({ username });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid Username' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid Password' });
     }
 
     const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, {
