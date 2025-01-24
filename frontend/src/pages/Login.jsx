@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import '../styles/Login.css'; //Importing CSS file
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const navigate = useNavigate();
 
     const handlelogin = async (e) => {
         e.preventDefault();
@@ -64,7 +63,7 @@ const Login = () => {
                             type="button"
                             className="toggle-password"
                             onClick={() => setShowPassword(!showPassword)}
-    >
+                        >
                             {showPassword ? (
                                 // Open Eye Icon
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="toggle-password"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg>
@@ -76,12 +75,12 @@ const Login = () => {
                     </span>
                 </div>
                 <div className="form-links">
-                    <a href="/signup" className="sign-up">
+                    <Link to="/signup" className="sign-up">
                         Sign Up
-                    </a>
-                    <a href="/forgot-password" className="forgot-password">
+                    </Link>
+                    <Link to="/forgot-password" className="forgot-password">
                         Forgot Password?
-                    </a>
+                    </Link>
                 </div>
                 <button type="submit" className="login-button">Log in</button>
             </form>
