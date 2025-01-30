@@ -1,6 +1,6 @@
 /*Forgot Password Container */
 .forgotPassword-container {
-    width: 600px;
+    width: 450px;
     height: auto;
     max-width: 1000px;
     padding: 30px;
@@ -17,12 +17,12 @@
 }
 
 .forgotPassword-form h2 {
-    margin-bottom: 5px;
+    margin-bottom: 10px;
     text-align: left;
 }
 
 .forgotPassword-form p {
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     text-align: left;
     font-size: 14px;
 }
@@ -35,7 +35,7 @@
 }
 
 .input-group-forgot {
-    width: 50%;
+    width: 100%;
     position: relative;
     border: 1px solid #c4c4c4;
     border-radius: var(--border-radius);
@@ -62,13 +62,11 @@
     box-shadow: 0 0 5px rgba(177, 205, 243, 1);
 }
 
-.send-button {
+.send-button,
+.cancel-button {
     padding: 10px;
     font-size: 16px;
     width: 20%;
-    display: block;
-    margin: 20px auto;
-    text-align: center;
     font-weight: bold;
     border-radius: var(--border-radius);
     background-color: var(--default-button-color);
@@ -86,4 +84,11 @@
     margin-top: 10px;
     text-align: left;
     font-size: 14px;
+}
+
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
 }
