@@ -168,4 +168,44 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
+router.post("/update-info", async (req, res) => {
+  const {
+    email,
+    address,
+    birthday,
+    contactNumber,
+    gender,
+    contactFirstName,
+    contactLastName,
+    contactEmergency,
+    contactAddress,
+  } = req.body;
+
+  try {
+    const employee = await Employee.findOne({ email });
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    employee.address = address;
+    employee.birthday = birthday;
+    employee.contactNumber = contactNumber;
+    employee.gender = gender;
+    employee.contactFirstName = contactFirstName;
+    employee.contactLastName = contactLastName;
+    employee.contactEmergency = contactEmergency;
+    employee.contactAddress = contactAddress;
+    await employee.save();
+
+    res.status(200).json({ message: "Additional info updated successfully" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({
+        message: "Server error. Please try again later",
+        error: err.message,
+      });
+  }
+});
+
 module.exports = router;

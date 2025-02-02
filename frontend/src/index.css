@@ -1,38 +1,44 @@
-@import '../src/fonts/fonts.css';
+@import "../src/fonts/fonts.css";
 
 /*Global Variables*/
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 
 /*Root Variables*/
 :root {
-  --default-button-color: #591FCE;
-  --hover-button-color: #9064E8;
-  --pressed-button-color: #30116F;
-  
-  --main-color-1: #0C9CEE;
-  --main-color-2: #591FCE;
-  --main-color-3: #3DBDC2;
-  --main-color-4: #A1F480;
+  --default-button-color: #591fce;
+  --hover-button-color: #9064e8;
+  --pressed-button-color: #30116f;
 
-  --neutral-color-100: #0A0A0A;
+  --main-color-1: #0c9cee;
+  --main-color-2: #591fce;
+  --main-color-3: #3dbdc2;
+  --main-color-4: #a1f480;
+
+  --neutral-color-100: #0a0a0a;
   --background-color: #f4f4f4;
   --border-radius: 5px;
 }
 
+html,
 body {
-  background-color: var(--background-color);
+  height: 100%;
+  margin: 0;
   display: flex;
-  place-items: center;
-  min-width: 500px;
-  min-height: 100vh;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(
+    180deg,
+    rgb(12, 156, 238) 0%,
+    rgb(61, 189, 194) 100%
+  );
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
 }
 
 /*Anchor Styles*/
@@ -43,7 +49,7 @@ a {
 }
 
 a:hover {
-  color: var(--main-color-2)
+  color: var(--main-color-2);
 }
 
 button {
@@ -74,6 +80,9 @@ h2 {
   color: var(--neutral-color-100);
 }
 
+.required {
+  color: red;
+}
 
 @media (prefers-color-scheme: dark) {
   :root {
