@@ -168,6 +168,7 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
+// Additional Information Route
 router.post("/update-info", async (req, res) => {
   const {
     email,
@@ -199,12 +200,10 @@ router.post("/update-info", async (req, res) => {
 
     res.status(200).json({ message: "Additional info updated successfully" });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        message: "Server error. Please try again later",
-        error: err.message,
-      });
+    res.status(500).json({
+      message: "Server error. Please try again later",
+      error: err.message,
+    });
   }
 });
 

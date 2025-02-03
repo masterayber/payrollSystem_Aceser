@@ -44,7 +44,7 @@ const AdditionalInfo = () => {
     <div className="additional-container">
       <form className="additional-form" onSubmit={handleSubmit}>
         <h2>Additional Information</h2>
-        <p>Please enter additional information to continue</p>
+        <p>Please enter your additional information to continue.</p>
 
         <div className="input-container-additional">
           <div className="label-container">
@@ -56,7 +56,7 @@ const AdditionalInfo = () => {
             <input
               type="text"
               name="address"
-              placeholder="Enter your address"
+              placeholder="Enter your Address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               required

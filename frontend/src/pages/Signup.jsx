@@ -75,35 +75,56 @@ const Signup = () => {
         </div>
         <h2>Sign up</h2>
         <p>Sign up to Continue</p>
-        <div className="input-container">
-          <div className="input-group-signup">
-            <input
-              type="text"
-              name="firstName"
-              placeholder="First Name"
-              value={formData.firstName}
-              onChange={handleChange}
-              required
-            />
+
+        <div className="input-row">
+          <div className="input-container">
+            <div className="label-container">
+              <label>
+                First Name <span className="required">*</span>
+              </label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="firstName"
+                placeholder="Enter your First Name"
+                value={formData.firstName}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
-          <div className="input-group-signup">
-            <input
-              type="text"
-              name="lastName"
-              placeholder="Last Name"
-              value={formData.lastName}
-              onChange={handleChange}
-              required
-            />
+
+          <div className="input-container">
+            <div className="label-container">
+              <label>
+                Last Name <span className="required">*</span>
+              </label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="lastName"
+                placeholder="Enter your Last Name"
+                value={formData.lastName}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
         </div>
 
         <div className="input-container">
+          <div className="label-container">
+            <label>
+              Email <span className="required">*</span>
+            </label>
+          </div>
           <div className="input-group-signup">
             <input
               type="email"
               name="email"
-              placeholder="Email"
+              placeholder="Enter your Email"
               value={formData.email}
               onChange={handleChange}
               required
@@ -112,6 +133,9 @@ const Signup = () => {
         </div>
 
         <div className="input-container">
+          <div className="label-container">
+            Username <span className="required">*</span>
+          </div>
           <div className="input-group-signup">
             <input
               type="text"
@@ -124,26 +148,40 @@ const Signup = () => {
           </div>
         </div>
 
-        <div className="input-container">
-          <div className="input-group-signup">
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+        <div className="input-row">
+          <div className="input-container">
+            <div className="label-container">
+              <label>
+                Password <span className="required">*</span>
+              </label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
-          <div className="input-group-signup">
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="Confirm Password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-            />
+          <div className="input-container">
+            <div className="label-container">
+              <label>
+                Confirm Password <span className="required">*</span>
+              </label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
         </div>
 

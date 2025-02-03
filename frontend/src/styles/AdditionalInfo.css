@@ -28,7 +28,6 @@
   font-size: 14px;
 }
 
-/* Input Row for Birthday & Contact Number */
 .input-row {
   display: flex;
   gap: 20px; /* Ensures a 20px gap between fields */

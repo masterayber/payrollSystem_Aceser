@@ -7,6 +7,7 @@ import ForgotPassword from "./pages/Forgot";
 import OTP from "./pages/OTP";
 import ResetPassword from "./pages/ResetPassword";
 import AdditionalInfo from "./pages/AdditionalInfo";
+import CreatedAccount from "./pages/CreatedAccount";
 import "./index.css";
 import PrivateRoute from "./components/PrivateRoute";
 import Dashboard from "./pages/Dashboard";
@@ -21,6 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="otp" element={<OTP />} />
         <Route path="reset-password" element={<ResetPassword />} />
         <Route path="update-info" element={<AdditionalInfo />} />
+        <Route path="created-account" element={<CreatedAccount />} />
         <Route
           path="dashboard"
           element={

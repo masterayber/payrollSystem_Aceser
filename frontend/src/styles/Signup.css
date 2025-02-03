@@ -1,3 +1,7 @@
+.required {
+  color: red;
+}
+
 /* Signup Form Container */
 .signup-container {
   width: 600px;
@@ -28,13 +32,13 @@
 
 /* Input Containers */
 .input-container {
+  flex: 1;
   display: flex;
-  gap: 20px;
+  flex-direction: column;
   margin-top: 20px;
 }
 
-.input-group-signup,
-input[type="date"] {
+.input-group-signup {
   width: 100%;
   flex: 1;
   position: relative;
