@@ -4,13 +4,13 @@
 
 .additional-container {
   width: 600px;
-  padding: 30px;
   background-color: #fff;
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  padding: 30px;
+  box-shadow: 0 4px 10px rgba(156, 77, 77, 0.2);
+  min-height: 400px;
+  margin: 75px auto;
+  overflow: hidden;
 }
 
 .additional-form {
@@ -108,4 +108,15 @@
   color: white;
   cursor: pointer;
   transition: background-color 0.3s ease;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .additional-container {
+    width: 95%;
+    padding: 20px;
+  }
+  .register-button {
+    font-size: 14px;
+  }
 }

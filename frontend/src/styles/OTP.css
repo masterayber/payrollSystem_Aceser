@@ -1,15 +1,11 @@
 .otp-container {
-  width: 450px;
-  position: relative;
-  height: auto;
-  max-width: 1000px;
-  padding: 30px;
+  width: 500px;
   background-color: #fff;
   border-radius: 10px;
+  padding: 30px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  margin: 75px auto;
+  overflow: hidden;
   transition: transform 1s ease-in-out;
 }
 
@@ -84,13 +80,6 @@
   box-shadow: 0 0 5px rgba(177, 205, 243, 1);
 }
 
-.button-container {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-
 .verify-button {
   padding: 10px;
   font-size: 16px;
@@ -141,4 +130,14 @@
 .timer-button.disabled {
   color: #fff;
   pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .otp-container {
+    width: 95%;
+    padding: 20px;
+  }
+  .verify-button {
+    font-size: 14px;
+  }
 }

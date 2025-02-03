@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
+import "../styles/Reset.css";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -73,9 +74,14 @@ const ResetPassword = () => {
             />
           </div>
         </div>
-        <button type="submit" className="reset-button" disabled={loading}>
-          {loading ? "Resetting..." : "Reset Password"}
-        </button>
+        <div className="button-container">
+          <button className="cancel-button" onClick={() => navigate("/")}>
+            Cancel
+          </button>
+          <button type="submit" className="reset-button" disabled={loading}>
+            {loading ? "Resetting..." : "Reset Password"}
+          </button>
+        </div>
       </form>
     </div>
   );
