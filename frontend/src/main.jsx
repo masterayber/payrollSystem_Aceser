@@ -22,7 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="otp" element={<OTP />} />
         <Route path="reset-password" element={<ResetPassword />} />
         <Route path="update-info" element={<AdditionalInfo />} />
-        <Route path="created-account" element={<CreatedAccount />} />
+        <Route path="created-account/:id" element={<CreatedAccount />} />
         <Route
           path="dashboard"
           element={

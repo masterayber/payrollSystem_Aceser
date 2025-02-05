@@ -24,13 +24,6 @@
   font-size: 14px;
 }
 
-/* Input Containers */
-.input-container {
-  display: flex;
-  gap: 20px;
-  margin-top: 20px;
-}
-
 .input-group-forgot {
   width: 100%;
   position: relative;

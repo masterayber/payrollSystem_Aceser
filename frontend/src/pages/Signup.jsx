@@ -42,6 +42,8 @@ const Signup = () => {
         "http://localhost:5000/api/auth/signup",
         dataToSend
       );
+
+      localStorage.setItem("email", response.data.email);
       alert(response.data.message);
       navigate("/update-info");
     } catch (error) {

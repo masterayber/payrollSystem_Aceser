@@ -23,8 +23,6 @@ router.post("/signup", async (req, res) => {
 
     // Create user in `users` collection
     const user = new User({
-      firstName,
-      lastName,
       email,
       username,
       password,
@@ -40,7 +38,7 @@ router.post("/signup", async (req, res) => {
     });
     await newEmployee.save();
 
-    res.status(200).json({ message: "User created successfully" });
+    res.status(200).json({ message: "User created successfully", email });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
@@ -188,6 +186,7 @@ router.post("/update-info", async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
+    // Update employee details
     employee.address = address;
     employee.birthday = birthday;
     employee.contactNumber = contactNumber;
@@ -196,12 +195,40 @@ router.post("/update-info", async (req, res) => {
     employee.contactLastName = contactLastName;
     employee.contactEmergency = contactEmergency;
     employee.contactAddress = contactAddress;
+
     await employee.save();
 
-    res.status(200).json({ message: "Additional info updated successfully" });
+    res
+      .status(200)
+      .json({
+        message: "Additional info updated successfully",
+        userId: employee._id,
+      });
   } catch (err) {
     res.status(500).json({
       message: "Server error. Please try again later",
+      error: err.message,
+    });
+  }
+});
+
+// Account Created Route
+router.get("/created-account/:id", async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+
+    if (!employee) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      gender: employee.gender,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error. Please try again later.",
       error: err.message,
     });
   }

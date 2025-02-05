@@ -4,39 +4,52 @@ import { useNavigate } from "react-router-dom";
 import "../styles/AdditionalInfo.css";
 
 const AdditionalInfo = () => {
-  const [address, setAddress] = useState("");
-  const [birthday, setBirthday] = useState("");
-  const [contactNumber, setContactNumber] = useState("");
-  const [gender, setGender] = useState("");
-  const [contactFirstName, setContactFirstName] = useState("");
-  const [contactLastName, setContactLastName] = useState("");
-  const [contactEmergency, setContactEmergency] = useState("");
-  const [contactAddress, setContactAddress] = useState("");
+  const [formData, setFormData] = useState({
+    address: "",
+    birthday: "",
+    contactNumber: "",
+    gender: "",
+    contactFirstName: "",
+    contactLastName: "",
+    contactEmergency: "",
+    contactAddress: "",
+  });
 
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const email = localStorage.getItem("email");
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const email = localStorage.getItem("email"); // Retrieve email from storage
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await axios.post("http://localhost:5000/api/auth/update-info", {
-        email,
-        address,
-        birthday,
-        contactNumber,
-        gender,
-        contactFirstName,
-        contactLastName,
-        contactEmergency,
-        contactAddress,
-      });
+    setLoading(true);
 
-      alert("Additional info updated successfully!");
-      navigate("/dashboard");
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/update-info",
+        {
+          email,
+          ...formData,
+        }
+      );
+
+      if (response.data.userId) {
+        navigate(`/created-account/${response.data.userId}`);
+      } else {
+        alert("User ID not found in response");
+      }
     } catch (error) {
-      console.error("Error updating info: ", error);
-      alert("Failed to update info");
+      alert(error.response?.data?.message || "Update Failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,8 +70,8 @@ const AdditionalInfo = () => {
               type="text"
               name="address"
               placeholder="Enter your Address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              value={formData.address}
+              onChange={handleChange}
               required
             />
           </div>
@@ -76,8 +89,8 @@ const AdditionalInfo = () => {
                 type="date"
                 name="birthday"
                 placeholder="Enter your Birthday"
-                value={birthday}
-                onChange={(e) => setBirthday(e.target.value)}
+                value={formData.birthday}
+                onChange={handleChange}
                 required
               />
             </div>
@@ -92,10 +105,10 @@ const AdditionalInfo = () => {
             <div className="input-group-additional">
               <input
                 type="text"
-                name="contact"
+                name="contactNumber"
                 placeholder="Enter your Contact Number"
-                value={contactNumber}
-                onChange={(e) => setContactNumber(e.target.value)}
+                value={formData.contactNumber}
+                onChange={handleChange}
                 required
               />
             </div>
@@ -107,14 +120,14 @@ const AdditionalInfo = () => {
             Gender <span className="required">*</span>
           </label>
           <div className="gender-options">
-            {["Male", "Female", "Other"].map((option) => (
+            {["Male", "Female"].map((option) => (
               <label key={option}>
                 <input
                   type="radio"
                   name="gender"
                   value={option}
-                  checked={gender === option}
-                  onChange={(e) => setGender(e.target.value)}
+                  checked={formData.gender === option}
+                  onChange={handleChange}
                 />
                 {option}
               </label>
@@ -134,10 +147,10 @@ const AdditionalInfo = () => {
             <div className="input-group-additional">
               <input
                 type="text"
-                name="firstName"
+                name="contactFirstName"
                 placeholder="First Name"
-                value={contactFirstName}
-                onChange={(e) => setContactFirstName(e.target.value)}
+                value={formData.contactFirstName}
+                onChange={handleChange}
                 required
               />
             </div>
@@ -152,10 +165,10 @@ const AdditionalInfo = () => {
             <div className="input-group-additional">
               <input
                 type="text"
-                name="lastName"
+                name="contactLastName"
                 placeholder="Last Name"
-                value={contactLastName}
-                onChange={(e) => setContactLastName(e.target.value)}
+                value={formData.contactLastName}
+                onChange={handleChange}
                 required
               />
             </div>
@@ -171,10 +184,10 @@ const AdditionalInfo = () => {
           <div className="input-group-additional">
             <input
               type="text"
-              name="contactEmergencyNumber"
+              name="contactEmergency"
               placeholder="Contact Number"
-              value={contactEmergency}
-              onChange={(e) => setContactEmergency(e.target.value)}
+              value={formData.contactEmergency}
+              onChange={handleChange}
               required
             />
           </div>
@@ -189,10 +202,10 @@ const AdditionalInfo = () => {
           <div className="input-group-additional">
             <input
               type="text"
-              name="contactEmergencyAddress"
+              name="contactAddress"
               placeholder="Address"
-              value={contactAddress}
-              onChange={(e) => setContactAddress(e.target.value)}
+              value={formData.contactAddress}
+              onChange={handleChange}
               required
             />
           </div>
