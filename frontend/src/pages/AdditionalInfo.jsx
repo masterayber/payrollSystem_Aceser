@@ -17,6 +17,7 @@ const AdditionalInfo = () => {
 
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const email = localStorage.getItem("email");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,8 +26,6 @@ const AdditionalInfo = () => {
       [name]: value,
     }));
   };
-
-  const email = localStorage.getItem("email"); // Retrieve email from storage
 
   const handleSubmit = async (e) => {
     e.preventDefault();

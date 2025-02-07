@@ -18,9 +18,15 @@
 }
 
 .reset-form p {
-  margin-bottom: 40;
+  margin-bottom: 40px;
   text-align: left;
   font-size: 14px;
+}
+
+.input-container-reset {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 50px;
 }
 
 .input-group-reset {

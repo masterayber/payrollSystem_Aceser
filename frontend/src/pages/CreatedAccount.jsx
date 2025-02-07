@@ -7,6 +7,10 @@ const CreatedAccount = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
+  const handleGoToDashboard = () => {
+    navigate("/dashboard");
+  };
+
   const [userData, setUserData] = useState({
     firstName: "New",
     lastName: "User",
@@ -286,10 +290,7 @@ const CreatedAccount = () => {
           dashboard.
         </p>
 
-        <button
-          className="dashboard-button"
-          onClick={() => navigate("/dashboard")}
-        >
+        <button className="dashboard-button" onClick={handleGoToDashboard}>
           Go to Dashboard
         </button>
       </form>

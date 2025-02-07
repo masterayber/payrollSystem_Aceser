@@ -43,7 +43,9 @@ const Signup = () => {
         dataToSend
       );
 
+      localStorage.setItem("token", response.data.token);
       localStorage.setItem("email", response.data.email);
+
       alert(response.data.message);
       navigate("/update-info");
     } catch (error) {

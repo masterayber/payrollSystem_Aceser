@@ -52,7 +52,7 @@ const ResetPassword = () => {
       <form className="reset-form" onSubmit={handleResetPassword}>
         <h2>Reset Password</h2>
         <p>Please enter new password</p>
-        <div className="input-container">
+        <div className="input-container-reset">
           <div className="input-group-reset">
             <input
               type="password"
