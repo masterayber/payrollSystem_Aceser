@@ -1,0 +1,62 @@
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  background-color: white;
+  width: 250px;
+  padding-top: 4px;
+
+  z-index: 200;
+}
+
+.company-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  padding: 25px;
+  width: 100%;
+}
+
+.aceser-text {
+  font-size: 24px;
+  font-weight: bold;
+  width: 100%;
+  padding-left: 10px;
+}
+
+.aceser-logo {
+  height: 50px;
+  width: 50px;
+}
+
+.logo {
+  width: 50px;
+  height: 50px;
+}
+
+.sidebar-toolkit {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.sidebar-toolkit-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+}
+
+.sidebar-toolkit-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.sidebar-toolkit-text {
+  padding-left: 20px;
+}
