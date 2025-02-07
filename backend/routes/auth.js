@@ -1,8 +1,10 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+
 const User = require("../models/user");
 const Employee = require("../models/employees");
+const sendEmail = require("../utils/nodemailer");
 
 const router = express.Router();
 const JWT_SECRET = "your_jwt_secret_key_here";
@@ -82,7 +84,7 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(404).json({ message: "Email is not registered" });
     }
 
-    const otp = "123456";
+    const otp = String(Math.floor(10000 + Math.random() * 900000));
     const expiresAt = Date.now() + 5 * 60 * 1000;
 
     otpStorage[email] = {
@@ -90,11 +92,12 @@ router.post("/forgot-password", async (req, res) => {
       expiresAt,
     };
 
-    console.log(`Generated OTP for ${email}: ${otp}`);
+    await sendEmail(email, otp);
 
     res.status(200).json({
       message: "Password reset has been sent to your email",
       expiresAt,
+      otp,
     });
   } catch (err) {
     res.status(500).json({
@@ -122,7 +125,8 @@ router.post("/otp", async (req, res) => {
   }
 
   const resetToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: "5m" });
-  delete otpStorage[email];
+  delete otpStorage[email]; // Delete OTP from local storage
+
   res.status(200).json({ message: "OTP verified.", resetToken });
 });
 
@@ -145,16 +149,10 @@ router.post("/reset-password", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    console.log("User found: ", user);
-
     // Hash the new password
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log("New hashed password:", hashedPassword); // Debug log
 
     await User.updateOne({ email }, { $set: { password: hashedPassword } });
-
-    const updatedUser = await User.findOne({ email });
-    console.log("Updated password: ", updatedUser.password);
 
     res.status(200).json({
       message:
@@ -198,12 +196,10 @@ router.post("/update-info", async (req, res) => {
 
     await employee.save();
 
-    res
-      .status(200)
-      .json({
-        message: "Additional info updated successfully",
-        userId: employee._id,
-      });
+    res.status(200).json({
+      message: "Additional info updated successfully",
+      userId: employee._id,
+    });
   } catch (err) {
     res.status(500).json({
       message: "Server error. Please try again later",
