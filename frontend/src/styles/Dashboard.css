@@ -1,8 +1,8 @@
 .dashboard-container {
   display: flex;
   flex-direction: row;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  overflow-x: hidden;
 }
 
 .sidebar {
@@ -14,7 +14,6 @@
   width: 250px;
   height: 100vh;
   border-right: 1px solid var(--gray-200);
-  z-index: -100;
 }
 
 .company-container {
@@ -279,4 +278,26 @@
 .table-content-container p {
   font-size: 12px;
   font-weight: 600;
+}
+
+/* Make sidebar responsive */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 200px; /* Shrink sidebar */
+  }
+  .header-content-container {
+    margin-left: 200px;
+    width: calc(100vw - 200px);
+  }
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    display: none;
+  }
+
+  .header-content-container {
+    width: 100vw;
+    margin-left: 0;
+  }
 }
