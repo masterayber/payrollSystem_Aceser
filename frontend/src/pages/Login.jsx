@@ -33,7 +33,7 @@ const Login = () => {
     <div className="login-container">
       <div className="logo-container">
         <img
-          src="/assets/aceser-logo.jpg"
+          src="/assets/aceser-logo.png"
           alt="Company Logo"
           className="logo"
         />

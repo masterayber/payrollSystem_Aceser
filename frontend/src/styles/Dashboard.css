@@ -1,16 +1,20 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+}
+
 .sidebar {
   position: fixed;
-  left: 0;
   top: 0;
+  left: 0;
   bottom: 0;
   background-color: var(--gray-50);
   width: 250px;
+  height: 100vh;
   border-right: 1px solid var(--gray-200);
-  z-index: 200;
-}
-
-p {
-  color: var(--neutral-color-100);
+  z-index: -100;
 }
 
 .company-container {
@@ -20,169 +24,139 @@ p {
   height: 100px;
   padding: 25px;
   width: 100%;
-  border-right: 1px solid var(--gray-200);
 }
 
-.aceser-text {
-  font-size: 24px;
-  font-weight: bold;
-  width: 100%;
-  padding-left: 10px;
-}
-
-.aceser-logo {
+.aceser-logo-container {
   height: 50px;
   width: 50px;
 }
 
 .logo {
-  width: 50px;
   height: 50px;
+  width: 50px;
 }
 
-.sidebar-toolkit {
+.company-container p {
+  font-size: 24px;
+  font-weight: bold;
+  width: 100%;
+  padding-left: 10px;
+  color: var(--neutral-color-100);
+}
+
+.sidebar-item {
   display: flex;
   align-items: center;
+  gap: 10px;
   padding: 10px 20px;
   cursor: pointer;
-
   background: linear-gradient(
       to left,
       var(--neutral-color-20) 50%,
       var(--neutral-color-30) 50%
     )
     right;
-  transition: ease-out 0.5s;
+  transition: ease-out 0.4s;
   background-size: 200% 100%;
 }
 
-.sidebar-toolkit:hover {
+.sidebar-item:hover {
   background-position: left;
 }
 
-.sidebar-toolkit-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-}
-
-.sidebar-toolkit-icon svg {
+.sidebar-item svg {
   width: 30px;
   height: 30px;
   color: var(--neutral-color-100);
-}
-
-.sidebar-toolkit-text {
-  padding-left: 20px;
-}
-
-.header-content {
   display: flex;
-  position: fixed;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-content-container {
+  width: calc(100vw - 250px);
+  margin-left: 250px;
+  height: 100vh;
+  background-color: var(--gray-50);
 }
 
 .header {
   display: flex;
-  position: fixed;
-  top: 0;
-  left: 250px;
-  right: 0;
   height: 100px;
   background-color: var(--gray-50);
-  padding-left: 30px;
-  padding-right: 30px;
+  padding: 30px;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid var(--gray-200);
 }
 
-.content {
+.main-content {
   display: flex;
-  position: fixed;
-  top: 100px;
-  left: 250px;
-  right: 0;
+  gap: 10px;
   flex-direction: column;
-  height: 100%;
   background-color: var(--gray-50);
-}
-
-.content-container {
-  align-items: flex-start;
-  align-self: stretch;
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  gap: 10px;
-  overflow: hidden;
-  position: relative;
-  width: 100%;
   padding: 10px 30px;
-}
-
-.content-container-user-track {
-  align-items: flex-start;
-  align-self: stretch;
-  display: flex;
-  flex: 0 0 auto;
-  gap: 10px;
-  overflow: hidden;
-  position: relative;
-  width: 100%;
-  padding: 10px 30px;
-}
-
-.user-status,
-.leave-requests {
   align-items: center;
-  background-color: white;
+}
+
+.user-greetings-container,
+.user-track-container,
+.leave-table-container {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: row;
+  justify-content: space-between;
+  overflow: hidden;
+  width: 100%;
+  padding: 15px;
   border: 1px solid var(--gray-200);
   border-radius: 10px;
-  display: flex;
-  flex: 0 0 auto;
-  justify-content: space-between;
-  overflow: hidden;
-  padding: 15px;
-  position: relative;
-  width: 100%;
 }
 
-.leave-requests {
+.user-track-container {
+  gap: 10px;
+  position: relative;
+  border: none;
+  padding: 0;
+}
+
+.leave-table-container {
   flex-direction: column;
   gap: 25px;
 }
 
-.greetings-container {
+.message-container {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.greetings-container p {
-  color: var(--neutral-color-80);
-}
-
-.greetings {
+.user-message {
   font-size: 22px;
   font-weight: 600;
-}
-
-.time {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-.time-in,
-.time-out {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
+  color: var(--neutral-color-100);
 }
 
 .user-highlight {
   color: var(--main-color-1);
+}
+
+.message-container p {
+  color: var(--neutral-color-80);
+}
+
+.time-details,
+.time-in-container,
+.time-out-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.time-in-container svg,
+.time-out-container svg {
+  color: var(--neutral-color-100);
 }
 
 .time-timer {
@@ -191,34 +165,24 @@ p {
   color: var(--neutral-color-90);
 }
 
-.time-details {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-weight: 400;
-  font-size: 16px;
-  color: var(--neutral-color-90);
+.time-in-details p,
+.time-out-details p {
+  color: var(--neutral-color-80);
 }
 
 .user-track {
-  align-items: flex-start;
-  background-color: white;
   border: 1px solid var(--gray-200);
   border-radius: 10px;
-  display: flex;
   flex: 1;
-  flex-direction: column;
+  display: flex;
   flex-grow: 1;
+  flex-direction: column;
   gap: 20px;
   overflow: hidden;
   padding: 15px;
-  position: relative;
 }
 
-.heading-content {
-  align-items: flex-start;
-  display: flex;
-  position: relative;
+.user-track p {
   color: var(--main-color-1);
   font-weight: 600;
   font-size: 22px;
@@ -248,6 +212,18 @@ p {
   justify-content: space-between;
 }
 
+.data-user-track p {
+  color: var(--neutral-color-90);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.user-data-number {
+  font-size: 15px;
+  font-style: normal;
+  color: var(--neutral-color-90);
+}
+
 .user-data-container {
   display: flex;
   flex-direction: row;
@@ -263,25 +239,28 @@ p {
   width: 100%;
 }
 
-.leave-requests-table {
-  align-items: flex-start;
-  display: flex;
-  flex: 0 0 auto;
+.leave-header p {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--main-color-1);
+}
+
+.leave-request-table {
   flex-direction: column;
-  position: relative;
   width: 100%;
 }
 
+.leave-request-table,
 .table-header,
 .table-content {
-  align-items: flex-start;
   display: flex;
   flex: 0 0 auto;
   position: relative;
   width: 100%;
 }
 
-.table-header-container {
+.table-header-container,
+.table-content-container {
   align-items: center;
   display: flex;
   flex: 1;
@@ -292,18 +271,12 @@ p {
   position: relative;
 }
 
-.table-container {
-  align-items: center;
-  display: flex;
-  flex: 1;
-  flex-grow: 1;
-  overflow: hidden;
-  padding: 19px 15px;
-  position: relative;
+.table-content-container {
+  background-color: var(--gray-50);
 }
 
 .table-header-container p,
-.table-container p {
+.table-content-container p {
   font-size: 12px;
   font-weight: 600;
 }
