@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const Employee = require("../models/employees");
 const sendEmail = require("../utils/nodemailer");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 const JWT_SECRET = "your_jwt_secret_key_here";
@@ -56,10 +57,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid Username" });
     }
 
-    console.log("Stored Hashed Password:", user.password); // Debug log
-
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log("Password Match Result:", isMatch); // Debug log
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid Password" });
     }
@@ -68,7 +66,22 @@ router.post("/login", async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.status(200).json({ token, message: "Login successful" });
+    const employee = await Employee.findOne({ email: user.email });
+
+    const userObj = user.toObject();
+    delete userObj.password;
+    const employeeObj = employee ? employee.toObject() : {};
+
+    const combinedData = {
+      ...userObj,
+      firstName: employeeObj.firstName,
+      lastName: employeeObj.lastName,
+      gender: employeeObj.gender,
+    };
+
+    res
+      .status(200)
+      .json({ token, user: combinedData, message: "Login successful" });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
@@ -228,6 +241,10 @@ router.get("/created-account/:id", async (req, res) => {
       error: err.message,
     });
   }
+});
+
+router.get("/dashboard-data", authMiddleware, async (req, res) => {
+  res.status(200).json({ message: "Protected Data" });
 });
 
 module.exports = router;

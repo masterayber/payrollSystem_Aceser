@@ -22,7 +22,8 @@ const Login = () => {
       );
       alert(response.data.message);
       localStorage.setItem("token", response.data.token);
-      //Redirect to another page after login(e.g., Dashboard)
+      localStorage.setItem("userData", JSON.stringify(response.data.user));
+
       navigate("/dashboard");
     } catch (error) {
       alert(error.response?.data?.message || "Login Failed");
