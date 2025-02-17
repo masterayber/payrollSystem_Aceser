@@ -38,6 +38,7 @@ body,
 #root {
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -129,6 +130,61 @@ h3 {
   border-right: 1px solid var(--gray-200);
 }
 
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  cursor: pointer;
+  background: linear-gradient(
+      to left,
+      var(--neutral-color-20) 50%,
+      var(--neutral-color-30) 50%
+    )
+    right;
+  transition: ease-out 0.4s;
+  background-size: 200% 100%;
+  color: var(--neutral-color-100);
+}
+
+.sidebar-item:hover,
+.sidebar-item.active:hover {
+  background-position: left;
+}
+
+.sidebar-item svg {
+  width: 30px;
+  height: 30px;
+  color: var(--neutral-color-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-item.active {
+  color: var(--main-color-1);
+  background: linear-gradient(
+      to left,
+      var(--gray-50) 50%,
+      var(--neutral-color-30) 50%
+    )
+    right;
+  background-size: 200% 100%;
+  gap: 20px;
+  font-size: 18px;
+}
+
+.sidebar-item.active svg {
+  color: var(--main-color-1);
+  width: 35px;
+  height: 35px;
+}
+
+.sidebar-item.active {
+  border: 1px solid var(--gray-200);
+  border-right: none;
+}
+
 .header-content-container {
   width: calc(100vw - 250px);
   margin-left: 250px;
@@ -138,12 +194,17 @@ h3 {
 
 .header {
   display: flex;
-  height: 100px;
-  background-color: var(--gray-50);
-  padding: 0 30px;
+  height: 80px;
+  border-bottom: 1px solid var(--gray-200);
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--gray-200);
+  position: fixed;
+  top: 0;
+  left: 250px;
+  right: 0;
+  background-color: var(--gray-50);
+  padding: 0 30px;
+  z-index: 100;
 }
 
 .user-header {
@@ -151,40 +212,107 @@ h3 {
   justify-content: center;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
 }
+
+.dropdown-arrow {
+  position: absolute;
+  display: flex;
+  bottom: 0;
+  right: 0;
+  align-items: center;
+  justify-content: center;
+}
+
 .user-header p {
   font-size: 22px;
   font-weight: 600;
   color: var(--neutral-color-100);
 }
 
+.user-header svg {
+  cursor: pointer;
+  position: relative;
+}
+
+.dropdown-overlay {
+  position: absolute;
+  top: 65px; /* Adjust so it appears below the icon */
+  right: 30px;
+  background: white;
+  border: 1px solid var(--gray-200);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  width: 230px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  z-index: 1000;
+}
+
+.dropdown-overlay p {
+  font-size: 20px;
+  color: var(--neutral-color-100);
+  margin-bottom: 20px;
+}
+
+.dropdown-item {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+  font-size: 18px;
+  color: var(--neutral-color-100);
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+
+.dropdown-item:hover {
+  background-color: var(--gray-200);
+}
+
+/* Log Out Button */
+.dropdown-item-logout {
+  padding: 10px 25px;
+  margin-top: 10px;
+}
+
 .main-content {
   display: flex;
   gap: 10px;
+  margin-left: 250px;
+  min-height: 120vh;
+  width: 100%;
+  margin-top: 80px;
   flex-direction: column;
   background-color: var(--gray-50);
   padding: 10px 30px;
+}
+
+.icon {
+  position: relative;
+  display: flex;
   align-items: center;
+  justify-content: center;
 }
 
-/* Make sidebar responsive */
-@media (max-width: 1024px) {
-  .sidebar {
-    width: 200px; /* Shrink sidebar */
-  }
-  .header-content-container {
-    margin-left: 200px;
-    width: calc(100vw - 200px);
-  }
+.icon-count {
+  position: relative;
+  display: flex;
+  justify-content: center;
 }
 
-@media (max-width: 900px) {
+/* @media (max-width: 900px) {
   .sidebar {
     display: none;
   }
 
-  .header-content-container {
+  .main-content {
     width: 100vw;
     margin-left: 0;
   }
-}
+} */

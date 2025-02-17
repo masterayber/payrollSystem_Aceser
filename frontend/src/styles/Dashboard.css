@@ -32,42 +32,12 @@
   color: var(--neutral-color-100);
 }
 
-.sidebar-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  cursor: pointer;
-  background: linear-gradient(
-      to left,
-      var(--neutral-color-20) 50%,
-      var(--neutral-color-30) 50%
-    )
-    right;
-  transition: ease-out 0.4s;
-  background-size: 200% 100%;
-}
-
-.sidebar-item:hover {
-  background-position: left;
-}
-
-.sidebar-item svg {
-  width: 30px;
-  height: 30px;
-  color: var(--neutral-color-100);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .user-greetings-container,
 .user-track-container,
-.leave-table-container {
+.table-container {
   align-items: center;
   display: flex;
   flex: 0 0 auto;
-  flex-direction: row;
   justify-content: space-between;
   overflow: hidden;
   width: 100%;
@@ -83,9 +53,9 @@
   padding: 0;
 }
 
-.leave-table-container {
+.table-container {
   flex-direction: column;
-  gap: 25px;
+  gap: 20px;
 }
 
 .message-container {
@@ -156,8 +126,9 @@
   align-items: center;
 }
 
-.user-number {
-  font-size: 48px;
+.user-number,
+.user-number-toggle {
+  font-size: 40px;
   font-weight: 600;
   color: var(--main-color-1);
 }
@@ -193,7 +164,7 @@
   gap: 30px;
 }
 
-.leave-header {
+.table-title {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -201,18 +172,18 @@
   width: 100%;
 }
 
-.leave-header p {
+.table-title p {
   font-size: 22px;
   font-weight: 600;
   color: var(--main-color-1);
 }
 
-.leave-request-table {
+.table {
   flex-direction: column;
   width: 100%;
 }
 
-.leave-request-table,
+.table,
 .table-header,
 .table-content {
   display: flex;
@@ -222,7 +193,8 @@
 }
 
 .table-header-container,
-.table-content-container {
+.table-content-container,
+.pay-period-container {
   align-items: center;
   display: flex;
   flex: 1;
@@ -231,6 +203,7 @@
   padding: 19px 15px;
   background-color: var(--gray-200);
   position: relative;
+  gap: 5px;
 }
 
 .table-content-container {

@@ -1,27 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useContext } from "react";
+import { UserContext } from "../context/UserContext";
 import "../styles/Dashboard.css";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const [userData, setUserData] = useState({
-    firstName: "",
-    lastName: "",
-    gender: "",
-  });
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("userData");
-    if (storedUser) {
-      setUserData(JSON.parse(storedUser));
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userData");
-    navigate("/");
-  };
+  const { userData } = useContext(UserContext);
 
   return (
     <div className="main-content">
@@ -29,7 +11,7 @@ const Dashboard = () => {
         <div className="message-container">
           <div className="user-message">
             <span>Good Day, </span>
-            <span className="user-highlight">{userData.firstName}</span>
+            <span className="user-highlight">{userData?.firstName}</span>
             <span>!</span>
           </div>
           <p>You timed in 15 minutes early today. Keep it up!</p>
@@ -161,8 +143,9 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-      <div className="leave-table-container">
-        <div className="leave-header">
+
+      <div className="table-container">
+        <div className="table-title">
           <p>Leave Requests</p>
           <svg
             width="24"
@@ -177,7 +160,7 @@ const Dashboard = () => {
             />
           </svg>
         </div>
-        <div className="leave-request-table">
+        <div className="table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Date</p>
@@ -248,8 +231,9 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-      <div className="leave-table-container">
-        <div className="leave-header">
+
+      <div className="table-container">
+        <div className="table-title">
           <p>Daily Attendance Log</p>
           <svg
             width="24"
@@ -264,7 +248,7 @@ const Dashboard = () => {
             />
           </svg>
         </div>
-        <div className="leave-request-table">
+        <div className="table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Date</p>

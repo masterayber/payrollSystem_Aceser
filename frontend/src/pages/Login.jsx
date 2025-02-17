@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
 import "../styles/Login.css"; //Importing CSS file
 
 const Login = () => {
@@ -9,6 +10,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { setUserData } = useContext(UserContext);
 
   const handlelogin = async (e) => {
     e.preventDefault();
@@ -21,8 +23,11 @@ const Login = () => {
         }
       );
       alert(response.data.message);
+
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("userData", JSON.stringify(response.data.user));
+
+      setUserData(response.data.user);
 
       navigate("/dashboard");
     } catch (error) {

@@ -1,0 +1,47 @@
+.toggle-data {
+  width: 25px;
+  height: 25px;
+  color: var(--neutral-color-100);
+  background-color: #fff;
+}
+
+.total-user-track {
+  width: 100%;
+}
+
+.user-number-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.pay-period-container {
+  background-color: var(--gray-50);
+}
+
+.pay-period-data {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.pay-period-data p {
+  color: var(--neutral-color-90);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.pay-period-data span {
+  color: var(--main-color-1);
+  font-weight: 600;
+  font-size: 24px;
+}
+
+hr {
+  border: 1px solid var(--gray-200);
+}
+
+.action-button {
+  padding: 10px;
+  border-radius: 20px;
+}
