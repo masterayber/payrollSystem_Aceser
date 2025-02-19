@@ -1,11 +1,9 @@
-import React, { useEffect, useState, useContext } from "react";
-import { UserContext } from "../context/UserContext";
+import React, { useState } from "react";
 import "../styles/Payroll.css";
 
 const Payroll = () => {
   const [showLastPayment, setShowLastPayment] = useState(false);
   const [showYearToDate, setShowYearToDate] = useState(false);
-  const { userData } = useContext(UserContext);
 
   return (
     <div className="main-content">
@@ -148,14 +146,14 @@ const Payroll = () => {
               { label: "Taxes", amount: "00000" },
             ].map((item, index) => (
               <React.Fragment key={index}>
-                <aricle className="pay-period-container">
+                <article className="pay-period-container">
                   <div className="pay-period-data">
                     <p>{item.label}</p>
                     <div>
                       <span>{item.amount}</span>
                     </div>
                   </div>
-                </aricle>
+                </article>
                 {index < 3 && <hr></hr>}
               </React.Fragment>
             ))}
@@ -187,14 +185,14 @@ const Payroll = () => {
                 { label: "Deductions", amount: "00000" },
               ].map((item, index) => (
                 <React.Fragment key={index}>
-                  <aricle className="pay-period-container">
+                  <article className="pay-period-container">
                     <div className="pay-period-data">
                       <p>{item.label}</p>
                       <div>
                         <span>{item.amount}</span>
                       </div>
                     </div>
-                  </aricle>
+                  </article>
                   {index < 1 && <hr></hr>}
                 </React.Fragment>
               ))}
@@ -225,14 +223,14 @@ const Payroll = () => {
                 { label: "Total Tax Withheld YTD", amount: "00000" },
               ].map((item, index) => (
                 <React.Fragment key={index}>
-                  <aricle className="pay-period-container">
+                  <article className="pay-period-container">
                     <div className="pay-period-data">
                       <p>{item.label}</p>
                       <div>
                         <span>{item.amount}</span>
                       </div>
                     </div>
-                  </aricle>
+                  </article>
                   {index < 1 && <hr></hr>}
                 </React.Fragment>
               ))}

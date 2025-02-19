@@ -13,6 +13,7 @@ import CreatedAccount from "./pages/CreatedAccount";
 import Dashboard from "./pages/Dashboard";
 import Payroll from "./pages/Payroll";
 import Payslips from "./pages/Payslips";
+import Attendance from "./pages/Attendance";
 
 import "./index.css";
 import PrivateRoute from "./components/PrivateRoute";
@@ -60,6 +61,16 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <PrivateRoute>
                 <MainLayout>
                   <Payslips />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="attendance"
+            element={
+              <PrivateRoute>
+                <MainLayout>
+                  <Attendance />
                 </MainLayout>
               </PrivateRoute>
             }

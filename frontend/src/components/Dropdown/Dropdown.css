@@ -1,0 +1,62 @@
+.dropdown-container {
+  width: 200px;
+  position: relative;
+  display: inline-block;
+}
+
+/* Button that mimics select */
+.dropdown-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+.dropdown-button.open {
+  border-color: var(--main-color-1);
+}
+
+/* SVG Icon */
+.dropdown-icon {
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+
+/* Rotate SVG when open */
+.dropdown-icon.open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown List */
+.dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  font-size: 14px;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 5px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  margin: 0;
+  z-index: 10;
+}
+
+/* Dropdown Items */
+.dropdown-month {
+  cursor: pointer;
+  padding: 5px 15px;
+  transition: background 0.2s;
+  height: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-month:hover {
+  background: var(--gray-200);
+}
