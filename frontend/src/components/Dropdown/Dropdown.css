@@ -1,5 +1,5 @@
 .dropdown-container {
-  width: 200px;
+  width: 250px;
   position: relative;
   display: inline-block;
 }
@@ -9,6 +9,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
   justify-content: space-between;
   border: 1px solid var(--gray-200);
   border-radius: 10px;

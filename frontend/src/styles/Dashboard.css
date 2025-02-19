@@ -34,7 +34,8 @@
 
 .user-greetings-container,
 .user-track-container,
-.table-container {
+.table-container,
+.application-container {
   align-items: center;
   display: flex;
   flex: 0 0 auto;
@@ -46,7 +47,8 @@
   border-radius: 10px;
 }
 
-.user-track-container {
+.user-track-container,
+.application-container {
   gap: 10px;
   position: relative;
   border: none;

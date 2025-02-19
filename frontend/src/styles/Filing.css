@@ -1,0 +1,19 @@
+.apply-button {
+  padding: 10px 30px;
+  border-radius: 20px;
+  gap: 5px;
+}
+
+.leave-application,
+.overtime-application {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  flex-grow: 1;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  gap: 20px;
+  overflow: hidden;
+  padding: 15px;
+}

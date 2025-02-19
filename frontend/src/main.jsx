@@ -14,6 +14,8 @@ import Dashboard from "./pages/Dashboard";
 import Payroll from "./pages/Payroll";
 import Payslips from "./pages/Payslips";
 import Attendance from "./pages/Attendance";
+import Calendar from "./pages/Calendar";
+import Filing from "./pages/Filing";
 
 import "./index.css";
 import PrivateRoute from "./components/PrivateRoute";
@@ -71,6 +73,26 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <PrivateRoute>
                 <MainLayout>
                   <Attendance />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="calendar"
+            element={
+              <PrivateRoute>
+                <MainLayout>
+                  <Calendar />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="filing"
+            element={
+              <PrivateRoute>
+                <MainLayout>
+                  <Filing />
                 </MainLayout>
               </PrivateRoute>
             }
