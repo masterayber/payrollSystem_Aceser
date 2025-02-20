@@ -77,7 +77,9 @@
   background-color: #fff;
 }
 
-.form-links {
+.form-links,
+.admin-login-container,
+.admin-form-links {
   display: flex;
   justify-content: space-between;
   margin-top: 7px;
@@ -85,9 +87,17 @@
   padding-right: 4px;
 }
 
+.admin-login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
 /* Forgot Password Link */
 .forgot-password,
-.sign-up {
+.sign-up,
+.admin-login {
   display: block;
   font-size: 14px;
   color: #0000ff;
@@ -102,7 +112,8 @@
 }
 
 .forgot-password:hover,
-.sign-up:hover {
+.sign-up:hover,
+.admin-login:hover {
   text-decoration: underline;
 }
 

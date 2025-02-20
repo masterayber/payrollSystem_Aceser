@@ -10,6 +10,8 @@ import ResetPassword from "./pages/ResetPassword";
 import AdditionalInfo from "./pages/AdditionalInfo";
 import CreatedAccount from "./pages/CreatedAccount";
 
+import AdminDashboard from "./pages/AdminPage/AdminDashboard";
+
 import Dashboard from "./pages/Dashboard";
 import Payroll from "./pages/Payroll";
 import Payslips from "./pages/Payslips";
@@ -36,11 +38,21 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="update-info" element={<AdditionalInfo />} />
           <Route path="created-account/:id" element={<CreatedAccount />} />
 
+          {/* Admin Routes */}
+          <Route
+            path="admin-dashboard"
+            element={
+              <PrivateRoute allowedRoles={["admin"]}>
+                <AdminDashboard />
+              </PrivateRoute>
+            }
+          />
+
           {/* Protected Routes with Main Layout */}
           <Route
             path="dashboard"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["user"]}>
                 <MainLayout>
                   <Dashboard />
                 </MainLayout>

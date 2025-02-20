@@ -1,7 +1,6 @@
 import React, { useState, useContext } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import "../styles/Login.css"; //Importing CSS file
 
@@ -29,7 +28,11 @@ const Login = () => {
 
       setUserData(response.data.user);
 
-      navigate("/dashboard");
+      if (response.data.user.role === "admin") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       alert(error.response?.data?.message || "Login Failed");
     }
@@ -135,6 +138,7 @@ const Login = () => {
             Forgot Password?
           </Link>
         </div>
+
         <button type="submit" className="login-button">
           Log in
         </button>

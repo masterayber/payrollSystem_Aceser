@@ -77,6 +77,7 @@ router.post("/login", async (req, res) => {
       firstName: employeeObj.firstName,
       lastName: employeeObj.lastName,
       gender: employeeObj.gender,
+      role: user.role,
     };
 
     res

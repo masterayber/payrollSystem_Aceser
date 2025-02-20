@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 
-const PrivateRoute = ({ children }) => {
+const PrivateRoute = ({ children, allowedRoles }) => {
   const { userData } = useContext(UserContext);
   const token = localStorage.getItem("token");
   const [isLoading, setIsLoading] = useState(true);
@@ -16,6 +16,10 @@ const PrivateRoute = ({ children }) => {
   }
 
   if (!token || !userData) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (!allowedRoles.includes(userData.role)) {
     return <Navigate to="/" replace />;
   }
 
