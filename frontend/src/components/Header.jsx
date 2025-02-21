@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 
-function Header() {
+function Header({ role }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -275,13 +275,51 @@ function Header() {
         </svg>
       );
     } else {
-      return null;
+      return (
+        <svg
+          width="50px"
+          height="50px"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+          <g
+            id="SVGRepo_tracerCarrier"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          ></g>
+          <g id="SVGRepo_iconCarrier">
+            {" "}
+            <circle
+              cx="12"
+              cy="9"
+              r="3"
+              stroke="#000000"
+              strokeWidth="1.5"
+            ></circle>{" "}
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="#000000"
+              strokeWidth="1.5"
+            ></circle>{" "}
+            <path
+              d="M17.9691 20C17.81 17.1085 16.9247 15 11.9999 15C7.07521 15 6.18991 17.1085 6.03076 20"
+              stroke="#000000"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            ></path>{" "}
+          </g>
+        </svg>
+      );
     }
   };
 
   const fullName = `${userData?.firstName} ${userData?.lastName}`;
 
-  const menuTitles = [
+  const userMenuTitles = [
     {
       name: "Dashboard",
       path: "/dashboard",
@@ -311,6 +349,43 @@ function Header() {
       path: "/settings",
     },
   ];
+
+  const adminMenuTitles = [
+    {
+      name: "Dashboard",
+      path: "/admin-dashboard",
+    },
+    {
+      name: "Employees",
+      path: "/employees",
+    },
+    {
+      name: "Deductions",
+      path: "/deductions",
+    },
+    {
+      name: "Pay Slips",
+      path: "/admin-payslips",
+    },
+    {
+      name: "Attendace",
+      path: "/admin-attendance",
+    },
+    {
+      name: "Calendar",
+      path: "/admin-calendar",
+    },
+    {
+      name: "Reports",
+      path: "/reports",
+    },
+    {
+      name: "Reports",
+      path: "/admin-reports",
+    },
+  ];
+
+  const menuTitles = role === "admin" ? adminMenuTitles : userMenuTitles;
 
   return (
     <header className="header">

@@ -1,11 +1,14 @@
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
+import { useContext } from "react";
+import { UserContext } from "../context/UserContext";
 
 const MainLayout = ({ children }) => {
+  const { userData } = useContext(UserContext);
   return (
     <div className="page-container">
-      <Sidebar />
-      <Header />
+      <Sidebar role={userData?.role} />
+      <Header role={userData?.role} />
       {children}
     </div>
   );

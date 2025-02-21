@@ -18,6 +18,7 @@ import Payslips from "./pages/Payslips";
 import Attendance from "./pages/Attendance";
 import Calendar from "./pages/Calendar";
 import Filing from "./pages/Filing";
+import Settings from "./pages/Settings";
 
 import "./index.css";
 import PrivateRoute from "./components/PrivateRoute";
@@ -43,12 +44,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             path="admin-dashboard"
             element={
               <PrivateRoute allowedRoles={["admin"]}>
-                <AdminDashboard />
+                <MainLayout>
+                  <AdminDashboard />
+                </MainLayout>
               </PrivateRoute>
             }
           />
 
-          {/* Protected Routes with Main Layout */}
+          {/* Protected Routes with User Layout */}
           <Route
             path="dashboard"
             element={
@@ -62,7 +65,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route
             path="payroll"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["user"]}>
                 <MainLayout>
                   <Payroll />
                 </MainLayout>
@@ -72,7 +75,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route
             path="payslips"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["user"]}>
                 <MainLayout>
                   <Payslips />
                 </MainLayout>
@@ -82,7 +85,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route
             path="attendance"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["user"]}>
                 <MainLayout>
                   <Attendance />
                 </MainLayout>
@@ -92,7 +95,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route
             path="calendar"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["user"]}>
                 <MainLayout>
                   <Calendar />
                 </MainLayout>
@@ -102,9 +105,19 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route
             path="filing"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["user"]}>
                 <MainLayout>
                   <Filing />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <PrivateRoute allowedRoles={["user"]}>
+                <MainLayout>
+                  <Settings />
                 </MainLayout>
               </PrivateRoute>
             }

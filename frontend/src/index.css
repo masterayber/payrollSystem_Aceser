@@ -306,6 +306,14 @@ h3 {
   justify-content: center;
 }
 
+hr {
+  border: 1px solid var(--gray-200);
+}
+
+.header-hr {
+  border: 1px solid var(--gray-400);
+}
+
 /* @media (max-width: 900px) {
   .sidebar {
     display: none;
