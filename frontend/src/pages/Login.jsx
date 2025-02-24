@@ -44,7 +44,7 @@ const Login = () => {
         <img
           src="/assets/aceser-logo.png"
           alt="Company Logo"
-          className="logo"
+          className="company-logo"
         />
       </div>
       <form className="login-form" onSubmit={handlelogin}>
