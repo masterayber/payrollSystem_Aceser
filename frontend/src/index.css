@@ -19,6 +19,11 @@
   --main-color-3: #3dbdc2;
   --main-color-4: #a1f480;
 
+  --green-status: #00ff00;
+  --yellow-status: #f6ff00;
+  --red-status: #ff0000;
+  --gray-status: #858585;
+
   --neutral-color-100: #0a0a0a;
   --neutral-color-90: #404040;
   --neutral-color-80: #616161;

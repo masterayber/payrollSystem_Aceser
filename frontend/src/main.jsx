@@ -11,6 +11,7 @@ import AdditionalInfo from "./pages/AdditionalInfo";
 import CreatedAccount from "./pages/CreatedAccount";
 
 import AdminDashboard from "./pages/AdminPage/AdminDashboard";
+import Employees from "./pages/AdminPage/Employees";
 
 import Dashboard from "./pages/Dashboard";
 import Payroll from "./pages/Payroll";
@@ -46,6 +47,16 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <PrivateRoute allowedRoles={["admin"]}>
                 <MainLayout>
                   <AdminDashboard />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="employees"
+            element={
+              <PrivateRoute allowedRoles={["admin"]}>
+                <MainLayout>
+                  <Employees />
                 </MainLayout>
               </PrivateRoute>
             }
