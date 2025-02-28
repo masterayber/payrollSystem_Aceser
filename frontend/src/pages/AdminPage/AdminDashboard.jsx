@@ -118,60 +118,47 @@ const AdminDashboard = () => {
             <article className="table-header-container">
               <p>Net Pay</p>
             </article>
-            <hr className="header-hr"></hr>
-            <article className="table-header-container">
-              <p>Status</p>
+          </div>
+          <div className="table-content">
+            <article className="table-content-container">
+              <p>02/11/25 - 02/25/25</p>
+            </article>
+            <article className="table-content-container">
+              <p>0000000.00</p>
+            </article>
+            <article className="table-content-container">
+              <p>0000000.00</p>
+            </article>
+            <article className="table-content-container">
+              <p>0000000.00</p>
             </article>
           </div>
           <div className="table-content">
             <article className="table-content-container">
-              <p>02/12/25</p>
+              <p>01/26/25 - 02/10/25</p>
             </article>
             <article className="table-content-container">
-              <p>8:38 AM</p>
+              <p>0000000.00</p>
             </article>
             <article className="table-content-container">
-              <p>1 Day</p>
+              <p>0000000.00</p>
             </article>
             <article className="table-content-container">
-              <p>Vacation Leave</p>
-            </article>
-            <article className="table-content-container">
-              <p>Pending</p>
+              <p>0000000.00</p>
             </article>
           </div>
           <div className="table-content">
             <article className="table-content-container">
-              <p>02/12/25</p>
+              <p>01/11/25 - 01/25/25</p>
             </article>
             <article className="table-content-container">
-              <p>8:38 AM</p>
+              <p>0000000.00</p>
             </article>
             <article className="table-content-container">
-              <p>1 Day</p>
+              <p>0000000.00</p>
             </article>
             <article className="table-content-container">
-              <p>Vacation Leave</p>
-            </article>
-            <article className="table-content-container">
-              <p>Pending</p>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>02/12/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>8:38 AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>1 Day</p>
-            </article>
-            <article className="table-content-container">
-              <p>Vacation Leave</p>
-            </article>
-            <article className="table-content-container">
-              <p>Pending</p>
+              <p>0000000.00</p>
             </article>
           </div>
         </div>

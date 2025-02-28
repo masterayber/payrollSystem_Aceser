@@ -62,18 +62,26 @@ const AdminAttendance = () => {
     return "On-Time";
   };
 
-  const filteredEmployees = employeeData.map((employee) => {
-    const attendanceRecord = employee.attendance.find(
-      (record) => record.date === formatDate(selectedDate)
-    );
-    return attendanceRecord
-      ? {
-          ...employee,
-          timeIn: attendanceRecord.timeIn,
-          timeOut: attendanceRecord.timeOut,
-        }
-      : { ...employee, timeIn: "", timeOut: "" };
-  });
+  const filteredEmployees = employeeData
+    .map((employee) => {
+      const attendanceRecord = employee.attendance.find(
+        (record) => record.date === formatDate(selectedDate)
+      );
+      return attendanceRecord
+        ? {
+            ...employee,
+            timeIn: attendanceRecord.timeIn,
+            timeOut: attendanceRecord.timeOut,
+          }
+        : { ...employee, timeIn: "", timeOut: "" };
+    })
+    .filter((employee) => {
+      return (
+        employee.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        employee.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        employee.lastName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    });
 
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;

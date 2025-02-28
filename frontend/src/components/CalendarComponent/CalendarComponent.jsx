@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import "./CalendarComponent.css";
 
 const CalendarComponent = () => {
@@ -45,46 +46,28 @@ const CalendarComponent = () => {
   return (
     <div className="calendar-container">
       <div className="calendar-header">
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          onClick={() => changeMonth(-1)}
-          className="calendar-button"
-        >
-          <path
-            d="M14.0832 16.6666L9.9165 12.5L14.0832 8.33329"
-            stroke="black"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
         <span>
           {currentDate.toLocaleDateString("en-US", {
             month: "long",
             year: "numeric",
           })}
         </span>
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          onClick={() => changeMonth(1)}
-          className="calendar-button"
-        >
-          <path
-            d="M9.91683 8.33337L14.0835 12.5L9.91683 16.6667"
-            stroke="black"
-            strokeWidth="2.5"
+        <div className="calendar-navigate">
+          <IconChevronLeft
+            stroke={3}
+            onClick={() => changeMonth(-1)}
+            className="calendar-button"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-        </svg>
+          <IconChevronRight
+            stroke={3}
+            onClick={() => changeMonth(1)}
+            className="calendar-button"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </div>
       </div>
       <table className="calendar-table">
         <thead>
