@@ -290,7 +290,7 @@ h3 {
   display: flex;
   gap: 10px;
   margin-left: 250px;
-  min-height: 120vh;
+  min-height: 100vh;
   width: 100%;
   margin-top: 80px;
   flex-direction: column;

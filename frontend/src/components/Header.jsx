@@ -368,7 +368,7 @@ function Header({ role }) {
       path: "/admin-payslips",
     },
     {
-      name: "Attendace",
+      name: "Attendance",
       path: "/admin-attendance",
     },
     {

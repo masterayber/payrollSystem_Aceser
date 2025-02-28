@@ -1,108 +1,24 @@
 import React, { useState } from "react";
-import { IconPlus, IconEdit } from "@tabler/icons-react";
+import { IconPlus, IconEdit, IconSearch } from "@tabler/icons-react";
 import "../../styles/AdminCSS/Employees.css";
+import { useEmployee } from "../../context/EmployeeContext";
 
 const Employees = () => {
-  const employeeData = [
-    {
-      id: "AC-001",
-      lastName: "DELA CRUZ",
-      firstName: "JUAN",
-      type: "Regular",
-      department: "Admin",
-      position: "Staff",
-      startDate: "December 2, 2023",
-    },
-    {
-      id: "AC-002",
-      lastName: "SANTOS",
-      firstName: "MARIA",
-      type: "Probationary",
-      department: "Accounting",
-      position: "Accountant",
-      startDate: "December 2, 2024",
-    },
-    {
-      id: "AC-003",
-      lastName: "REYES",
-      firstName: "PEDRO",
-      type: "Regular",
-      department: "IT",
-      position: "Developer",
-      startDate: "March 4, 2024",
-    },
-    {
-      id: "AC-003",
-      lastName: "REYES",
-      firstName: "PEDRO",
-      type: "Regular",
-      department: "IT",
-      position: "Developer",
-      startDate: "March 4, 2024",
-    },
-    {
-      id: "AC-003",
-      lastName: "REYES",
-      firstName: "PEDRO",
-      type: "Regular",
-      department: "IT",
-      position: "Developer",
-      startDate: "March 4, 2024",
-    },
-    {
-      id: "AC-003",
-      lastName: "REYES",
-      firstName: "PEDRO",
-      type: "Regular",
-      department: "IT",
-      position: "Developer",
-      startDate: "March 4, 2024",
-    },
-    {
-      id: "AC-003",
-      lastName: "REYES",
-      firstName: "PEDRO",
-      type: "Regular",
-      department: "IT",
-      position: "Developer",
-      startDate: "March 4, 2024",
-    },
-    {
-      id: "AC-003",
-      lastName: "REYES",
-      firstName: "PEDRO",
-      type: "Regular",
-      department: "IT",
-      position: "Developer",
-      startDate: "March 4, 2024",
-    },
-    {
-      id: "AC-003",
-      lastName: "REYES",
-      firstName: "PEDRO",
-      type: "Regular",
-      department: "IT",
-      position: "Developer",
-      startDate: "March 4, 2024",
-    },
-    {
-      id: "AC-003",
-      lastName: "REYES",
-      firstName: "PEDRO",
-      type: "Regular",
-      department: "IT",
-      position: "Developer",
-      startDate: "March 4, 2024",
-    },
-  ];
+  const { employeeData } = useEmployee();
 
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
 
-  const totalPages = Math.ceil(employeeData.length / itemsPerPage);
+  const filteredEmployees = employeeData.filter((employee) =>
+    Object.values(employee).some((value) =>
+      value.toString().toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  );
 
+  const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentEmployees = employeeData.slice(
+  const currentEmployees = filteredEmployees.slice(
     startIndex,
     startIndex + itemsPerPage
   );
@@ -112,19 +28,34 @@ const Employees = () => {
       <div className="user-track-container">
         <div className="user-track">
           <p>Total Employees</p>
-          <div className="user-number">177</div>
+          <span className="user-number">177</span>
         </div>
         <div className="user-track">
           <p>Total Regural Employees</p>
-          <div className="user-number">157</div>
+          <span className="user-number">157</span>
         </div>
         <div className="user-track">
           <p>Total Probationary Employees</p>
-          <div className="user-number">20</div>
+          <span className="user-number">20</span>
         </div>
       </div>
 
-      <div className="search-container"></div>
+      <div className="search-container">
+        <span className="icon-container">
+          <IconSearch stroke={2} className="icon" />
+        </span>
+
+        <input
+          type="text"
+          placeholder="Search"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+
       <div className="tooltip-container">
         <button className="tooltip-button">
           <IconPlus stroke={2} />
@@ -193,6 +124,10 @@ const Employees = () => {
           </div>
         ))}
       </div>
+
+      {filteredEmployees.length === 0 && (
+        <p className="no-results">No employees found.</p>
+      )}
 
       <div className="pagination">
         <button

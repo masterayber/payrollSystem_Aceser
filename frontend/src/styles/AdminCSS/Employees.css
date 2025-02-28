@@ -20,3 +20,13 @@
 .pagination-button {
   padding: 10px;
 }
+
+.search-container {
+  margin: 0;
+  width: 500px;
+  background-color: var(--gray-50);
+}
+
+.search-container input {
+  background-color: var(--gray-50);
+}
