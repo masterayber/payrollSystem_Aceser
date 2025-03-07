@@ -90,6 +90,16 @@
   align-items: center;
 }
 
+.time-details {
+  flex-direction: column;
+}
+
+.time-in-out {
+  display: flex;
+  margin-left: auto;
+  gap: 10px;
+}
+
 .time-in-container svg,
 .time-out-container svg {
   color: var(--neutral-color-100);
@@ -214,6 +224,30 @@
 
 .table-content-container {
   background-color: var(--gray-50);
+  padding: 0 15px;
+  min-height: 52px;
+}
+
+.dots-button {
+  cursor: pointer;
+}
+
+.dropdown-details {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border: 1px solid var(--gray-200);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  width: 175px;
+  height: auto;
+  justify-content: center;
+  z-index: 1000;
+  align-items: center;
+  padding: 0;
+  display: flex;
+  margin-top: 8px;
 }
 
 .table-header-container p,

@@ -1,13 +1,15 @@
 import React, { useContext } from "react";
 import { UserContext } from "../../context/UserContext";
+import { EmployeeContext } from "../../context/EmployeeContext";
 import "../../styles/AdminCSS/AdminDashboard.css";
-import "../../components/TimeDate";
-import TimeDate from "../../components/TimeDate";
+import "../../components/TimeDate/TimeDate";
+import TimeDate from "../../components/TimeDate/TimeDate";
 import Calendar from "../../components/CalendarComponent/CalendarComponent";
 import AttendanceChart from "../../components/AttendanceChart/AttendanceChart";
 
 const AdminDashboard = () => {
   const { userData } = useContext(UserContext);
+  const { employeeData } = useContext(EmployeeContext);
 
   const attendanceData = {
     onTime: 150,
@@ -25,7 +27,7 @@ const AdminDashboard = () => {
             <span className="user-highlight">{userData?.firstName}</span>
             <span>!</span>
           </div>
-          <p>177 Employees have timed in today!</p>
+          <p>{employeeData.length} Employees have timed in today!</p>
         </div>
 
         <TimeDate />
@@ -34,15 +36,15 @@ const AdminDashboard = () => {
       <div className="user-track-container">
         <div className="user-track">
           <p>Total Employees</p>
-          <div className="user-number">177</div>
+          <div className="user-number">{employeeData.length}</div>
         </div>
         <div className="user-track">
           <p>Total Employees Timed In</p>
-          <div className="user-number">177</div>
+          <div className="user-number">{employeeData.length}</div>
         </div>
         <div className="user-track">
           <p>Total Employees Timed Out</p>
-          <div className="user-number">177</div>
+          <div className="user-number">{employeeData.length}</div>
         </div>
       </div>
 

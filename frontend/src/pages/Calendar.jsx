@@ -38,7 +38,9 @@ const Calendar = () => {
         </div>
       </div>
 
-      <CalendarComponent />
+      <div className="table-container">
+        <CalendarComponent />
+      </div>
     </div>
   );
 };

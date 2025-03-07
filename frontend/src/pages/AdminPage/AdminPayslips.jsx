@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   IconSearch,
   IconEye,
   IconDownload,
   IconDotsVertical,
 } from "@tabler/icons-react";
-import { useEmployee } from "../../context/EmployeeContext";
+import { EmployeeContext } from "../../context/EmployeeContext";
 
 const AdminPayslips = () => {
-  const { employeeData } = useEmployee();
+  const { employeeData } = useContext(EmployeeContext);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

@@ -1,9 +1,125 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { IconDotsVertical } from "@tabler/icons-react";
 import "../styles/Payroll.css";
+import { useNavigate } from "react-router-dom";
 
 const Payroll = () => {
+  const navigate = useNavigate();
+
   const [showLastPayment, setShowLastPayment] = useState(false);
   const [showYearToDate, setShowYearToDate] = useState(false);
+
+  const [showPayPeriodDropdown, setShowPayPeriodDropdown] = useState(false);
+  const [showYearToDateDropdown, setShowYearToDateDropdown] = useState(false);
+  const [showTaxInformationDropdown, setShowTaxInformationDropdown] =
+    useState(false);
+  const [showPayHistoryDropdown, setShowPayHistoryDropdown] = useState(false);
+
+  const payPeriodDropdownRef = useRef(null);
+  const payPeriodSvgRef = useRef(null);
+
+  const yearToDateDropdownRef = useRef(null);
+  const yearToDateSvgRef = useRef(null);
+
+  const taxInformationDropdownRef = useRef(null);
+  const taxInformationSvgRef = useRef(null);
+
+  const payHistoryDropdownRef = useRef(null);
+  const payHistorySvgRef = useRef(null);
+
+  const togglePayPeriodDropdown = (event) => {
+    event.stopPropagation();
+    setShowPayPeriodDropdown((prev) => !prev);
+    setShowYearToDateDropdown(false);
+    setShowTaxInformationDropdown(false);
+    setShowPayHistoryDropdown(false);
+  };
+
+  const toggleYearToDateDropdown = (event) => {
+    event.stopPropagation();
+    setShowYearToDateDropdown((prev) => !prev);
+    setShowPayPeriodDropdown(false);
+    setShowTaxInformationDropdown(false);
+    setShowPayHistoryDropdown(false);
+  };
+
+  const toggleTaxInformationDropdown = (event) => {
+    event.stopPropagation();
+    setShowTaxInformationDropdown((prev) => !prev);
+    setShowPayPeriodDropdown(false);
+    setShowYearToDateDropdown(false);
+    setShowPayHistoryDropdown(false);
+  };
+
+  const togglePayHistoryDropdown = (event) => {
+    event.stopPropagation();
+    setShowPayHistoryDropdown((prev) => !prev);
+    setShowPayPeriodDropdown(false);
+    setShowYearToDateDropdown(false);
+    setShowTaxInformationDropdown(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        showPayPeriodDropdown &&
+        payPeriodDropdownRef.current &&
+        !payPeriodDropdownRef.current.contains(event.target) &&
+        payPeriodSvgRef.current &&
+        !payPeriodSvgRef.current.contains(event.target)
+      ) {
+        setShowPayPeriodDropdown(false);
+      }
+
+      if (
+        showYearToDateDropdown &&
+        yearToDateDropdownRef.current &&
+        !yearToDateDropdownRef.current.contains(event.target) &&
+        yearToDateSvgRef.current &&
+        !yearToDateSvgRef.current.contains(event.target)
+      ) {
+        setShowYearToDateDropdown(false);
+      }
+
+      if (
+        showTaxInformationDropdown &&
+        taxInformationDropdownRef.current &&
+        !taxInformationDropdownRef.current.contains(event.target) &&
+        taxInformationSvgRef.current &&
+        !taxInformationSvgRef.current.contains(event.target)
+      ) {
+        setShowTaxInformationDropdown(false);
+      }
+
+      if (
+        showPayHistoryDropdown &&
+        payHistoryDropdownRef.current &&
+        !payHistoryDropdownRef.current.contains(event.target) &&
+        payHistorySvgRef.current &&
+        !payHistorySvgRef.current.contains(event.target)
+      ) {
+        setShowPayHistoryDropdown(false);
+      }
+    };
+
+    if (
+      showPayPeriodDropdown ||
+      showYearToDateDropdown ||
+      showTaxInformationDropdown ||
+      showPayHistoryDropdown
+    ) {
+      document.addEventListener("click", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [
+    showPayPeriodDropdown,
+    showYearToDateDropdown,
+    showTaxInformationDropdown,
+    showPayHistoryDropdown,
+  ]);
 
   return (
     <div className="main-content">
@@ -124,18 +240,24 @@ const Payroll = () => {
       <div className="table-container">
         <div className="table-title">
           <p>Pay Period Summary</p>
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M10.7998 18.3C10.7998 17.9022 10.9578 17.5206 11.2391 17.2393C11.5204 16.958 11.902 16.8 12.2998 16.8C12.6976 16.8 13.0792 16.958 13.3605 17.2393C13.6418 17.5206 13.7998 17.9022 13.7998 18.3C13.7998 18.6978 13.6418 19.0794 13.3605 19.3607C13.0792 19.642 12.6976 19.8 12.2998 19.8C11.902 19.8 11.5204 19.642 11.2391 19.3607C10.9578 19.0794 10.7998 18.6978 10.7998 18.3ZM10.7998 12.3C10.7998 11.9022 10.9578 11.5206 11.2391 11.2393C11.5204 10.958 11.902 10.8 12.2998 10.8C12.6976 10.8 13.0792 10.958 13.3605 11.2393C13.6418 11.5206 13.7998 11.9022 13.7998 12.3C13.7998 12.6978 13.6418 13.0794 13.3605 13.3607C13.0792 13.642 12.6976 13.8 12.2998 13.8C11.902 13.8 11.5204 13.642 11.2391 13.3607C10.9578 13.0794 10.7998 12.6978 10.7998 12.3ZM10.7998 6.3C10.7998 5.90218 10.9578 5.52065 11.2391 5.23934C11.5204 4.95804 11.902 4.8 12.2998 4.8C12.6976 4.8 13.0792 4.95804 13.3605 5.23934C13.6418 5.52065 13.7998 5.90218 13.7998 6.3C13.7998 6.69783 13.6418 7.07936 13.3605 7.36066C13.0792 7.64197 12.6976 7.8 12.2998 7.8C11.902 7.8 11.5204 7.64197 11.2391 7.36066C10.9578 7.07936 10.7998 6.69783 10.7998 6.3Z"
-              fill="#0A0A0A"
+          <div className="dots-button-container">
+            <IconDotsVertical
+              stroke={2}
+              onClick={togglePayPeriodDropdown}
+              ref={payPeriodSvgRef}
+              className="dots-button"
             />
-          </svg>
+            {showPayPeriodDropdown && (
+              <div className="dropdown-details" ref={payPeriodDropdownRef}>
+                <button
+                  className="dropdown-item-details"
+                  onClick={() => navigate("/")}
+                >
+                  View details
+                </button>
+              </div>
+            )}
+          </div>
         </div>
         <div className="table">
           <div className="table-header">
@@ -165,18 +287,24 @@ const Payroll = () => {
         <div className="user-track">
           <div className="table-title">
             <p>Year-to-Date Earnings</p>
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M10.7998 18.3C10.7998 17.9022 10.9578 17.5206 11.2391 17.2393C11.5204 16.958 11.902 16.8 12.2998 16.8C12.6976 16.8 13.0792 16.958 13.3605 17.2393C13.6418 17.5206 13.7998 17.9022 13.7998 18.3C13.7998 18.6978 13.6418 19.0794 13.3605 19.3607C13.0792 19.642 12.6976 19.8 12.2998 19.8C11.902 19.8 11.5204 19.642 11.2391 19.3607C10.9578 19.0794 10.7998 18.6978 10.7998 18.3ZM10.7998 12.3C10.7998 11.9022 10.9578 11.5206 11.2391 11.2393C11.5204 10.958 11.902 10.8 12.2998 10.8C12.6976 10.8 13.0792 10.958 13.3605 11.2393C13.6418 11.5206 13.7998 11.9022 13.7998 12.3C13.7998 12.6978 13.6418 13.0794 13.3605 13.3607C13.0792 13.642 12.6976 13.8 12.2998 13.8C11.902 13.8 11.5204 13.642 11.2391 13.3607C10.9578 13.0794 10.7998 12.6978 10.7998 12.3ZM10.7998 6.3C10.7998 5.90218 10.9578 5.52065 11.2391 5.23934C11.5204 4.95804 11.902 4.8 12.2998 4.8C12.6976 4.8 13.0792 4.95804 13.3605 5.23934C13.6418 5.52065 13.7998 5.90218 13.7998 6.3C13.7998 6.69783 13.6418 7.07936 13.3605 7.36066C13.0792 7.64197 12.6976 7.8 12.2998 7.8C11.902 7.8 11.5204 7.64197 11.2391 7.36066C10.9578 7.07936 10.7998 6.69783 10.7998 6.3Z"
-                fill="#0A0A0A"
+            <div className="dots-button-container">
+              <IconDotsVertical
+                stroke={2}
+                onClick={toggleYearToDateDropdown}
+                ref={yearToDateSvgRef}
+                className="dots-button"
               />
-            </svg>
+              {showYearToDateDropdown && (
+                <div className="dropdown-details" ref={yearToDateDropdownRef}>
+                  <button
+                    className="dropdown-item-details"
+                    onClick={() => navigate("/")}
+                  >
+                    View details
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           <div className="table">
             <div className="table-header">
@@ -203,18 +331,27 @@ const Payroll = () => {
         <div className="user-track">
           <div className="table-title">
             <p>Tax Information</p>
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M10.7998 18.3C10.7998 17.9022 10.9578 17.5206 11.2391 17.2393C11.5204 16.958 11.902 16.8 12.2998 16.8C12.6976 16.8 13.0792 16.958 13.3605 17.2393C13.6418 17.5206 13.7998 17.9022 13.7998 18.3C13.7998 18.6978 13.6418 19.0794 13.3605 19.3607C13.0792 19.642 12.6976 19.8 12.2998 19.8C11.902 19.8 11.5204 19.642 11.2391 19.3607C10.9578 19.0794 10.7998 18.6978 10.7998 18.3ZM10.7998 12.3C10.7998 11.9022 10.9578 11.5206 11.2391 11.2393C11.5204 10.958 11.902 10.8 12.2998 10.8C12.6976 10.8 13.0792 10.958 13.3605 11.2393C13.6418 11.5206 13.7998 11.9022 13.7998 12.3C13.7998 12.6978 13.6418 13.0794 13.3605 13.3607C13.0792 13.642 12.6976 13.8 12.2998 13.8C11.902 13.8 11.5204 13.642 11.2391 13.3607C10.9578 13.0794 10.7998 12.6978 10.7998 12.3ZM10.7998 6.3C10.7998 5.90218 10.9578 5.52065 11.2391 5.23934C11.5204 4.95804 11.902 4.8 12.2998 4.8C12.6976 4.8 13.0792 4.95804 13.3605 5.23934C13.6418 5.52065 13.7998 5.90218 13.7998 6.3C13.7998 6.69783 13.6418 7.07936 13.3605 7.36066C13.0792 7.64197 12.6976 7.8 12.2998 7.8C11.902 7.8 11.5204 7.64197 11.2391 7.36066C10.9578 7.07936 10.7998 6.69783 10.7998 6.3Z"
-                fill="#0A0A0A"
+            <div className="dots-button-container ">
+              <IconDotsVertical
+                stroke={2}
+                onClick={toggleTaxInformationDropdown}
+                ref={taxInformationSvgRef}
+                className="dots-button"
               />
-            </svg>
+              {showTaxInformationDropdown && (
+                <div
+                  className="dropdown-details"
+                  ref={taxInformationDropdownRef}
+                >
+                  <button
+                    className="dropdown-item-details"
+                    onClick={() => navigate("/")}
+                  >
+                    View details
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           <div className="table">
             <div className="table-header">
@@ -242,18 +379,24 @@ const Payroll = () => {
       <div className="table-container">
         <div className="table-title">
           <p>Pay History</p>
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M10.7998 18.3C10.7998 17.9022 10.9578 17.5206 11.2391 17.2393C11.5204 16.958 11.902 16.8 12.2998 16.8C12.6976 16.8 13.0792 16.958 13.3605 17.2393C13.6418 17.5206 13.7998 17.9022 13.7998 18.3C13.7998 18.6978 13.6418 19.0794 13.3605 19.3607C13.0792 19.642 12.6976 19.8 12.2998 19.8C11.902 19.8 11.5204 19.642 11.2391 19.3607C10.9578 19.0794 10.7998 18.6978 10.7998 18.3ZM10.7998 12.3C10.7998 11.9022 10.9578 11.5206 11.2391 11.2393C11.5204 10.958 11.902 10.8 12.2998 10.8C12.6976 10.8 13.0792 10.958 13.3605 11.2393C13.6418 11.5206 13.7998 11.9022 13.7998 12.3C13.7998 12.6978 13.6418 13.0794 13.3605 13.3607C13.0792 13.642 12.6976 13.8 12.2998 13.8C11.902 13.8 11.5204 13.642 11.2391 13.3607C10.9578 13.0794 10.7998 12.6978 10.7998 12.3ZM10.7998 6.3C10.7998 5.90218 10.9578 5.52065 11.2391 5.23934C11.5204 4.95804 11.902 4.8 12.2998 4.8C12.6976 4.8 13.0792 4.95804 13.3605 5.23934C13.6418 5.52065 13.7998 5.90218 13.7998 6.3C13.7998 6.69783 13.6418 7.07936 13.3605 7.36066C13.0792 7.64197 12.6976 7.8 12.2998 7.8C11.902 7.8 11.5204 7.64197 11.2391 7.36066C10.9578 7.07936 10.7998 6.69783 10.7998 6.3Z"
-              fill="#0A0A0A"
+          <div className="dots-button-container ">
+            <IconDotsVertical
+              stroke={2}
+              onClick={togglePayHistoryDropdown}
+              ref={payHistorySvgRef}
+              className="dots-button"
             />
-          </svg>
+            {showPayHistoryDropdown && (
+              <div className="dropdown-details" ref={payHistoryDropdownRef}>
+                <button
+                  className="dropdown-item-details"
+                  onClick={() => navigate("/")}
+                >
+                  View details
+                </button>
+              </div>
+            )}
+          </div>
         </div>
         <div className="table">
           <div className="table-header">

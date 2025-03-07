@@ -282,6 +282,7 @@ function Header({ role }) {
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          onClick={toggleDropDown}
         >
           <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
           <g
@@ -402,7 +403,7 @@ function Header({ role }) {
             <h3>{item.name}</h3>
           </div>
         ))}
-      <div className="user-header" onClick={toggleDropDown}>
+      <div className="user-header">
         <p>{userData?.firstName}</p>
         <div className="icon-count">
           {getGenderIcon()}
@@ -460,19 +461,18 @@ function Header({ role }) {
               </svg>
             )}
           </div>
+          {showDropDown && (
+            <div className="dropdown-overlay" ref={dropdownRef}>
+              <p>{fullName}</p>
+              <button className="dropdown-item">Profile</button>
+              <button className="dropdown-item">Settings</button>
+              <button className="dropdown-item">About</button>
+              <button className="dropdown-item-logout" onClick={handleLogout}>
+                Log Out
+              </button>
+            </div>
+          )}
         </div>
-
-        {showDropDown && (
-          <div className="dropdown-overlay" ref={dropdownRef}>
-            <p>{fullName}</p>
-            <button className="dropdown-item">Profile</button>
-            <button className="dropdown-item">Settings</button>
-            <button className="dropdown-item">About</button>
-            <button className="dropdown-item-logout" onClick={handleLogout}>
-              Log Out
-            </button>
-          </div>
-        )}
       </div>
     </header>
   );

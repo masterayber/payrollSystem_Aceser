@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import "./TimeDate.css";
 
 const TimeDate = () => {
   const [currentTimedate, setCurrentTimeDate] = useState(new Date());

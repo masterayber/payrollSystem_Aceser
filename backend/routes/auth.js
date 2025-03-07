@@ -29,7 +29,7 @@ router.post("/signup", async (req, res) => {
       email,
       username,
       password,
-      role, //Optional
+      role,
     });
     await user.save();
 
@@ -38,6 +38,7 @@ router.post("/signup", async (req, res) => {
       firstName,
       lastName,
       email,
+      role,
     });
     await newEmployee.save();
 
@@ -246,6 +247,36 @@ router.get("/created-account/:id", async (req, res) => {
 
 router.get("/dashboard-data", authMiddleware, async (req, res) => {
   res.status(200).json({ message: "Protected Data" });
+});
+
+router.get("/employees", async (req, res) => {
+  try {
+    const employees = await Employee.find({ role: "employee" });
+    res.status(200).json(employees);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error fetching employees", error: err.message });
+  }
+});
+
+router.put("employees/:id", async (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+
+  try {
+    const result = await EmployeeModel.findByIdAndUpdate(id, updatedData, {
+      new: true,
+    });
+
+    if (!result) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to updated employee" });
+  }
 });
 
 module.exports = router;

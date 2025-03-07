@@ -1,13 +1,22 @@
-import React, { useState } from "react";
-import { IconPlus, IconEdit, IconSearch } from "@tabler/icons-react";
+import React, { useState, useContext } from "react";
+import {
+  IconPlus,
+  IconEdit,
+  IconSearch,
+  IconCancel,
+} from "@tabler/icons-react";
 import "../../styles/AdminCSS/Employees.css";
-import { useEmployee } from "../../context/EmployeeContext";
+import { EmployeeContext } from "../../context/EmployeeContext";
+import EditEmployeeModal from "../../components/Modals/EditEmployee/EditEmployeeModal";
 
 const Employees = () => {
-  const { employeeData } = useEmployee();
-
+  const { employeeData, setEmployeeData } = useContext(EmployeeContext);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [editMode, setEditMode] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const itemsPerPage = 7;
 
   const filteredEmployees = employeeData.filter((employee) =>
@@ -23,12 +32,32 @@ const Employees = () => {
     startIndex + itemsPerPage
   );
 
+  const handleEditClick = (employee) => {
+    setSelectedEmployee(employee);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateEmployee = async (updatedEmployee) => {
+    setIsEditModalOpen(false);
+
+    try {
+      const response = await fetch("http://localhost:500/api/auth/employees");
+      const data = await response.json();
+
+      const employeesOnly = data.filter((emp) => emp.role === "employee");
+
+      setEmployeeData(employeesOnly);
+    } catch (error) {
+      console.error("Error refreshing employees after update:", error);
+    }
+  };
+
   return (
     <div className="main-content">
       <div className="user-track-container">
         <div className="user-track">
           <p>Total Employees</p>
-          <span className="user-number">177</span>
+          <span className="user-number">{employeeData.length}</span>
         </div>
         <div className="user-track">
           <p>Total Regural Employees</p>
@@ -61,14 +90,25 @@ const Employees = () => {
           <IconPlus stroke={2} />
           Add Employee
         </button>
-        <button className="tooltip-button">
-          <IconEdit stroke={2} />
-          Edit Employee
+        <button
+          className="tooltip-button"
+          onClick={() => setEditMode(!editMode)}
+        >
+          {editMode ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
+          {editMode ? "Cancel" : "Edit Employee"}
         </button>
       </div>
 
       <div className="table">
         <div className="table-header">
+          {editMode && (
+            <>
+              <article className="table-header-container">
+                <p>Edit</p>
+              </article>
+              <hr className="header-hr"></hr>
+            </>
+          )}
           <article className="table-header-container">
             <p>Employee ID</p>
           </article>
@@ -100,6 +140,16 @@ const Employees = () => {
 
         {currentEmployees.map((employee, index) => (
           <div className="table-content" key={index}>
+            {editMode && (
+              <article className="table-content-container">
+                <button
+                  className="action-button"
+                  onClick={() => handleEditClick(employee)}
+                >
+                  <IconEdit stroke={2} />
+                </button>
+              </article>
+            )}
             <article className="table-content-container">
               <p>{employee.id}</p>
             </article>
@@ -151,6 +201,14 @@ const Employees = () => {
           Next
         </button>
       </div>
+
+      {isEditModalOpen && selectedEmployee && (
+        <EditEmployeeModal
+          employee={selectedEmployee}
+          onClose={() => setIsEditModalOpen(false)}
+          onUpdateEmployee={handleUpdateEmployee}
+        />
+      )}
     </div>
   );
 };

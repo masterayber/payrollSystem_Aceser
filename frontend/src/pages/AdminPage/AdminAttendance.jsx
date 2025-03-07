@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useContext } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import {
@@ -6,11 +6,11 @@ import {
   IconDotsVertical,
   IconCalendarClock,
 } from "@tabler/icons-react";
-import { useEmployee } from "../../context/EmployeeContext";
+import { EmployeeContext } from "../../context/EmployeeContext";
 import "../../styles/AdminCSS/AdminAttendance.css";
 
 const AdminAttendance = () => {
-  const { employeeData } = useEmployee();
+  const { employeeData } = useContext(EmployeeContext);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
