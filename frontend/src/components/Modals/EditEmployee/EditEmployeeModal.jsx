@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import "./EditEmployeeModal.css";
+import "../Modal.css";
+import Dropdown from "../../Dropdown/Dropdown";
 
 const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   const [editedEmployee, setEditedEmployee] = useState({ ...employee });
@@ -88,22 +89,50 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
 
             <div className="input-container">
               <div className="label-container">
-                <label>Last Name</label>
+                <label>Designation</label>
               </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="lastName"
-                  value={editedEmployee.lastName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+              <Dropdown />
             </div>
           </div>
 
-          <button onClick={onClose}>Cancel</button>
-          <button>Save Changes</button>
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Employment Type</label>
+              </div>
+              <Dropdown />
+            </div>
+
+            <div className="input-container">
+              <div className="label-container">
+                <label>Department</label>
+              </div>
+              <Dropdown />
+            </div>
+          </div>
+
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Position</label>
+              </div>
+              <Dropdown />
+            </div>
+
+            <div className="input-container">
+              <div className="label-container">
+                <label>Start Date</label>
+              </div>
+              <Dropdown />
+            </div>
+          </div>
+
+          <div className="modal-buttons">
+            <button onClick={onClose} className="modal-button">
+              Cancel
+            </button>
+            <button className="modal-button">Save Changes</button>
+          </div>
         </form>
       </div>
     </div>

@@ -1,7 +1,9 @@
 const express = require("express");
+const multer = require("multer");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+const Dropdown = require("../models/dropdownOptions");
 const User = require("../models/user");
 const Employee = require("../models/employees");
 const sendEmail = require("../utils/nodemailer");
@@ -12,33 +14,36 @@ const JWT_SECRET = "your_jwt_secret_key_here";
 
 let otpStorage = {}; // Temporarily stores OTPs for demonstration
 
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
 // Signup route
 router.post("/signup", async (req, res) => {
-  // Extract data from the request body
-  const { firstName, lastName, email, username, password, role } = req.body;
+  const { firstName, lastName, email, username, password, role, status } =
+    req.body;
 
   try {
-    // Check if email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Email is already registered" });
     }
 
-    // Create user in `users` collection
     const user = new User({
       email,
       username,
       password,
       role,
+      status,
+      createdAt: new Date(),
     });
     await user.save();
 
-    // Create corresponding employee in 'employees' collection
     const newEmployee = new Employee({
       firstName,
       lastName,
       email,
       role,
+      createdAt: new Date(),
     });
     await newEmployee.save();
 
@@ -56,6 +61,10 @@ router.post("/login", async (req, res) => {
     const user = await User.findOne({ username });
     if (!user) {
       return res.status(400).json({ message: "Invalid Username" });
+    }
+
+    if (user.status !== "active") {
+      return res.status(403).json({ message: "Account is pending approval" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -251,7 +260,38 @@ router.get("/dashboard-data", authMiddleware, async (req, res) => {
 
 router.get("/employees", async (req, res) => {
   try {
-    const employees = await Employee.find({ role: "employee" });
+    const employees = await Employee.aggregate([
+      {
+        $lookup: {
+          from: "users", // Name of the 'users' collection
+          localField: "email", // Field in employees
+          foreignField: "email", // Field in users
+          as: "userDetails",
+        },
+      },
+      { $unwind: "$userDetails" }, // Convert array to object
+      {
+        $match: {
+          "userDetails.status": "active", // Filter active users
+          "userDetails.role": "employee", // Ensure role is employee
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          firstName: 1,
+          lastName: 1,
+          email: 1,
+          role: 1,
+          address: 1,
+          birthday: 1,
+          gender: 1,
+          contactNumber: 1,
+          createdAt: 1,
+        },
+      },
+    ]);
+
     res.status(200).json(employees);
   } catch (err) {
     res
@@ -260,23 +300,161 @@ router.get("/employees", async (req, res) => {
   }
 });
 
-router.put("employees/:id", async (req, res) => {
+router.put("/users/:id", async (req, res) => {
   const { id } = req.params;
-  const updatedData = req.body;
 
   try {
-    const result = await EmployeeModel.findByIdAndUpdate(id, updatedData, {
-      new: true,
-    });
+    const result = await User.findByIdAndUpdate(
+      id,
+      { status: "active" },
+      { new: true }
+    );
 
     if (!result) {
-      return res.status(404).json({ error: "Employee not found" });
+      return res.status(404).json({ error: "User not found" });
     }
 
-    res.json(result);
+    res.json({ message: "User approved successfully", user: result });
   } catch (error) {
-    res.status(500).json({ error: "Failed to updated employee" });
+    res.status(500).json({ error: "Failed to approve user" });
   }
 });
+
+router.get("/pending-users", async (req, res) => {
+  try {
+    const pendingUsers = await User.find({ status: "pending" });
+
+    const enrichedUsers = await Promise.all(
+      pendingUsers.map(async (user) => {
+        const employee = await Employee.findOne({ email: user.email });
+        return {
+          _id: user._id,
+          email: user.email,
+          firstName: employee ? employee.firstName : "N/A",
+          lastName: employee ? employee.lastName : "N/A",
+          createdAt: user.createdAt,
+        };
+      })
+    );
+
+    res.json(enrichedUsers);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+router.put("/approve-user/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { status: "active" },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    io.emit("userApproved", updatedUser);
+
+    res
+      .status(200)
+      .json({ message: "User approved successfully", user: updatedUser });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+router.post("/add-employee", async (req, res) => {
+  const { firstName, lastName, email, username, password, role } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    const user = new User({
+      email,
+      username,
+      password,
+      role,
+      status: "active",
+    });
+    await user.save();
+
+    const employee = new Employee({
+      firstName,
+      lastName,
+      email,
+      role,
+    });
+    await employee.save();
+
+    res.status(200).json({ message: "Employee added successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+router.get("/:category", async (req, res) => {
+  try {
+    const dropdown = await Dropdown.findOne({ category: req.params.category });
+    res.json(dropdown ? dropdown.options : []);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching dropdown options" });
+  }
+});
+
+router.post("/:category", async (req, res) => {
+  const { option } = req.body;
+  try {
+    let dropdown = await dropdown.findOne({ category: req.params.category });
+
+    if (!dropdown) {
+      dropdown = new Dropdown({
+        category: req.params.category,
+        options: [option],
+      });
+    } else {
+      dropdown.options.push(option);
+    }
+
+    await dropdown.save();
+    res.json({
+      message: "Option added successfully",
+      options: dropdown.option,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding option" });
+  }
+});
+
+router.put(
+  "/users/:id/profile-photo",
+  upload.single("profilePhoto", async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const profilePhoto = req.file.buffer.toString("base64");
+
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { profilePhoto },
+        { new: true }
+      );
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res
+        .status(200)
+        .json({ message: "Profile photo updated successfully", user });
+    } catch (error) {
+      res.status(500).json({ message: "Error updating profile photo", error });
+    }
+  })
+);
 
 module.exports = router;

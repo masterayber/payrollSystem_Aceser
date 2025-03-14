@@ -1,27 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
+import { IconCaretDownFilled } from "@tabler/icons-react";
 import "./Dropdown.css";
 
-const Dropdown = () => {
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
+const Dropdown = ({ category, placeholder = "Select an option", onSelect }) => {
+  const [options, setOptions] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedOption, setSelectedOption] = useState("");
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/auth/dropdown/${category}`)
+      .then((res) => res.json())
+      .then((data) => setOptions(data))
+      .catch((err) => console.error("Error fetching dropdown options:", err));
+  }, [category]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -34,48 +27,37 @@ const Dropdown = () => {
     };
   }, []);
 
+  const handleSelect = (option) => {
+    setSelectedOption(option);
+    setIsOpen(false);
+    if (onSelect) onSelect(option);
+  };
+
   return (
     <div className="dropdown-container" ref={dropdownRef}>
-      {/* Dropdown Button */}
       <div
         className={`dropdown-button ${isOpen ? "open" : ""}`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span>{selectedMonth || "Select A Month"}</span>
+        <span>{selectedOption || placeholder}</span>
 
-        {/* SVG Arrow */}
-        <svg
+        <IconCaretDownFilled
           key={isOpen}
           className={`dropdown-icon ${isOpen ? "open" : ""}`}
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M6 9L12 15L18 9"
-            stroke="black"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+          width="20"
+          height="20"
+        />
       </div>
 
-      {/* Dropdown List */}
       {isOpen && (
         <ul className="dropdown-list">
-          {months.map((month, index) => (
+          {options.map((option, index) => (
             <li
               key={index}
-              className="dropdown-month"
-              onClick={() => {
-                setSelectedMonth(month);
-                setIsOpen(false);
-              }}
+              className="dropdown-option"
+              onClick={() => handleSelect(option)}
             >
-              {month}
+              {option}
             </li>
           ))}
         </ul>

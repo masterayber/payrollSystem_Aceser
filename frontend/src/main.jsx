@@ -17,6 +17,7 @@ import AdminPayslips from "./pages/AdminPage/AdminPayslips";
 import AdminAttendance from "./pages/AdminPage/AdminAttendance";
 import AdminCalendar from "./pages/AdminPage/AdminCalendar";
 import Reports from "./pages/AdminPage/Reports";
+import AdminSettings from "./pages/AdminPage/AdminSettings";
 
 import Dashboard from "./pages/Dashboard";
 import Payroll from "./pages/Payroll";
@@ -114,6 +115,16 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                 <PrivateRoute allowedRoles={["admin"]}>
                   <MainLayout>
                     <Reports />
+                  </MainLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="admin-settings"
+              element={
+                <PrivateRoute allowedRoles={["admin"]}>
+                  <MainLayout>
+                    <AdminSettings />
                   </MainLayout>
                 </PrivateRoute>
               }

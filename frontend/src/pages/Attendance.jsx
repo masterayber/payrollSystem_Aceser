@@ -3,6 +3,21 @@ import "../styles/Attendance.css";
 import Dropdown from "../components/Dropdown/Dropdown";
 
 const Attendance = () => {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
   return (
     <div className="main-content">
       <div className="user-track-container">
@@ -34,7 +49,7 @@ const Attendance = () => {
         </div>
       </div>
 
-      <Dropdown />
+      <Dropdown options={months} placeholder="Select A Month" />
 
       <div className="table-container">
         <div className="table-title">

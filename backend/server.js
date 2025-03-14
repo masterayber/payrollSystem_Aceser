@@ -1,14 +1,23 @@
 const express = require("express");
+const http = require("http");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-
+const cors = require("cors");
+const socketIo = require("socket.io");
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    method: ["GET", "POST"],
+  },
+});
+
 const PORT = process.env.PORT || 5000;
 
 const authRoutes = require("./routes/auth");
 
 const dotenv = require("dotenv");
-const cors = require("cors");
 
 const authMiddleware = require("./middleware/authMiddleware");
 
@@ -19,6 +28,18 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+
+io.on("connection", (socket) => {
+  console.log("A user connected");
+
+  socket.on("approveUser", (data) => {
+    io.emit("userApproved", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
+});
 
 // Connect to MongoDB
 mongoose
@@ -35,7 +56,7 @@ app.get("/", (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 

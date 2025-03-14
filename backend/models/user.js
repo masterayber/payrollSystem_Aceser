@@ -21,6 +21,15 @@ const UserSchema = new mongoose.Schema({
     enum: ["admin", "employee"],
     default: "employee",
   },
+  status: {
+    type: String,
+    enum: ["pending", "active", "inactive"],
+    default: "pending",
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
   resetToken: {
     type: String,
     default: null,
@@ -34,6 +43,12 @@ UserSchema.pre("save", async function (next) {
     this.password = await bcrypt.hash(this.password, salt);
   }
   next();
+});
+
+UserSchema.virtual("formattedCreatedAt").get(function () {
+  return this.createdAt.toLocaleString("en-US", {
+    week,
+  });
 });
 
 module.exports = mongoose.model("User", UserSchema);

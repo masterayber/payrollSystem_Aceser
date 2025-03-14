@@ -1,13 +1,19 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   IconPlus,
   IconEdit,
   IconSearch,
   IconCancel,
+  IconProgressCheck,
 } from "@tabler/icons-react";
-import "../../styles/AdminCSS/Employees.css";
 import { EmployeeContext } from "../../context/EmployeeContext";
+import AddEmployeeModal from "../../components/Modals/AddEmployee/AddEmployeeModal";
 import EditEmployeeModal from "../../components/Modals/EditEmployee/EditEmployeeModal";
+import ApproveEmployeeModal from "../../components/Modals/Approve/ApproveEmployeeModal";
+import io from "socket.io-client";
+import "../../styles/AdminCSS/Employees.css";
+
+const socket = io("http://localhost:5000");
 
 const Employees = () => {
   const { employeeData, setEmployeeData } = useContext(EmployeeContext);
@@ -15,9 +21,37 @@ const Employees = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [editMode, setEditMode] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
 
   const itemsPerPage = 7;
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/auth/employees"
+        );
+        const data = await response.json();
+        setEmployeeData(data);
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+      }
+    };
+
+    fetchEmployees();
+
+    socket.on("userApproved", (updatedUser) => {
+      console.log("User approved:", updatedUser);
+
+      fetchEmployees();
+    });
+
+    return () => {
+      socket.off("userApproved");
+    };
+  }, [setEmployeeData]);
 
   const filteredEmployees = employeeData.filter((employee) =>
     Object.values(employee).some((value) =>
@@ -32,21 +66,27 @@ const Employees = () => {
     startIndex + itemsPerPage
   );
 
+  const handleAddClick = () => {
+    setIsAddModalOpen(true);
+  };
+
   const handleEditClick = (employee) => {
     setSelectedEmployee(employee);
     setIsEditModalOpen(true);
   };
 
-  const handleUpdateEmployee = async (updatedEmployee) => {
+  const handleApproveClick = () => {
+    setIsApproveModalOpen(true);
+  };
+
+  const handleUpdateEmployee = async () => {
     setIsEditModalOpen(false);
 
     try {
-      const response = await fetch("http://localhost:500/api/auth/employees");
+      const response = await fetch("http://localhost:5000/api/auth/employees");
       const data = await response.json();
 
-      const employeesOnly = data.filter((emp) => emp.role === "employee");
-
-      setEmployeeData(employeesOnly);
+      setEmployeeData(data);
     } catch (error) {
       console.error("Error refreshing employees after update:", error);
     }
@@ -86,7 +126,7 @@ const Employees = () => {
       </div>
 
       <div className="tooltip-container">
-        <button className="tooltip-button">
+        <button className="tooltip-button" onClick={() => handleAddClick()}>
           <IconPlus stroke={2} />
           Add Employee
         </button>
@@ -96,6 +136,10 @@ const Employees = () => {
         >
           {editMode ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
           {editMode ? "Cancel" : "Edit Employee"}
+        </button>
+        <button className="tooltip-button" onClick={() => handleApproveClick()}>
+          <IconProgressCheck stroke={2} />
+          Approve Employee
         </button>
       </div>
 
@@ -202,10 +246,21 @@ const Employees = () => {
         </button>
       </div>
 
+      {isAddModalOpen && (
+        <AddEmployeeModal onClose={() => setIsAddModalOpen(false)} />
+      )}
+
       {isEditModalOpen && selectedEmployee && (
         <EditEmployeeModal
           employee={selectedEmployee}
           onClose={() => setIsEditModalOpen(false)}
+          onUpdateEmployee={handleUpdateEmployee}
+        />
+      )}
+
+      {isApproveModalOpen && (
+        <ApproveEmployeeModal
+          onClose={() => setIsApproveModalOpen(false)}
           onUpdateEmployee={handleUpdateEmployee}
         />
       )}

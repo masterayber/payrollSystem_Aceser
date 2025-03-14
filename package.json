@@ -19,13 +19,17 @@
     "chart.js": "^4.4.8",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.4",
     "nodemailer": "^6.10.0",
     "react-chartjs-2": "^5.3.0",
-    "react-datepicker": "^8.1.0"
+    "react-datepicker": "^8.1.0",
+    "react-easy-crop": "^5.4.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",

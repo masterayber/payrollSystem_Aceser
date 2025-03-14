@@ -1,5 +1,4 @@
 .dropdown-container {
-  width: 250px;
   position: relative;
   display: inline-block;
 }
@@ -25,6 +24,7 @@
 .dropdown-icon {
   transition: transform 0.3s ease;
   pointer-events: none;
+  color: var(--neutral-color-100);
 }
 
 /* Rotate SVG when open */

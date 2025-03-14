@@ -1,0 +1,83 @@
+.modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.modal-content {
+  background: var(--gray-50);
+  padding: 30px;
+  border-radius: 10px;
+  width: 50%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.cropper-container {
+  position: relative;
+  margin-top: 20px;
+  width: 100%;
+  height: 500px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.form-group {
+  margin-top: 50px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 30px;
+  justify-content: right;
+}
+
+.modal-button {
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.employee-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+.table-modal {
+  margin-top: 20px;
+}
+
+.approve-button {
+  padding: 5px;
+}
+
+.message {
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+.cropper-buttons {
+  margin-top: 20px;
+  width: 100%;
+  display: flex;
+  gap: 3px;
+}
+
+.cropper-button {
+  display: flex;
+  flex: 1;
+  padding: 10px;
+}

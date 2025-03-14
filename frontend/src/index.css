@@ -219,6 +219,7 @@ h3 {
   align-items: center;
   gap: 10px;
   cursor: pointer;
+  height: 50px;
 }
 
 .dropdown-arrow {

@@ -7,8 +7,8 @@ const CreatedAccount = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const handleGoToDashboard = () => {
-    navigate("/dashboard");
+  const handleGoToLogIn = () => {
+    navigate("/");
   };
 
   const [userData, setUserData] = useState({
@@ -286,12 +286,12 @@ const CreatedAccount = () => {
           </div>
         </div>
         <p>
-          The account has been created successfully. You can now go to
-          dashboard.
+          The account has been created successfully. Please wait for the admin
+          to approve the account.
         </p>
 
-        <button className="dashboard-button" onClick={handleGoToDashboard}>
-          Go to Dashboard
+        <button className="dashboard-button" onClick={handleGoToLogIn}>
+          Continue
         </button>
       </form>
     </div>

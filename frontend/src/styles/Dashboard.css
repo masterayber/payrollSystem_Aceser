@@ -194,14 +194,16 @@
   color: var(--main-color-1);
 }
 
-.table {
+.table,
+.table-modal {
   flex-direction: column;
   width: 100%;
 }
 
 .table,
 .table-header,
-.table-content {
+.table-content,
+.table-modal {
   display: flex;
   flex: 0 0 auto;
   position: relative;
