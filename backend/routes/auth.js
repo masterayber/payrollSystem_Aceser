@@ -14,8 +14,7 @@ const JWT_SECRET = "your_jwt_secret_key_here";
 
 let otpStorage = {}; // Temporarily stores OTPs for demonstration
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({ dest: "uploads/" });
 
 // Signup route
 router.post("/signup", async (req, res) => {
@@ -55,12 +54,12 @@ router.post("/signup", async (req, res) => {
 
 // Login route
 router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-
   try {
+    const { username, password } = req.body;
     const user = await User.findOne({ username });
+
     if (!user) {
-      return res.status(400).json({ message: "Invalid Username" });
+      return res.status(401).json({ message: "Invalid Username" });
     }
 
     if (user.status !== "active") {
@@ -69,7 +68,7 @@ router.post("/login", async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid Password" });
+      return res.status(400).json({ message: "Invalid username or password" });
     }
 
     const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, {
@@ -88,6 +87,7 @@ router.post("/login", async (req, res) => {
       lastName: employeeObj.lastName,
       gender: employeeObj.gender,
       role: user.role,
+      photoURL: user.profilePhoto || null,
     };
 
     res
@@ -208,7 +208,6 @@ router.post("/update-info", async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    // Update employee details
     employee.address = address;
     employee.birthday = birthday;
     employee.contactNumber = contactNumber;
@@ -219,6 +218,20 @@ router.post("/update-info", async (req, res) => {
     employee.contactAddress = contactAddress;
 
     await employee.save();
+
+    const user = await User.findOne({ email });
+    if (user) {
+      if (!user.profilePhoto || user.profilePhoto === "/user-circle.svg") {
+        if (user.role === "admin") {
+          user.profilePhoto = "/user-circle.svg";
+        } else if (gender === "male") {
+          user.profilePhoto = "/male.svg";
+        } else if (gender === "female") {
+          user.profilePhoto = "female.svg";
+        }
+        await user.save();
+      }
+    }
 
     res.status(200).json({
       message: "Additional info updated successfully",
@@ -433,28 +446,28 @@ router.post("/:category", async (req, res) => {
 
 router.put(
   "/users/:id/profile-photo",
-  upload.single("profilePhoto", async (req, res) => {
+  upload.single("profilePhoto"),
+  async (req, res) => {
     try {
       const userId = req.params.id;
-      const profilePhoto = req.file.buffer.toString("base64");
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
 
-      const user = await User.findByIdAndUpdate(
-        userId,
-        { profilePhoto },
-        { new: true }
-      );
+      if (!req.file)
+        return res.status(400).json({ message: "No file uploaded" });
 
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      user.profilePhoto = `/uploads/${req.file.filename}`;
+      await user.save();
 
-      res
-        .status(200)
-        .json({ message: "Profile photo updated successfully", user });
+      res.status(200).json({
+        message: "Profile photo updated",
+        photoURL: user.profilePhoto,
+      });
     } catch (error) {
-      res.status(500).json({ message: "Error updating profile photo", error });
+      console.error("Error updating profile photo:", error);
+      res.status(500).json({ message: "Server error", error });
     }
-  })
+  }
 );
 
 module.exports = router;

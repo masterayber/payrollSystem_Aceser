@@ -104,6 +104,7 @@ const AdminGeneralSettings = () => {
       {showCropper && (
         <ProfilePhotoCropper
           imageSrc={selectedImage}
+          userId={userData?._id}
           onClose={() => setShowCropper(false)}
           onCropComplete={handleCropComplete}
         />

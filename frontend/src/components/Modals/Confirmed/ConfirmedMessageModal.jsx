@@ -1,7 +1,7 @@
 import React from "react";
 import "../Modal.css";
 
-const ConfirmedMessageApproval = ({ message, onClose }) => {
+const ConfirmedMessageModal = ({ message, onConfirm }) => {
   return (
     <div className="modal">
       <div className="modal-content">
@@ -9,7 +9,7 @@ const ConfirmedMessageApproval = ({ message, onClose }) => {
         <div className="message">
           <p>{message}</p>
           <div className="modal-buttons">
-            <button onClick={onClose} className="modal-button">
+            <button onClick={onConfirm} className="modal-button">
               OK
             </button>
           </div>
@@ -19,4 +19,4 @@ const ConfirmedMessageApproval = ({ message, onClose }) => {
   );
 };
 
-export default ConfirmedMessageApproval;
+export default ConfirmedMessageModal;

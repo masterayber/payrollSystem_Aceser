@@ -5,7 +5,6 @@ export const UserContext = createContext();
 export const UserProvider = ({ children }) => {
   const [userData, setUserData] = useState(null);
 
-  // Load user data from localStorage on app load
   useEffect(() => {
     const storedUser = localStorage.getItem("userData");
     if (storedUser) {
@@ -13,8 +12,18 @@ export const UserProvider = ({ children }) => {
     }
   }, []);
 
+  const updateUserProfilePhoto = (newPhotoURL) => {
+    setUserData((prev) => {
+      const updatedUser = { ...prev, photoURL: newPhotoURL };
+      localStorage.setItem("userData", JSON.stringify(updatedUser));
+      return updatedUser;
+    });
+  };
+
   return (
-    <UserContext.Provider value={{ userData, setUserData }}>
+    <UserContext.Provider
+      value={{ userData, setUserData, updateUserProfilePhoto }}
+    >
       {children}
     </UserContext.Provider>
   );

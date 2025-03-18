@@ -21,10 +21,15 @@ const Login = () => {
           password,
         }
       );
+
       alert(response.data.message);
 
+      const user = response.data.user;
+
+      const updatedUserData = { ...user, photoURL: user.photoURL || null };
+
       localStorage.setItem("token", response.data.token);
-      localStorage.setItem("userData", JSON.stringify(response.data.user));
+      localStorage.setItem("userData", JSON.stringify(updatedUserData));
 
       setUserData(response.data.user);
 

@@ -26,6 +26,10 @@ const UserSchema = new mongoose.Schema({
     enum: ["pending", "active", "inactive"],
     default: "pending",
   },
+  profilePhoto: {
+    type: String,
+    default: "/frontend/public/assets/user-circle.svg",
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -36,7 +40,6 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
-// Hash the password before saving
 UserSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     const salt = await bcrypt.genSalt(10);

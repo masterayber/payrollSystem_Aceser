@@ -64,3 +64,5 @@ server.listen(PORT, () => {
 app.get("/api/protected", authMiddleware, (req, res) => {
   res.json({ message: "You have access to this protected route" });
 });
+
+app.use("/uploads", express.static("uploads"));
