@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 const http = require("http");
 const mongoose = require("mongoose");
@@ -30,14 +31,8 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 
 io.on("connection", (socket) => {
-  console.log("A user connected");
-
   socket.on("approveUser", (data) => {
     io.emit("userApproved", data);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
   });
 });
 
@@ -65,4 +60,4 @@ app.get("/api/protected", authMiddleware, (req, res) => {
   res.json({ message: "You have access to this protected route" });
 });
 
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));

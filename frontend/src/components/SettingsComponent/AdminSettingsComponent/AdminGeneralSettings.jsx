@@ -3,15 +3,18 @@ import { IconCamera } from "@tabler/icons-react";
 import { UserContext } from "../../../context/UserContext";
 import ProfilePhoto from "../../ProfilePhoto/ProfilePhoto";
 import ProfilePhotoCropper from "../../Modals/ProfilePhotoCropper/ProfilePhotoCropper";
+import ConfirmModal from "../../Modals/Confirm/ConfirmModal";
 import "../AdminSettingsComponent.css";
 
 const AdminGeneralSettings = () => {
   const [showPhotoChange, setShowPhotoChange] = useState(false);
-  const { userData, setUserData } = useContext(UserContext);
+  const { userData, setUserData, updateUserProfilePhoto } =
+    useContext(UserContext);
   const changePhotoRef = useRef(null);
   const fileInputRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [showCropper, setShowCropper] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const fullName = `${userData?.firstName} ${userData?.lastName}`;
 
@@ -31,6 +34,7 @@ const AdminGeneralSettings = () => {
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
+
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
@@ -42,14 +46,33 @@ const AdminGeneralSettings = () => {
   };
 
   const handleUploadClick = () => {
+    fileInputRef.current.value = "";
     fileInputRef.current.click();
   };
 
-  const handleRemovePhoto = () => {
-    setUserData((prevData) => ({
-      ...prevData,
-      photoURL: null,
-    }));
+  const handleRemoveClick = () => {
+    setShowConfirmModal(true);
+  };
+
+  const handleRemovePhoto = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/auth/remove-profile-photo/${userData._id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (response.ok) {
+        updateUserProfilePhoto(null);
+      } else {
+        console.error("Failed to remove profile photo");
+      }
+    } catch (error) {
+      console.error("Error removing profile photo", error);
+    }
+
+    setShowConfirmModal(false);
   };
 
   const handleCropComplete = (croppedImage) => {
@@ -81,7 +104,7 @@ const AdminGeneralSettings = () => {
                 Set Profile Photo
               </button>
               <hr />
-              <button className="dropdown-item" onClick={handleRemovePhoto}>
+              <button className="dropdown-item" onClick={handleRemoveClick}>
                 Remove
               </button>
             </div>
@@ -107,6 +130,17 @@ const AdminGeneralSettings = () => {
           userId={userData?._id}
           onClose={() => setShowCropper(false)}
           onCropComplete={handleCropComplete}
+        />
+      )}
+
+      {showConfirmModal && (
+        <ConfirmModal
+          title="Remove Profile Photo"
+          message="Are you sure you want to remove your profile photo?"
+          onClose={() => setShowConfirmModal(false)}
+          onConfirm={handleRemovePhoto}
+          confirmText="Yes"
+          cancelText="No"
         />
       )}
 

@@ -7,7 +7,9 @@ const ProfilePhoto = ({ size = "50px" }) => {
   const { userData } = useContext(UserContext);
   const backendUrl = "http://localhost:5000";
 
-  const profilePhoto = userData?.photoURL
+  const profilePhoto = userData?.photoURL?.startsWith("http")
+    ? userData.photoURL
+    : userData?.photoURL
     ? `${backendUrl}${userData.photoURL}`
     : null;
 
@@ -15,7 +17,13 @@ const ProfilePhoto = ({ size = "50px" }) => {
     <div className="profile-icon">
       {profilePhoto ? (
         <img
-          src={profilePhoto}
+          src={
+            profilePhoto ? (
+              profilePhoto
+            ) : (
+              <IconUserCircle strokeWidth={1.5} width={size} height={size} />
+            )
+          }
           alt="Profile"
           className="rounded-full"
           style={{ width: size, height: size, objectFit: "cover" }}

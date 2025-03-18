@@ -63,7 +63,6 @@ const ProfilePhotoCropper = ({ imageSrc, userId, onClose, onCropComplete }) => {
       if (response.ok) {
         const data = await response.json();
         const newPhotoURL = `http://localhost:5000${data.photoURL}`;
-
         updateUserProfilePhoto(newPhotoURL);
         onCropComplete(newPhotoURL);
       } else {
