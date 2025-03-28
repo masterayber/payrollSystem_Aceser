@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../../styles/AdminCSS/AdminSettings.css";
-import GeneralSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminGeneralSettings";
+import AdminGeneralSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminGeneralSettings";
 
 const settingsOptions = [
   { name: "General", key: "general" },
@@ -15,7 +15,7 @@ const settingsOptions = [
 ];
 
 const settingsContent = {
-  general: <GeneralSettings />,
+  general: <AdminGeneralSettings />,
   // manage: <ManageSettings />,
   // accessibility: <AccessibilitySettings />,
   // employees: <EmployeesSettings />,
@@ -46,9 +46,7 @@ const AdminSettings = () => {
           ))}
         </div>
 
-        <div className="settings-content">
-          {settingsContent[selectedOption]}
-        </div>
+        {settingsContent[selectedOption]}
       </div>
     </div>
   );

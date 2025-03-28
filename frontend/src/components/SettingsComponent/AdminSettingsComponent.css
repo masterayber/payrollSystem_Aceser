@@ -29,7 +29,8 @@
 }
 
 .setting-tab {
-  margin-top: 10px;
+  width: 100%;
+  margin-top: 20px;
 }
 
 .setting-tab-title p {
@@ -76,4 +77,34 @@
   top: 60px;
   left: 97px;
   gap: 3px;
+}
+
+.setting-tab-container {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+}
+
+.settings-button-option-container {
+  display: flex;
+  margin-top: 20px;
+  gap: 10px;
+  justify-content: right;
+}
+
+.settings-button-option {
+  padding: 15px;
+}
+
+.settings-button-option:disabled,
+.settings-button-option.disabled {
+  background-color: var(--gray-200);
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+.setting-tab-flex {
+  display: flex;
+  gap: 20px;
+  width: 100%;
 }

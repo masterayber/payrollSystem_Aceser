@@ -26,6 +26,8 @@ const Login = () => {
 
       const user = response.data.user;
 
+      console.log("user:", user);
+
       const updatedUserData = { ...user, photoURL: user.photoURL || null };
 
       localStorage.setItem("token", response.data.token);
@@ -33,7 +35,9 @@ const Login = () => {
 
       setUserData(response.data.user);
 
-      if (response.data.user.role === "admin") {
+      console.log("User Role:", response.data.user.role);
+
+      if (response.data.user.role === "Admin") {
         navigate("/admin-dashboard");
       } else {
         navigate("/dashboard");

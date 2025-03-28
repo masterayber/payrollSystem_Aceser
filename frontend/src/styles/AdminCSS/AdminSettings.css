@@ -2,8 +2,8 @@
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
-  justify-content: space-between;
   overflow: hidden;
+  height: 100%;
   width: 100%;
   padding: 15px;
   border: 1px solid var(--gray-200);
@@ -38,4 +38,8 @@
   height: 2px;
   background-color: var(--main-color-1);
   transition: width 0.3s ease-in-out;
+}
+
+.settings-content {
+  width: 100%;
 }

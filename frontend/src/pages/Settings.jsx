@@ -1,7 +1,40 @@
-import React from "react";
+import React, { useState } from "react";
+import GeneralSettings from "../components/SettingsComponent/UserSettingsComponent/GeneralSettings";
 
-const Settings = () => {
-  return <div>Settings</div>;
+const settingsOptions = [
+  { name: "General", key: "general" },
+  { name: "Manage", key: "manage" },
+  { name: "Accessibility", key: "accessibility" },
+];
+
+const settingsContent = {
+  general: <GeneralSettings />,
 };
 
-export default Settings;
+const AdminSettings = () => {
+  const [selectedOption, setSelectedOption] = useState("general");
+
+  return (
+    <div className="main-content">
+      <div className="setting-container">
+        <div className="setting-options">
+          {settingsOptions.map((option) => (
+            <button
+              key={option.key}
+              className={`setting-button ${
+                selectedOption === option.key ? "active" : ""
+              }`}
+              onClick={() => setSelectedOption(option.key)}
+            >
+              <p>{option.name}</p>
+            </button>
+          ))}
+        </div>
+
+        {settingsContent[selectedOption]}
+      </div>
+    </div>
+  );
+};
+
+export default AdminSettings;

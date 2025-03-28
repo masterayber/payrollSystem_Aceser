@@ -31,178 +31,181 @@ import "./index.css";
 import PrivateRoute from "./components/PrivateRoute";
 import { UserProvider } from "./context/UserContext";
 import { EmployeeProvider } from "./context/EmployeeContext";
+import { SettingsProvider } from "./context/SettingsContext";
 import MainLayout from "./layouts/MainLayout";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <UserProvider>
       <EmployeeProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Login />} />
-            <Route path="signup" element={<Signup />} />
-            <Route path="forgot-password" element={<ForgotPassword />} />
-            <Route path="otp" element={<OTP />} />
-            <Route path="reset-password" element={<ResetPassword />} />
-            <Route path="update-info" element={<AdditionalInfo />} />
-            <Route path="created-account/:id" element={<CreatedAccount />} />
+        <SettingsProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Login />} />
+              <Route path="signup" element={<Signup />} />
+              <Route path="forgot-password" element={<ForgotPassword />} />
+              <Route path="otp" element={<OTP />} />
+              <Route path="reset-password" element={<ResetPassword />} />
+              <Route path="update-info" element={<AdditionalInfo />} />
+              <Route path="created-account/:id" element={<CreatedAccount />} />
 
-            {/* Admin Routes */}
-            <Route
-              path="admin-dashboard"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <MainLayout>
-                    <AdminDashboard />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="employees"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <MainLayout>
-                    <Employees />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="deductions"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <MainLayout>
-                    <Deductions />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="admin-payslips"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <MainLayout>
-                    <AdminPayslips />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="admin-attendance"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <MainLayout>
-                    <AdminAttendance />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="admin-calendar"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <MainLayout>
-                    <AdminCalendar />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="reports"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <MainLayout>
-                    <Reports />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="admin-settings"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <MainLayout>
-                    <AdminSettings />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
+              {/* Admin Routes */}
+              <Route
+                path="admin-dashboard"
+                element={
+                  <PrivateRoute allowedRoles={["Admin"]}>
+                    <MainLayout>
+                      <AdminDashboard />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="employees"
+                element={
+                  <PrivateRoute allowedRoles={["Admin"]}>
+                    <MainLayout>
+                      <Employees />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="deductions"
+                element={
+                  <PrivateRoute allowedRoles={["Admin"]}>
+                    <MainLayout>
+                      <Deductions />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="admin-payslips"
+                element={
+                  <PrivateRoute allowedRoles={["Admin"]}>
+                    <MainLayout>
+                      <AdminPayslips />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="admin-attendance"
+                element={
+                  <PrivateRoute allowedRoles={["Admin"]}>
+                    <MainLayout>
+                      <AdminAttendance />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="admin-calendar"
+                element={
+                  <PrivateRoute allowedRoles={["Admin"]}>
+                    <MainLayout>
+                      <AdminCalendar />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="reports"
+                element={
+                  <PrivateRoute allowedRoles={["Admin"]}>
+                    <MainLayout>
+                      <Reports />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="admin-settings"
+                element={
+                  <PrivateRoute allowedRoles={["Admin"]}>
+                    <MainLayout>
+                      <AdminSettings />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Protected Routes with Employee Layout */}
-            <Route
-              path="dashboard"
-              element={
-                <PrivateRoute allowedRoles={["employee"]}>
-                  <MainLayout>
-                    <Dashboard />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="payroll"
-              element={
-                <PrivateRoute allowedRoles={["employee"]}>
-                  <MainLayout>
-                    <Payroll />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="payslips"
-              element={
-                <PrivateRoute allowedRoles={["employee"]}>
-                  <MainLayout>
-                    <Payslips />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="attendance"
-              element={
-                <PrivateRoute allowedRoles={["employee"]}>
-                  <MainLayout>
-                    <Attendance />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="calendar"
-              element={
-                <PrivateRoute allowedRoles={["employee"]}>
-                  <MainLayout>
-                    <Calendar />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="filing"
-              element={
-                <PrivateRoute allowedRoles={["employee"]}>
-                  <MainLayout>
-                    <Filing />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="settings"
-              element={
-                <PrivateRoute allowedRoles={["employee"]}>
-                  <MainLayout>
-                    <Settings />
-                  </MainLayout>
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-        </BrowserRouter>
+              {/* Protected Routes with Employee Layout */}
+              <Route
+                path="dashboard"
+                element={
+                  <PrivateRoute allowedRoles={["Employee"]}>
+                    <MainLayout>
+                      <Dashboard />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="payroll"
+                element={
+                  <PrivateRoute allowedRoles={["Employee"]}>
+                    <MainLayout>
+                      <Payroll />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="payslips"
+                element={
+                  <PrivateRoute allowedRoles={["Employee"]}>
+                    <MainLayout>
+                      <Payslips />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="attendance"
+                element={
+                  <PrivateRoute allowedRoles={["Employee"]}>
+                    <MainLayout>
+                      <Attendance />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="calendar"
+                element={
+                  <PrivateRoute allowedRoles={["Employee"]}>
+                    <MainLayout>
+                      <Calendar />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="filing"
+                element={
+                  <PrivateRoute allowedRoles={["Employee"]}>
+                    <MainLayout>
+                      <Filing />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <PrivateRoute allowedRoles={["Employee"]}>
+                    <MainLayout>
+                      <Settings />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </BrowserRouter>
+        </SettingsProvider>
       </EmployeeProvider>
     </UserProvider>
   </React.StrictMode>

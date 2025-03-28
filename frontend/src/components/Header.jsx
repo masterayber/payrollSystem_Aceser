@@ -107,7 +107,7 @@ function Header({ role }) {
     },
   ];
 
-  const menuTitles = role === "admin" ? adminMenuTitles : userMenuTitles;
+  const menuTitles = role === "Admin" ? adminMenuTitles : userMenuTitles;
 
   return (
     <header className="header">

@@ -42,7 +42,12 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("MongoDB connected successfully"))
+  .then(() =>
+    console.log(
+      "MongoDB connected successfully",
+      mongoose.connection.readyState
+    )
+  )
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Routes

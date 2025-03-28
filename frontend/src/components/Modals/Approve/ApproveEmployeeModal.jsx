@@ -30,13 +30,13 @@ const ApproveEmployeeModal = ({ onClose, onUpdateEmployee }) => {
   const handleApprove = async (userId) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/auth/users/${userId}`,
+        `http://localhost:5000/api/auth/auths/${userId}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ status: "active" }),
+          body: JSON.stringify({ status: "Active" }),
         }
       );
 

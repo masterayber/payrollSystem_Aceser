@@ -4,12 +4,14 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const path = require("path");
 const fs = require("fs");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const Dropdown = require("../models/dropdownOptions");
-const User = require("../models/user");
+const User = require("../models/authUsers");
 const Employee = require("../models/employees");
+const Settings = require("../models/settings");
+
 const sendEmail = require("../utils/nodemailer");
-const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 const JWT_SECRET = "your_jwt_secret_key_here";
@@ -38,6 +40,7 @@ router.post("/signup", async (req, res) => {
   const { firstName, lastName, email, username, password, role, status } =
     req.body;
 
+  // Check if email is already registered to the database
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -45,11 +48,11 @@ router.post("/signup", async (req, res) => {
     }
 
     const user = new User({
-      email,
       username,
       password,
-      role,
-      status,
+      email,
+      role: "Employee",
+      status: "Pending",
       createdAt: new Date(),
     });
     await user.save();
@@ -58,7 +61,7 @@ router.post("/signup", async (req, res) => {
       firstName,
       lastName,
       email,
-      role,
+      role: "Employee",
       createdAt: new Date(),
     });
     await newEmployee.save();
@@ -73,43 +76,47 @@ router.post("/signup", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
+
     const user = await User.findOne({ username });
 
     if (!user) {
       return res.status(401).json({ message: "Invalid Username" });
     }
 
-    if (user.status !== "active") {
+    if (user.status !== "Active") {
       return res.status(403).json({ message: "Account is pending approval" });
     }
 
+    // Check if the password matches the user input
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid username or password" });
     }
 
+    // Generate JWT token
     const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, {
       expiresIn: "1h",
     });
 
     const employee = await Employee.findOne({ email: user.email });
+    const settings = await Settings.findOne({ userId: user._id });
 
     const userObj = user.toObject();
     delete userObj.password;
+
     const employeeObj = employee ? employee.toObject() : {};
+    const settingsObj = settings ? settings.toObject() : {};
 
     const combinedData = {
       ...userObj,
-      firstName: employeeObj.firstName,
-      lastName: employeeObj.lastName,
-      gender: employeeObj.gender,
-      role: user.role,
+      ...employeeObj,
+      settings: settingsObj,
       photoURL: user.profilePhoto || null,
     };
 
     res
       .status(200)
-      .json({ token, user: combinedData, message: "Login successful" });
+      .json({ token, user: combinedData, message: "Login Successful" });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
@@ -209,7 +216,6 @@ router.post("/reset-password", async (req, res) => {
 router.post("/update-info", async (req, res) => {
   const {
     email,
-    address,
     birthday,
     contactNumber,
     gender,
@@ -217,6 +223,12 @@ router.post("/update-info", async (req, res) => {
     contactLastName,
     contactEmergency,
     contactAddress,
+    country,
+    region,
+    city,
+    barangay,
+    street,
+    postalCode,
   } = req.body;
 
   try {
@@ -225,7 +237,6 @@ router.post("/update-info", async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    employee.address = address;
     employee.birthday = birthday;
     employee.contactNumber = contactNumber;
     employee.gender = gender;
@@ -238,16 +249,39 @@ router.post("/update-info", async (req, res) => {
 
     const user = await User.findOne({ email });
     if (user) {
-      if (!user.profilePhoto || user.profilePhoto === "/user-circle.svg") {
-        if (user.role === "admin") {
-          user.profilePhoto = "/user-circle.svg";
-        } else if (gender === "male") {
-          user.profilePhoto = "/male.svg";
-        } else if (gender === "female") {
-          user.profilePhoto = "female.svg";
-        }
-        await user.save();
+      if (gender === "Male") {
+        user.profilePhoto = "/assets/genderIcons/male.svg";
+      } else if (gender === "Female") {
+        user.profilePhoto = "/assets/genderIcons/female.svg";
+      } else {
+        user.profilePhoto = "/assets/user-circle.svg";
       }
+      await user.save();
+
+      let settings = await Settings.findOne({ userId: user._id });
+
+      if (!settings) {
+        settings = new settings({
+          userId: user._id,
+          general: {
+            country,
+            region,
+            city,
+            barangay,
+            street,
+            postalCode,
+          },
+        });
+      } else {
+        settings.general.country = country;
+        settings.general.region = region;
+        settings.general.city = city;
+        settings.general.barangay = barangay;
+        settings.general.street = street;
+        settings.general.postalCode = postalCode;
+      }
+
+      await settings.save();
     }
 
     res.status(200).json({
@@ -293,17 +327,17 @@ router.get("/employees", async (req, res) => {
     const employees = await Employee.aggregate([
       {
         $lookup: {
-          from: "users", // Name of the 'users' collection
-          localField: "email", // Field in employees
-          foreignField: "email", // Field in users
+          from: "auths",
+          localField: "email",
+          foreignField: "email",
           as: "userDetails",
         },
       },
-      { $unwind: "$userDetails" }, // Convert array to object
+      { $unwind: "$userDetails" },
       {
         $match: {
-          "userDetails.status": "active", // Filter active users
-          "userDetails.role": "employee", // Ensure role is employee
+          "userDetails.status": "Active",
+          "userDetails.role": "Employee",
         },
       },
       {
@@ -330,13 +364,13 @@ router.get("/employees", async (req, res) => {
   }
 });
 
-router.put("/users/:id", async (req, res) => {
+router.put("/auths/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
     const result = await User.findByIdAndUpdate(
       id,
-      { status: "active" },
+      { status: "Active" },
       { new: true }
     );
 
@@ -352,7 +386,7 @@ router.put("/users/:id", async (req, res) => {
 
 router.get("/pending-users", async (req, res) => {
   try {
-    const pendingUsers = await User.find({ status: "pending" });
+    const pendingUsers = await User.find({ status: "Pending" });
 
     const enrichedUsers = await Promise.all(
       pendingUsers.map(async (user) => {
@@ -378,7 +412,7 @@ router.put("/approve-user/:id", async (req, res) => {
     const userId = req.params.id;
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { status: "active" },
+      { status: "Active" },
       { new: true }
     );
 
@@ -410,7 +444,7 @@ router.post("/add-employee", async (req, res) => {
       username,
       password,
       role,
-      status: "active",
+      status: "Active",
     });
     await user.save();
 
@@ -462,7 +496,7 @@ router.post("/:category", async (req, res) => {
 });
 
 router.put(
-  "/users/:id/profile-photo",
+  "/auths/:id/profile-photo",
   upload.single("profilePhoto"),
   async (req, res) => {
     try {
@@ -472,6 +506,14 @@ router.put(
 
       if (!req.file)
         return res.status(400).json({ message: "No file uploaded" });
+
+      if (user.profilePhoto) {
+        const oldFilePath = path.join(__dirname, "..", user.profilePhoto);
+
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      }
 
       user.profilePhoto = `/uploads/${req.file.filename}`;
       await user.save();

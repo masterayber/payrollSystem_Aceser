@@ -14,6 +14,7 @@ export const UserProvider = ({ children }) => {
 
   const updateUserProfilePhoto = (newPhotoURL) => {
     setUserData((prev) => {
+      if (!prev) return null;
       const updatedUser = { ...prev, photoURL: newPhotoURL };
       localStorage.setItem("userData", JSON.stringify(updatedUser));
       return updatedUser;

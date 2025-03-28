@@ -5,7 +5,6 @@ import "../styles/AdditionalInfo.css";
 
 const AdditionalInfo = () => {
   const [formData, setFormData] = useState({
-    address: "",
     birthday: "",
     contactNumber: "",
     gender: "",
@@ -57,24 +56,6 @@ const AdditionalInfo = () => {
       <form className="additional-form" onSubmit={handleSubmit}>
         <h2>Additional Information</h2>
         <p>Please enter your additional information to continue.</p>
-
-        <div className="input-container-additional">
-          <div className="label-container">
-            <label>
-              Address <span className="required">*</span>
-            </label>
-          </div>
-          <div className="input-group-additional">
-            <input
-              type="text"
-              name="address"
-              placeholder="Enter your Address"
-              value={formData.address}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
 
         <div className="input-row">
           <div className="input-container-additional">

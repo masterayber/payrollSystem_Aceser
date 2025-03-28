@@ -16,12 +16,12 @@ const employeeSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["admin", "employee"],
-    default: "employee",
+    enum: ["Admin", "Employee"],
   },
-  address: {
+  type: {
     type: String,
-    default: "",
+    enum: ["Probationary", "Full-Time", "Project-Based"],
+    default: "Probationary",
   },
   birthday: {
     type: Date,
@@ -32,6 +32,34 @@ const employeeSchema = new mongoose.Schema({
     default: "",
   },
   gender: {
+    type: String,
+    default: "",
+  },
+  country: {
+    type: String,
+    default: "",
+  },
+  region: {
+    type: String,
+    default: "",
+  },
+  province: {
+    type: String,
+    default: "",
+  },
+  city: {
+    type: String,
+    default: "",
+  },
+  barangay: {
+    type: String,
+    default: "",
+  },
+  street: {
+    type: String,
+    default: "",
+  },
+  postalCode: {
     type: String,
     default: "",
   },
@@ -57,4 +85,4 @@ const employeeSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("Employee", employeeSchema);
+module.exports = mongoose.model("Employee", employeeSchema, "employees");

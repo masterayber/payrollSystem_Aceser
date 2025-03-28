@@ -97,7 +97,7 @@ function Sidebar({ role }) {
     },
   ];
 
-  const menuItems = role === "admin" ? adminMenuItems : userMenuItems;
+  const menuItems = role === "Admin" ? adminMenuItems : userMenuItems;
 
   return (
     <div className="sidebar">
