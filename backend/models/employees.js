@@ -20,8 +20,7 @@ const employeeSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["Probationary", "Full-Time", "Project-Based"],
-    default: "Probationary",
+    enum: ["Probationary", "Regular", "Project-Based"],
   },
   birthday: {
     type: Date,

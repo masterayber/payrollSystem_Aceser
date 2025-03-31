@@ -47,24 +47,32 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ message: "Email is already registered" });
     }
 
+    const defaultStatus = role === "Admin" ? "Regular" : "Probationary";
+
     const user = new User({
       username,
       password,
       email,
-      role: "Employee",
-      status: "Pending",
+      role,
+      status,
       createdAt: new Date(),
     });
     await user.save();
 
-    const newEmployee = new Employee({
+    const employee = new Employee({
       firstName,
       lastName,
       email,
-      role: "Employee",
+      role: user.role,
+      type: defaultStatus,
       createdAt: new Date(),
     });
-    await newEmployee.save();
+    await employee.save();
+
+    const settings = new Settings({
+      userId: user._id,
+    });
+    await settings.save();
 
     res.status(200).json({ message: "User created successfully", email });
   } catch (err) {

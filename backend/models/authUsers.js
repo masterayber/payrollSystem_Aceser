@@ -19,10 +19,12 @@ const AuthSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ["Admin", "Employee"],
+    default: "Employee",
   },
   status: {
     type: String,
     enum: ["Pending", "Active", "Inactive"],
+    default: "Pending",
   },
   profilePhoto: {
     type: String,
