@@ -231,12 +231,6 @@ router.post("/update-info", async (req, res) => {
     contactLastName,
     contactEmergency,
     contactAddress,
-    country,
-    region,
-    city,
-    barangay,
-    street,
-    postalCode,
   } = req.body;
 
   try {
@@ -248,10 +242,10 @@ router.post("/update-info", async (req, res) => {
     employee.birthday = birthday;
     employee.contactNumber = contactNumber;
     employee.gender = gender;
-    employee.contactFirstName = contactFirstName;
-    employee.contactLastName = contactLastName;
-    employee.contactEmergency = contactEmergency;
-    employee.contactAddress = contactAddress;
+    employee.emergencyDetails.contactFirstName = contactFirstName;
+    employee.emergencyDetails.contactLastName = contactLastName;
+    employee.emergencyDetails.contactEmergency = contactEmergency;
+    employee.emergencyDetails.contactAddress = contactAddress;
 
     await employee.save();
 
@@ -265,31 +259,6 @@ router.post("/update-info", async (req, res) => {
         user.profilePhoto = "/assets/user-circle.svg";
       }
       await user.save();
-
-      let settings = await Settings.findOne({ userId: user._id });
-
-      if (!settings) {
-        settings = new settings({
-          userId: user._id,
-          general: {
-            country,
-            region,
-            city,
-            barangay,
-            street,
-            postalCode,
-          },
-        });
-      } else {
-        settings.general.country = country;
-        settings.general.region = region;
-        settings.general.city = city;
-        settings.general.barangay = barangay;
-        settings.general.street = street;
-        settings.general.postalCode = postalCode;
-      }
-
-      await settings.save();
     }
 
     res.status(200).json({

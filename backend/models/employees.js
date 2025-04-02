@@ -34,49 +34,53 @@ const employeeSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
-  country: {
-    type: String,
-    default: "",
+  address: {
+    country: {
+      type: String,
+      default: "",
+    },
+    region: {
+      type: String,
+      default: "",
+    },
+    province: {
+      type: String,
+      default: "",
+    },
+    city: {
+      type: String,
+      default: "",
+    },
+    barangay: {
+      type: String,
+      default: "",
+    },
+    street: {
+      type: String,
+      default: "",
+    },
+    postalCode: {
+      type: String,
+      default: "",
+    },
   },
-  region: {
-    type: String,
-    default: "",
-  },
-  province: {
-    type: String,
-    default: "",
-  },
-  city: {
-    type: String,
-    default: "",
-  },
-  barangay: {
-    type: String,
-    default: "",
-  },
-  street: {
-    type: String,
-    default: "",
-  },
-  postalCode: {
-    type: String,
-    default: "",
-  },
-  contactFirstName: {
-    type: String,
-    default: "",
-  },
-  contactLastName: {
-    type: String,
-    default: "",
-  },
-  contactEmergency: {
-    type: String,
-    default: "",
-  },
-  contactAddress: {
-    type: String,
-    default: "",
+  emergencyDetails: {
+    contactFirstName: {
+      type: String,
+      default: "",
+    },
+    contactLastName: {
+      type: String,
+      default: "",
+    },
+    contactEmergency: {
+      type: String,
+      default: "",
+    },
+    contactAddress: {
+      type: String,
+      default: "",
+    },
   },
   createdAt: {
     type: Date,

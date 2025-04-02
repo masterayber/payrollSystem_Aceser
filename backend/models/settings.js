@@ -10,16 +10,6 @@ const settingsSchema = new mongoose.Schema({
     companyName: { type: String, default: "" },
     companyLogo: { type: String, default: "" },
     companyContact: { type: String, default: "" },
-
-    address: {
-      country: { type: String, default: "" },
-      region: { type: String, default: "" },
-      city: { type: String, default: "" },
-      barangay: { type: String, default: "" },
-      street: { type: String, default: "" },
-      postalCode: { type: String, default: "" },
-    },
-
     dateFormat: { type: String, default: "MM-DD-YYYY" },
     timeFormat: { type: String, default: "12 Hour" },
     createdAt: { type: Date, default: Date.now },
