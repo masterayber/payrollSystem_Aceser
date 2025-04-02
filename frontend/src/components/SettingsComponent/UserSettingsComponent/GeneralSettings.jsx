@@ -244,6 +244,48 @@ const GeneralSettings = () => {
           <div className="setting-tab-container">
             <div className="input-container">
               <div className="label-container">
+                <label>Birthday</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="date"
+                  name="birthday"
+                  placeholder="Contact Number"
+                  value={
+                    userData?.birthday ? userData.birthday.split("T")[0] : ""
+                  }
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Gender</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="gender"
+                  placeholder="Gender"
+                  value={userData?.gender}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="setting-tab">
+        <div className="setting-tab-title">
+          <p>Contact Details</p>
+        </div>
+        <div className="setting-tab-flex">
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
                 <label>Contact Number</label>
               </div>
               <div className="input-group-signup">
@@ -260,17 +302,254 @@ const GeneralSettings = () => {
           <div className="setting-tab-container">
             <div className="input-container">
               <div className="label-container">
-                <label>Last Name</label>
+                <label>Country</label>
               </div>
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="lastName"
-                  placeholder="Last Name"
-                  value={userData?.lastName}
+                  name="country"
+                  placeholder="Country"
+                  value={userData?.address?.country || ""}
                   onChange={handleInputChange}
                 />
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="setting-tab-flex">
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Region</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="region"
+                  placeholder="Region"
+                  value={userData?.address?.region || ""}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Province</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="province"
+                  placeholder="Province"
+                  value={userData?.address?.province || ""}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="setting-tab-flex">
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>City</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="city"
+                  placeholder="City"
+                  value={userData?.address?.city || ""}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Barangay</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="barangay"
+                  placeholder="Barangay"
+                  value={userData?.address?.barangay || ""}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="setting-tab-flex">
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Street</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="street"
+                  placeholder="Street"
+                  value={userData?.address?.street || ""}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Postal Code</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="postalCode"
+                  placeholder="Postal Code"
+                  value={userData?.address?.postalCode || ""}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="setting-tab">
+        <div className="setting-tab-title">
+          <p>Company Information</p>
+        </div>
+        <div className="setting-tab-container">
+          <div className="input-container">
+            <div className="label-container">
+              <label>Company Name</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="companyName"
+                placeholder="Company Name"
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="setting-tab-flex">
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Company Logo</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="file"
+                  accept="image/*"
+                  name="companyLogo"
+                  placeholder="Choose a file"
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Company Contact</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="companyContact"
+                  placeholder="Company Contact"
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="setting-tab">
+        <div className="setting-tab-title">
+          <p>Emergency Contact</p>
+        </div>
+        <div className="setting-tab-flex">
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Contact First Name</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="contactFirstName"
+                  placeholder="Contact First Name"
+                  value={userData?.emergencyDetails?.contactFirstName}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Contact Last Name</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="contactLastName"
+                  placeholder="Contact Last Name"
+                  value={userData?.emergencyDetails?.contactLastName}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="setting-tab-container">
+          <div className="input-container">
+            <div className="label-container">
+              <label>Contact Emergency Number</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="contactEmergency"
+                placeholder="Contact Emergency Number"
+                value={userData?.emergencyDetails?.contactEmergency}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="setting-tab-container">
+          <div className="input-container">
+            <div className="label-container">
+              <label>Contact Address</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="contactAddress"
+                placeholder="Contact Address"
+                value={userData?.emergencyDetails?.contactAddress}
+                onChange={handleInputChange}
+              />
             </div>
           </div>
         </div>
