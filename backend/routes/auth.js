@@ -341,6 +341,27 @@ router.get("/employees", async (req, res) => {
   }
 });
 
+router.put("/employees/:id", async (req, res) => {
+  try {
+    const updatedUser = await Employee.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+      }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 router.put("/auths/:id", async (req, res) => {
   const { id } = req.params;
 

@@ -1,8 +1,10 @@
-.settings-profile {
+.settings-profile,
+.profile-section {
   display: flex;
   flex-direction: row;
   gap: 20px;
   align-items: center;
+  justify-content: space-between;
 }
 
 .profile-details {
@@ -39,7 +41,7 @@
   font-size: 20px;
 }
 
-.profile-section {
+.profile-picture {
   position: relative;
   width: 100px;
   height: 100px;
@@ -94,6 +96,11 @@
 
 .settings-button-option {
   padding: 15px;
+}
+
+.edit-profile {
+  padding: 10px;
+  border-radius: 10px;
 }
 
 .settings-button-option:disabled,

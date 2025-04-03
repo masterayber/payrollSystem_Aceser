@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { IconCamera } from "@tabler/icons-react";
+import { IconCamera, IconCancel, IconEdit } from "@tabler/icons-react";
 import { UserContext } from "../../../context/UserContext";
 import ProfilePhoto from "../../ProfilePhoto/ProfilePhoto";
 import ProfilePhotoCropper from "../../Modals/ProfilePhotoCropper/ProfilePhotoCropper";
 import ConfirmModal from "../../Modals/Confirm/ConfirmModal";
+import ConfirmedMessageModal from "../../Modals/Confirmed/ConfirmedMessageModal";
 
 const GeneralSettings = () => {
   const { userData, setUserData, updateUserProfilePhoto } =
@@ -13,43 +14,55 @@ const GeneralSettings = () => {
   const fileInputRef = useRef(null);
 
   const [showPhotoChange, setShowPhotoChange] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isConfirmedMessageModalOpen, setIsConfirmedMessageModalOpen] =
+    useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [showCropper, setShowCropper] = useState(false);
-
-  const [settings, setSettings] = useState({
-    firstName: "",
-    lastName: "",
+  const [isEditing, setIsEditing] = useState(false);
+  const [isChanged, setIsChanged] = useState(false);
+  const [tempData, setTempData] = useState({
+    emergencyDetails: {
+      contactFirstName: "",
+      contactLastName: "",
+      contactEmergency: "",
+      contactAddress: "",
+    },
+    ...userData,
   });
-
-  useEffect(() => {
-    const fetchUserSettings = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:5000/api/auth/${userData._id}`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setSettings(data);
-        } else {
-          console.error("Failed to fetch user settings");
-        }
-      } catch (error) {
-        console.error("Error fetching user settings", error);
-      }
-    };
-
-    if (userData?._id) {
-      fetchUserSettings();
-    }
-  }, [userData]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setSettings((prevSettings) => ({
-      ...prevSettings,
-      [name]: value,
-    }));
+
+    setTempData((prevData) => {
+      if (
+        name in prevData.emergencyDetails &&
+        name in prevData.emergencyDetails
+      ) {
+        return {
+          ...prevData,
+          emergencyDetails: {
+            ...prevData.emergencyDetails,
+            [name]: value || "",
+          },
+        };
+      } else if (name in prevData.address && name in prevData.address) {
+        return {
+          ...prevData,
+          address: {
+            ...prevData.address,
+            [name]: value || "",
+          },
+        };
+      } else {
+        return {
+          ...prevData,
+          [name]: value || "",
+        };
+      }
+    });
+
+    setIsChanged(true);
   };
 
   const togglePhotoChange = (event) => {
@@ -63,7 +76,7 @@ const GeneralSettings = () => {
   };
 
   const handleRemoveClick = () => {
-    setShowConfirmModal(true);
+    setIsConfirmModalOpen(true);
   };
 
   const handleFileChange = (event) => {
@@ -105,7 +118,7 @@ const GeneralSettings = () => {
       console.error("Error removing profile photo", error);
     }
 
-    setShowConfirmModal(false);
+    setIsConfirmModalOpen(false);
   };
 
   const handleClickOutside = (event) => {
@@ -124,46 +137,106 @@ const GeneralSettings = () => {
     };
   });
 
+  const handleCancel = () => {
+    setTempData(userData);
+    setIsChanged(false);
+    setIsEditing(false);
+  };
+
+  const toggleEdit = () => {
+    if (isEditing) {
+      setTempData(userData);
+      setIsChanged(false);
+    }
+    setIsEditing(!isEditing);
+  };
+
+  const handleSaveClick = () => {
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/auth/employees/${userData._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(tempData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update user data");
+      }
+
+      const updatedUser = await response.json();
+      setUserData(updatedUser);
+      localStorage.setItem("userData", JSON.stringify(updatedUser));
+
+      setIsEditing(false);
+      setIsChanged(false);
+      setIsConfirmModalOpen(false);
+
+      setTimeout(() => setIsConfirmedMessageModalOpen(true), 300);
+    } catch (error) {
+      console.error("Error editing profile:", error);
+    }
+  };
+
   const fullName = `${userData?.firstName} ${userData?.lastName}`;
+  const isAdmin = userData?.role === "Admin";
 
   return (
     <div className="settings-content">
       <div className="settings-profile">
         <div className="profile-section">
-          <ProfilePhoto size="100px" />
-          <div className="camera-icon" onClick={togglePhotoChange}>
-            <IconCamera strokeWidth={2} />
+          <div className="profile-picture">
+            <ProfilePhoto size="100px" />
+            <div className="camera-icon" onClick={togglePhotoChange}>
+              <IconCamera strokeWidth={2} />
+            </div>
+
+            {showPhotoChange && (
+              <div className="change-photo" ref={changePhotoRef}>
+                <button className="dropdown-item" onClick={handleUploadClick}>
+                  Set Profile Photo
+                </button>
+                {userData?.photoURL && (
+                  <>
+                    <hr />
+                    <button
+                      className="dropdown-item"
+                      onClick={handleRemoveClick}
+                    >
+                      Remove
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              accept="image*/"
+              onChange={handleFileChange}
+            />
           </div>
 
-          {showPhotoChange && (
-            <div className="change-photo" ref={changePhotoRef}>
-              <button className="dropdown-item" onClick={handleUploadClick}>
-                Set Profile Photo
-              </button>
-              {userData?.photoURL && (
-                <>
-                  <hr />
-                  <button className="dropdown-item" onClick={handleRemoveClick}>
-                    Remove
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-
-          <input
-            type="file"
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            accept="image*/"
-            onChange={handleFileChange}
-          />
+          <div className="profile-details">
+            <p className="profile-name">{fullName}</p>
+            <p className="profile-role">{userData?.role}</p>
+          </div>
         </div>
 
-        <div className="profile-details">
-          <p className="profile-name">{fullName}</p>
-          <p className="profile-role">{userData?.role}</p>
-        </div>
+        <button className="tooltip-button" onClick={toggleEdit}>
+          {isEditing ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
+          {isEditing ? "Cancel" : "Edit Profile"}
+        </button>
       </div>
 
       {showCropper && (
@@ -175,11 +248,11 @@ const GeneralSettings = () => {
         />
       )}
 
-      {showConfirmModal && (
+      {isConfirmModalOpen && (
         <ConfirmModal
           title="Remove Profile Photo"
           message="Are you sure you want to remove your profile photo?"
-          onClose={() => setShowConfirmModal(false)}
+          onClose={() => setIsConfirmModalOpen(false)}
           onConfirm={handleRemovePhoto}
           confirmText="Yes"
           cancelText="No"
@@ -200,9 +273,12 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="firstName"
-                  placeholder="First Name"
-                  value={userData?.firstName}
+                  placeholder={
+                    isEditing || tempData?.firstName ? "Enter First Name" : ""
+                  }
+                  value={tempData?.firstName || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -216,9 +292,12 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="lastName"
-                  placeholder="Last Name"
-                  value={userData?.lastName}
+                  placeholder={
+                    isEditing || tempData?.lastName ? "Enter Last Name" : ""
+                  }
+                  value={tempData?.lastName || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -233,9 +312,10 @@ const GeneralSettings = () => {
               <input
                 type="text"
                 name="email"
-                placeholder="Email"
-                value={userData?.email}
+                placeholder={isEditing || tempData?.email ? "Enter Email" : ""}
+                value={tempData?.email || ""}
                 onChange={handleInputChange}
+                disabled={!isEditing}
               />
             </div>
           </div>
@@ -250,11 +330,11 @@ const GeneralSettings = () => {
                 <input
                   type="date"
                   name="birthday"
-                  placeholder="Contact Number"
                   value={
-                    userData?.birthday ? userData.birthday.split("T")[0] : ""
+                    tempData?.birthday ? tempData.birthday.split("T")[0] : ""
                   }
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -268,9 +348,12 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="gender"
-                  placeholder="Gender"
-                  value={userData?.gender}
+                  placeholder={
+                    isEditing || tempData?.gender ? "Enter Gender" : ""
+                  }
+                  value={tempData?.gender || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -292,9 +375,14 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="contactNumber"
-                  placeholder="Contact Number"
-                  value={userData?.contactNumber}
+                  placeholder={
+                    isEditing || tempData?.contactNumber
+                      ? "Enter Contact Number"
+                      : ""
+                  }
+                  value={tempData?.contactNumber || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -308,9 +396,14 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="country"
-                  placeholder="Country"
-                  value={userData?.address?.country || ""}
+                  placeholder={
+                    isEditing || tempData?.address?.country
+                      ? "Enter Country"
+                      : ""
+                  }
+                  value={tempData?.address?.country || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -327,9 +420,12 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="region"
-                  placeholder="Region"
-                  value={userData?.address?.region || ""}
+                  placeholder={
+                    isEditing || tempData.address.region ? "Enter Region" : ""
+                  }
+                  value={tempData?.address?.region || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -344,9 +440,14 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="province"
-                  placeholder="Province"
-                  value={userData?.address?.province || ""}
+                  placeholder={
+                    isEditing || tempData?.address?.province
+                      ? "Enter Province"
+                      : ""
+                  }
+                  value={tempData?.address?.province || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -363,9 +464,12 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="city"
-                  placeholder="City"
-                  value={userData?.address?.city || ""}
+                  placeholder={
+                    isEditing || tempData?.address?.city ? "Enter City" : ""
+                  }
+                  value={tempData?.address?.city || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -380,9 +484,14 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="barangay"
-                  placeholder="Barangay"
-                  value={userData?.address?.barangay || ""}
+                  placeholder={
+                    isEditing || tempData?.address?.baranagay
+                      ? "Enter Barangay"
+                      : ""
+                  }
+                  value={tempData?.address?.barangay || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -399,9 +508,12 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="street"
-                  placeholder="Street"
-                  value={userData?.address?.street || ""}
+                  placeholder={
+                    isEditing || tempData?.address?.street ? "Enter Street" : ""
+                  }
+                  value={tempData?.address?.street || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -416,9 +528,14 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="postalCode"
-                  placeholder="Postal Code"
-                  value={userData?.address?.postalCode || ""}
+                  placeholder={
+                    isEditing || tempData?.address?.postalCode
+                      ? "Enter Postal Code"
+                      : ""
+                  }
+                  value={tempData?.address?.postalCode || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -441,6 +558,7 @@ const GeneralSettings = () => {
                 name="companyName"
                 placeholder="Company Name"
                 onChange={handleInputChange}
+                disabled={!isAdmin}
               />
             </div>
           </div>
@@ -457,8 +575,8 @@ const GeneralSettings = () => {
                   type="file"
                   accept="image/*"
                   name="companyLogo"
-                  placeholder="Choose a file"
                   onChange={handleInputChange}
+                  disabled={!isAdmin}
                 />
               </div>
             </div>
@@ -474,6 +592,7 @@ const GeneralSettings = () => {
                   name="companyContact"
                   placeholder="Company Contact"
                   onChange={handleInputChange}
+                  disabled={!isAdmin}
                 />
               </div>
             </div>
@@ -495,9 +614,14 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="contactFirstName"
-                  placeholder="Contact First Name"
-                  value={userData?.emergencyDetails?.contactFirstName}
+                  placeholder={
+                    isEditing || tempData?.emergencyDetails?.contactFirstName
+                      ? "Enter Contact First Name"
+                      : ""
+                  }
+                  value={tempData?.emergencyDetails?.contactFirstName}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -511,9 +635,14 @@ const GeneralSettings = () => {
                 <input
                   type="text"
                   name="contactLastName"
-                  placeholder="Contact Last Name"
-                  value={userData?.emergencyDetails?.contactLastName}
+                  placeholder={
+                    isEditing || tempData?.emergencyDetails?.contactLastName
+                      ? "Enter Contact Last Name"
+                      : ""
+                  }
+                  value={tempData?.emergencyDetails?.contactLastName}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -529,9 +658,14 @@ const GeneralSettings = () => {
               <input
                 type="text"
                 name="contactEmergency"
-                placeholder="Contact Emergency Number"
-                value={userData?.emergencyDetails?.contactEmergency}
+                placeholder={
+                  isEditing || tempData?.emergencyDetails?.contactEmergency
+                    ? "Enter Contact Emergency Number"
+                    : ""
+                }
+                value={tempData?.emergencyDetails?.contactEmergency}
                 onChange={handleInputChange}
+                disabled={!isEditing}
               />
             </div>
           </div>
@@ -546,14 +680,52 @@ const GeneralSettings = () => {
               <input
                 type="text"
                 name="contactAddress"
-                placeholder="Contact Address"
-                value={userData?.emergencyDetails?.contactAddress}
+                placeholder={
+                  isEditing || tempData?.emergencyDetails?.contactAddress
+                    ? "Enter Contact Address"
+                    : ""
+                }
+                value={tempData?.emergencyDetails?.contactAddress}
                 onChange={handleInputChange}
+                disabled={!isEditing}
               />
             </div>
           </div>
         </div>
       </div>
+
+      <div className="settings-button-option-container">
+        <button
+          className={`settings-button-option ${!isChanged ? "disabled" : ""}`}
+          onClick={handleSaveClick}
+          disabled={!isChanged}
+        >
+          Save
+        </button>
+        <button
+          className={`settings-button-option ${!isChanged ? "disabled" : ""}`}
+          onClick={handleCancel}
+          disabled={!isChanged}
+        >
+          Cancel
+        </button>
+      </div>
+
+      {isConfirmModalOpen && (
+        <ConfirmModal
+          title="Confirm Changes"
+          message="Are you sure you want to save changes?"
+          onConfirm={handleConfirmSave}
+          onClose={() => setIsConfirmModalOpen(false)}
+        />
+      )}
+
+      {isConfirmedMessageModalOpen && (
+        <ConfirmedMessageModal
+          message="Save changes successfully."
+          onClose={() => setIsConfirmedMessageModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
