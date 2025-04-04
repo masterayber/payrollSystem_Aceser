@@ -35,8 +35,6 @@ const Login = () => {
 
       setUserData(response.data.user);
 
-      console.log("User Role:", response.data.user.role);
-
       if (response.data.user.role === "Admin") {
         navigate("/admin-dashboard");
       } else {

@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconDotsVertical } from "@tabler/icons-react";
-import { UserContext } from "../context/UserContext";
-import "../styles/Dashboard.css";
-import TimeDate from "../components/TimeDate/TimeDate";
+import { UserContext } from "../../context/UserContext";
+import "../../styles/UserCSS/Dashboard.css";
+import TimeDate from "../../components/TimeDate/TimeDate";
 
 const Dashboard = () => {
   const { userData } = useContext(UserContext);
@@ -68,7 +68,9 @@ const Dashboard = () => {
         <div className="message-container">
           <div className="user-message">
             <span>Good Day, </span>
-            <span className="user-highlight">{userData?.firstName}</span>
+            <span className="user-highlight">
+              {userData?.employee?.firstName}
+            </span>
             <span>!</span>
           </div>
           <p>You timed in 15 minutes early today. Keep it up!</p>

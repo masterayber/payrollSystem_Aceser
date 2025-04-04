@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import "../styles/Calendar.css";
-import CalendarComponent from "../components/CalendarComponent/CalendarComponent";
+import "../../styles/UserCSS/Calendar.css";
+import CalendarComponent from "../../components/CalendarComponent/CalendarComponent";
 
 const Calendar = () => {
   return (

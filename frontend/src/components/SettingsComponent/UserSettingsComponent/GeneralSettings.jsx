@@ -22,7 +22,16 @@ const GeneralSettings = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isChanged, setIsChanged] = useState(false);
   const [tempData, setTempData] = useState({
-    emergencyDetails: {
+    address: userData?.employee?.address || {
+      country: "",
+      region: "",
+      province: "",
+      city: "",
+      barangay: "",
+      street: "",
+      postalCode: "",
+    },
+    emergencyDetails: userData?.employee?.emergencyDetails || {
       contactFirstName: "",
       contactLastName: "",
       contactEmergency: "",
@@ -35,22 +44,27 @@ const GeneralSettings = () => {
     const { name, value } = e.target;
 
     setTempData((prevData) => {
-      if (
-        name in prevData.emergencyDetails &&
-        name in prevData.emergencyDetails
-      ) {
+      if (name in prevData.employee) {
         return {
           ...prevData,
-          emergencyDetails: {
-            ...prevData.emergencyDetails,
+          employee: {
+            ...prevData.employee,
             [name]: value || "",
           },
         };
-      } else if (name in prevData.address && name in prevData.address) {
+      } else if (name in prevData.address) {
         return {
           ...prevData,
           address: {
             ...prevData.address,
+            [name]: value || "",
+          },
+        };
+      } else if (name in prevData.emergencyDetails) {
+        return {
+          ...prevData,
+          emergencyDetails: {
+            ...prevData.emergencyDetails,
             [name]: value || "",
           },
         };
@@ -186,8 +200,8 @@ const GeneralSettings = () => {
     }
   };
 
-  const fullName = `${userData?.firstName} ${userData?.lastName}`;
-  const isAdmin = userData?.role === "Admin";
+  const fullName = `${userData?.employee?.firstName} ${userData?.employee?.lastName}`;
+  const isAdmin = userData?.employee?.role === "Admin";
 
   return (
     <div className="settings-content">
@@ -274,9 +288,11 @@ const GeneralSettings = () => {
                   type="text"
                   name="firstName"
                   placeholder={
-                    isEditing || tempData?.firstName ? "Enter First Name" : ""
+                    isEditing || tempData?.employee?.firstName
+                      ? "Enter First Name"
+                      : ""
                   }
-                  value={tempData?.firstName || ""}
+                  value={tempData?.employee?.firstName || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -293,9 +309,11 @@ const GeneralSettings = () => {
                   type="text"
                   name="lastName"
                   placeholder={
-                    isEditing || tempData?.lastName ? "Enter Last Name" : ""
+                    isEditing || tempData?.employee?.lastName
+                      ? "Enter Last Name"
+                      : ""
                   }
-                  value={tempData?.lastName || ""}
+                  value={tempData?.employee?.lastName || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -331,7 +349,9 @@ const GeneralSettings = () => {
                   type="date"
                   name="birthday"
                   value={
-                    tempData?.birthday ? tempData.birthday.split("T")[0] : ""
+                    tempData?.employee?.birthday
+                      ? tempData.employee?.birthday.split("T")[0]
+                      : ""
                   }
                   onChange={handleInputChange}
                   disabled={!isEditing}
@@ -349,9 +369,11 @@ const GeneralSettings = () => {
                   type="text"
                   name="gender"
                   placeholder={
-                    isEditing || tempData?.gender ? "Enter Gender" : ""
+                    isEditing || tempData?.employee?.gender
+                      ? "Enter Gender"
+                      : ""
                   }
-                  value={tempData?.gender || ""}
+                  value={tempData?.employee?.gender || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -376,11 +398,11 @@ const GeneralSettings = () => {
                   type="text"
                   name="contactNumber"
                   placeholder={
-                    isEditing || tempData?.contactNumber
+                    isEditing || tempData?.employee?.contactNumber
                       ? "Enter Contact Number"
                       : ""
                   }
-                  value={tempData?.contactNumber || ""}
+                  value={tempData?.employee?.contactNumber || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -401,7 +423,7 @@ const GeneralSettings = () => {
                       ? "Enter Country"
                       : ""
                   }
-                  value={tempData?.address?.country || ""}
+                  value={tempData?.address?.country}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -421,9 +443,9 @@ const GeneralSettings = () => {
                   type="text"
                   name="region"
                   placeholder={
-                    isEditing || tempData.address.region ? "Enter Region" : ""
+                    isEditing || tempData?.address?.region ? "Enter Region" : ""
                   }
-                  value={tempData?.address?.region || ""}
+                  value={tempData?.address?.region}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -445,7 +467,7 @@ const GeneralSettings = () => {
                       ? "Enter Province"
                       : ""
                   }
-                  value={tempData?.address?.province || ""}
+                  value={tempData?.address?.province}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -467,7 +489,7 @@ const GeneralSettings = () => {
                   placeholder={
                     isEditing || tempData?.address?.city ? "Enter City" : ""
                   }
-                  value={tempData?.address?.city || ""}
+                  value={tempData?.address?.city}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -489,7 +511,7 @@ const GeneralSettings = () => {
                       ? "Enter Barangay"
                       : ""
                   }
-                  value={tempData?.address?.barangay || ""}
+                  value={tempData?.address?.barangay}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -511,7 +533,7 @@ const GeneralSettings = () => {
                   placeholder={
                     isEditing || tempData?.address?.street ? "Enter Street" : ""
                   }
-                  value={tempData?.address?.street || ""}
+                  value={tempData?.address?.street}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -533,7 +555,7 @@ const GeneralSettings = () => {
                       ? "Enter Postal Code"
                       : ""
                   }
-                  value={tempData?.address?.postalCode || ""}
+                  value={tempData?.address?.postalCode}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -715,8 +737,8 @@ const GeneralSettings = () => {
         <ConfirmModal
           title="Confirm Changes"
           message="Are you sure you want to save changes?"
-          onConfirm={handleConfirmSave}
           onClose={() => setIsConfirmModalOpen(false)}
+          onConfirm={handleConfirmSave}
         />
       )}
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { IconDotsVertical } from "@tabler/icons-react";
-import "../styles/Payroll.css";
+import "../../styles/UserCSS/Payroll.css";
 import { useNavigate } from "react-router-dom";
 
 const Payroll = () => {

@@ -1,6 +1,6 @@
 import React from "react";
-import "../styles/Attendance.css";
-import Dropdown from "../components/Dropdown/Dropdown";
+import "../../styles/UserCSS/Attendance.css";
+import Dropdown from "../../components/Dropdown/Dropdown";
 
 const Attendance = () => {
   const months = [

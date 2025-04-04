@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import GeneralSettings from "../components/SettingsComponent/UserSettingsComponent/GeneralSettings";
+import GeneralSettings from "../../components/SettingsComponent/UserSettingsComponent/GeneralSettings";
 
 const settingsOptions = [
   { name: "General", key: "general" },

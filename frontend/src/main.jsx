@@ -19,13 +19,13 @@ import AdminCalendar from "./pages/AdminPage/AdminCalendar";
 import Reports from "./pages/AdminPage/Reports";
 import AdminSettings from "./pages/AdminPage/AdminSettings";
 
-import Dashboard from "./pages/Dashboard";
-import Payroll from "./pages/Payroll";
-import Payslips from "./pages/Payslips";
-import Attendance from "./pages/Attendance";
-import Calendar from "./pages/Calendar";
-import Filing from "./pages/Filing";
-import Settings from "./pages/Settings";
+import Dashboard from "./pages/UserPage/Dashboard";
+import Payroll from "./pages/UserPage/Payroll";
+import Payslips from "./pages/UserPage/Payslips";
+import Attendance from "./pages/UserPage/Attendance";
+import Calendar from "./pages/UserPage/Calendar";
+import Filing from "./pages/UserPage/Filing";
+import Settings from "./pages/UserPage/Settings";
 
 import "./index.css";
 import PrivateRoute from "./components/PrivateRoute";

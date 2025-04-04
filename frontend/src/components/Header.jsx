@@ -35,7 +35,7 @@ function Header({ role }) {
     window.location.href = "/";
   };
 
-  const fullName = `${userData?.firstName} ${userData?.lastName}`;
+  const fullName = `${userData?.employee?.firstName} ${userData?.employee?.lastName}`;
 
   const userMenuTitles = [
     {
@@ -125,7 +125,7 @@ function Header({ role }) {
           </div>
         ))}
       <div className="user-header">
-        <p>{userData?.firstName}</p>
+        <p>{userData?.employee?.firstName}</p>
         <div className="icon-count" onClick={toggleDropDown}>
           <ProfilePhoto user={userData} />
           <div className="dropdown-arrow">

@@ -117,10 +117,12 @@ router.post("/login", async (req, res) => {
 
     const combinedData = {
       ...userObj,
-      ...employeeObj,
+      employee: employeeObj,
       settings: settingsObj,
       photoURL: user.profilePhoto || null,
     };
+
+    console.log("Login successful:", combinedData);
 
     res
       .status(200)
@@ -500,6 +502,10 @@ router.put(
     try {
       const userId = req.params.id;
       const user = await User.findById(userId);
+
+      console.log("User found:", user);
+      console.log("User ID:", userId);
+
       if (!user) return res.status(404).json({ message: "User not found" });
 
       if (!req.file)
