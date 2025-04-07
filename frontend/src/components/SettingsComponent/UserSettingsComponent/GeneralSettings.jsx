@@ -40,40 +40,39 @@ const GeneralSettings = () => {
     ...userData,
   });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  console.log("Temp Data:", tempData);
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
 
     setTempData((prevData) => {
-      if (name in prevData.employee) {
-        return {
-          ...prevData,
-          employee: {
-            ...prevData.employee,
-            [name]: value || "",
-          },
-        };
-      } else if (name in prevData.address) {
-        return {
-          ...prevData,
-          address: {
-            ...prevData.address,
-            [name]: value || "",
-          },
-        };
-      } else if (name in prevData.emergencyDetails) {
-        return {
-          ...prevData,
-          emergencyDetails: {
-            ...prevData.emergencyDetails,
-            [name]: value || "",
-          },
-        };
-      } else {
-        return {
-          ...prevData,
+      let updatedData = { ...prevData };
+
+      if (name === "email") {
+        updatedData.email = value || "";
+        if (updatedData.employee) {
+          updatedData.employee.email = value || "";
+        }
+      } else if (name in prevData.employee) {
+        updatedData.employee = {
+          ...prevData.employee,
           [name]: value || "",
         };
+      } else if (name in prevData.address) {
+        updatedData.address = {
+          ...prevData.address,
+          [name]: value || "",
+        };
+      } else if (name in prevData.emergencyDetails) {
+        updatedData.emergencyDetails = {
+          ...prevData.emergencyDetails,
+          [name]: value || "",
+        };
+      } else {
+        updatedData[name] = value || "";
       }
+
+      return updatedData;
     });
 
     setIsChanged(true);
@@ -159,7 +158,24 @@ const GeneralSettings = () => {
 
   const toggleEdit = () => {
     if (isEditing) {
-      setTempData(userData);
+      setTempData({
+        address: userData?.employee?.address || {
+          country: "",
+          region: "",
+          province: "",
+          city: "",
+          barangay: "",
+          street: "",
+          postalCode: "",
+        },
+        emergencyDetails: userData?.employee?.emergencyDetails || {
+          contactFirstName: "",
+          contactLastName: "",
+          contactEmergency: "",
+          contactAddress: "",
+        },
+        ...userData,
+      });
       setIsChanged(false);
     }
     setIsEditing(!isEditing);
@@ -172,7 +188,7 @@ const GeneralSettings = () => {
   const handleConfirmSave = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/auth/employees/${userData._id}`,
+        `http://localhost:5000/api/auth/updateGeneralSettings/${userData._id}`,
         {
           method: "PUT",
           headers: {
@@ -188,6 +204,7 @@ const GeneralSettings = () => {
 
       const updatedUser = await response.json();
       setUserData(updatedUser);
+      console.log("Updated User Data:", updatedUser);
       localStorage.setItem("userData", JSON.stringify(updatedUser));
 
       setIsEditing(false);

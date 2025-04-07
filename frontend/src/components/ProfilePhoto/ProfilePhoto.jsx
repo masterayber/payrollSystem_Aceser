@@ -18,7 +18,7 @@ const ProfilePhoto = ({ size = "50px" }) => {
       userData.photoURL.endsWith(".jpeg") ||
       userData.photoURL.endsWith(".png")
     ) {
-      profilePhoto = `${backendUrl}${userData.photoURL}`;
+      profilePhoto = `${backendUrl}${userData?.photoURL}`;
     } else if (userData.photoURL.endsWith(".svg")) {
       profilePhoto = userData.photoURL;
     }

@@ -343,24 +343,49 @@ router.get("/employees", async (req, res) => {
   }
 });
 
-router.put("/employees/:id", async (req, res) => {
+router.put("/updateGeneralSettings/:id", async (req, res) => {
   try {
-    const updatedUser = await Employee.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-      }
-    );
+    const userId = req.params.id;
+    const { employee, settings, ...userData } = req.body;
+
+    console.log("User ID:", userId);
+    console.log("User Data:", userData);
+    console.log("Employee Data:", employee);
+    console.log("Settings Data:", settings);
+
+    // Update Auths
+    const updatedUser = await User.findByIdAndUpdate(userId, userData, {
+      new: true,
+    });
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json(updatedUser);
+    // Update Employees
+    const updatedEmployee = await Employee.findOneAndUpdate(
+      { email: updatedUser.email },
+      employee,
+      { new: true }
+    );
+
+    //Update Settings
+    const updatedSettings = await Settings.findOneAndUpdate(
+      { userId },
+      settings,
+      { new: true }
+    );
+
+    const combined = {
+      ...updatedUser.toObject(),
+      employee: updatedEmployee ? updatedEmployee.toObject() : {},
+      settings: updatedSettings ? updatedSettings.toObject() : {},
+    };
+
+    res.json(combined);
   } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Error updating all user data:", error);
+    res.status(500).json({ message: "Error updating user data" });
   }
 });
 
