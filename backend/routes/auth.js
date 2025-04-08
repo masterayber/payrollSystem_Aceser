@@ -122,8 +122,6 @@ router.post("/login", async (req, res) => {
       photoURL: user.profilePhoto || null,
     };
 
-    console.log("Login successful:", combinedData);
-
     res
       .status(200)
       .json({ token, user: combinedData, message: "Login Successful" });
@@ -348,10 +346,19 @@ router.put("/updateGeneralSettings/:id", async (req, res) => {
     const userId = req.params.id;
     const { employee, settings, ...userData } = req.body;
 
-    console.log("User ID:", userId);
     console.log("User Data:", userData);
-    console.log("Employee Data:", employee);
-    console.log("Settings Data:", settings);
+
+    const existingUser = await User.findById(userId);
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!userData.profilePhoto && existingUser.profilePhoto) {
+      userData.profilePhoto = existingUser.profilePhoto;
+    }
+    if (!userData.photoURL && existingUser.photoURL) {
+      userData.photoURL = existingUser.photoURL;
+    }
 
     // Update Auths
     const updatedUser = await User.findByIdAndUpdate(userId, userData, {
@@ -382,6 +389,7 @@ router.put("/updateGeneralSettings/:id", async (req, res) => {
       settings: updatedSettings ? updatedSettings.toObject() : {},
     };
 
+    console.log("Combined Data:", combined);
     res.json(combined);
   } catch (error) {
     console.error("Error updating all user data:", error);
@@ -582,7 +590,7 @@ router.delete("/remove-profile-photo/:id", async (req, res) => {
 
     return res
       .status(200)
-      .json({ message: "Profile photo removed successfully" });
+      .json({ message: "Profile photo removed successfully", user });
   } catch (error) {
     console.error("Error in deleting profile photo:", error);
     return res.status(500).json({ message: "Internal server error", error });

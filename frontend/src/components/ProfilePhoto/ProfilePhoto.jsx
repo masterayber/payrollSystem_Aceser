@@ -6,21 +6,19 @@ const ProfilePhoto = ({ size = "50px" }) => {
   const { userData } = useContext(UserContext);
   const backendUrl = "http://localhost:5000";
 
-  let profilePhoto = userData?.photoURL?.startsWith("http")
-    ? userData.photoURL
-    : userData?.profilePhoto || "/assets/user-circle.svg";
+  let profilePhoto = "/assets/user-circle.svg"; // Default profile photo
 
-  if (userData?.photoURL) {
-    if (userData.photoURL.startsWith("http")) {
-      profilePhoto = userData.photoURL;
+  const photo = userData?.photoURL || userData?.profilePhoto;
+
+  if (photo) {
+    if (photo.startsWith("http")) {
+      profilePhoto = photo;
     } else if (
-      userData.photoURL.endsWith(".jpg") ||
-      userData.photoURL.endsWith(".jpeg") ||
-      userData.photoURL.endsWith(".png")
+      photo.endsWith(".jpg") ||
+      photo.endsWith(".jpeg") ||
+      photo.endsWith(".png")
     ) {
-      profilePhoto = `${backendUrl}${userData?.photoURL}`;
-    } else if (userData.photoURL.endsWith(".svg")) {
-      profilePhoto = userData.photoURL;
+      profilePhoto = `${backendUrl}${photo}`;
     }
   }
 

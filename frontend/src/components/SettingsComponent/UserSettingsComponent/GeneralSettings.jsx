@@ -15,6 +15,8 @@ const GeneralSettings = () => {
 
   const [showPhotoChange, setShowPhotoChange] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [IsRemoveConfirmMdoalOpen, setIsRemoveConfirmModalOpen] =
+    useState(false);
   const [isConfirmedMessageModalOpen, setIsConfirmedMessageModalOpen] =
     useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -39,8 +41,6 @@ const GeneralSettings = () => {
     },
     ...userData,
   });
-
-  console.log("Temp Data:", tempData);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -89,7 +89,7 @@ const GeneralSettings = () => {
   };
 
   const handleRemoveClick = () => {
-    setIsConfirmModalOpen(true);
+    setIsRemoveConfirmModalOpen(true);
   };
 
   const handleFileChange = (event) => {
@@ -111,6 +111,8 @@ const GeneralSettings = () => {
       photoURL: croppedImage,
     }));
     setShowCropper(false);
+
+    setTimeout(() => setIsConfirmedMessageModalOpen(true), 300);
   };
 
   const handleRemovePhoto = async () => {
@@ -131,7 +133,9 @@ const GeneralSettings = () => {
       console.error("Error removing profile photo", error);
     }
 
-    setIsConfirmModalOpen(false);
+    setIsRemoveConfirmModalOpen(false);
+
+    setTimeout(() => setIsConfirmedMessageModalOpen(true), 300);
   };
 
   const handleClickOutside = (event) => {
@@ -204,7 +208,6 @@ const GeneralSettings = () => {
 
       const updatedUser = await response.json();
       setUserData(updatedUser);
-      console.log("Updated User Data:", updatedUser);
       localStorage.setItem("userData", JSON.stringify(updatedUser));
 
       setIsEditing(false);
@@ -279,11 +282,11 @@ const GeneralSettings = () => {
         />
       )}
 
-      {isConfirmModalOpen && (
+      {IsRemoveConfirmMdoalOpen && (
         <ConfirmModal
           title="Remove Profile Photo"
           message="Are you sure you want to remove your profile photo?"
-          onClose={() => setIsConfirmModalOpen(false)}
+          onClose={() => setIsRemoveConfirmModalOpen(false)}
           onConfirm={handleRemovePhoto}
           confirmText="Yes"
           cancelText="No"
