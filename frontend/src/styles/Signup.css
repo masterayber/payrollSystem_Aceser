@@ -46,6 +46,8 @@
   border-radius: var(--border-radius);
   overflow: hidden;
   background-color: #fff;
+  display: flex;
+  flex-direction: row;
 }
 
 .input-group-signup input,

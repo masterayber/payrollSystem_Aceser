@@ -1,14 +1,21 @@
 import React, { useState } from "react";
 import GeneralSettings from "../../components/SettingsComponent/UserSettingsComponent/GeneralSettings";
+import ManageSettings from "../../components/SettingsComponent/UserSettingsComponent/ManageSettings";
+import AccessibilittySettings from "../../components/SettingsComponent/UserSettingsComponent/AccessibilittySettings";
+import AboutSettings from "../../components/SettingsComponent/UserSettingsComponent/AboutSettings";
 
 const settingsOptions = [
   { name: "General", key: "general" },
   { name: "Manage", key: "manage" },
   { name: "Accessibility", key: "accessibility" },
+  { name: "About", key: "about" },
 ];
 
 const settingsContent = {
   general: <GeneralSettings />,
+  manage: <ManageSettings />,
+  accessibility: <AccessibilittySettings />,
+  about: <AboutSettings />,
 };
 
 const AdminSettings = () => {
