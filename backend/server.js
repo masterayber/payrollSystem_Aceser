@@ -50,6 +50,8 @@ mongoose
   )
   .catch((err) => console.error("MongoDB connection error:", err));
 
+require("./schedulers/attendanceScheduler");
+
 // Routes
 app.get("/", (req, res) => {
   res.send("API is running...");

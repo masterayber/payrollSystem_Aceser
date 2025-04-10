@@ -17,6 +17,9 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   const [showPendingDropdown, setShowPendingDropdown] = useState(false);
+  const [timedInCount, setTimedInCount] = useState(0);
+  const [timedOutCount, setTimedOutCount] = useState(0);
+  const [pendingUsers, setPendingUsers] = useState([]);
 
   const pendingDropdownRef = useRef(null);
   const pendingSvgRef = useRef(null);
@@ -26,7 +29,27 @@ const AdminDashboard = () => {
     setShowPendingDropdown((prev) => !prev);
   };
 
-  const [pendingUsers, setPendingUsers] = useState([]);
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/auth/today"
+        );
+        const attendance = response.data;
+
+        console.log("Attendance:", attendance);
+        const timedIn = attendance.filter((entry) => entry.timeIn).length;
+        const timedOut = attendance.filter((entry) => entry.timeOut).length;
+
+        setTimedInCount(timedIn);
+        setTimedOutCount(timedOut);
+      } catch (err) {
+        console.error("Error fetching time in and out:", err);
+      }
+    };
+
+    fetchAttendance();
+  }, []);
 
   useEffect(() => {
     const fetchPendingUsers = async () => {
@@ -76,7 +99,9 @@ const AdminDashboard = () => {
         <div className="message-container">
           <div className="user-message">
             <span>Good Day, </span>
-            <span className="user-highlight">{userData?.firstName}</span>
+            <span className="user-highlight">
+              {userData?.employee.firstName}
+            </span>
             <span>!</span>
           </div>
           <p>{employeeData.length} Employees have timed in today!</p>
@@ -92,11 +117,11 @@ const AdminDashboard = () => {
         </div>
         <div className="user-track">
           <p>Total Employees Timed In</p>
-          <div className="user-number">{employeeData.length}</div>
+          <div className="user-number">{timedInCount}</div>
         </div>
         <div className="user-track">
           <p>Total Employees Timed Out</p>
-          <div className="user-number">{employeeData.length}</div>
+          <div className="user-number">{timedOutCount}</div>
         </div>
       </div>
 

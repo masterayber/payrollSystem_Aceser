@@ -5,7 +5,7 @@ import { SettingsContext } from "../../../context/SettingsContext";
 import ProfilePhoto from "../../ProfilePhoto/ProfilePhoto";
 import ProfilePhotoCropper from "../../Modals/ProfilePhotoCropper/ProfilePhotoCropper";
 import ConfirmModal from "../../Modals/Confirm/ConfirmModal";
-import "../AdminSettingsComponent.css";
+import "../SettingsComponent.css";
 
 const AdminGeneralSettings = () => {
   const { settingsData, setSettingsData } = useContext(SettingsContext);

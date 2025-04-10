@@ -10,6 +10,7 @@ const Dropdown = require("../models/dropdownOptions");
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
+const Attendance = require("../models/attendance");
 
 const sendEmail = require("../utils/nodemailer");
 
@@ -594,6 +595,20 @@ router.delete("/remove-profile-photo/:id", async (req, res) => {
   } catch (error) {
     console.error("Error in deleting profile photo:", error);
     return res.status(500).json({ message: "Internal server error", error });
+  }
+});
+
+router.get("/today", async (req, res) => {
+  try {
+    const today = new Date();
+    const formattedToday = today.toISOString().split("T")[0].trim;
+    console.log("Formatted today:", formattedToday);
+
+    const todayAttendance = await Attendance.find({ date: formattedToday });
+    console.log("Today's attendance:", todayAttendance);
+    res.json(todayAttendance);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch today's attendance" });
   }
 });
 

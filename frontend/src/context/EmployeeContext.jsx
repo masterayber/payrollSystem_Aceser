@@ -12,9 +12,7 @@ export const EmployeeProvider = ({ children }) => {
           "http://localhost:5000/api/auth/employees"
         );
         const data = await response.json();
-
-        const employeesOnly = data.filter((emp) => emp.role === "employee");
-
+        const employeesOnly = data.filter((emp) => emp.role === "Employee");
         setEmployeeData(employeesOnly);
       } catch (error) {
         console.error("Error fetching employees", error);
