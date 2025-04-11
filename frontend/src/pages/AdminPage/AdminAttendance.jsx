@@ -7,10 +7,12 @@ import {
   IconCalendarClock,
 } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
+import { AttendanceContext } from "../../context/AttendanceContext";
 import "../../styles/AdminCSS/AdminAttendance.css";
 
 const AdminAttendance = () => {
   const { employeeData } = useContext(EmployeeContext);
+  const { attendanceData } = useContext(AttendanceContext);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,58 +30,83 @@ const AdminAttendance = () => {
   const formatDate = (date) => date.toISOString().split("T")[0];
 
   const calculateBehavior = (timeIn, timeOut) => {
-    if (!timeIn && !timeOut) return "Absent";
-    if (!timeIn) return "No Time In";
-    if (!timeOut) return "No Time Out";
-
     const today = formatDate(selectedDate);
 
+    if (!timeIn && !timeOut) return "Absent";
+    if (!timeIn) return "No Time In";
+
+    const timeInDate = new Date(`${today}T${timeIn}`);
     const shiftStart = new Date(`${today}T08:00:00`);
     const shiftEnd = new Date(`${today}T17:00:00`);
-
-    const halfDayMorningOut = new Date(`${today}T13:00:00`);
-    const halfDayAfternoonInStart = new Date(`${today}T10:00:00`);
-    const halfDayAfternoonInEnd = new Date(`${today}T13:00:00`);
-
-    const employeeTimeIn = new Date(`${today}T${timeIn}`);
-    const employeeTimeOut = new Date(`${today}T${timeOut}`);
-
     const lateThreshold = new Date(shiftStart.getTime() + 1 * 60 * 1000);
 
-    if (employeeTimeIn <= shiftStart && employeeTimeOut <= halfDayMorningOut) {
+    if (!timeOut) {
+      const now = new Date();
+      const inDateStr = timeInDate.toISOString().split("T")[0];
+
+      if (inDateStr === today) {
+        return "On-time";
+      } else {
+        return "No Time Out";
+      }
+    }
+
+    const timeOutDate = new Date(`${today}T${timeOut}`);
+
+    const halfDayMorningOut = new Date(`${today}T13:00:00`);
+    if (timeInDate <= shiftStart && timeOutDate <= halfDayMorningOut) {
       return "Half-Day";
     }
 
+    const halfDayAfternoonInStart = new Date(`${today}T10:00:00`);
+    const halfDayAfternoonInEnd = new Date(`${today}T13:00:00`);
     if (
-      employeeTimeIn >= halfDayAfternoonInStart &&
-      employeeTimeIn <= halfDayAfternoonInEnd
+      timeInDate >= halfDayAfternoonInStart &&
+      timeInDate <= halfDayAfternoonInEnd
     ) {
       return "Half-Day";
     }
 
-    if (employeeTimeIn >= lateThreshold) return "Late";
+    const employeeTimeOut = new Date(`${today}T${timeOut}`);
+
+    if (timeInDate <= shiftStart && employeeTimeOut <= halfDayMorningOut) {
+      return "Half-Day";
+    }
+
+    if (
+      timeInDate >= halfDayAfternoonInStart &&
+      timeInDate <= halfDayAfternoonInEnd
+    ) {
+      return "Half-Day";
+    }
+
+    if (timeInDate > lateThreshold) return "Late";
+
     if (employeeTimeOut < shiftEnd) return "Early Out";
+
     return "On-Time";
   };
 
-  const filteredEmployees = employeeData
+  const filteredEmployees = (employeeData || [])
     .map((employee) => {
-      const attendanceRecord = employee.attendance.find(
-        (record) => record.date === formatDate(selectedDate)
+      const attendanceRecord = (attendanceData || []).find(
+        (record) =>
+          record.userId === employee._id &&
+          record.date === formatDate(selectedDate)
       );
-      return attendanceRecord
-        ? {
-            ...employee,
-            timeIn: attendanceRecord.timeIn,
-            timeOut: attendanceRecord.timeOut,
-          }
-        : { ...employee, timeIn: "", timeOut: "" };
+
+      return {
+        firstName: employee.firstName,
+        lastName: employee.lastName,
+        timeIn: attendanceRecord?.timeIn || "",
+        timeOut: attendanceRecord?.timeOut || "",
+      };
     })
     .filter((employee) => {
       return (
-        employee.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        employee.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        employee.lastName.toLowerCase().includes(searchQuery.toLowerCase())
+        employee.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        employee.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        employee.lastName?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     });
 
@@ -206,25 +233,27 @@ const AdminAttendance = () => {
               <p>Behavior</p>
             </article>
           </div>
-          {currentEmployees.map((employee, index) => (
+          {currentEmployees.map((employeeData, index) => (
             <div className="table-content" key={index}>
               <article className="table-content-container">
-                <p>{employee.id}</p>
+                <p>{employeeData.id}</p>
               </article>
               <article className="table-content-container">
-                <p>{employee.lastName}</p>
+                <p>{employeeData?.lastName}</p>
               </article>
               <article className="table-content-container">
-                <p>{employee.firstName}</p>
+                <p>{employeeData.firstName}</p>
               </article>
               <article className="table-content-container">
-                <p>{employee.timeIn || "No Record"}</p>
+                <p>{employeeData.timeIn || "No Record"}</p>
               </article>
               <article className="table-content-container">
-                <p>{employee.timeOut || "No Record"}</p>
+                <p>{employeeData.timeOut || "No Record"}</p>
               </article>
               <article className="table-content-container">
-                <p>{calculateBehavior(employee.timeIn, employee.timeOut)}</p>
+                <p>
+                  {calculateBehavior(employeeData.timeIn, employeeData.timeOut)}
+                </p>
               </article>
             </div>
           ))}

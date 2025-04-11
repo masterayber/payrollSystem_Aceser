@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { UserContext } from "../../context/UserContext";
 import { EmployeeContext } from "../../context/EmployeeContext";
+import { AttendanceContext } from "../../context/AttendanceContext";
 import "../../styles/AdminCSS/AdminDashboard.css";
 import "../../components/TimeDate/TimeDate";
 import TimeDate from "../../components/TimeDate/TimeDate";
@@ -14,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 const AdminDashboard = () => {
   const { userData } = useContext(UserContext);
   const { employeeData } = useContext(EmployeeContext);
+  const { attendanceData } = useContext(AttendanceContext);
   const navigate = useNavigate();
 
   const [showPendingDropdown, setShowPendingDropdown] = useState(false);
@@ -30,26 +32,14 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    const fetchAttendance = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:5000/api/attendance/today"
-        );
-        const attendance = response.data;
+    if (attendanceData && attendanceData.length > 0) {
+      const timedIn = attendanceData.filter((entry) => entry.timeIn).length;
+      const timedOut = attendanceData.filter((entry) => entry.timeOut).length;
 
-        console.log("Attendance:", attendance);
-        const timedIn = attendance.filter((entry) => entry.timeIn).length;
-        const timedOut = attendance.filter((entry) => entry.timeOut).length;
-
-        setTimedInCount(timedIn);
-        setTimedOutCount(timedOut);
-      } catch (err) {
-        console.error("Error fetching time in and out:", err);
-      }
-    };
-
-    fetchAttendance();
-  }, []);
+      setTimedInCount(timedIn);
+      setTimedOutCount(timedOut);
+    }
+  }, [attendanceData]);
 
   useEffect(() => {
     const fetchPendingUsers = async () => {
@@ -86,7 +76,7 @@ const AdminDashboard = () => {
     };
   }, [showPendingDropdown]);
 
-  const attendanceData = {
+  const todayAttendanceData = {
     onTime: 150,
     late: 17,
     absent: 7,
@@ -138,7 +128,7 @@ const AdminDashboard = () => {
             <p>Today&apos;s Attendance</p>
             <IconDotsVertical />
           </div>
-          <AttendanceChart attendanceData={attendanceData} />
+          <AttendanceChart attendanceData={todayAttendanceData} />
         </div>
       </div>
 
