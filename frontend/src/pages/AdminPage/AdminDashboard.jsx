@@ -33,7 +33,7 @@ const AdminDashboard = () => {
     const fetchAttendance = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/auth/today"
+          "http://localhost:5000/api/attendance/today"
         );
         const attendance = response.data;
 
@@ -104,7 +104,7 @@ const AdminDashboard = () => {
             </span>
             <span>!</span>
           </div>
-          <p>{employeeData.length} Employees have timed in today!</p>
+          <p>{timedInCount} Employees have timed in today!</p>
         </div>
 
         <TimeDate />

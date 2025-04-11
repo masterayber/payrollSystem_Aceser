@@ -17,6 +17,7 @@ const io = socketIo(server, {
 const PORT = process.env.PORT || 5000;
 
 const authRoutes = require("./routes/auth");
+const attendanceRoutes = require("./routes/attendance");
 
 const dotenv = require("dotenv");
 
@@ -29,6 +30,7 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 io.on("connection", (socket) => {
   socket.on("approveUser", (data) => {

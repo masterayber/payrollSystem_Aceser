@@ -598,18 +598,4 @@ router.delete("/remove-profile-photo/:id", async (req, res) => {
   }
 });
 
-router.get("/today", async (req, res) => {
-  try {
-    const today = new Date();
-    const formattedToday = today.toISOString().split("T")[0].trim;
-    console.log("Formatted today:", formattedToday);
-
-    const todayAttendance = await Attendance.find({ date: formattedToday });
-    console.log("Today's attendance:", todayAttendance);
-    res.json(todayAttendance);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch today's attendance" });
-  }
-});
-
 module.exports = router;
