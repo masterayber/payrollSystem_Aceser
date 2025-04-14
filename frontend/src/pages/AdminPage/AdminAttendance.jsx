@@ -1,4 +1,5 @@
-import React, { useState, useRef, useContext } from "react";
+import React, { useState, useRef, useContext, useEffect } from "react";
+import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import {
@@ -12,7 +13,7 @@ import "../../styles/AdminCSS/AdminAttendance.css";
 
 const AdminAttendance = () => {
   const { employeeData } = useContext(EmployeeContext);
-  const { attendanceData } = useContext(AttendanceContext);
+  const { attendanceData, setAttendanceData } = useContext(AttendanceContext);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -31,6 +32,8 @@ const AdminAttendance = () => {
 
   const calculateBehavior = (timeIn, timeOut) => {
     const today = formatDate(selectedDate);
+
+    console.log("Picked Date:", today);
 
     if (!timeIn && !timeOut) return "Absent";
     if (!timeIn) return "No Time In";
@@ -87,15 +90,35 @@ const AdminAttendance = () => {
     return "On-Time";
   };
 
+  useEffect(() => {
+    const fetchAttendanceByDate = async () => {
+      try {
+        const formattedDate = selectedDate.toISOString().split("T")[0];
+        const res = await axios.get(
+          `http://localhost:5000/api/attendance/attendance?date=${formattedDate}`
+        );
+        setAttendanceData(res.data);
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+      }
+    };
+
+    fetchAttendanceByDate();
+  }, [selectedDate]);
+
   const filteredEmployees = (employeeData || [])
     .map((employee) => {
-      const attendanceRecord = (attendanceData || []).find(
-        (record) =>
-          record.userId === employee._id &&
-          record.date === formatDate(selectedDate)
-      );
+      const attendanceRecord = (attendanceData || []).find((record) => {
+        const recordDate = formatDate(new Date(record.date));
+        const selected = formatDate(selectedDate);
+        return record.userId === employee._id && recordDate === selected;
+      });
+
+      console.log("Selected date:", formatDate(selectedDate));
+      console.log("All attendance records", attendanceRecord);
 
       return {
+        id: employee._id,
         firstName: employee.firstName,
         lastName: employee.lastName,
         timeIn: attendanceRecord?.timeIn || "",
@@ -181,7 +204,7 @@ const AdminAttendance = () => {
               setSelectedDate(date);
               setIsDatePickerOpen(false);
             }}
-            dateFormat="dd-MM-yyyy"
+            dateFormat="MM-dd-yyyy"
             className="date-picker"
             ref={datePickerRef}
             onClickOutside={() => setIsDatePickerOpen(false)}

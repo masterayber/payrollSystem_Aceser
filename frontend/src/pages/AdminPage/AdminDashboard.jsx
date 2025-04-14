@@ -32,14 +32,30 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    if (attendanceData && attendanceData.length > 0) {
-      const timedIn = attendanceData.filter((entry) => entry.timeIn).length;
-      const timedOut = attendanceData.filter((entry) => entry.timeOut).length;
+    const fetchTodayAttendance = async () => {
+      try {
+        const today = new Date();
+        const formattedToday = today.toISOString().split("T")[0].trim();
 
-      setTimedInCount(timedIn);
-      setTimedOutCount(timedOut);
-    }
-  }, [attendanceData]);
+        const res = await axios.get(
+          `http://localhost:5000/api/attendance/attendance?date=${formattedToday}`
+        );
+        const data = res.data;
+
+        if (data && data.length > 0) {
+          const timedIn = data.filter((entry) => entry.timeIn).length;
+          const timedOut = data.filter((entry) => entry.timeOut).length;
+
+          setTimedInCount(timedIn);
+          setTimedOutCount(timedOut);
+        }
+      } catch (error) {
+        console.error("Error fetching today's attendance:", error);
+      }
+    };
+
+    fetchTodayAttendance();
+  }, []);
 
   useEffect(() => {
     const fetchPendingUsers = async () => {
