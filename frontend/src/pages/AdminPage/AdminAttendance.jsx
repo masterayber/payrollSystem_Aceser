@@ -6,9 +6,11 @@ import {
   IconSearch,
   IconDotsVertical,
   IconCalendarClock,
+  IconEdit,
 } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import { AttendanceContext } from "../../context/AttendanceContext";
+import EditEmployeeAttendanceModal from "../../components/Modals/EditEmployee/EditEmployeeAttendanceModal";
 import "../../styles/AdminCSS/AdminAttendance.css";
 
 const AdminAttendance = () => {
@@ -19,6 +21,8 @@ const AdminAttendance = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const datePickerRef = useRef(null);
   const itemsPerPage = 7;
 
@@ -30,10 +34,16 @@ const AdminAttendance = () => {
 
   const formatDate = (date) => date.toISOString().split("T")[0];
 
-  const calculateBehavior = (timeIn, timeOut) => {
+  const calculateBehavior = (timeIn, timeOut, isBeforeHired) => {
     const today = formatDate(selectedDate);
+    const dayOfWeek = new Date(today).getDay();
 
-    console.log("Picked Date:", today);
+    if (isBeforeHired) return "Not Hired Yet";
+    if (dayOfWeek === 0) return "Weekend";
+
+    if (dayOfWeek === 6) {
+      if (!timeIn && !timeOut) return "Weekend";
+    }
 
     if (!timeIn && !timeOut) return "Absent";
     if (!timeIn) return "No Time In";
@@ -44,14 +54,9 @@ const AdminAttendance = () => {
     const lateThreshold = new Date(shiftStart.getTime() + 1 * 60 * 1000);
 
     if (!timeOut) {
-      const now = new Date();
       const inDateStr = timeInDate.toISOString().split("T")[0];
-
-      if (inDateStr === today) {
-        return "On-time";
-      } else {
-        return "No Time Out";
-      }
+      if (inDateStr === today) return "On-time";
+      else return "No Time Out";
     }
 
     const timeOutDate = new Date(`${today}T${timeOut}`);
@@ -70,22 +75,8 @@ const AdminAttendance = () => {
       return "Half-Day";
     }
 
-    const employeeTimeOut = new Date(`${today}T${timeOut}`);
-
-    if (timeInDate <= shiftStart && employeeTimeOut <= halfDayMorningOut) {
-      return "Half-Day";
-    }
-
-    if (
-      timeInDate >= halfDayAfternoonInStart &&
-      timeInDate <= halfDayAfternoonInEnd
-    ) {
-      return "Half-Day";
-    }
-
     if (timeInDate > lateThreshold) return "Late";
-
-    if (employeeTimeOut < shiftEnd) return "Early Out";
+    if (timeOutDate < shiftEnd) return "Early Out";
 
     return "On-Time";
   };
@@ -108,24 +99,27 @@ const AdminAttendance = () => {
 
   const filteredEmployees = (employeeData || [])
     .map((employee) => {
+      const selected = formatDate(selectedDate);
+      const createdDate = formatDate(new Date(employee.createdAt));
+      const isBeforeHired = new Date(selected) < new Date(createdDate);
+
       const attendanceRecord = (attendanceData || []).find((record) => {
         const recordDate = formatDate(new Date(record.date));
-        const selected = formatDate(selectedDate);
         return record.userId === employee._id && recordDate === selected;
       });
-
-      console.log("Selected date:", formatDate(selectedDate));
-      console.log("All attendance records", attendanceRecord);
 
       return {
         id: employee._id,
         firstName: employee.firstName,
         lastName: employee.lastName,
-        timeIn: attendanceRecord?.timeIn || "",
-        timeOut: attendanceRecord?.timeOut || "",
+        date: employee.date,
+        timeIn: isBeforeHired ? "--:--:--" : attendanceRecord?.timeIn || "",
+        timeOut: isBeforeHired ? "--:--:--" : attendanceRecord?.timeOut || "",
+        isBeforeHired,
       };
     })
     .filter((employee) => {
+      if (!employee) return false;
       return (
         employee.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         employee.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -140,6 +134,14 @@ const AdminAttendance = () => {
     startIndex + itemsPerPage
   );
 
+  const handleEditClick = (employeeData) => {
+    setSelectedEmployee(employeeData);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateAttendance = async () => {
+    setIsEditModalOpen(false);
+  };
   return (
     <div className="main-content">
       <div className="user-track-container">
@@ -149,7 +151,11 @@ const AdminAttendance = () => {
             {
               filteredEmployees.filter(
                 (emp) =>
-                  calculateBehavior(emp.timeIn, emp.timeOut) === "On-Time"
+                  calculateBehavior(
+                    emp.timeIn,
+                    emp.timeOut,
+                    emp.isBeforeHired
+                  ) === "On-Time"
               ).length
             }
           </span>
@@ -160,6 +166,17 @@ const AdminAttendance = () => {
             {
               filteredEmployees.filter(
                 (emp) => calculateBehavior(emp.timeIn, emp.timeOut) === "Late"
+              ).length
+            }
+          </span>
+        </div>
+        <div className="user-track">
+          <p>Half-Day Today</p>
+          <span className="user-number">
+            {
+              filteredEmployees.filter(
+                (emp) =>
+                  calculateBehavior(emp.timeIn, emp.timeOut) === "Half-Day"
               ).length
             }
           </span>
@@ -255,6 +272,10 @@ const AdminAttendance = () => {
             <article className="table-header-container">
               <p>Behavior</p>
             </article>
+            <hr className="header-hr"></hr>
+            <article className="table-header-container">
+              <p>Action</p>
+            </article>
           </div>
           {currentEmployees.map((employeeData, index) => (
             <div className="table-content" key={index}>
@@ -275,8 +296,20 @@ const AdminAttendance = () => {
               </article>
               <article className="table-content-container">
                 <p>
-                  {calculateBehavior(employeeData.timeIn, employeeData.timeOut)}
+                  {calculateBehavior(
+                    employeeData.timeIn,
+                    employeeData.timeOut,
+                    employeeData.isBeforeHired
+                  )}
                 </p>
+              </article>
+              <article className="table-content-container">
+                <button
+                  className="action-button"
+                  onClick={() => handleEditClick(employeeData)}
+                >
+                  <IconEdit stroke={2} />
+                </button>
               </article>
             </div>
           ))}
@@ -311,6 +344,14 @@ const AdminAttendance = () => {
           Next
         </button>
       </div>
+
+      {isEditModalOpen && selectedEmployee && (
+        <EditEmployeeAttendanceModal
+          employee={selectedEmployee}
+          onClose={() => setIsEditModalOpen(false)}
+          onUpdate={handleUpdateAttendance}
+        />
+      )}
     </div>
   );
 };

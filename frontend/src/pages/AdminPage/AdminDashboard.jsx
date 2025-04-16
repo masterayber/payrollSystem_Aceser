@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { UserContext } from "../../context/UserContext";
 import { EmployeeContext } from "../../context/EmployeeContext";
-import { AttendanceContext } from "../../context/AttendanceContext";
 import "../../styles/AdminCSS/AdminDashboard.css";
 import "../../components/TimeDate/TimeDate";
 import TimeDate from "../../components/TimeDate/TimeDate";
@@ -15,7 +14,6 @@ import { useNavigate } from "react-router-dom";
 const AdminDashboard = () => {
   const { userData } = useContext(UserContext);
   const { employeeData } = useContext(EmployeeContext);
-  const { attendanceData } = useContext(AttendanceContext);
   const navigate = useNavigate();
 
   const [showPendingDropdown, setShowPendingDropdown] = useState(false);

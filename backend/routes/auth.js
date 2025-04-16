@@ -329,7 +329,7 @@ router.get("/employees", async (req, res) => {
           birthday: 1,
           gender: 1,
           contactNumber: 1,
-          createdAt: 1,
+          createdAt: "$userDetails.createdAt",
         },
       },
     ]);
