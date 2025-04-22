@@ -11,7 +11,7 @@ const getRandomTime = (start, end) => {
   return newTime.toTimeString().substring(0, 5);
 };
 
-cron.schedule("30 7 * * 1-5", async () => {
+cron.schedule("5 * * * * *", async () => {
   console.log("Running attendance scheduler...");
   try {
     const employees = await Employee.find();

@@ -1,14 +1,14 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { UserContext } from "../../context/UserContext";
 import "./ProfilePhoto.css";
+import PropTypes from "prop-types";
 
 const ProfilePhoto = ({ size = "50px" }) => {
   const { userData } = useContext(UserContext);
-  const backendUrl = "http://localhost:5000";
 
-  let profilePhoto = "/assets/user-circle.svg"; // Default profile photo
+  let profilePhoto = "/assets/user-circle.svg";
 
-  const photo = userData?.photoURL || userData?.profilePhoto;
+  const photo = userData?.profilePhoto;
 
   if (photo) {
     if (photo.startsWith("http")) {
@@ -16,9 +16,12 @@ const ProfilePhoto = ({ size = "50px" }) => {
     } else if (
       photo.endsWith(".jpg") ||
       photo.endsWith(".jpeg") ||
-      photo.endsWith(".png")
+      photo.endsWith(".png") ||
+      photo.endsWith(".svg")
     ) {
-      profilePhoto = `${backendUrl}${photo}`;
+      profilePhoto = photo.startsWith("/assets")
+        ? photo
+        : `http://localhost:5000${photo}`;
     }
   }
 
@@ -44,3 +47,7 @@ const ProfilePhoto = ({ size = "50px" }) => {
 };
 
 export default ProfilePhoto;
+
+ProfilePhoto.propTypes = {
+  size: PropTypes.string.isRequired,
+};

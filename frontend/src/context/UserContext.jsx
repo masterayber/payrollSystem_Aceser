@@ -12,10 +12,10 @@ export const UserProvider = ({ children }) => {
     }
   }, []);
 
-  const updateUserProfilePhoto = (newPhotoURL) => {
+  const updateUserProfilePhoto = (newProfilePhoto) => {
     setUserData((prev) => {
       if (!prev) return null;
-      const updatedUser = { ...prev, photoURL: newPhotoURL };
+      const updatedUser = { ...prev, profilePhoto: newProfilePhoto };
       localStorage.setItem("userData", JSON.stringify(updatedUser));
       return updatedUser;
     });

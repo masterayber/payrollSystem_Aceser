@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Reset.css";
@@ -6,7 +6,7 @@ import "../styles/Reset.css";
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const setMessage = useState("");
   const [loading, setLoading] = useState("");
   const navigate = useNavigate();
   const location = useLocation();

@@ -1,10 +1,11 @@
-import React, { useCallback, useState, useContext } from "react";
+import { useCallback, useState, useContext } from "react";
 import Cropper from "react-easy-crop";
 import { UserContext } from "../../../context/UserContext";
 import { getCroppedImg } from "../../../utils/cropImage";
 import "../Modal.css";
 import ConfirmModal from "../Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
+import PropTypes from "prop-types";
 
 const ProfilePhotoCropper = ({ imageSrc, userId, onClose, onCropComplete }) => {
   const { updateUserProfilePhoto } = useContext(UserContext);
@@ -21,12 +22,6 @@ const ProfilePhotoCropper = ({ imageSrc, userId, onClose, onCropComplete }) => {
   const onCropCompleteHandler = useCallback((_, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
-
-  const handleConfirmedMessage = async () => {
-    setIsConfirmModalOpen(false);
-
-    setTimeout(() => setIsConfirmedMessageModalOpen(true), 200);
-  };
 
   const handleCropConfirm = async () => {
     if (!userId) {
@@ -62,7 +57,7 @@ const ProfilePhotoCropper = ({ imageSrc, userId, onClose, onCropComplete }) => {
 
       if (response.ok) {
         const data = await response.json();
-        const newPhotoURL = `http://localhost:5000${data.photoURL}`;
+        const newPhotoURL = `http://localhost:5000${data.profilePhoto}`;
         updateUserProfilePhoto(newPhotoURL);
         onCropComplete(newPhotoURL);
       } else {
@@ -122,3 +117,10 @@ const ProfilePhotoCropper = ({ imageSrc, userId, onClose, onCropComplete }) => {
 };
 
 export default ProfilePhotoCropper;
+
+ProfilePhotoCropper.propTypes = {
+  imageSrc: PropTypes.string.isRequired,
+  userId: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onCropComplete: PropTypes.func.isRequired,
+};

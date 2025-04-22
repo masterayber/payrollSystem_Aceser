@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext, useEffect } from "react";
+import { useState, useRef, useContext, useEffect } from "react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -95,7 +95,7 @@ const AdminAttendance = () => {
     };
 
     fetchAttendanceByDate();
-  }, [selectedDate]);
+  }, [selectedDate, setAttendanceData]);
 
   const filteredEmployees = (employeeData || [])
     .map((employee) => {

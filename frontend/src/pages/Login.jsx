@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import { useState, useContext } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
@@ -28,7 +28,7 @@ const Login = () => {
 
       console.log("user:", user);
 
-      const updatedUserData = { ...user, photoURL: user.photoURL || null };
+      const updatedUserData = { ...(user || null) };
 
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("userData", JSON.stringify(updatedUserData));

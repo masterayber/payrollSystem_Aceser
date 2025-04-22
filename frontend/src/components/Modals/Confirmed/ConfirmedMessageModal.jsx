@@ -1,5 +1,6 @@
-import React from "react";
+import "react";
 import "../Modal.css";
+import PropTypes from "prop-types";
 
 const ConfirmedMessageModal = ({ message, onClose }) => {
   return (
@@ -20,3 +21,8 @@ const ConfirmedMessageModal = ({ message, onClose }) => {
 };
 
 export default ConfirmedMessageModal;
+
+ConfirmedMessageModal.propTypes = {
+  message: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
+};

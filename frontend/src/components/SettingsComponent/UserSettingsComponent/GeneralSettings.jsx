@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { IconCamera, IconCancel, IconEdit } from "@tabler/icons-react";
 import { UserContext } from "../../../context/UserContext";
 import ProfilePhoto from "../../ProfilePhoto/ProfilePhoto";
@@ -108,7 +108,7 @@ const GeneralSettings = () => {
   const handleCropComplete = (croppedImage) => {
     setUserData((prevData) => ({
       ...prevData,
-      photoURL: croppedImage,
+      profilePhoto: croppedImage,
     }));
     setShowCropper(false);
 
@@ -125,7 +125,10 @@ const GeneralSettings = () => {
       );
 
       if (response.ok) {
-        updateUserProfilePhoto(null);
+        const data = await response.json();
+        const updatedPhoto = data?.user?.profilePhoto;
+
+        updateUserProfilePhoto(updatedPhoto);
       } else {
         console.error("Failed to remove profile photo");
       }
@@ -238,17 +241,18 @@ const GeneralSettings = () => {
                 <button className="dropdown-item" onClick={handleUploadClick}>
                   Set Profile Photo
                 </button>
-                {userData?.photoURL && (
-                  <>
-                    <hr />
-                    <button
-                      className="dropdown-item"
-                      onClick={handleRemoveClick}
-                    >
-                      Remove
-                    </button>
-                  </>
-                )}
+                {userData?.profilePhoto &&
+                  !userData.profilePhoto.startsWith("/assets") && (
+                    <>
+                      <hr />
+                      <button
+                        className="dropdown-item"
+                        onClick={handleRemoveClick}
+                      >
+                        Remove
+                      </button>
+                    </>
+                  )}
               </div>
             )}
 

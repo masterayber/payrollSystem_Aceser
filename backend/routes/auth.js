@@ -120,7 +120,6 @@ router.post("/login", async (req, res) => {
       ...userObj,
       employee: employeeObj,
       settings: settingsObj,
-      photoURL: user.profilePhoto || null,
     };
 
     res
@@ -347,8 +346,6 @@ router.put("/updateGeneralSettings/:id", async (req, res) => {
     const userId = req.params.id;
     const { employee, settings, ...userData } = req.body;
 
-    console.log("User Data:", userData);
-
     const existingUser = await User.findById(userId);
     if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
@@ -356,9 +353,6 @@ router.put("/updateGeneralSettings/:id", async (req, res) => {
 
     if (!userData.profilePhoto && existingUser.profilePhoto) {
       userData.profilePhoto = existingUser.profilePhoto;
-    }
-    if (!userData.photoURL && existingUser.photoURL) {
-      userData.photoURL = existingUser.photoURL;
     }
 
     // Update Auths
@@ -390,7 +384,6 @@ router.put("/updateGeneralSettings/:id", async (req, res) => {
       settings: updatedSettings ? updatedSettings.toObject() : {},
     };
 
-    console.log("Combined Data:", combined);
     res.json(combined);
   } catch (error) {
     console.error("Error updating all user data:", error);
@@ -537,9 +530,6 @@ router.put(
       const userId = req.params.id;
       const user = await User.findById(userId);
 
-      console.log("User found:", user);
-      console.log("User ID:", userId);
-
       if (!user) return res.status(404).json({ message: "User not found" });
 
       if (!req.file)
@@ -554,11 +544,12 @@ router.put(
       }
 
       user.profilePhoto = `/uploads/${req.file.filename}`;
+      console.log("New profile photo path:", user.profilePhoto);
       await user.save();
 
       res.status(200).json({
         message: "Profile photo updated",
-        photoURL: user.profilePhoto,
+        profilePhoto: user.profilePhoto,
       });
     } catch (error) {
       console.error("Error updating profile photo:", error);
@@ -577,23 +568,38 @@ router.delete("/remove-profile-photo/:id", async (req, res) => {
     }
 
     const filePath = path.join(__dirname, "..", user.profilePhoto);
-    console.log("Attempting to delete file:", filePath);
 
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
-      console.log("File deleted successfully.");
+      console.log("File deleted successfully:", filePath);
     } else {
-      console.log("File not found in uploads folder.");
+      console.log("File not found:", filePath);
     }
 
-    user.profilePhoto = null;
+    let defaultPhoto = "/assets/user-circle.svg";
+
+    if (user.role === "Employee") {
+      const employee = await Employee.findOne({ email: user.email });
+
+      if (employee && employee.gender) {
+        const gender = employee.gender;
+
+        console.log("Employee Gender:", gender);
+        if (gender === "Male") {
+          defaultPhoto = "/assets/genderIcons/male.svg";
+        } else if (gender === "Female") {
+          defaultPhoto = "/assets/genderIcons/female.svg";
+        }
+      }
+    }
+
+    user.profilePhoto = defaultPhoto;
     await user.save();
 
     return res
       .status(200)
-      .json({ message: "Profile photo removed successfully", user });
+      .json({ message: "Profile photo set to default", user });
   } catch (error) {
-    console.error("Error in deleting profile photo:", error);
     return res.status(500).json({ message: "Internal server error", error });
   }
 });

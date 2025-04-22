@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "../Modal.css";
 import Dropdown from "../../Dropdown/Dropdown";
+import PropTypes from "prop-types";
 
 const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   const [editedEmployee, setEditedEmployee] = useState({ ...employee });
@@ -140,3 +141,9 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
 };
 
 export default EditEmployeeModal;
+
+EditEmployeeModal.propTypes = {
+  employee: PropTypes.shape().isRequired,
+  onClose: PropTypes.func.isRequired,
+  onUpdateEmployee: PropTypes.func.isRequired,
+};
