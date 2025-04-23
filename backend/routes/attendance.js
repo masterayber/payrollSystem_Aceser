@@ -4,6 +4,7 @@ const router = express.Router();
 
 const Attendance = require("../models/attendance");
 
+// Route Record for Admin
 router.get("/attendance", async (req, res) => {
   try {
     const { date } = req.query;
@@ -15,7 +16,6 @@ router.get("/attendance", async (req, res) => {
       console.log("Filtered by date:", date);
     } else {
       attendance = await Attendance.find({});
-      console.log("Returning all attendance records");
     }
 
     res.json(attendance);
@@ -24,19 +24,53 @@ router.get("/attendance", async (req, res) => {
   }
 });
 
-// router.get("/today", async (req, res) => {
-//   try {
-//     const today = new Date();
-//     const formattedToday = today.toISOString().split("T")[0].trim();
+// Route for user attendance today
+router.get("/:userId/today", async (req, res) => {
+  try {
+    const { userId } = req.params;
 
-//     console.log("Today's date:", formattedToday);
+    const today = new Date().toISOString().slice(0, 10);
 
-//     const todayAttendance = await Attendance.find({ date: formattedToday });
-//     console.log("Today's Attendance:", todayAttendance);
-//     res.json(todayAttendance);
-//   } catch (error) {
-//     res.json(500).json({ error: "Failed to fetch today's attendance" });
-//   }
-// });
+    const attendance = await Attendance.findOne({
+      userId,
+      date: today,
+    });
+
+    if (!attendance) {
+      return res
+        .status(404)
+        .json({ message: "Attendance not found for today" });
+    }
+
+    res.json(attendance);
+  } catch (error) {
+    console.error("Error fetching today's attendance:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
+    const total = await Attendance.countDocuments({ userId });
+    const attendanceRecords = await Attendance.find({ userId })
+      .sort({ date: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      data: attendanceRecords,
+    });
+  } catch (error) {
+    console.error("Error fetching attendance records:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 module.exports = router;

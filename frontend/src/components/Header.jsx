@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import ProfilePhoto from "./ProfilePhoto/ProfilePhoto";
@@ -127,7 +127,7 @@ function Header({ role }) {
       <div className="user-header">
         <p>{userData?.employee?.firstName}</p>
         <div className="icon-count" onClick={toggleDropDown}>
-          <ProfilePhoto user={userData} />
+          <ProfilePhoto size="50px" />
           <div className="dropdown-arrow">
             {showDropDown ? (
               <svg

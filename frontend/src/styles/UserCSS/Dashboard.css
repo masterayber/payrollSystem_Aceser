@@ -230,10 +230,6 @@
   min-height: 52px;
 }
 
-.dots-button {
-  cursor: pointer;
-}
-
 .dropdown-details {
   position: absolute;
   top: 100%;
