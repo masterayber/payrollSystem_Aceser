@@ -13,6 +13,12 @@ const Dashboard = () => {
   const [showLeaveDropdown, setShowLeaveDropdown] = useState(false);
   const [showDailyDropdown, setShowDailyDropdown] = useState(false);
   const [timingMessage, setTimingMessage] = useState("");
+  const [todayAttendance, setTodayAttendance] = useState(null);
+  const [summary, setSummary] = useState({
+    daysWorked: "",
+    hoursWorked: "",
+    overtimeHours: "",
+  });
 
   const leaveDropdownRef = useRef(null);
   const leaveSvgRef = useRef(null);
@@ -36,49 +42,116 @@ const Dashboard = () => {
     const fetchAttendance = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/attendance/${userData?.employee?._id}/today`
+          `http://localhost:5000/api/attendance/${userData?.employee?._id}/records`
         );
+
         if (res.ok) {
           const data = await res.json();
           setAttendance(data);
 
-          const scheduledTimeIn = new Date();
-          scheduledTimeIn.setHours(8, 0, 0, 0);
+          let totalDaysWorked = 0;
+          let totalHoursWorked = 0;
+          let totalOvertimeHours = 0;
 
-          const todayStr = new Date().toISOString().slice(0, 10);
-          const actualTimeIn = new Date(`${todayStr}T${data.timeIn}`);
+          const todayDate = new Date().toISOString().slice(0, 10);
 
-          const diffInMinutes = Math.floor(
-            (actualTimeIn - scheduledTimeIn) / (1000 * 60)
+          const todayRecord = attendance?.find(
+            (record) => record.date === todayDate
           );
+          setTodayAttendance(todayRecord);
 
-          console.log("Difference in minutes:", diffInMinutes);
+          let foundToday = false;
 
-          if (diffInMinutes < 0) {
+          data.forEach((record) => {
+            if (record.timeIn && record.timeOut) {
+              totalDaysWorked++;
+
+              const timeIn = new Date(`${record.date}T${record.timeIn}`);
+              const timeOut = new Date(`${record.date}T${record.timeOut}`);
+
+              const breakStart = new Date(`${record.date}T12:00:00`);
+              const breakEnd = new Date(`${record.date}T12:00:00`);
+
+              let workedHours =
+                (timeOut.getTime() - timeIn.getTime()) / (1000 * 60 * 60);
+
+              if (timeIn < breakEnd && timeOut > breakStart) {
+                workedHours -= 1;
+              }
+
+              totalHoursWorked += workedHours;
+
+              // // Approved overtime check
+              // if (
+              //   record.overtimeFiled &&
+              //   record.overtimeStatus === "approved"
+              // ) {
+              //   const standardOut = new Date(`${record.date}T17:00:00`);
+              //   if (timeOut > standardOut) {
+              //     const overtimeHours =
+              //       (timeOut.getTime() - standardOut.getTime()) /
+              //       (1000 * 60 * 60);
+              //     totalOvertimeHours += overtimeHours;
+              //   }
+              // }
+
+              console.log("record date:", record.date);
+
+              if (record.date === todayDate) {
+                foundToday = true;
+
+                if (!record.timeIn) {
+                  setTimingMessage(
+                    `You have no time in yet today! You forget, don't you?`
+                  );
+                } else {
+                  const scheduledTimeIn = new Date(`${record.date}T08:00:00`);
+                  const actualTimeIn = new Date(
+                    `${record.date}T${record.timeIn}`
+                  );
+                  const diffInMinutes = Math.floor(
+                    (actualTimeIn - scheduledTimeIn) / (1000 * 60)
+                  );
+
+                  if (diffInMinutes < 0) {
+                    setTimingMessage(
+                      `You timed in ${Math.abs(
+                        diffInMinutes
+                      )} minutes early today. Keep it up!`
+                    );
+                  } else if (diffInMinutes === 0) {
+                    setTimingMessage(`You timed in exactly on time today.`);
+                  } else {
+                    setTimingMessage(
+                      `You timed in ${diffInMinutes} minutes late today`
+                    );
+                  }
+                }
+              }
+            }
+          });
+
+          if (!foundToday) {
             setTimingMessage(
-              `You Timed in ${Math.abs(
-                diffInMinutes
-              )} minutes early today. Keep it up!`
+              `You have no time in yet today! You forget, don't you?`
             );
-          } else if (diffInMinutes === 0) {
-            setTimingMessage(`You time in exactly on time today. Good job!`);
-          } else if (diffInMinutes > 0) {
-            setTimingMessage(
-              `You timed in ${Math.abs(diffInMinutes)} minutes late today.`
-            );
-          } else if (diffInMinutes === "null") {
-            setTimingMessage(`You have not timed in yet today.`);
           }
+
+          setSummary({
+            daysWorked: totalDaysWorked,
+            hoursWorked: totalHoursWorked.toFixed(2),
+            overtimeHours: totalOvertimeHours.toFixed(2),
+          });
         }
-      } catch (err) {
-        console.error("Error fetching attendance:", err);
+      } catch (error) {
+        console.error("Error fetching attedance:", error);
       }
     };
 
-    if (userData?._id) {
+    if (userData?.employee?._id) {
       fetchAttendance();
     }
-  }, [userData]);
+  });
 
   const formatTime = (time) => {
     if (!time) return "--:--";
@@ -142,7 +215,9 @@ const Dashboard = () => {
               <IconLogin2 strokeWidth={1.5} width={40} height={40} />
               <div className="time-in-details">
                 <div className="time-timer">
-                  {attendance?.timeIn ? formatTime(attendance.timeIn) : "--:--"}
+                  {todayAttendance?.timeIn
+                    ? formatTime(todayAttendance.timeIn)
+                    : "--:--"}
                 </div>
                 <p>Time IN</p>
               </div>

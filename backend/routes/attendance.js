@@ -49,6 +49,16 @@ router.get("/:userId/today", async (req, res) => {
   }
 });
 
+router.get("/:userId/records", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const attendance = await Attendance.find({ userId });
+    res.json(attendance);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.get("/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
