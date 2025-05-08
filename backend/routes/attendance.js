@@ -24,7 +24,7 @@ router.get("/attendance", async (req, res) => {
   }
 });
 
-// Route for user attendance today
+// Route for user's attendance today
 router.get("/:userId/today", async (req, res) => {
   try {
     const { userId } = req.params;

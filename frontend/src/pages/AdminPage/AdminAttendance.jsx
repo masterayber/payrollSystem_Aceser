@@ -75,7 +75,7 @@ const AdminAttendance = () => {
       return "Half-Day";
     }
 
-    if (timeInDate > lateThreshold) return "Late";
+    if (timeInDate >= lateThreshold) return "Late";
     if (timeOutDate < shiftEnd) return "Early Out";
 
     return "On-Time";
@@ -146,7 +146,7 @@ const AdminAttendance = () => {
     <div className="main-content">
       <div className="user-track-container">
         <div className="user-track">
-          <p>On-time Today</p>
+          <p>On-time</p>
           <span className="user-number">
             {
               filteredEmployees.filter(
@@ -161,7 +161,7 @@ const AdminAttendance = () => {
           </span>
         </div>
         <div className="user-track">
-          <p>Late Today</p>
+          <p>Late</p>
           <span className="user-number">
             {
               filteredEmployees.filter(
@@ -171,7 +171,7 @@ const AdminAttendance = () => {
           </span>
         </div>
         <div className="user-track">
-          <p>Half-Day Today</p>
+          <p>Half-Day</p>
           <span className="user-number">
             {
               filteredEmployees.filter(
@@ -182,7 +182,7 @@ const AdminAttendance = () => {
           </span>
         </div>
         <div className="user-track">
-          <p>Absent Today</p>
+          <p>Absent</p>
           <span className="user-number">
             {
               filteredEmployees.filter(
@@ -192,7 +192,7 @@ const AdminAttendance = () => {
           </span>
         </div>
         <div className="user-track">
-          <p>On-Leave Today</p>
+          <p>On-Leave</p>
           <span className="user-number">0</span>
         </div>
       </div>

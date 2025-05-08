@@ -17,8 +17,15 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   const [showPendingDropdown, setShowPendingDropdown] = useState(false);
+
   const [timedInCount, setTimedInCount] = useState(0);
   const [timedOutCount, setTimedOutCount] = useState(0);
+
+  const [onTimeCount, setOnTimeCount] = useState(0);
+  const [lateCount, setLateCount] = useState(0);
+  const [absentCount, setAbsentCount] = useState(0);
+  // const [onLeaveCount, setOnLeaveCount] = useState(0);
+
   const [pendingUsers, setPendingUsers] = useState([]);
 
   const pendingDropdownRef = useRef(null);
@@ -35,18 +42,50 @@ const AdminDashboard = () => {
         const today = new Date();
         const formattedToday = today.toISOString().split("T")[0].trim();
 
-        const res = await axios.get(
+        // Fetch all employees
+        const empRes = await axios.get(
+          "http://localhost:5000/api/auth/employees"
+        );
+        const employees = empRes.data;
+
+        // Fetch today's attendance
+        const attRes = await axios.get(
           `http://localhost:5000/api/attendance/attendance?date=${formattedToday}`
         );
-        const data = res.data;
+        const attendance = attRes.data;
 
-        if (data && data.length > 0) {
-          const timedIn = data.filter((entry) => entry.timeIn).length;
-          const timedOut = data.filter((entry) => entry.timeOut).length;
+        if (attendance && attendance.length > 0) {
+          const timedIn = attendance.filter((entry) => entry.timeIn).length;
+          const timedOut = attendance.filter((entry) => entry.timeOut).length;
 
           setTimedInCount(timedIn);
           setTimedOutCount(timedOut);
         }
+
+        let onTime = 0;
+        let late = 0;
+
+        const scheduledTimeIn = new Date(`${formattedToday}T08:00:00`);
+
+        attendance.forEach((record) => {
+          if (record.timeIn) {
+            const [hours, minutes] = record.timeIn.split(":").map(Number);
+            const timeIn = new Date(formattedToday);
+            timeIn.setHours(hours, minutes, 0, 0);
+
+            if (timeIn <= scheduledTimeIn) {
+              onTime++;
+            } else {
+              late++;
+            }
+          }
+        });
+
+        const absent = employees.length - attendance.length;
+
+        setOnTimeCount(onTime);
+        setLateCount(late);
+        setAbsentCount(absent);
       } catch (error) {
         console.error("Error fetching today's attendance:", error);
       }
@@ -91,10 +130,10 @@ const AdminDashboard = () => {
   }, [showPendingDropdown]);
 
   const todayAttendanceData = {
-    onTime: 150,
-    late: 17,
-    absent: 7,
-    leave: 3,
+    onTime: onTimeCount,
+    late: lateCount,
+    absent: absentCount,
+    leave: 0,
   };
 
   return (
