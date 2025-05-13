@@ -4,9 +4,10 @@ const dropdownSchema = new mongoose.Schema({
   category: {
     type: String,
     require: true,
+    unique: true,
   },
   options: {
-    type: String,
+    type: [String],
     required: true,
   },
 });

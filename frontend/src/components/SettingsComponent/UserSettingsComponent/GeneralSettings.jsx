@@ -15,7 +15,7 @@ const GeneralSettings = () => {
 
   const [showPhotoChange, setShowPhotoChange] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [IsRemoveConfirmMdoalOpen, setIsRemoveConfirmModalOpen] =
+  const [isRemoveConfirmModalOpen, setIsRemoveConfirmModalOpen] =
     useState(false);
   const [isConfirmedMessageModalOpen, setIsConfirmedMessageModalOpen] =
     useState(false);
@@ -79,7 +79,6 @@ const GeneralSettings = () => {
   };
 
   const togglePhotoChange = (event) => {
-    console.log("ProfilePhoto:", userData?.profilePhoto);
     event.stopPropagation();
     setShowPhotoChange((prev) => !prev);
   };
@@ -286,7 +285,7 @@ const GeneralSettings = () => {
         />
       )}
 
-      {IsRemoveConfirmMdoalOpen && (
+      {isRemoveConfirmModalOpen && (
         <ConfirmModal
           title="Remove Profile Photo"
           message="Are you sure you want to remove your profile photo?"

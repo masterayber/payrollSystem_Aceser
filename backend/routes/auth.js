@@ -324,6 +324,7 @@ router.get("/employees", async (req, res) => {
           lastName: 1,
           email: 1,
           role: 1,
+          type: 1,
           address: 1,
           birthday: 1,
           gender: 1,

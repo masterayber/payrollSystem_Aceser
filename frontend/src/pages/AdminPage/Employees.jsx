@@ -53,6 +53,13 @@ const Employees = () => {
     };
   }, [setEmployeeData]);
 
+  const probationaryCount = employeeData.filter(
+    (employee) => employee.type === "Probationary"
+  ).length;
+  const regularCount = employeeData.filter(
+    (employee) => employee.type === "Regular"
+  ).length;
+
   const filteredEmployees = employeeData.filter((employee) =>
     Object.values(employee).some((value) =>
       value.toString().toLowerCase().includes(searchQuery.toLowerCase())
@@ -100,12 +107,12 @@ const Employees = () => {
           <span className="user-number">{employeeData.length}</span>
         </div>
         <div className="user-track">
-          <p>Total Regural Employees</p>
-          <span className="user-number">157</span>
+          <p>Total Regular Employees</p>
+          <span className="user-number">{regularCount}</span>
         </div>
         <div className="user-track">
           <p>Total Probationary Employees</p>
-          <span className="user-number">20</span>
+          <span className="user-number">{probationaryCount}</span>
         </div>
       </div>
 
