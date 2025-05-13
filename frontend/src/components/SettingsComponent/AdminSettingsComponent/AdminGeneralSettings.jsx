@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { IconCamera } from "@tabler/icons-react";
 import { UserContext } from "../../../context/UserContext";
 import { SettingsContext } from "../../../context/SettingsContext";

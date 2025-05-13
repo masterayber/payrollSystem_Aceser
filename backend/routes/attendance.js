@@ -13,7 +13,6 @@ router.get("/attendance", async (req, res) => {
 
     if (date) {
       attendance = await Attendance.find({ date: date.trim() });
-      console.log("Filtered by date:", date);
     } else {
       attendance = await Attendance.find({});
     }

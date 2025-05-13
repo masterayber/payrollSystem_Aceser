@@ -79,6 +79,7 @@ const GeneralSettings = () => {
   };
 
   const togglePhotoChange = (event) => {
+    console.log("ProfilePhoto:", userData?.profilePhoto);
     event.stopPropagation();
     setShowPhotoChange((prev) => !prev);
   };
@@ -230,7 +231,7 @@ const GeneralSettings = () => {
     <div className="settings-content">
       <div className="settings-profile">
         <div className="profile-section">
-          <div className="profile-picture">
+          <div className="profile-photo-container">
             <ProfilePhoto size="100px" />
             <div className="camera-icon" onClick={togglePhotoChange}>
               <IconCamera strokeWidth={2} />
@@ -241,29 +242,28 @@ const GeneralSettings = () => {
                 <button className="dropdown-item" onClick={handleUploadClick}>
                   Set Profile Photo
                 </button>
-                {userData?.profilePhoto &&
-                  !userData.profilePhoto.startsWith("/assets") && (
-                    <>
-                      <hr />
-                      <button
-                        className="dropdown-item"
-                        onClick={handleRemoveClick}
-                      >
-                        Remove
-                      </button>
-                    </>
-                  )}
+                {userData?.profilePhoto && (
+                  <>
+                    <hr />
+                    <button
+                      className="dropdown-item"
+                      onClick={handleRemoveClick}
+                    >
+                      Remove
+                    </button>
+                  </>
+                )}
               </div>
             )}
-
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              accept="image*/"
-              onChange={handleFileChange}
-            />
           </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            accept="image*/"
+            onChange={handleFileChange}
+          />
 
           <div className="profile-details">
             <p className="profile-name">{fullName}</p>
@@ -271,7 +271,7 @@ const GeneralSettings = () => {
           </div>
         </div>
 
-        <button className="tooltip-button" onClick={toggleEdit}>
+        <button className="setting-edit-button" onClick={toggleEdit}>
           {isEditing ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
           {isEditing ? "Cancel" : "Edit Profile"}
         </button>

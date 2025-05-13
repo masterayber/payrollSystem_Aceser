@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import GeneralSettings from "../../components/SettingsComponent/UserSettingsComponent/GeneralSettings";
 import ManageSettings from "../../components/SettingsComponent/UserSettingsComponent/ManageSettings";
 import AccessibilittySettings from "../../components/SettingsComponent/UserSettingsComponent/AccessibilittySettings";

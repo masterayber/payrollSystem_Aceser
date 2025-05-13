@@ -1,6 +1,7 @@
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import "./AttendanceChart.css";
+import PropTypes from "prop-types";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -60,3 +61,7 @@ const AttendanceChart = ({ attendanceData }) => {
 };
 
 export default AttendanceChart;
+
+AttendanceChart.propTypes = {
+  attendanceData: PropTypes.string.isRequired,
+};
