@@ -24,20 +24,17 @@ const employeeSchema = new mongoose.Schema({
   },
   birthday: {
     type: Date,
-    default: null,
   },
   contactNumber: {
     type: String,
-    default: "",
   },
   gender: {
     type: String,
-    default: "",
   },
   address: {
     country: {
       type: String,
-      default: "",
+      default: "Philippines",
     },
     region: {
       type: String,
@@ -67,19 +64,15 @@ const employeeSchema = new mongoose.Schema({
   emergencyDetails: {
     contactFirstName: {
       type: String,
-      default: "",
     },
     contactLastName: {
       type: String,
-      default: "",
     },
     contactEmergency: {
       type: String,
-      default: "",
     },
     contactAddress: {
       type: String,
-      default: "",
     },
   },
   createdAt: {

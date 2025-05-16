@@ -26,8 +26,6 @@ const Login = () => {
 
       const user = response.data.user;
 
-      console.log("user:", user);
-
       const updatedUserData = { ...(user || null) };
 
       localStorage.setItem("token", response.data.token);

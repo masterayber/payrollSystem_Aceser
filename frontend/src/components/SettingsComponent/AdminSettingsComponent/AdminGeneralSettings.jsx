@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef, useContext } from "react";
 import { IconCamera, IconCancel, IconEdit } from "@tabler/icons-react";
 import { UserContext } from "../../../context/UserContext";
-// import { SettingsContext } from "../../../context/SettingsContext";
 import ProfilePhoto from "../../ProfilePhoto/ProfilePhoto";
 import ProfilePhotoCropper from "../../Modals/ProfilePhotoCropper/ProfilePhotoCropper";
 import ConfirmModal from "../../Modals/Confirm/ConfirmModal";
@@ -9,13 +8,8 @@ import ConfirmedMessageModal from "../../Modals/Confirmed/ConfirmedMessageModal"
 import "../SettingsComponent.css";
 
 const AdminGeneralSettings = () => {
-  // const { settingsData, setSettingsData } = useContext(SettingsContext);
   const { userData, setUserData, updateUserProfilePhoto } =
     useContext(UserContext);
-
-  // const [formData, setFormData] = useState({});
-  // const [initialFormData, setInitialFormData] = useState(null);
-  // const [isChanged, setIsChanged] = useState(false);
 
   const changePhotoRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -40,11 +34,12 @@ const AdminGeneralSettings = () => {
       street: "",
       postalCode: "",
     },
-    emergencyDetails: userData?.employee?.emergencyDetails || {
-      contactFirstName: "",
-      contactLastName: "",
-      contactEmergency: "",
-      contactAddress: "",
+    generalSettings: userData?.settings?.general || {
+      companyName: "",
+      companyLogo: "",
+      companyContact: "",
+      dateFormat: "",
+      timeFormat: "",
     },
     ...userData,
   });
@@ -55,7 +50,15 @@ const AdminGeneralSettings = () => {
     setTempData((prevData) => {
       let updatedData = { ...prevData };
 
-      if (name === "email") {
+      if (name.includes(".")) {
+        const keys = name.split(".");
+        const [parent, child] = keys;
+
+        updatedData[parent] = {
+          ...prevData[parent],
+          [child]: value || "",
+        };
+      } else if (name === "email") {
         updatedData.email = value || "";
         if (updatedData.employee) {
           updatedData.employee.email = value || "";
@@ -70,9 +73,9 @@ const AdminGeneralSettings = () => {
           ...prevData.address,
           [name]: value || "",
         };
-      } else if (name in prevData.emergencyDetails) {
-        updatedData.emergencyDetails = {
-          ...prevData.emergencyDetails,
+      } else if (name in prevData.generalSettings) {
+        updatedData.generalSettings = {
+          ...prevData.generalSettings,
           [name]: value || "",
         };
       } else {
@@ -165,9 +168,27 @@ const AdminGeneralSettings = () => {
   });
 
   const handleCancel = () => {
-    setTempData(userData);
+    setTempData({
+      address: userData?.employee?.address || {
+        country: "",
+        region: "",
+        province: "",
+        city: "",
+        barangay: "",
+        street: "",
+        postalCode: "",
+      },
+      generalSettings: userData?.settings?.general || {
+        companyName: "",
+        companyLogo: "",
+        companyContact: "",
+        dateFormat: "",
+        timeFormat: "",
+      },
+      ...userData,
+    });
     setIsChanged(false);
-    setIsEditing(false);
+    setIsEditing(!isEditing);
   };
 
   const toggleEdit = () => {
@@ -182,11 +203,12 @@ const AdminGeneralSettings = () => {
           street: "",
           postalCode: "",
         },
-        emergencyDetails: userData?.employee?.emergencyDetails || {
-          contactFirstName: "",
-          contactLastName: "",
-          contactEmergency: "",
-          contactAddress: "",
+        generalSettings: userData?.settings?.general || {
+          companyName: "",
+          companyLogo: "",
+          companyContact: "",
+          dateFormat: "",
+          timeFormat: "",
         },
         ...userData,
       });
@@ -201,6 +223,18 @@ const AdminGeneralSettings = () => {
 
   const handleConfirmSave = async () => {
     try {
+      const payload = {
+        ...tempData,
+        employee: {
+          ...tempData.employee,
+          address: tempData.address,
+        },
+        settings: {
+          ...tempData.settings,
+          general: tempData.generalSettings,
+        },
+      };
+
       const response = await fetch(
         `http://localhost:5000/api/auth/updateGeneralSettings/${userData._id}`,
         {
@@ -208,7 +242,7 @@ const AdminGeneralSettings = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(tempData),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -369,49 +403,6 @@ const AdminGeneralSettings = () => {
             </div>
           </div>
         </div>
-        <div className="setting-tab-flex">
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Birthday</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="date"
-                  name="birthday"
-                  value={
-                    tempData?.employee?.birthday
-                      ? tempData?.employee?.birthday.split("T")[0]
-                      : ""
-                  }
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Gender</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="gender"
-                  placeholder={
-                    isEditing || tempData?.employee?.gender
-                      ? "Enter Gender"
-                      : ""
-                  }
-                  value={tempData?.employee?.gender || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="setting-tab">
@@ -426,13 +417,13 @@ const AdminGeneralSettings = () => {
             <div className="input-group-signup">
               <input
                 type="text"
-                name="companyName"
+                name="generalSettings.companyName"
                 placeholder={
-                  isEditing || tempData?.employee?.companyName
+                  isEditing || tempData?.generalSettings?.companyName
                     ? "Enter Company Name"
                     : ""
                 }
-                value={tempData?.employee?.companyName || ""}
+                value={tempData?.generalSettings?.companyName || ""}
                 onChange={handleInputChange}
                 disabled={!isEditing}
               />
@@ -449,7 +440,7 @@ const AdminGeneralSettings = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  name="companyLogo"
+                  name="generalSettings.companyLogo"
                   placeholder="Choose file"
                   onChange={handleInputChange}
                 />
@@ -464,13 +455,13 @@ const AdminGeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="companyContact"
+                  name="generalSettings.companyContact"
                   placeholder={
-                    isEditing || tempData?.employee?.companyContact
+                    isEditing || tempData?.generalSettings?.companyContact
                       ? "Enter Contact Number"
                       : ""
                   }
-                  value={tempData?.employee?.companyContact || ""}
+                  value={tempData?.generalSettings?.companyContact || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -484,22 +475,39 @@ const AdminGeneralSettings = () => {
         <div className="setting-tab-title">
           <p>Address Details</p>
         </div>
+        <div className="setting-tab-container">
+          <div className="input-container">
+            <div className="label-container">
+              <label>Country</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="address.country"
+                placeholder={
+                  isEditing || tempData?.address?.country ? "Enter Country" : ""
+                }
+                value={tempData?.address?.country || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
+        </div>
         <div className="setting-tab-flex">
           <div className="setting-tab-container">
             <div className="input-container">
               <div className="label-container">
-                <label>Country</label>
+                <label>Region</label>
               </div>
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="country"
+                  name="address.region"
                   placeholder={
-                    isEditing || tempData?.employee?.country
-                      ? "Enter Country"
-                      : ""
+                    isEditing || tempData?.address?.region ? "Enter Region" : ""
                   }
-                  value={tempData?.employee?.country || ""}
+                  value={tempData?.address?.region || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -509,18 +517,18 @@ const AdminGeneralSettings = () => {
           <div className="setting-tab-container">
             <div className="input-container">
               <div className="label-container">
-                <label>Region</label>
+                <label>Province</label>
               </div>
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="region"
+                  name="address.province"
                   placeholder={
-                    isEditing || tempData?.employee?.region
-                      ? "Enter Region"
+                    isEditing || tempData?.address?.province
+                      ? "Enter Province"
                       : ""
                   }
-                  value={tempData?.address?.region || ""}
+                  value={tempData?.address?.province || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -538,11 +546,11 @@ const AdminGeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="city"
+                  name="address.city"
                   placeholder={
                     isEditing || tempData?.address?.city ? "Enter City" : ""
                   }
-                  value={tempData?.employee?.city || ""}
+                  value={tempData?.address?.city || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -557,13 +565,13 @@ const AdminGeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="barangay"
+                  name="address.barangay"
                   placeholder={
-                    isEditing || tempData?.employee?.barangay
+                    isEditing || tempData?.address?.barangay
                       ? "Enter Barangay"
                       : ""
                   }
-                  value={tempData?.employee?.barangay || ""}
+                  value={tempData?.address?.barangay || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -581,13 +589,11 @@ const AdminGeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="street"
+                  name="address.street"
                   placeholder={
-                    isEditing || tempData?.employee?.street
-                      ? "Enter Street"
-                      : ""
+                    isEditing || tempData?.address?.street ? "Enter Street" : ""
                   }
-                  value={tempData?.employee?.street || ""}
+                  value={tempData?.address?.street || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -602,13 +608,13 @@ const AdminGeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="postalCode"
+                  name="address.postalCode"
                   placeholder={
-                    isEditing || tempData?.employee?.postalCode
+                    isEditing || tempData?.address?.postalCode
                       ? "Enter Postal"
                       : ""
                   }
-                  value={tempData?.employee?.postalCode || ""}
+                  value={tempData?.address?.postalCode || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -631,10 +637,15 @@ const AdminGeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="dateFormat"
-                  placeholder="MM-DD-YYYY"
-                  value={tempData?.dateFormat}
+                  name="generalSettings.dateFormat"
+                  placeholder={
+                    isEditing || tempData?.generalSettings?.dateFormat
+                      ? "Enter Date Format"
+                      : ""
+                  }
+                  value={tempData?.generalSettings?.dateFormat || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -647,10 +658,15 @@ const AdminGeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="timeFormat"
-                  placeholder="12 Hour"
-                  value={tempData?.timeFormat}
+                  name="generalSettings.timeFormat"
+                  placeholder={
+                    isEditing || tempData?.generalSettings?.timeFormat
+                      ? "Enter Time Format"
+                      : ""
+                  }
+                  value={tempData?.generalSettings?.timeFormat || ""}
                   onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
             </div>

@@ -60,14 +60,29 @@ router.post("/signup", async (req, res) => {
     });
     await user.save();
 
-    const employee = new Employee({
+    let employeeData = {
       firstName,
       lastName,
       email,
       role: user.role,
       type: defaultStatus,
       createdAt: new Date(),
-    });
+    };
+
+    if (user.role === "Employee") {
+      employeeData.contactNumber = "";
+      employeeData.birthday = "";
+      employeeData.gender = user.gender || "Male";
+
+      employeeData.emergencyDetails = {
+        contactFirstName: "",
+        contactLastName: "",
+        contactEmergency: "",
+        contactAddress: "",
+      };
+    }
+
+    const employee = new Employee(employeeData);
     await employee.save();
 
     const settings = new Settings({
@@ -368,14 +383,14 @@ router.put("/updateGeneralSettings/:id", async (req, res) => {
     // Update Employees
     const updatedEmployee = await Employee.findOneAndUpdate(
       { email: updatedUser.email },
-      employee,
+      { $set: employee },
       { new: true }
     );
 
-    //Update Settings
+    // Update Settings
     const updatedSettings = await Settings.findOneAndUpdate(
       { userId },
-      settings,
+      { $set: settings },
       { new: true }
     );
 
@@ -545,7 +560,6 @@ router.put(
       }
 
       user.profilePhoto = `/uploads/${req.file.filename}`;
-      console.log("New profile photo path:", user.profilePhoto);
       await user.save();
 
       res.status(200).json({

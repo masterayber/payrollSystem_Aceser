@@ -46,9 +46,17 @@ const GeneralSettings = () => {
     const { name, value } = event.target;
 
     setTempData((prevData) => {
-      let updatedData = { ...prevData };
+      const updatedData = { ...prevData };
 
-      if (name === "email") {
+      if (name.includes(".")) {
+        const keys = name.split(".");
+        const [parent, child] = keys;
+
+        updatedData[parent] = {
+          ...prevData[parent],
+          [child]: value || "",
+        };
+      } else if (name === "email") {
         updatedData.email = value || "";
         if (updatedData.employee) {
           updatedData.employee.email = value || "";
@@ -158,9 +166,26 @@ const GeneralSettings = () => {
   });
 
   const handleCancel = () => {
-    setTempData(userData);
+    setTempData({
+      address: userData?.employee?.address || {
+        country: "",
+        region: "",
+        province: "",
+        city: "",
+        barangay: "",
+        street: "",
+        postalCode: "",
+      },
+      emergencyDetails: userData?.employee?.emergencyDetails || {
+        contactFirstName: "",
+        contactLastName: "",
+        contactEmergency: "",
+        contactAddress: "",
+      },
+      ...userData,
+    });
     setIsChanged(false);
-    setIsEditing(false);
+    setIsEditing(!isEditing);
   };
 
   const toggleEdit = () => {
@@ -174,6 +199,11 @@ const GeneralSettings = () => {
           barangay: "",
           street: "",
           postalCode: "",
+        },
+        companyInfo: userData?.employee?.companyInfo || {
+          companyName: "",
+          companyLogo: "",
+          companyContact: "",
         },
         emergencyDetails: userData?.employee?.emergencyDetails || {
           contactFirstName: "",
@@ -194,6 +224,17 @@ const GeneralSettings = () => {
 
   const handleConfirmSave = async () => {
     try {
+      const payload = {
+        ...tempData,
+        employee: {
+          ...tempData.employee,
+          address: tempData.address,
+          companyInfo: tempData.companyInfo,
+          emergencyDetails: tempData.emergencyDetails,
+        },
+        settings: tempData.settings,
+      };
+
       const response = await fetch(
         `http://localhost:5000/api/auth/updateGeneralSettings/${userData._id}`,
         {
@@ -201,7 +242,7 @@ const GeneralSettings = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(tempData),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -440,13 +481,13 @@ const GeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="country"
+                  name="address.country"
                   placeholder={
                     isEditing || tempData?.address?.country
                       ? "Enter Country"
                       : ""
                   }
-                  value={tempData?.address?.country}
+                  value={tempData?.address?.country || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -464,11 +505,11 @@ const GeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="region"
+                  name="address.region"
                   placeholder={
                     isEditing || tempData?.address?.region ? "Enter Region" : ""
                   }
-                  value={tempData?.address?.region}
+                  value={tempData?.address?.region || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -484,13 +525,13 @@ const GeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="province"
+                  name="address.province"
                   placeholder={
                     isEditing || tempData?.address?.province
                       ? "Enter Province"
                       : ""
                   }
-                  value={tempData?.address?.province}
+                  value={tempData?.address?.province || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -508,11 +549,11 @@ const GeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="city"
+                  name="address.city"
                   placeholder={
                     isEditing || tempData?.address?.city ? "Enter City" : ""
                   }
-                  value={tempData?.address?.city}
+                  value={tempData?.address?.city || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -528,13 +569,13 @@ const GeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="barangay"
+                  name="address.barangay"
                   placeholder={
-                    isEditing || tempData?.address?.baranagay
+                    isEditing || tempData?.address?.barangay
                       ? "Enter Barangay"
                       : ""
                   }
-                  value={tempData?.address?.barangay}
+                  value={tempData?.address?.barangay || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -552,11 +593,11 @@ const GeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="street"
+                  name="address.street"
                   placeholder={
                     isEditing || tempData?.address?.street ? "Enter Street" : ""
                   }
-                  value={tempData?.address?.street}
+                  value={tempData?.address?.street || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -572,13 +613,13 @@ const GeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="postalCode"
+                  name="address.postalCode"
                   placeholder={
                     isEditing || tempData?.address?.postalCode
                       ? "Enter Postal Code"
                       : ""
                   }
-                  value={tempData?.address?.postalCode}
+                  value={tempData?.address?.postalCode || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -658,13 +699,13 @@ const GeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="contactFirstName"
+                  name="emergencyDetails.contactFirstName"
                   placeholder={
                     isEditing || tempData?.emergencyDetails?.contactFirstName
                       ? "Enter Contact First Name"
                       : ""
                   }
-                  value={tempData?.emergencyDetails?.contactFirstName}
+                  value={tempData?.emergencyDetails?.contactFirstName || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -679,13 +720,13 @@ const GeneralSettings = () => {
               <div className="input-group-signup">
                 <input
                   type="text"
-                  name="contactLastName"
+                  name="emergencyDetails.contactLastName"
                   placeholder={
                     isEditing || tempData?.emergencyDetails?.contactLastName
                       ? "Enter Contact Last Name"
                       : ""
                   }
-                  value={tempData?.emergencyDetails?.contactLastName}
+                  value={tempData?.emergencyDetails?.contactLastName || ""}
                   onChange={handleInputChange}
                   disabled={!isEditing}
                 />
@@ -702,13 +743,13 @@ const GeneralSettings = () => {
             <div className="input-group-signup">
               <input
                 type="text"
-                name="contactEmergency"
+                name="emergencyDetails.contactEmergency"
                 placeholder={
                   isEditing || tempData?.emergencyDetails?.contactEmergency
                     ? "Enter Contact Emergency Number"
                     : ""
                 }
-                value={tempData?.emergencyDetails?.contactEmergency}
+                value={tempData?.emergencyDetails?.contactEmergency || ""}
                 onChange={handleInputChange}
                 disabled={!isEditing}
               />
@@ -724,13 +765,13 @@ const GeneralSettings = () => {
             <div className="input-group-signup">
               <input
                 type="text"
-                name="contactAddress"
+                name="emergencyDetails.contactAddress"
                 placeholder={
                   isEditing || tempData?.emergencyDetails?.contactAddress
                     ? "Enter Contact Address"
                     : ""
                 }
-                value={tempData?.emergencyDetails?.contactAddress}
+                value={tempData?.emergencyDetails?.contactAddress || ""}
                 onChange={handleInputChange}
                 disabled={!isEditing}
               />
