@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "../../styles/AdminCSS/AdminSettings.css";
 import AdminGeneralSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminGeneralSettings";
+import AdminManageSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminManageSettings";
 
 const settingsOptions = [
   { name: "General", key: "general" },
@@ -16,7 +17,7 @@ const settingsOptions = [
 
 const settingsContent = {
   general: <AdminGeneralSettings />,
-  // manage: <ManageSettings />,
+  manage: <AdminManageSettings />,
   // accessibility: <AccessibilitySettings />,
   // employees: <EmployeesSettings />,
   // security: <SecuritySettings />,

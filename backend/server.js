@@ -18,6 +18,7 @@ const PORT = process.env.PORT || 5000;
 
 const authRoutes = require("./routes/auth");
 const attendanceRoutes = require("./routes/attendance");
+const dropdownRoutes = require("./routes/dropdownOption");
 
 const dotenv = require("dotenv");
 
@@ -31,6 +32,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/dropdownOption", dropdownRoutes);
 
 io.on("connection", (socket) => {
   socket.on("approveUser", (data) => {

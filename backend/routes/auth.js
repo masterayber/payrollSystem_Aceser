@@ -6,7 +6,7 @@ const path = require("path");
 const fs = require("fs");
 const authMiddleware = require("../middleware/authMiddleware");
 
-const Dropdown = require("../models/dropdownOptions");
+const Dropdown = require("../models/dropdownOption");
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
@@ -511,30 +511,6 @@ router.get("/:category", async (req, res) => {
     res.json(dropdown ? dropdown.options : []);
   } catch (error) {
     res.status(500).json({ message: "Error fetching dropdown options" });
-  }
-});
-
-router.post("/:category", async (req, res) => {
-  const { option } = req.body;
-  try {
-    let dropdown = await dropdown.findOne({ category: req.params.category });
-
-    if (!dropdown) {
-      dropdown = new Dropdown({
-        category: req.params.category,
-        options: [option],
-      });
-    } else {
-      dropdown.options.push(option);
-    }
-
-    await dropdown.save();
-    res.json({
-      message: "Option added successfully",
-      options: dropdown.option,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Error adding option" });
   }
 });
 
