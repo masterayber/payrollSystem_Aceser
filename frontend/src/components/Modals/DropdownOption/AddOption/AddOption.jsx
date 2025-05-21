@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../Modal.css";
+import "../../Modal.css";
 import PropTypes from "prop-types";
 
 const AddOptionModal = ({ title, message, onClose, onAddOption }) => {

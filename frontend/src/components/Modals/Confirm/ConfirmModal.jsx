@@ -1,4 +1,5 @@
 import "../Modal.css";
+import PropTypes from "prop-types";
 
 const ConfirmModal = ({
   title = "Confirmation",
@@ -27,6 +28,15 @@ const ConfirmModal = ({
       </div>
     </div>
   );
+};
+
+ConfirmModal.propTypes = {
+  title: PropTypes.string,
+  message: PropTypes.string,
+  onClose: PropTypes.func,
+  onConfirm: PropTypes.func,
+  confirmText: PropTypes.string,
+  cancelText: PropTypes.string,
 };
 
 export default ConfirmModal;
