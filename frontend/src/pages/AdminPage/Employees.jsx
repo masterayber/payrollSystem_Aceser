@@ -227,7 +227,7 @@ const Employees = () => {
       </div>
 
       {filteredEmployees.length === 0 && (
-        <p className="no-results">No employees found.</p>
+        <p className="no-data">No employees found.</p>
       )}
 
       <div className="pagination">

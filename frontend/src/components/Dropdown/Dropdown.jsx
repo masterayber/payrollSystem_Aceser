@@ -1,19 +1,16 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { IconCaretDownFilled } from "@tabler/icons-react";
 import "./Dropdown.css";
+import PropTypes from "prop-types";
 
-const Dropdown = ({ category, placeholder = "Select an option", onSelect }) => {
-  const [options, setOptions] = useState([]);
+const Dropdown = ({
+  options = [],
+  placeholder = "Select an Option",
+  onSelect,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState("");
   const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    fetch(`http://localhost:5000/api/auth/dropdown/${category}`)
-      .then((res) => res.json())
-      .then((data) => setOptions(data))
-      .catch((err) => console.error("Error fetching dropdown options:", err));
-  }, [category]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -40,7 +37,6 @@ const Dropdown = ({ category, placeholder = "Select an option", onSelect }) => {
         onClick={() => setIsOpen(!isOpen)}
       >
         <span>{selectedOption || placeholder}</span>
-
         <IconCaretDownFilled
           key={isOpen}
           className={`dropdown-icon ${isOpen ? "open" : ""}`}
@@ -67,3 +63,9 @@ const Dropdown = ({ category, placeholder = "Select an option", onSelect }) => {
 };
 
 export default Dropdown;
+
+Dropdown.propTypes = {
+  options: PropTypes.array,
+  placeholder: PropTypes.string,
+  onSelect: PropTypes.func,
+};

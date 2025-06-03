@@ -95,8 +95,6 @@ const Dashboard = () => {
               //   }
               // }
 
-              console.log("record date:", record.date);
-
               if (record.date === todayDate) {
                 foundToday = true;
 

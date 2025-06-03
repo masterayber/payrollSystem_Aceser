@@ -1,24 +1,85 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import "../Modal.css";
 import Dropdown from "../../Dropdown/Dropdown";
+import PropTypes from "prop-types";
+import ConfirmModal from "../Confirm/ConfirmModal";
+import CancelModal from "../Cancel/CancelModal";
 
-const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
+const AddEmployeeModal = ({ onClose }) => {
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [addEmployee, setAddEmployee] = useState({
     firstName: "",
     lastName: "",
-    id: "",
+    employeeId: "",
+    gender: "",
+    email: "",
+    username: "",
+    password: "",
     designation: "",
-    employmentType: "",
     department: "",
     position: "",
+    employmentType: "",
     startDate: "",
   });
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const [dropdownOptions, setDropdownOptions] = useState({
+    gender: [],
+    designations: [],
+    departments: [],
+    positions: [],
+    employmentTypes: [],
+  });
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/dropdownOption")
+      .then((res) => res.json())
+      .then((data) => setDropdownOptions(data))
+      .catch((err) => console.error("Failed to fetch dropdowns", err));
+  }, []);
 
   const handleChange = (e) => {
     setAddEmployee({
       ...addEmployee,
       [e.target.name]: e.target.value,
     });
+    setHasChanges(true);
+  };
+
+  const handleDropdownChange = (field, value) => {
+    setAddEmployee({
+      ...addEmployee,
+      [field]: value,
+    });
+    setHasChanges(true);
+  };
+
+  const handleCancelClick = (e) => {
+    e.preventDefault();
+    if (hasChanges) {
+      setIsCancelModalOpen(true);
+    } else {
+      onClose();
+    }
+  };
+
+  const handleConfirmClick = () => {
+    if (
+      !addEmployee.firstName.trim() ||
+      !addEmployee.lastName.trim() ||
+      !addEmployee.employeeId.trim()
+    ) {
+      alert("Inputs cannot be empty");
+      return;
+    } else {
+      setIsConfirmModalOpen(true);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsCancelModalOpen(false);
+    onClose();
   };
 
   const handleSubmit = async (e) => {
@@ -30,11 +91,10 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newEmployee),
+        body: JSON.stringify(addEmployee),
       });
 
       if (response.ok) {
-        onAddEmployee();
         onClose();
       } else {
         console.error("Failed to add employee. Please try again later");
@@ -90,7 +150,50 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                 <input
                   type="text"
                   name="employeeId"
-                  value={addEmployee.id}
+                  value={addEmployee.employeeId}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="input-container">
+              <div className="label-container">Gender</div>
+              <Dropdown
+                options={["--Select Gender--", ...dropdownOptions.gender]}
+                placeholder="--Select Gender--"
+                onSelect={(value) => handleDropdownChange("gender", value)}
+              />
+            </div>
+          </div>
+
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Email</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="email"
+                  value={addEmployee.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Username</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="username"
+                  value={addEmployee.username}
                   onChange={handleChange}
                   required
                 />
@@ -99,9 +202,68 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
 
             <div className="input-container">
               <div className="label-container">
+                <label>Password</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="password"
+                  value={addEmployee.password}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
                 <label>Designation</label>
               </div>
-              <Dropdown category="designation" />
+              <Dropdown
+                options={[
+                  "--Select Designation--",
+                  ...dropdownOptions.designations,
+                ]}
+                placeholder="--Select Designation--"
+                onSelect={(value) => handleDropdownChange("designation", value)}
+              />
+            </div>
+          </div>
+
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Department</label>
+              </div>
+              <Dropdown
+                options={[
+                  "--Select Department--",
+                  ...dropdownOptions.departments,
+                ]}
+                placeholder="--Select Department--"
+                onSelect={(value) => handleDropdownChange("department", value)}
+              />
+            </div>
+
+            <div className="input-container">
+              <div className="label-container">
+                <label>Position</label>
+              </div>
+              <Dropdown
+                options={
+                  addEmployee.department
+                    ? [
+                        "--Select Position--",
+                        ...(dropdownOptions.positions[addEmployee.department] ||
+                          []),
+                      ]
+                    : ["--Select Position--"]
+                }
+                placeholder="--Select Position--"
+                onSelect={(value) => handleDropdownChange("position", value)}
+              />
             </div>
           </div>
 
@@ -110,43 +272,80 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
               <div className="label-container">
                 <label>Employment Type</label>
               </div>
-              <Dropdown category="employmentType" />
-            </div>
-
-            <div className="input-container">
-              <div className="label-container">
-                <label>Department</label>
-              </div>
-              <Dropdown category="department" />
-            </div>
-          </div>
-
-          <div className="input-row">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Position</label>
-              </div>
-              <Dropdown category="position" />
+              <Dropdown
+                options={[
+                  "--Select Employment Type--",
+                  ...dropdownOptions.employmentTypes,
+                ]}
+                placeholder="--Select Employment Type--"
+                onSelect={(value) =>
+                  handleDropdownChange("employmentType", value)
+                }
+              />
             </div>
 
             <div className="input-container">
               <div className="label-container">
                 <label>Start Date</label>
               </div>
-              <Dropdown />
+              <div className="input-group-signup">
+                <input
+                  type="date"
+                  name="startDate"
+                  value={addEmployee.startDate}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
           </div>
 
           <div className="modal-buttons">
-            <button onClick={onClose} className="modal-button">
+            <button
+              type="button"
+              onClick={handleCancelClick}
+              className="modal-button"
+            >
               Cancel
             </button>
-            <button className="modal-button">Add Employee</button>
+            <button
+              type="submit"
+              onClick={handleConfirmClick}
+              className="modal-button"
+            >
+              Add Employee
+            </button>
           </div>
         </form>
       </div>
+
+      {isCancelModalOpen && (
+        <CancelModal
+          title="Cancel Changes"
+          message="Are you sure you want to cancel changes?"
+          onClose={() => setIsCancelModalOpen(false)}
+          onConfirm={handleCancel}
+          cancelText="No"
+          confirmText="Yes"
+        />
+      )}
+
+      {isConfirmModalOpen && (
+        <ConfirmModal
+          title="Confirm Add"
+          message={`Are you sure you want to add ${addEmployee.firstName} ${addEmployee.lastName} as an employee?`}
+          onClose={() => setIsConfirmModalOpen(false)}
+          onConfirm={handleSubmit}
+          cancelText="No"
+          confirmText="Yes"
+        />
+      )}
     </div>
   );
 };
 
 export default AddEmployeeModal;
+
+AddEmployeeModal.propTypes = {
+  onClose: PropTypes.func,
+  onUpdateEmployee: PropTypes.func,
+};

@@ -1,4 +1,4 @@
-import React from "react";
+import "react";
 import "../../styles/UserCSS/Filing.css";
 
 const Filing = () => {

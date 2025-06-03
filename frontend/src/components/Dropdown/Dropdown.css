@@ -48,6 +48,16 @@
   z-index: 10;
 }
 
+.dropdown-option {
+  font-size: 16px;
+  padding: 10px 15px;
+}
+
+.dropdown-option:hover {
+  cursor: pointer;
+  background-color: var(--gray-200);
+}
+
 /* Dropdown Items */
 .dropdown-month {
   cursor: pointer;

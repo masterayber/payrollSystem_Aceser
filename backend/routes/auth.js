@@ -38,8 +38,16 @@ const upload = multer({
 
 // Signup route
 router.post("/signup", async (req, res) => {
-  const { firstName, lastName, email, username, password, role, status } =
-    req.body;
+  const {
+    firstName,
+    lastName,
+    email,
+    employeeId,
+    username,
+    password,
+    role,
+    status,
+  } = req.body;
 
   // Check if email is already registered to the database
   try {
@@ -63,6 +71,7 @@ router.post("/signup", async (req, res) => {
     let employeeData = {
       firstName,
       lastName,
+      employeeId,
       email,
       role: user.role,
       type: defaultStatus,
@@ -594,5 +603,24 @@ router.delete("/remove-profile-photo/:id", async (req, res) => {
     return res.status(500).json({ message: "Internal server error", error });
   }
 });
+
+// router.put("/add-employee-via-admin", async (req, res) => {
+//   try {
+//     const {
+//       firstName,
+//       lastName,
+//       email,
+//       employeeId,
+//       username,
+//       password,
+//       role,
+//       status,
+//     } = req.body;
+
+//     try {
+//       const existingUser = await user
+//     }
+//   }
+// });
 
 module.exports = router;

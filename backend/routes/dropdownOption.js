@@ -1,8 +1,12 @@
 const express = require("express");
-
 const router = express.Router();
-
 const Dropdown = require("../models/dropdownOption");
+
+const allowedFields = ["designations", "departments", "employmentTypes"];
+
+function isValidField(field) {
+  return allowedFields.includes(field);
+}
 
 // Route for fetching dropdown options
 router.get("/", async (req, res) => {
@@ -14,69 +18,87 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.put("/department", async (req, res) => {
+// ADD Option Route
+router.put("/:field/add", async (req, res) => {
+  const { field } = req.params;
   const { option } = req.body;
-  if (!option) return res.status(400).json({ message: "Option is required" });
+
+  if (!isValidField(field)) {
+    return res.status(400).json({ message: "Invalid dropdown field" });
+  }
+
+  if (!option) {
+    return res.status(400).json({ message: "Option is required" });
+  }
 
   try {
     const updated = await Dropdown.findOneAndUpdate(
       {},
-      { $addToSet: { Departments: option } },
+      { $addToSet: { [field]: option } },
       { new: true }
     );
+
+    console.log("Updated dropdown:", updated);
     res.json(updated);
   } catch (error) {
     res.status(500).json({ message: "Error updating department list" });
   }
 });
 
-router.put("/department/edit", async (req, res) => {
+// EDIT Option Route
+router.put("/:field/edit", async (req, res) => {
+  const { field } = req.params;
   const { oldOption, newOption } = req.body;
+
+  if (!isValidField(field)) {
+    return res.status(400).json({ message: "Invalid dropdown field" });
+  }
+
   if (!oldOption || !newOption) {
     return res
       .status(400)
-      .json({ message: "Both old new and new values are required" });
+      .json({ message: "Both old and new values are required" });
   }
 
   try {
     const dropdown = await Dropdown.findOne();
-
-    if (!dropdown) {
-      return res.status(404).json({ message: "Dropdown not found" });
+    if (!dropdown || !dropdown[field]) {
+      return res.status(404).json({ message: `Field '${field}' not found` });
     }
 
-    const index = dropdown.Departments.indexOf(oldOption);
+    const index = dropdown[field].indexOf(oldOption);
     if (index === -1) {
       return res.status(404).json({ message: "Old option not found" });
     }
 
-    dropdown.Departments[index] = newOption;
+    dropdown[field][index] = newOption;
     await dropdown.save();
 
     res.json(dropdown);
   } catch (error) {
-    console.error("Error updating department:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
-router.delete("/department/delete", async (req, res) => {
+// DELETE Option Route
+router.delete("/:field/delete", async (req, res) => {
+  const { field } = req.params;
+  const { option } = req.body;
+
+  if (!isValidField(field)) {
+    return res.status(400).json({ message: "Invalid dropdown field" });
+  }
+
+  if (!option) {
+    return res.status(400).json({ error: "Option is required for deletion." });
+  }
+
   try {
-    const { option } = req.body;
-
-    if (!option) {
-      return res
-        .status(400)
-        .json({ error: "Option is required for deletion." });
-    }
-
     const updatedDoc = await Dropdown.findOneAndUpdate(
       {},
-      { $pull: { Departments: option } },
+      { $pull: { [field]: option } },
       { new: true }
     );
-
-    console.log("Updated Doc:", updatedDoc);
 
     if (!updatedDoc) {
       return res.status(404).json({ error: "Dropdown option not found" });
@@ -84,10 +106,9 @@ router.delete("/department/delete", async (req, res) => {
 
     res.status(200).json({
       message: `${option} has been deleted successfully.`,
-      Departments: updatedDoc.Departments,
+      updatedList: updatedDoc[field],
     });
   } catch (error) {
-    console.error("Error deleting department:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

@@ -1,7 +1,14 @@
 const mongoose = require("mongoose");
 
 const dropdownSchema = new mongoose.Schema({
-  Departments: [String],
+  designations: [String],
+  departments: [String],
+  positionsByDepartment: {
+    type: Map,
+    of: [String],
+    default: {},
+  },
+  employmentTypes: [String],
 });
 
 module.exports = mongoose.model("Dropdown", dropdownSchema);
