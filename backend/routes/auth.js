@@ -74,7 +74,6 @@ router.post("/signup", async (req, res) => {
       employeeId,
       email,
       role: user.role,
-      type: defaultStatus,
       createdAt: new Date(),
     };
 
@@ -96,6 +95,9 @@ router.post("/signup", async (req, res) => {
 
     const settings = new Settings({
       userId: user._id,
+      general: {
+        employmentType: defaultStatus,
+      },
     });
     await settings.save();
 
@@ -323,6 +325,7 @@ router.get("/dashboard-data", authMiddleware, async (req, res) => {
   res.status(200).json({ message: "Protected Data" });
 });
 
+// Router for getting all the employees data
 router.get("/employees", async (req, res) => {
   try {
     const employees = await Employee.aggregate([
@@ -558,6 +561,7 @@ router.put(
   }
 );
 
+// Route for removing profile photo of user
 router.delete("/remove-profile-photo/:id", async (req, res) => {
   try {
     const userId = req.params.id;
@@ -604,23 +608,77 @@ router.delete("/remove-profile-photo/:id", async (req, res) => {
   }
 });
 
-// router.put("/add-employee-via-admin", async (req, res) => {
-//   try {
-//     const {
-//       firstName,
-//       lastName,
-//       email,
-//       employeeId,
-//       username,
-//       password,
-//       role,
-//       status,
-//     } = req.body;
+// Route for adding employee via admin manually
+router.post("/add-employee-via-admin", async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      employeeId,
+      gender,
+      email,
+      username,
+      password,
+      designation,
+      department,
+      position,
+      employmentType,
+      startDate,
+    } = req.body;
 
-//     try {
-//       const existingUser = await user
-//     }
-//   }
-// });
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ message: "Email or username already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({
+      username,
+      password: hashedPassword,
+      email,
+      status: "Active",
+      createdAt: new Date(),
+    });
+    await user.save();
+
+    const employee = new Employee({
+      firstName,
+      lastName,
+      employeeId,
+      email,
+      role: user.role,
+      type: employmentType,
+      gender,
+      createdAt: new Date(),
+    });
+    await employee.save();
+
+    const settings = new Settings({
+      userId: user._id,
+      general: {
+        designation: designation || "",
+        department: department || "",
+        position: position || "",
+        employmentType: employmentType || "",
+        startDate: startDate || "",
+      },
+    });
+    await settings.save();
+
+    res.status(201).json({
+      message: "Employee account created successfully",
+      user,
+      employee,
+      settings,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+});
 
 module.exports = router;

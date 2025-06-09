@@ -23,15 +23,13 @@ const employeeSchema = new mongoose.Schema({
     type: String,
     enum: ["Admin", "Employee"],
   },
-  type: {
-    type: String,
-    enum: ["Probationary", "Regular", "Project-Based"],
-  },
   birthday: {
     type: Date,
+    default: "",
   },
   contactNumber: {
     type: String,
+    default: "",
   },
   gender: {
     type: String,

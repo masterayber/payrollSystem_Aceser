@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import "../Modal.css";
 import Dropdown from "../../Dropdown/Dropdown";
 import PropTypes from "prop-types";
 import ConfirmModal from "../Confirm/ConfirmModal";
 import CancelModal from "../Cancel/CancelModal";
+import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
 
 const AddEmployeeModal = ({ onClose }) => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
   const [addEmployee, setAddEmployee] = useState({
     firstName: "",
     lastName: "",
@@ -31,6 +34,13 @@ const AddEmployeeModal = ({ onClose }) => {
     positions: [],
     employmentTypes: [],
   });
+
+  useEffect(() => {
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
 
   useEffect(() => {
     fetch("http://localhost:5000/api/dropdownOption")
@@ -86,25 +96,26 @@ const AddEmployeeModal = ({ onClose }) => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/employees", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(addEmployee),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/auth/add-employee-via-admin",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(addEmployee),
+        }
+      );
 
       if (response.ok) {
-        onClose();
-      } else {
-        console.error("Failed to add employee. Please try again later");
+        setIsConfirmModalOpen(false);
       }
     } catch (error) {
       console.error("Failed adding employee:", error);
     }
   };
 
-  return (
+  return ReactDOM.createPortal(
     <div className="modal">
       <div className="modal-content">
         <h3>Add Employee</h3>
@@ -339,7 +350,15 @@ const AddEmployeeModal = ({ onClose }) => {
           confirmText="Yes"
         />
       )}
-    </div>
+
+      {isConfirmedModalOpen && (
+        <ConfirmedMessageModal
+          message="Added Successfully!"
+          onClose={() => setIsConfirmedModalOpen(false)}
+        />
+      )}
+    </div>,
+    document.body
   );
 };
 

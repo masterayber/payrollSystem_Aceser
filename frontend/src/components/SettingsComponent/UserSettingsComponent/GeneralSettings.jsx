@@ -684,6 +684,95 @@ const GeneralSettings = () => {
             </div>
           </div>
         </div>
+
+        <div className="setting-tab-container">
+          <div className="input-container">
+            <div className="label-container">
+              <label>Designation</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="designation"
+                placeholder="Designation"
+                onChange={handleInputChange}
+                disabled={!isAdmin}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="setting-tab-flex">
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Department</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="department"
+                  placeholder="Department"
+                  onChange={handleInputChange}
+                  disabled={!isAdmin}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Position</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="position"
+                  placeholder="Position"
+                  onChange={handleInputChange}
+                  disabled={!isAdmin}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="setting-tab-flex">
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Employment Type</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="employmentType"
+                  placeholder="Employment Type"
+                  onChange={handleInputChange}
+                  disabled={!isAdmin}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="setting-tab-container">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Start Date</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="date"
+                  name="startDate"
+                  placeholder="Start Date"
+                  onChange={handleInputChange}
+                  disabled={!isAdmin}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="setting-tab">

@@ -17,6 +17,10 @@
   border-radius: 10px;
   width: 50%;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  margin: 40px 0;
+  height: auto;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
 }
 
 .cropper-container {

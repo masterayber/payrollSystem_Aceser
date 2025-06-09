@@ -30,13 +30,19 @@ const Dropdown = ({
     if (onSelect) onSelect(option);
   };
 
+  const displayOptions = options[0] === "" ? options : ["", ...options];
+
   return (
     <div className="dropdown-container" ref={dropdownRef}>
       <div
         className={`dropdown-button ${isOpen ? "open" : ""}`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span>{selectedOption || placeholder}</span>
+        <span>
+          {selectedOption === "" || selectedOption === "--Select Gender--"
+            ? placeholder
+            : selectedOption}
+        </span>
         <IconCaretDownFilled
           key={isOpen}
           className={`dropdown-icon ${isOpen ? "open" : ""}`}
@@ -50,8 +56,22 @@ const Dropdown = ({
           {options.map((option, index) => (
             <li
               key={index}
-              className="dropdown-option"
+              className={`dropdown-option${
+                option === "" || option.startsWith("--Select")
+                  ? " dropdown-placeholder"
+                  : ""
+              }`}
               onClick={() => handleSelect(option)}
+              style={{
+                color:
+                  option === "" || option.startsWith("--Select")
+                    ? "#aaa"
+                    : undefined,
+                fontStyle:
+                  option === "" || option.startsWith("--Select")
+                    ? "italic"
+                    : undefined,
+              }}
             >
               {option}
             </li>

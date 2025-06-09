@@ -10,6 +10,28 @@ const settingsSchema = new mongoose.Schema({
     companyName: { type: String, default: "" },
     companyLogo: { type: String, default: "" },
     companyContact: { type: String, default: "" },
+    jobDescription: {
+      designation: {
+        type: String,
+        default: "",
+      },
+      department: {
+        type: String,
+        default: "",
+      },
+      position: {
+        type: String,
+        default: "",
+      },
+      employmentType: {
+        type: String,
+        default: "",
+      },
+      startDate: {
+        type: Date,
+        default: Date.now,
+      },
+    },
     dateFormat: { type: String, default: "MM-DD-YYYY" },
     timeFormat: { type: String, default: "12 Hour" },
     createdAt: { type: Date, default: Date.now },

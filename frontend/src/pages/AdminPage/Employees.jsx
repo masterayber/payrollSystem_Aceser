@@ -107,7 +107,7 @@ const Employees = () => {
           <span className="user-number">{employeeData.length}</span>
         </div>
         <div className="user-track">
-          <p>Total Regular Employees</p>
+          <p>Total Regural Employees</p>
           <span className="user-number">{regularCount}</span>
         </div>
         <div className="user-track">
