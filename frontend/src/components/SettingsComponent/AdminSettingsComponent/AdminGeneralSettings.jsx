@@ -247,7 +247,7 @@ const AdminGeneralSettings = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to updated user data");
+        throw new Error("Failed to update user data");
       }
 
       const updatedUser = await response.json();

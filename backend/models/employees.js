@@ -11,7 +11,6 @@ const employeeSchema = new mongoose.Schema({
   },
   employeeId: {
     type: String,
-    unique: true,
     default: "",
   },
   email: {
@@ -67,15 +66,19 @@ const employeeSchema = new mongoose.Schema({
   emergencyDetails: {
     contactFirstName: {
       type: String,
+      default: "",
     },
     contactLastName: {
       type: String,
+      default: "",
     },
     contactEmergency: {
       type: String,
+      default: "",
     },
     contactAddress: {
       type: String,
+      default: "",
     },
   },
   createdAt: {

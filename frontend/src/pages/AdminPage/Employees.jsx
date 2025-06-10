@@ -152,28 +152,20 @@ const Employees = () => {
 
       <div className="table">
         <div className="table-header">
-          {editMode && (
-            <>
-              <article className="table-header-container">
-                <p>Edit</p>
-              </article>
-              <hr className="header-hr"></hr>
-            </>
-          )}
           <article className="table-header-container">
             <p>Employee ID</p>
           </article>
           <hr className="header-hr"></hr>
           <article className="table-header-container">
-            <p>Employee Last Name</p>
+            <p>Last Name</p>
           </article>
           <hr className="header-hr"></hr>
           <article className="table-header-container">
-            <p>Employee First Name</p>
+            <p>First Name</p>
           </article>
           <hr className="header-hr"></hr>
           <article className="table-header-container">
-            <p>Employment Type</p>
+            <p>Designation</p>
           </article>
           <hr className="header-hr"></hr>
           <article className="table-header-container">
@@ -185,22 +177,24 @@ const Employees = () => {
           </article>
           <hr className="header-hr"></hr>
           <article className="table-header-container">
+            <p>Employment Type</p>
+          </article>
+          <hr className="header-hr"></hr>
+          <article className="table-header-container">
             <p>Start Date</p>
           </article>
+          {editMode && (
+            <>
+              <hr className="header-hr"></hr>
+              <article className="table-header-container">
+                <p>Action</p>
+              </article>
+            </>
+          )}
         </div>
 
         {currentEmployees.map((employee, index) => (
           <div className="table-content" key={index}>
-            {editMode && (
-              <article className="table-content-container">
-                <button
-                  className="action-button"
-                  onClick={() => handleEditClick(employee)}
-                >
-                  <IconEdit stroke={2} />
-                </button>
-              </article>
-            )}
             <article className="table-content-container">
               <p>{employee.id}</p>
             </article>
@@ -211,7 +205,7 @@ const Employees = () => {
               <p>{employee.firstName}</p>
             </article>
             <article className="table-content-container">
-              <p>{employee.type}</p>
+              <p>{employee.jobDescription?.designation || ""}</p>
             </article>
             <article className="table-content-container">
               <p>{employee.department}</p>
@@ -220,8 +214,21 @@ const Employees = () => {
               <p>{employee.position}</p>
             </article>
             <article className="table-content-container">
+              <p>{employee.employmentType}</p>
+            </article>
+            <article className="table-content-container">
               <p>{employee.startDate}</p>
             </article>
+            {editMode && (
+              <article className="table-content-container">
+                <button
+                  className="action-button"
+                  onClick={() => handleEditClick(employee)}
+                >
+                  <IconEdit stroke={2} />
+                </button>
+              </article>
+            )}
           </div>
         ))}
       </div>
@@ -254,7 +261,10 @@ const Employees = () => {
       </div>
 
       {isAddModalOpen && (
-        <AddEmployeeModal onClose={() => setIsAddModalOpen(false)} />
+        <AddEmployeeModal
+          onClose={() => setIsAddModalOpen(false)}
+          onUpdateEmployee={handleUpdateEmployee}
+        />
       )}
 
       {isEditModalOpen && selectedEmployee && (

@@ -7,7 +7,7 @@ import ConfirmModal from "../Confirm/ConfirmModal";
 import CancelModal from "../Cancel/CancelModal";
 import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
 
-const AddEmployeeModal = ({ onClose }) => {
+const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
@@ -74,7 +74,7 @@ const AddEmployeeModal = ({ onClose }) => {
     }
   };
 
-  const handleConfirmClick = () => {
+  const handleConfirmClick = async () => {
     if (
       !addEmployee.firstName.trim() ||
       !addEmployee.lastName.trim() ||
@@ -82,9 +82,36 @@ const AddEmployeeModal = ({ onClose }) => {
     ) {
       alert("Inputs cannot be empty");
       return;
-    } else {
-      setIsConfirmModalOpen(true);
     }
+
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/auth/check-user-exists",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: addEmployee.email,
+            username: addEmployee.username,
+            employeeId: addEmployee.employeeId,
+          }),
+        }
+      );
+      const data = await res.json();
+      let errorMsg = "";
+      if (data.email) errorMsg += "Email already exists.\n";
+      if (data.username) errorMsg += "Username already exists.\n";
+      if (data.employeeId) errorMsg += "Employee ID already exists.\n";
+      if (errorMsg) {
+        alert(errorMsg.trim());
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to check user:", err);
+      return;
+    }
+
+    setIsConfirmModalOpen(true);
   };
 
   const handleCancel = () => {
@@ -107,9 +134,15 @@ const AddEmployeeModal = ({ onClose }) => {
         }
       );
 
-      if (response.ok) {
-        setIsConfirmModalOpen(false);
+      if (!response.ok) {
+        throw new Error("Failed to add employee");
       }
+
+      setIsConfirmModalOpen(false);
+
+      if (onUpdateEmployee) onUpdateEmployee();
+
+      setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (error) {
       console.error("Failed adding employee:", error);
     }
@@ -319,7 +352,7 @@ const AddEmployeeModal = ({ onClose }) => {
               Cancel
             </button>
             <button
-              type="submit"
+              type="button"
               onClick={handleConfirmClick}
               className="modal-button"
             >
@@ -354,7 +387,10 @@ const AddEmployeeModal = ({ onClose }) => {
       {isConfirmedModalOpen && (
         <ConfirmedMessageModal
           message="Added Successfully!"
-          onClose={() => setIsConfirmedModalOpen(false)}
+          onClose={() => {
+            setIsConfirmedModalOpen(false);
+            onClose();
+          }}
         />
       )}
     </div>,

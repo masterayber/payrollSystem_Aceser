@@ -331,6 +331,20 @@ router.get("/employees", async (req, res) => {
     const employees = await Employee.aggregate([
       {
         $lookup: {
+          from: "settings",
+          localField: "_id",
+          foreignField: "userId",
+          as: "settings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$settings",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
           from: "auths",
           localField: "email",
           foreignField: "email",
@@ -357,6 +371,7 @@ router.get("/employees", async (req, res) => {
           gender: 1,
           contactNumber: 1,
           createdAt: "$userDetails.createdAt",
+          jobDescription: "$settings.general.jobDescription",
         },
       },
     ]);
@@ -626,13 +641,6 @@ router.post("/add-employee-via-admin", async (req, res) => {
       startDate,
     } = req.body;
 
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) {
-      return res
-        .status(400)
-        .json({ message: "Email or username already exists" });
-    }
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User({
@@ -650,7 +658,6 @@ router.post("/add-employee-via-admin", async (req, res) => {
       employeeId,
       email,
       role: user.role,
-      type: employmentType,
       gender,
       createdAt: new Date(),
     });
@@ -659,11 +666,13 @@ router.post("/add-employee-via-admin", async (req, res) => {
     const settings = new Settings({
       userId: user._id,
       general: {
-        designation: designation || "",
-        department: department || "",
-        position: position || "",
-        employmentType: employmentType || "",
-        startDate: startDate || "",
+        jobDescription: {
+          designation: designation,
+          department: department,
+          position: position,
+          employmentType: employmentType,
+          startDate: startDate,
+        },
       },
     });
     await settings.save();
@@ -679,6 +688,24 @@ router.post("/add-employee-via-admin", async (req, res) => {
       .status(500)
       .json({ message: "Internal Server Error", error: error.message });
   }
+});
+
+router.post("/check-user-exists", async (req, res) => {
+  const { email, username, employeeId } = req.body;
+  const result = {};
+  if (email) {
+    const emailExists = await User.findOne({ email });
+    if (emailExists) result.email = true;
+  }
+  if (username) {
+    const usernameExists = await User.findOne({ username });
+    if (usernameExists) result.username = true;
+  }
+  if (employeeId) {
+    const employeeIdExists = await Employee.findOne({ employeeId });
+    if (employeeIdExists) result.employeeId = true;
+  }
+  res.json(result);
 });
 
 module.exports = router;
