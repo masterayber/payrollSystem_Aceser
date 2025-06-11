@@ -13,23 +13,18 @@ const settingsSchema = new mongoose.Schema({
     jobDescription: {
       designation: {
         type: String,
-        default: "",
       },
       department: {
         type: String,
-        default: "",
       },
       position: {
         type: String,
-        default: "",
       },
       employmentType: {
         type: String,
-        default: "",
       },
       startDate: {
         type: Date,
-        default: Date.now,
       },
     },
     dateFormat: { type: String, default: "MM-DD-YYYY" },

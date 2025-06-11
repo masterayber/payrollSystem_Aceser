@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
 const employeeSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
   firstName: {
     type: String,
     required: true,
@@ -11,7 +16,6 @@ const employeeSchema = new mongoose.Schema({
   },
   employeeId: {
     type: String,
-    default: "",
   },
   email: {
     type: String,
@@ -24,11 +28,9 @@ const employeeSchema = new mongoose.Schema({
   },
   birthday: {
     type: Date,
-    default: "",
   },
   contactNumber: {
     type: String,
-    default: "",
   },
   gender: {
     type: String,
@@ -66,19 +68,15 @@ const employeeSchema = new mongoose.Schema({
   emergencyDetails: {
     contactFirstName: {
       type: String,
-      default: "",
     },
     contactLastName: {
       type: String,
-      default: "",
     },
     contactEmergency: {
       type: String,
-      default: "",
     },
     contactAddress: {
       type: String,
-      default: "",
     },
   },
   createdAt: {

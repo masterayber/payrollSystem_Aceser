@@ -34,6 +34,7 @@ const Employees = () => {
           "http://localhost:5000/api/auth/employees"
         );
         const data = await response.json();
+        console.log("Employee Data:", data);
         setEmployeeData(data);
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -196,7 +197,7 @@ const Employees = () => {
         {currentEmployees.map((employee, index) => (
           <div className="table-content" key={index}>
             <article className="table-content-container">
-              <p>{employee.id}</p>
+              <p>{employee.employeeId}</p>
             </article>
             <article className="table-content-container">
               <p>{employee.lastName}</p>

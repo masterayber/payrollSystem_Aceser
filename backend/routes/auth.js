@@ -13,6 +13,7 @@ const Settings = require("../models/settings");
 const Attendance = require("../models/attendance");
 
 const sendEmail = require("../utils/nodemailer");
+const settings = require("../models/settings");
 
 const router = express.Router();
 const JWT_SECRET = "your_jwt_secret_key_here";
@@ -42,11 +43,11 @@ router.post("/signup", async (req, res) => {
     firstName,
     lastName,
     email,
-    employeeId,
     username,
     password,
     role,
     status,
+    gender,
   } = req.body;
 
   // Check if email is already registered to the database
@@ -71,17 +72,29 @@ router.post("/signup", async (req, res) => {
     let employeeData = {
       firstName,
       lastName,
-      employeeId,
       email,
       role: user.role,
       createdAt: new Date(),
+      userId: user._id,
     };
 
     if (user.role === "Employee") {
+      const lastEmployee = await Employee.findOne({
+        employeeId: { $regex: /^AC-\d+$/ },
+      })
+        .sort({ employeeId: -1 })
+        .collation({ locale: "en_US", numericOrdering: true });
+
+      let newEmployeeId = "AC-001";
+      if (lastEmployee && lastEmployee.employeeId) {
+        const lastNumber = parseInt(lastEmployee.employeeId.split("-")[1], 10);
+        newEmployeeId = `AC-${String(lastNumber + 1).padStart(3, "0")}`;
+      }
+
+      employeeData.employeeId = newEmployeeId;
       employeeData.contactNumber = "";
       employeeData.birthday = "";
-      employeeData.gender = user.gender || "Male";
-
+      employeeData.gender = gender || "Male";
       employeeData.emergencyDetails = {
         contactFirstName: "",
         contactLastName: "",
@@ -93,12 +106,23 @@ router.post("/signup", async (req, res) => {
     const employee = new Employee(employeeData);
     await employee.save();
 
-    const settings = new Settings({
-      userId: user._id,
-      general: {
-        employmentType: defaultStatus,
-      },
-    });
+    let settingsData = {
+      userId: employee._id,
+    };
+
+    if (user.role === "Employee") {
+      settingsData.general = {
+        jobDescription: {
+          designation: "",
+          department: "",
+          position: "",
+          employmentType: defaultStatus,
+          startDate: "",
+        },
+      };
+    }
+
+    const settings = new Settings(settingsData);
     await settings.save();
 
     res.status(200).json({ message: "User created successfully", email });
@@ -361,15 +385,13 @@ router.get("/employees", async (req, res) => {
       {
         $project: {
           _id: 1,
+          employeeId: 1,
           firstName: 1,
           lastName: 1,
           email: 1,
           role: 1,
           type: 1,
-          address: 1,
-          birthday: 1,
           gender: 1,
-          contactNumber: 1,
           createdAt: "$userDetails.createdAt",
           jobDescription: "$settings.general.jobDescription",
         },
@@ -647,20 +669,21 @@ router.post("/add-employee-via-admin", async (req, res) => {
       username,
       password: hashedPassword,
       email,
+      role: "Employee",
       status: "Active",
       createdAt: new Date(),
     });
     await user.save();
 
-    const employee = new Employee({
+    let employeeData = {
       firstName,
       lastName,
       employeeId,
-      email,
-      role: user.role,
       gender,
-      createdAt: new Date(),
-    });
+      email,
+    };
+
+    const employee = new Settings(employeeData);
     await employee.save();
 
     const settings = new Settings({
