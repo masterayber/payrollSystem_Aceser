@@ -356,7 +356,7 @@ router.get("/employees", async (req, res) => {
       {
         $lookup: {
           from: "settings",
-          localField: "_id",
+          localField: "userId",
           foreignField: "userId",
           as: "settings",
         },
@@ -681,9 +681,20 @@ router.post("/add-employee-via-admin", async (req, res) => {
       employeeId,
       gender,
       email,
+      role: user.role,
+      createdAt: new Date(),
+      userId: user._id,
+      contactNumber: "",
+      birthday: "",
+      emergencyDetails: {
+        contactFirstName: "",
+        contactLastName: "",
+        contactEmergency: "",
+        contactAddress: "",
+      },
     };
 
-    const employee = new Settings(employeeData);
+    const employee = new Employee(employeeData);
     await employee.save();
 
     const settings = new Settings({
@@ -729,6 +740,29 @@ router.post("/check-user-exists", async (req, res) => {
     if (employeeIdExists) result.employeeId = true;
   }
   res.json(result);
+});
+
+router.delete("/delete-employee:employeeId", async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+
+    const employee = await Employee.findOne({ employeeId });
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    await User.deleteOne({ _id: employee.userId });
+
+    await Settings.deleteOne({ userId: employee.userId });
+
+    await Employee.deleteOne({ employeeId });
+
+    res.status(200).json({ message: "Employee deleted successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
 });
 
 module.exports = router;

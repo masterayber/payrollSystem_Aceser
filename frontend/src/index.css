@@ -351,6 +351,14 @@ hr {
   border: 1px solid var(--gray-400);
 }
 
+.alert-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+}
+
 /* @media (max-width: 900px) {
   .sidebar {
     display: none;

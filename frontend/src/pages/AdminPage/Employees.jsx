@@ -5,6 +5,8 @@ import {
   IconSearch,
   IconCancel,
   IconProgressCheck,
+  IconTrash,
+  IconAlertTriangle,
 } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import AddEmployeeModal from "../../components/Modals/AddEmployee/AddEmployeeModal";
@@ -12,6 +14,7 @@ import EditEmployeeModal from "../../components/Modals/EditEmployee/EditEmployee
 import ApproveEmployeeModal from "../../components/Modals/Approve/ApproveEmployeeModal";
 import io from "socket.io-client";
 import "../../styles/AdminCSS/Employees.css";
+import ConfirmModal from "../../components/Modals/Confirm/ConfirmModal";
 
 const socket = io("http://localhost:5000");
 
@@ -23,6 +26,8 @@ const Employees = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
 
   const itemsPerPage = 7;
@@ -83,6 +88,11 @@ const Employees = () => {
     setIsEditModalOpen(true);
   };
 
+  const handleDeleteClick = (employee) => {
+    setSelectedEmployee(employee);
+    setIsConfirmModalOpen(true);
+  };
+
   const handleApproveClick = () => {
     setIsApproveModalOpen(true);
   };
@@ -97,6 +107,28 @@ const Employees = () => {
       setEmployeeData(data);
     } catch (error) {
       console.error("Error refreshing employees after update:", error);
+    }
+  };
+
+  const handleDeleteEmployee = async () => {
+    setIsConfirmModalOpen(false);
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/auth/delete-employee/${selectedEmployee.employeeId}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to delete employee");
+
+      await handleUpdateEmployee();
+
+      setTimeout(() => setIsConfirmedModalOpen(true), 300);
+    } catch (error) {
+      console.error("Error deleting employee", error);
     }
   };
 
@@ -209,16 +241,22 @@ const Employees = () => {
               <p>{employee.jobDescription?.designation || ""}</p>
             </article>
             <article className="table-content-container">
-              <p>{employee.department}</p>
+              <p>{employee.jobDescription?.department || ""}</p>
             </article>
             <article className="table-content-container">
-              <p>{employee.position}</p>
+              <p>{employee.jobDescription?.position || ""}</p>
             </article>
             <article className="table-content-container">
-              <p>{employee.employmentType}</p>
+              <p>{employee.jobDescription?.employmentType || ""}</p>
             </article>
             <article className="table-content-container">
-              <p>{employee.startDate}</p>
+              <p>
+                {employee.jobDescription?.startDate
+                  ? new Date(
+                      employee.jobDescription.startDate
+                    ).toLocaleDateString("en-CA")
+                  : ""}
+              </p>
             </article>
             {editMode && (
               <article className="table-content-container">
@@ -227,6 +265,12 @@ const Employees = () => {
                   onClick={() => handleEditClick(employee)}
                 >
                   <IconEdit stroke={2} />
+                </button>
+                <button
+                  className="action-button"
+                  onClick={() => handleDeleteClick(employee)}
+                >
+                  <IconTrash stroke={2} />
                 </button>
               </article>
             )}
@@ -275,6 +319,39 @@ const Employees = () => {
           onUpdateEmployee={handleUpdateEmployee}
         />
       )}
+
+      {isConfirmModalOpen && (
+        <ConfirmModal
+          title="Delete Employee"
+          message={
+            selectedEmployee ? (
+              <div className="alert-icon">
+                <IconAlertTriangle
+                  strokeWidth={2}
+                  width={75}
+                  height={75}
+                  color="Red"
+                />
+                <p>
+                  Are you sure you want to delete
+                  <b>
+                    {" "}
+                    {selectedEmployee.firstName} {selectedEmployee.lastName}
+                  </b>{" "}
+                  as an employee? This action cannot be undone.
+                </p>
+              </div>
+            ) : (
+              "Are you sure you want to delete? This action cannot be undone."
+            )
+          }
+          onClose={() => setIsConfirmModalOpen(false)}
+          onConfirm={handleDeleteEmployee}
+          confirmText="Yes, Delete"
+        />
+      )}
+
+      {isConfirmedModalOpen}
 
       {isApproveModalOpen && (
         <ApproveEmployeeModal
