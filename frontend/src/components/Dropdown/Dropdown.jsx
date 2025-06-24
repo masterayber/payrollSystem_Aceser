@@ -7,9 +7,9 @@ const Dropdown = ({
   options = [],
   placeholder = "Select an Option",
   onSelect,
+  value = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState("");
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -25,12 +25,9 @@ const Dropdown = ({
   }, []);
 
   const handleSelect = (option) => {
-    setSelectedOption(option);
     setIsOpen(false);
     if (onSelect) onSelect(option);
   };
-
-  const displayOptions = options[0] === "" ? options : ["", ...options];
 
   return (
     <div className="dropdown-container" ref={dropdownRef}>
@@ -39,9 +36,7 @@ const Dropdown = ({
         onClick={() => setIsOpen(!isOpen)}
       >
         <span>
-          {selectedOption === "" || selectedOption === "--Select Gender--"
-            ? placeholder
-            : selectedOption}
+          {value === "" || value === "--Select Gender--" ? placeholder : value}
         </span>
         <IconCaretDownFilled
           key={isOpen}
@@ -88,4 +83,5 @@ Dropdown.propTypes = {
   options: PropTypes.array,
   placeholder: PropTypes.string,
   onSelect: PropTypes.func,
+  value: PropTypes.string,
 };

@@ -384,14 +384,14 @@ router.get("/employees", async (req, res) => {
       },
       {
         $project: {
-          _id: 1,
+          _id: "$userDetails._id",
           employeeId: 1,
           firstName: 1,
           lastName: 1,
           email: 1,
-          role: 1,
-          type: 1,
           gender: 1,
+          username: "$userDetails.username",
+          password: "$userDetails.password",
           createdAt: "$userDetails.createdAt",
           jobDescription: "$settings.general.jobDescription",
         },
@@ -725,20 +725,30 @@ router.post("/add-employee-via-admin", async (req, res) => {
 });
 
 router.post("/check-user-exists", async (req, res) => {
-  const { email, username, employeeId } = req.body;
+  const { email, username, employeeId, excludeId } = req.body;
   const result = {};
+
   if (email) {
-    const emailExists = await User.findOne({ email });
+    const emailExists = await User.findOne({ email, _id: { $ne: excludeId } });
     if (emailExists) result.email = true;
   }
+
   if (username) {
-    const usernameExists = await User.findOne({ username });
+    const usernameExists = await User.findOne({
+      username,
+      _id: { $ne: excludeId },
+    });
     if (usernameExists) result.username = true;
   }
+
   if (employeeId) {
-    const employeeIdExists = await Employee.findOne({ employeeId });
+    const employeeIdExists = await Employee.findOne({
+      employeeId,
+      userId: { $ne: excludeId },
+    });
     if (employeeIdExists) result.employeeId = true;
   }
+
   res.json(result);
 });
 
@@ -762,6 +772,91 @@ router.delete("/delete-employee:employeeId", async (req, res) => {
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
+  }
+});
+
+router.put("/employees/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+    console.log("Updating employee with ID:", userId);
+    const {
+      firstName,
+      lastName,
+      employeeId,
+      gender,
+      email,
+      username,
+      password,
+      designation,
+      department,
+      position,
+      employmentType,
+      startDate,
+    } = req.body;
+
+    // Auth collection update
+    const userUpdate = {
+      firstName,
+      lastName,
+      email,
+      username,
+    };
+    if (password && password.trim() !== "") {
+      userUpdate.password = await require("bcryptjs").hash(password, 10);
+    }
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: userUpdate },
+      { new: true }
+    );
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Employee collection update
+    const employeeUpdate = {
+      firstName,
+      lastName,
+      email,
+      gender,
+      employeeId,
+    };
+    const updatedEmployee = await Employee.findOneAndUpdate(
+      { userId },
+      { $set: employeeUpdate },
+      { new: true }
+    );
+    if (!updatedEmployee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    const jobDescriptionUpdate = {
+      "general.jobDescription.designation": designation,
+      "general.jobDescription.department": department,
+      "general.jobDescription.position": position,
+      "general.jobDescription.employmentType": employmentType,
+      "general.jobDescription.startDate": startDate,
+    };
+    const updatedSettings = await Settings.findOneAndUpdate(
+      { userId },
+      { $set: jobDescriptionUpdate },
+      { new: true }
+    );
+    if (!updatedSettings) {
+      return res.status(404).json({ message: "Settings not found" });
+    }
+
+    res.status(200).json({
+      message: "Employee updated successfully",
+      user: updatedUser,
+      employee: updatedEmployee,
+      settings: updatedSettings,
+    });
+  } catch (error) {
+    console.error("Error updating employee:", error);
+    res
+      .status(500)
+      .json({ message: "Error updating employee", error: error.message });
   }
 });
 

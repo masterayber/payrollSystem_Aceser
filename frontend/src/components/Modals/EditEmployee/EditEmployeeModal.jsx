@@ -3,18 +3,28 @@ import ReactDOM from "react-dom";
 import "../Modal.css";
 import Dropdown from "../../Dropdown/Dropdown";
 import PropTypes from "prop-types";
-import ConfirmModal from "../../Dropdown/Dropdown";
+import ConfirmModal from "../Confirm/ConfirmModal";
 import CancelModal from "../Cancel/CancelModal";
 import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
+import { IconCancel, IconCheck } from "@tabler/icons-react";
 
 const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
+  const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [isConfirmMOdalOpen, setIsConfirmModalOpen] = useState(false);
-  const [isConfirmedModalOpen, setISConfirmedModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [editEmployee, setEditEmployee] = useState({
     ...employee,
     gender: employee.gender || "",
+    password: "",
+    designation: employee.jobDescription.designation || "",
+    department: employee.jobDescription.department || "",
+    position: employee.jobDescription.position || "",
+    employmentType: employee.jobDescription.employmentType || "",
+    startDate: employee.jobDescription.startDate
+      ? new Date(employee.jobDescription.startDate).toISOString().split("T")[0]
+      : "",
   });
 
   const [dropdownOptions, setDropdownOptions] = useState({
@@ -84,6 +94,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
             email: editEmployee.email,
             username: editEmployee.username,
             employeeId: editEmployee.employeeId,
+            excludeId: editEmployee._id,
           }),
         }
       );
@@ -112,13 +123,16 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
     e.preventDefault();
 
     try {
-      const response = await fetch(`api/auth/employees/${employee._id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(editEmployee),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/auth/employees/${employee._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(editEmployee),
+        }
+      );
 
       if (response.ok) {
         onUpdateEmployee();
@@ -189,9 +203,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                 options={["--Select Gender--", ...dropdownOptions.gender]}
                 value={editEmployee.gender}
                 placeholder="--Select Gender--"
-                onSelect={(value) =>
-                  setEditEmployee({ ...editEmployee, gender: value })
-                }
+                onSelect={(value) => handleDropdownChange("gender", value)}
               />
             </div>
           </div>
@@ -233,14 +245,52 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
               <div className="label-container">
                 <label>Password</label>
               </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="password"
-                  value={editEmployee.password}
-                  onChange={handleChange}
-                  required
-                />
+              <div className="password-container">
+                <div className="input-group-signup">
+                  <input
+                    type="password"
+                    name="password"
+                    value={editEmployee.password}
+                    onChange={handleChange}
+                    disabled={!isPasswordResetOpen}
+                    placeholder={
+                      isPasswordResetOpen ? "Enter new password" : ""
+                    }
+                  />
+                </div>
+                {isPasswordResetOpen ? (
+                  <>
+                    <button
+                      type="button"
+                      className="reset-password"
+                      style={{ padding: "10px" }}
+                      onClick={() => {
+                        setIsPasswordResetOpen(false);
+                        setEditEmployee({ ...editEmployee, password: "" });
+                      }}
+                    >
+                      <IconCancel stroke={2} size={20} />
+                    </button>
+                    <button
+                      type="button"
+                      className="reset-password"
+                      style={{ padding: "10px" }}
+                      onClick={() => {
+                        setIsPasswordResetOpen(false);
+                      }}
+                    >
+                      <IconCheck stroke={2} size={20} />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="reset-password"
+                    onClick={() => setIsPasswordResetOpen(true)}
+                  >
+                    Reset Password
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -255,6 +305,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                   "--Select Designation--",
                   ...dropdownOptions.designations,
                 ]}
+                value={editEmployee.designation}
                 placeholder="--Select Designation--"
                 onSelect={(value) => handleDropdownChange("designation", value)}
               />
@@ -271,6 +322,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                   "--Select Department--",
                   ...dropdownOptions.departments,
                 ]}
+                value={editEmployee.department}
                 placeholder="--Select Department--"
                 onSelect={(value) => handleDropdownChange("department", value)}
               />
@@ -291,6 +343,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                       ]
                     : ["--Select Position--"]
                 }
+                value={editEmployee.position}
                 placeholder="--Select Position--"
                 onSelect={(value) => handleDropdownChange("position", value)}
               />
@@ -307,6 +360,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                   "--Select EmploymentType--",
                   ...dropdownOptions.employmentTypes,
                 ]}
+                value={editEmployee.employmentType}
                 placeholder="--Select Employment Type--"
                 onSelect={(value) =>
                   handleDropdownChange("employmentType", value)
@@ -330,13 +384,56 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
           </div>
 
           <div className="modal-buttons">
-            <button onClick={onClose} className="modal-button">
+            <button
+              type="button"
+              onClick={handleCancelClick}
+              className="modal-button"
+            >
               Cancel
             </button>
-            <button className="modal-button">Save Changes</button>
+            <button
+              type="button"
+              onClick={handleConfirmClick}
+              className={`modal-button ${!hasChanges ? "disabled" : ""}`}
+              disabled={!hasChanges}
+            >
+              Save Changes
+            </button>
           </div>
         </form>
       </div>
+
+      {isCancelModalOpen && (
+        <CancelModal
+          title="Cancel Changes"
+          message="Are you sure you want to cancel editing this employee?"
+          onClose={() => setIsCancelModalOpen(false)}
+          onConfirm={handleCancel}
+          cancelText="No"
+          confirmText="Yes, Cancel"
+        />
+      )}
+
+      {isConfirmModalOpen && (
+        <ConfirmModal
+          title="Confirm Changes"
+          message={`Are you sure you want to edit ${editEmployee.firstName} ${editEmployee.lastName}?`}
+          onClose={() => setIsConfirmModalOpen(false)}
+          onConfirm={handleSubmit}
+          cancelText="No"
+          confirmText="Yes, Edit"
+        />
+      )}
+
+      {isConfirmedModalOpen && (
+        <ConfirmedMessageModal
+          message="Employee details updated successfully"
+          onClose={() => {
+            setIsConfirmedModalOpen(false);
+            onClose();
+          }}
+        />
+      )}
     </div>,
     document.body
   );

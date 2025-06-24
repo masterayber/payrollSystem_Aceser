@@ -354,7 +354,8 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
             <button
               type="button"
               onClick={handleConfirmClick}
-              className="modal-button"
+              className={`modal-button ${!hasChanges ? "disabled" : ""}`}
+              disabled={!hasChanges}
             >
               Add Employee
             </button>

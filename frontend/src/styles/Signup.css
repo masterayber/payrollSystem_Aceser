@@ -48,6 +48,7 @@
   background-color: #fff;
   display: flex;
   flex-direction: row;
+  align-items: center;
 }
 
 .input-group-signup input,

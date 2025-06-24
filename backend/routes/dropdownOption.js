@@ -12,6 +12,7 @@ function isValidField(field) {
 router.get("/", async (req, res) => {
   try {
     const dropdownOptions = await Dropdown.findOne();
+    console.log("Dropdown Options:", dropdownOptions);
     res.json(dropdownOptions);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch dropdown options" });
@@ -32,13 +33,15 @@ router.put("/:field/add", async (req, res) => {
   }
 
   try {
-    const updated = await Dropdown.findOneAndUpdate(
-      {},
-      { $addToSet: { [field]: option } },
-      { new: true }
-    );
+    let update = { $addToSet: { [field]: option } };
 
-    console.log("Updated dropdown:", updated);
+    // check if adding a department, also initiate positions[option] as an empty array
+    if (field === "departments") {
+      update.$set = { [`positions.${option}`]: [] };
+    }
+
+    const updated = await Dropdown.findOneAndUpdate({}, update, { new: true });
+
     res.json(updated);
   } catch (error) {
     res.status(500).json({ message: "Error updating department list" });
@@ -94,11 +97,15 @@ router.delete("/:field/delete", async (req, res) => {
   }
 
   try {
-    const updatedDoc = await Dropdown.findOneAndUpdate(
-      {},
-      { $pull: { [field]: option } },
-      { new: true }
-    );
+    let update = { $pull: { [field]: option } };
+
+    if (field === "departments") {
+      update.$unset = { [`positions.${option}`]: "" };
+    }
+
+    const updatedDoc = await Dropdown.findOneAndUpdate({}, update, {
+      new: true,
+    });
 
     if (!updatedDoc) {
       return res.status(404).json({ error: "Dropdown option not found" });

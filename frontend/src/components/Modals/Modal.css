@@ -86,3 +86,22 @@
   flex: 1;
   padding: 10px;
 }
+
+.password-container {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
+.reset-password {
+  padding: 5px;
+  border-radius: 10px;
+}
+
+.modal-button:disabled,
+.modal-button.disabled {
+  background-color: var(--gray-200);
+  cursor: not-allowed;
+  pointer-events: auto;
+  border-radius: 10px;
+}

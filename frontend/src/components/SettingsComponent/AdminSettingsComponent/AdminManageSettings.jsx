@@ -37,6 +37,7 @@ const AdminManageSettings = () => {
   const [dropdownOptions, setDropdownOptions] = useState({
     designations: [],
     departments: [],
+    positions: [],
     employmentTypes: [],
   });
 
@@ -57,11 +58,11 @@ const AdminManageSettings = () => {
   // Positions Management
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [positions, setPositions] = useState("");
-  const [isPositionAddModalOpen, setIsPositionAddModalOpen] = useState(false);
-  const [isPositionEditModalOpen, setIsPositionEditModalOpen] = useState(false);
-  const [positionToAdd, setPositionToAdd] = useState("");
-  const [selectedPosition, setSelectedPosition] = useState("");
-  const [positionToEdit, setPositionToEdit] = useState("");
+  // const [isPositionAddModalOpen, setIsPositionAddModalOpen] = useState(false);
+  // const [isPositionEditModalOpen, setIsPositionEditModalOpen] = useState(false);
+  // const [positionToAdd, setPositionToAdd] = useState("");
+  // const [selectedPosition, setSelectedPosition] = useState("");
+  // const [positionToEdit, setPositionToEdit] = useState("");
 
   const addSvgRef = useRef(null);
 
@@ -167,6 +168,7 @@ const AdminManageSettings = () => {
         body = { option: selectedOption };
       }
 
+      console.log("API URL:", url);
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -187,55 +189,8 @@ const AdminManageSettings = () => {
     }
   };
 
-  const handleAddPosition = async () => {
-    await fetch(
-      `http://localhost:5000/api/dropdownOption/positions/${selectedDepartment}/add`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ position: positionToAdd }),
-      }
-    );
-    setPositionToAdd("");
-    setIsPositionAddModalOpen(false);
-    fetchPositions(selectedDepartment);
-  };
-
-  const handleEditPosition = async () => {
-    await fetch(
-      `http://localhost:5000/api/dropdownOption/positions/${selectedDepartment}/edit`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          oldPosition: selectedPosition,
-          newPosition: positionToEdit,
-        }),
-      }
-    );
-    setSelectedPosition("");
-    setPositionToEdit("");
-    setIsPositionEditModalOpen(false);
-    fetchPositions(selectedDepartment);
-  };
-
-  const handleDeletePosition = async (position) => {
-    await fetch(
-      `http://localhost:5000/api/dropdownOption/positions/${selectedDepartment}/delete`,
-      {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ position }),
-      }
-    );
-    fetchPositions(selectedDepartment);
-  };
-
   const departmentsIndex = DROPDOWN_TYPES.findIndex(
     (d) => d.key === "departments"
-  );
-  const employmentTypesIndex = DROPDOWN_TYPES.findIndex(
-    (d) => d.key === "employementTypes"
   );
 
   return (
@@ -274,7 +229,7 @@ const AdminManageSettings = () => {
                   <article className="table-header-container">
                     <p>{dropdown.singular}</p>
                   </article>
-                  <hr className="header-hr"></hr>
+                  <hr className="header-hr" />
                   <article className="table-header-container">
                     <p>Action</p>
                   </article>
@@ -360,6 +315,10 @@ const AdminManageSettings = () => {
           cancelText="Cancel"
           confirmText="Save"
           onClose={() => setIsManagePositionModalOpen(false)}
+          departments={dropdownOptions.departments}
+          selectedDepartment={selectedDepartment}
+          onSelectDepartment={setSelectedDepartment}
+          positions={positions}
         />
       )}
 

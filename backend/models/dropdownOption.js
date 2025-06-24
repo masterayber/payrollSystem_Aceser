@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const dropdownSchema = new mongoose.Schema({
   designations: [String],
   departments: [String],
-  positionsByDepartment: {
+  positions: {
     type: Map,
     of: [String],
     default: {},

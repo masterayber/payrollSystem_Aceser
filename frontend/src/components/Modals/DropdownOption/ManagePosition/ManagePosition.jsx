@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import "../../Modal.css";
 import Dropdown from "../../../Dropdown/Dropdown";
 import PropTypes from "prop-types";
@@ -6,9 +5,10 @@ import PropTypes from "prop-types";
 const ManagePositionModal = ({
   title,
   message,
-  onClose,
   cancelText,
   confirmText,
+  onClose,
+  departments,
 }) => {
   return (
     <div className="modal">
@@ -18,7 +18,7 @@ const ManagePositionModal = ({
           <p>{message}</p>
         </div>
         <div className="input-container">
-          <Dropdown category="position" />
+          <Dropdown options={["--Select Department--", ...departments]} />
         </div>
         <div className="modal-buttons">
           <button onClick={onClose} className="modal-button">
@@ -39,4 +39,5 @@ ManagePositionModal.propTypes = {
   onClose: PropTypes.func,
   cancelText: PropTypes.string,
   confirmText: PropTypes.string,
+  departments: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
