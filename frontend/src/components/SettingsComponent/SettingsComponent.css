@@ -113,6 +113,7 @@
 
 .setting-tab-table {
   margin-top: 20px;
+  overflow: visible;
 }
 
 .settings-button-option-container {
@@ -223,4 +224,8 @@
 .manage-position p {
   font-weight: 500;
   font-size: 20px;
+}
+
+.department-dropdown-container {
+  margin: 0;
 }

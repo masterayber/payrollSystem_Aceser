@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import ReactDOM from "react-dom";
 import "../Modal.css";
 import PropTypes from "prop-types";
 
@@ -9,7 +11,14 @@ const ConfirmModal = ({
   confirmText = "Confirm",
   cancelText = "Cancel",
 }) => {
-  return (
+  useEffect(() => {
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
+
+  return ReactDOM.createPortal(
     <div className="modal">
       <div className="modal-content">
         <h3>{title}</h3>
@@ -26,7 +35,8 @@ const ConfirmModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

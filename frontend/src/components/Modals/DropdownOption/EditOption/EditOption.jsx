@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import "../../Modal.css";
 import PropTypes from "prop-types";
 
@@ -14,6 +15,13 @@ const EditOptionModal = ({
   const [option, setOption] = useState(currentOption || "");
 
   useEffect(() => {
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
+
+  useEffect(() => {
     setOption(currentOption || "");
   }, [currentOption]);
 
@@ -25,7 +33,7 @@ const EditOptionModal = ({
     onEditOption(option);
     setOption("");
   };
-  return (
+  return ReactDOM.createPortal(
     <div className="modal">
       <div className="modal-content">
         <h3>{title}</h3>
@@ -50,7 +58,8 @@ const EditOptionModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

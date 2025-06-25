@@ -60,6 +60,7 @@
 .table-container {
   flex-direction: column;
   gap: 20px;
+  overflow: visible;
 }
 
 .message-container {

@@ -3,12 +3,7 @@ import { IconCaretDownFilled } from "@tabler/icons-react";
 import "./Dropdown.css";
 import PropTypes from "prop-types";
 
-const Dropdown = ({
-  options = [],
-  placeholder = "Select an Option",
-  onSelect,
-  value = "",
-}) => {
+const Dropdown = ({ options, placeholder, value, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 

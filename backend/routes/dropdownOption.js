@@ -120,4 +120,16 @@ router.delete("/:field/delete", async (req, res) => {
   }
 });
 
+router.get("positions/:department", async (req, res) => {
+  const { department } = req.params;
+
+  try {
+    const dropdown = await Dropdown.findOne();
+    if (!dropdown || !dropdown.positions || !dropdown.positions[department]) {
+    }
+  } catch (error) {
+    console.error("Internal Server Error:", error);
+  }
+});
+
 module.exports = router;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../../styles/AdminCSS/AdminSettings.css";
 import AdminGeneralSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminGeneralSettings";
 import AdminManageSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminManageSettings";
@@ -29,7 +29,6 @@ const settingsContent = {
 
 const AdminSettings = () => {
   const [selectedOption, setSelectedOption] = useState("general");
-
   return (
     <div className="main-content">
       <div className="setting-container">

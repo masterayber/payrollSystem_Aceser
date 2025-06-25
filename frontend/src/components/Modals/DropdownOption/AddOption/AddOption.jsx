@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import "../../Modal.css";
 import PropTypes from "prop-types";
 
 const AddOptionModal = ({ title, message, onClose, onAddOption }) => {
   const [option, setOption] = useState("");
+
+  useEffect(() => {
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
 
   const handleAddClick = () => {
     if (option.trim() === "") {
@@ -13,7 +21,7 @@ const AddOptionModal = ({ title, message, onClose, onAddOption }) => {
     onAddOption(option);
     setOption("");
   };
-  return (
+  return ReactDOM.createPortal(
     <div className="modal">
       <div className="modal-content">
         <h3>{title}</h3>
@@ -38,7 +46,8 @@ const AddOptionModal = ({ title, message, onClose, onAddOption }) => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

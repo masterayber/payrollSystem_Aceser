@@ -3,13 +3,12 @@ import {
   IconEdit,
   IconSquareRoundedX,
   IconDotsVertical,
-  IconUserCog,
 } from "@tabler/icons-react";
 import AddModal from "../../Modals/DropdownOption/AddOption/AddOption";
 import EditModal from "../../Modals/DropdownOption/EditOption/EditOption";
-import ManageModal from "../../Modals/DropdownOption/ManagePosition/ManagePosition";
 import ConfirmModal from "../../Modals/Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../../Modals/Confirmed/ConfirmedMessageModal";
+import Dropdown from "../../Dropdown/Dropdown";
 
 const DROPDOWN_TYPES = [
   {
@@ -37,15 +36,13 @@ const AdminManageSettings = () => {
   const [dropdownOptions, setDropdownOptions] = useState({
     designations: [],
     departments: [],
-    positions: [],
     employmentTypes: [],
+    positions: [],
   });
 
   const [showDropdownOption, setShowDropdownOption] = useState({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isManagePositionModalOpen, setIsManagePositionModalOpen] =
-    useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmedMessageModalOpen, setIsConfirmedMessageModalOpen] =
     useState(false);
@@ -57,12 +54,6 @@ const AdminManageSettings = () => {
 
   // Positions Management
   const [selectedDepartment, setSelectedDepartment] = useState("");
-  const [positions, setPositions] = useState("");
-  // const [isPositionAddModalOpen, setIsPositionAddModalOpen] = useState(false);
-  // const [isPositionEditModalOpen, setIsPositionEditModalOpen] = useState(false);
-  // const [positionToAdd, setPositionToAdd] = useState("");
-  // const [selectedPosition, setSelectedPosition] = useState("");
-  // const [positionToEdit, setPositionToEdit] = useState("");
 
   const addSvgRef = useRef(null);
 
@@ -70,33 +61,14 @@ const AdminManageSettings = () => {
     fetchDropdowns();
   }, []);
 
-  useEffect(() => {
-    if (selectedDepartment) {
-      fetchPositions(selectedDepartment);
-    } else {
-      setPositions([]);
-    }
-  }, [selectedDepartment]);
-
   const fetchDropdowns = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/dropdownOption");
       const data = await res.json();
       setDropdownOptions(data);
+      console.log("fetched dropdown options:", data);
     } catch (error) {
       console.error("Error fetching dropdowns:", error);
-    }
-  };
-
-  const fetchPositions = async (department) => {
-    try {
-      const res = await fetch(
-        `http://localhost:5000/api/dropdownOption/positions/${department}`
-      );
-      const data = await res.json();
-      setPositions(data.positions || []);
-    } catch {
-      setPositions([]);
     }
   };
 
@@ -128,10 +100,6 @@ const AdminManageSettings = () => {
     setSelectedOption(option);
     setConfirmAction("delete");
     setIsConfirmModalOpen(true);
-  };
-
-  const handleManageClick = () => {
-    setIsManagePositionModalOpen(true);
   };
 
   const handleConfirmAdd = (newOption) => {
@@ -189,9 +157,11 @@ const AdminManageSettings = () => {
     }
   };
 
-  const departmentsIndex = DROPDOWN_TYPES.findIndex(
-    (d) => d.key === "departments"
-  );
+  const handleDropdownChange = (type, value) => {
+    if (type === "department") {
+      setSelectedDepartment(value);
+    }
+  };
 
   return (
     <div className="settings-content">
@@ -200,7 +170,7 @@ const AdminManageSettings = () => {
           <p>Manage Employment Configuration</p>
         </div>
 
-        {DROPDOWN_TYPES.slice(0, departmentsIndex + 1).map((dropdown) => (
+        {DROPDOWN_TYPES.map((dropdown) => (
           <div className="setting-tab-table" key={dropdown.key}>
             <div className="table-container">
               <div className="table-title">
@@ -265,18 +235,70 @@ const AdminManageSettings = () => {
         <div className="setting-tab-table">
           <div className="table-container">
             <div className="table-title">
-              <p>Positions</p>
+              <p>Position</p>
             </div>
-            <div className="manage-position">
-              <p>Manage Position:</p>
-              <button
-                className="action-button"
-                onClick={() => handleManageClick()}
-              >
-                <IconUserCog stroke={2} />
-                Manage
-              </button>
+            <div className="input-container department-dropdown-container">
+              <Dropdown
+                options={[
+                  "--Select Department--",
+                  ...dropdownOptions.departments,
+                ]}
+                placeholder="--Select Department--"
+                value={selectedDepartment}
+                onSelect={(value) => handleDropdownChange("department", value)}
+              />
             </div>
+            {selectedDepartment && (
+              <div className="table">
+                <div className="table-header">
+                  <article className="table-header-container">
+                    <p>Positions</p>
+                  </article>
+                  <hr className="header-hr" />
+                  <article className="table-header-container">
+                    <p>Action</p>
+                  </article>
+                </div>
+                {(dropdownOptions.positions?.[selectedDepartment] || [])
+                  .length === 0 ? (
+                  <div className="table-content">
+                    <article className="table-content-container">
+                      <p style={{ color: "#888" }}>
+                        No positions for this department.
+                      </p>
+                    </article>
+                  </div>
+                ) : (
+                  dropdownOptions.positions[selectedDepartment].map(
+                    (option, index) => (
+                      <div className="table-content" key={index}>
+                        <tiarcle className="table-content-container">
+                          <p>{option}</p>
+                        </tiarcle>
+                        <article className="table-content-container">
+                          <button
+                            className="action-button"
+                            onClick={() => handleEditClick("positions", option)}
+                          >
+                            <IconEdit stroke={2} />
+                            Edit
+                          </button>
+                          <button
+                            className="action-button"
+                            onClick={() =>
+                              handleDeleteClick("positions", option)
+                            }
+                          >
+                            <IconSquareRoundedX stroke={2} />
+                            Delete
+                          </button>
+                        </article>
+                      </div>
+                    )
+                  )
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -305,20 +327,6 @@ const AdminManageSettings = () => {
           confirmText="Edit"
           cancelText="Cancel"
           currentOption={selectedOption}
-        />
-      )}
-
-      {isManagePositionModalOpen && (
-        <ManageModal
-          title="Manage Positions"
-          message={`Select a department to edit the positions:`}
-          cancelText="Cancel"
-          confirmText="Save"
-          onClose={() => setIsManagePositionModalOpen(false)}
-          departments={dropdownOptions.departments}
-          selectedDepartment={selectedDepartment}
-          onSelectDepartment={setSelectedDepartment}
-          positions={positions}
         />
       )}
 
