@@ -206,6 +206,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
               <Dropdown
                 options={["--Select Gender--", ...dropdownOptions.gender]}
                 placeholder="--Select Gender--"
+                value={addEmployee.gender}
                 onSelect={(value) => handleDropdownChange("gender", value)}
               />
             </div>
@@ -271,6 +272,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                   ...dropdownOptions.designations,
                 ]}
                 placeholder="--Select Designation--"
+                value={addEmployee.designation}
                 onSelect={(value) => handleDropdownChange("designation", value)}
               />
             </div>
@@ -287,6 +289,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                   ...dropdownOptions.departments,
                 ]}
                 placeholder="--Select Department--"
+                value={addEmployee.department}
                 onSelect={(value) => handleDropdownChange("department", value)}
               />
             </div>
@@ -306,6 +309,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                     : ["--Select Position--"]
                 }
                 placeholder="--Select Position--"
+                value={addEmployee.position}
                 onSelect={(value) => handleDropdownChange("position", value)}
               />
             </div>
@@ -322,6 +326,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                   ...dropdownOptions.employmentTypes,
                 ]}
                 placeholder="--Select Employment Type--"
+                value={addEmployee.employmentType}
                 onSelect={(value) =>
                   handleDropdownChange("employmentType", value)
                 }

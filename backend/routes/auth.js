@@ -752,7 +752,7 @@ router.post("/check-user-exists", async (req, res) => {
   res.json(result);
 });
 
-router.delete("/delete-employee:employeeId", async (req, res) => {
+router.delete("/delete-employee/:employeeId", async (req, res) => {
   try {
     const { employeeId } = req.params;
 

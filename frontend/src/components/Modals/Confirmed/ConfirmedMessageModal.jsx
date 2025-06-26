@@ -1,9 +1,17 @@
-import "react";
+import { useEffect } from "react";
+import ReactDOM from "react-dom";
 import "../Modal.css";
 import PropTypes from "prop-types";
 
 const ConfirmedMessageModal = ({ message, onClose }) => {
-  return (
+  useEffect(() => {
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = "hidden";
+    };
+  }, []);
+
+  return ReactDOM.createPortal(
     <div className="modal">
       <div className="modal-content">
         <h3>Success</h3>
@@ -16,7 +24,8 @@ const ConfirmedMessageModal = ({ message, onClose }) => {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

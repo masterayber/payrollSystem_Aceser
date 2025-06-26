@@ -32,38 +32,38 @@ const Employees = () => {
 
   const itemsPerPage = 7;
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:5000/api/auth/employees"
-        );
-        const data = await response.json();
-        console.log("Employee Data:", data);
-        setEmployeeData(data);
-      } catch (error) {
-        console.error("Error fetching employees:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchEmployees = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         "http://localhost:5000/api/auth/employees"
+  //       );
+  //       const data = await response.json();
+  //       console.log("Employee Data:", data);
+  //       setEmployeeData(data);
+  //     } catch (error) {
+  //       console.error("Error fetching employees:", error);
+  //     }
+  //   };
 
-    fetchEmployees();
+  //   fetchEmployees();
 
-    socket.on("userApproved", (updatedUser) => {
-      console.log("User approved:", updatedUser);
+  //   socket.on("userApproved", (updatedUser) => {
+  //     console.log("User approved:", updatedUser);
 
-      fetchEmployees();
-    });
+  //     fetchEmployees();
+  //   });
 
-    return () => {
-      socket.off("userApproved");
-    };
-  }, [setEmployeeData]);
+  //   return () => {
+  //     socket.off("userApproved");
+  //   };
+  // }, [setEmployeeData]);
 
   const probationaryCount = employeeData.filter(
-    (employee) => employee.type === "Probationary"
+    (employee) => employee.jobDescription.employmentType === "Probationary"
   ).length;
   const regularCount = employeeData.filter(
-    (employee) => employee.type === "Regular"
+    (employee) => employee.jobDescription.employmentType === "Regular"
   ).length;
 
   const filteredEmployees = employeeData.filter((employee) =>
@@ -98,13 +98,18 @@ const Employees = () => {
   };
 
   const handleUpdateEmployee = async () => {
-    setIsEditModalOpen(false);
-
     try {
       const response = await fetch("http://localhost:5000/api/auth/employees");
       const data = await response.json();
 
+      if (!response.ok) {
+        throw new Error("Failed to delete employee");
+      }
+
       setEmployeeData(data);
+
+      setIsEditModalOpen(false);
+      setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (error) {
       console.error("Error refreshing employees after update:", error);
     }

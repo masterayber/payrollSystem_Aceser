@@ -1,5 +1,4 @@
 import { useState, useEffect, useContext, useRef } from "react";
-import axios from "axios";
 import { UserContext } from "../../context/UserContext";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import "../../styles/AdminCSS/AdminDashboard.css";
@@ -10,22 +9,19 @@ import AttendanceChart from "../../components/AttendanceChart/AttendanceChart";
 import { IconDotsVertical } from "@tabler/icons-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const AdminDashboard = () => {
   const { userData } = useContext(UserContext);
-  const { employeeData } = useContext(EmployeeContext);
+  const { employeeData, setEmployeeData } = useContext(EmployeeContext);
   const navigate = useNavigate();
 
   const [showPendingDropdown, setShowPendingDropdown] = useState(false);
-
   const [timedInCount, setTimedInCount] = useState(0);
   const [timedOutCount, setTimedOutCount] = useState(0);
-
   const [onTimeCount, setOnTimeCount] = useState(0);
   const [lateCount, setLateCount] = useState(0);
   const [absentCount, setAbsentCount] = useState(0);
-  // const [onLeaveCount, setOnLeaveCount] = useState(0);
-
   const [pendingUsers, setPendingUsers] = useState([]);
 
   const pendingDropdownRef = useRef(null);
@@ -42,11 +38,7 @@ const AdminDashboard = () => {
         const today = new Date();
         const formattedToday = today.toISOString().split("T")[0].trim();
 
-        // Fetch all employees
-        const empRes = await axios.get(
-          "http://localhost:5000/api/auth/employees"
-        );
-        const employees = empRes.data;
+        const employees = employeeData;
 
         // Fetch today's attendance
         const attRes = await axios.get(
@@ -91,8 +83,10 @@ const AdminDashboard = () => {
       }
     };
 
-    fetchTodayAttendance();
-  }, []);
+    if (employeeData.length > 0) {
+      fetchTodayAttendance();
+    }
+  }, [employeeData]);
 
   useEffect(() => {
     const fetchPendingUsers = async () => {

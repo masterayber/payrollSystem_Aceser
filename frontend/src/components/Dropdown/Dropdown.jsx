@@ -3,7 +3,7 @@ import { IconCaretDownFilled } from "@tabler/icons-react";
 import "./Dropdown.css";
 import PropTypes from "prop-types";
 
-const Dropdown = ({ options, placeholder, value, onSelect }) => {
+const Dropdown = ({ options = [], placeholder, value = "", onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -31,7 +31,7 @@ const Dropdown = ({ options, placeholder, value, onSelect }) => {
         onClick={() => setIsOpen(!isOpen)}
       >
         <span>
-          {value === "" || value === "--Select Gender--" ? placeholder : value}
+          {value === "" || value.startsWith("--Select") ? placeholder : value}
         </span>
         <IconCaretDownFilled
           key={isOpen}
