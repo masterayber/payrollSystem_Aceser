@@ -81,20 +81,6 @@ const Dashboard = () => {
 
               totalHoursWorked += workedHours;
 
-              // // Approved overtime check
-              // if (
-              //   record.overtimeFiled &&
-              //   record.overtimeStatus === "approved"
-              // ) {
-              //   const standardOut = new Date(`${record.date}T17:00:00`);
-              //   if (timeOut > standardOut) {
-              //     const overtimeHours =
-              //       (timeOut.getTime() - standardOut.getTime()) /
-              //       (1000 * 60 * 60);
-              //     totalOvertimeHours += overtimeHours;
-              //   }
-              // }
-
               if (record.date === todayDate) {
                 foundToday = true;
 

@@ -1,4 +1,5 @@
 import { createContext, useEffect, useState } from "react";
+import PropTypes from "prop-types";
 
 export const AttendanceContext = createContext();
 
@@ -16,10 +17,14 @@ export const AttendanceProvider = ({ children }) => {
       } catch (error) {
         console.error("Error fetching employees:", error);
       }
+
+      AttendanceProvider.propTypes = {
+        children: PropTypes.node.isRequired,
+      };
     };
 
     fetchAttendance();
-  }, []);
+  }, [attendanceData, setAttendanceData]);
 
   return (
     <AttendanceContext.Provider value={{ attendanceData, setAttendanceData }}>

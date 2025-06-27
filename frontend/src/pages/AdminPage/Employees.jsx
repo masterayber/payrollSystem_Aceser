@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import {
   IconPlus,
   IconEdit,
@@ -12,11 +12,8 @@ import { EmployeeContext } from "../../context/EmployeeContext";
 import AddEmployeeModal from "../../components/Modals/AddEmployee/AddEmployeeModal";
 import EditEmployeeModal from "../../components/Modals/EditEmployee/EditEmployeeModal";
 import ApproveEmployeeModal from "../../components/Modals/Approve/ApproveEmployeeModal";
-import io from "socket.io-client";
 import "../../styles/AdminCSS/Employees.css";
 import ConfirmModal from "../../components/Modals/Confirm/ConfirmModal";
-
-const socket = io("http://localhost:5000");
 
 const Employees = () => {
   const { employeeData, setEmployeeData } = useContext(EmployeeContext);
@@ -31,33 +28,6 @@ const Employees = () => {
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
 
   const itemsPerPage = 7;
-
-  // useEffect(() => {
-  //   const fetchEmployees = async () => {
-  //     try {
-  //       const response = await fetch(
-  //         "http://localhost:5000/api/auth/employees"
-  //       );
-  //       const data = await response.json();
-  //       console.log("Employee Data:", data);
-  //       setEmployeeData(data);
-  //     } catch (error) {
-  //       console.error("Error fetching employees:", error);
-  //     }
-  //   };
-
-  //   fetchEmployees();
-
-  //   socket.on("userApproved", (updatedUser) => {
-  //     console.log("User approved:", updatedUser);
-
-  //     fetchEmployees();
-  //   });
-
-  //   return () => {
-  //     socket.off("userApproved");
-  //   };
-  // }, [setEmployeeData]);
 
   const probationaryCount = employeeData.filter(
     (employee) => employee.jobDescription.employmentType === "Probationary"

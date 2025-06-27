@@ -13,9 +13,10 @@ import axios from "axios";
 
 const AdminDashboard = () => {
   const { userData } = useContext(UserContext);
-  const { employeeData, setEmployeeData } = useContext(EmployeeContext);
+  const { employeeData } = useContext(EmployeeContext);
   const navigate = useNavigate();
 
+  const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
   const [showPendingDropdown, setShowPendingDropdown] = useState(false);
   const [timedInCount, setTimedInCount] = useState(0);
   const [timedOutCount, setTimedOutCount] = useState(0);
@@ -24,8 +25,15 @@ const AdminDashboard = () => {
   const [absentCount, setAbsentCount] = useState(0);
   const [pendingUsers, setPendingUsers] = useState([]);
 
+  const calendarDropdownRef = useRef(null);
+  const calendarSvgRef = useRef(null);
   const pendingDropdownRef = useRef(null);
   const pendingSvgRef = useRef(null);
+
+  const toggleCalendarDropdown = (event) => {
+    event.stopPropagation();
+    setShowCalendarDropdown((prev) => !prev);
+  };
 
   const togglePendingDropdown = (event) => {
     event.stopPropagation();
@@ -104,6 +112,16 @@ const AdminDashboard = () => {
 
     const handleClickOutside = (event) => {
       if (
+        showCalendarDropdown &&
+        calendarDropdownRef.current &&
+        !calendarDropdownRef.current.contains(event.target) &&
+        calendarSvgRef.current &&
+        !pendingSvgRef.current.contains(event.target)
+      ) {
+        setShowCalendarDropdown(false);
+      }
+
+      if (
         showPendingDropdown &&
         pendingDropdownRef.current &&
         !pendingDropdownRef.current.contains(event.target) &&
@@ -114,12 +132,12 @@ const AdminDashboard = () => {
       }
     };
 
-    if (showPendingDropdown) {
+    if (showCalendarDropdown || showPendingDropdown) {
       document.addEventListener("click", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener("Click", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, [showPendingDropdown]);
 
@@ -166,7 +184,24 @@ const AdminDashboard = () => {
         <div className="user-track">
           <div className="user-track-title">
             <p>Calendar</p>
-            <IconDotsVertical />
+            <div className="dots-button-container">
+              <IconDotsVertical
+                stroke={2}
+                onClick={toggleCalendarDropdown}
+                ref={calendarSvgRef}
+                className="dots-button"
+              />
+              {showCalendarDropdown && (
+                <div className="dropdown-details" ref={calendarDropdownRef}>
+                  <button
+                    className="dropdown-item-details"
+                    onClick={() => navigate("/admin-calendar")}
+                  >
+                    View Details
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           <Calendar />
         </div>

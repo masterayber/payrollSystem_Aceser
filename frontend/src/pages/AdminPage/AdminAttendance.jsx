@@ -16,7 +16,6 @@ import "../../styles/AdminCSS/AdminAttendance.css";
 const AdminAttendance = () => {
   const { employeeData } = useContext(EmployeeContext);
   const { attendanceData, setAttendanceData } = useContext(AttendanceContext);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -97,19 +96,24 @@ const AdminAttendance = () => {
     fetchAttendanceByDate();
   }, [selectedDate, setAttendanceData]);
 
+  const getAttendanceForEmployee = (employeeId) => {
+    const selected = formatDate(selectedDate);
+    return (attendanceData || []).find((record) => {
+      const recordDate = formatDate(new Date(record.date));
+      return record.userId === employeeId && recordDate === selected;
+    });
+  };
+
   const filteredEmployees = (employeeData || [])
     .map((employee) => {
       const selected = formatDate(selectedDate);
       const createdDate = formatDate(new Date(employee.createdAt));
       const isBeforeHired = new Date(selected) < new Date(createdDate);
 
-      const attendanceRecord = (attendanceData || []).find((record) => {
-        const recordDate = formatDate(new Date(record.date));
-        return record.userId === employee._id && recordDate === selected;
-      });
+      const attendanceRecord = getAttendanceForEmployee(employee._id);
 
       return {
-        id: employee._id,
+        id: employee.employeeId,
         firstName: employee.firstName,
         lastName: employee.lastName,
         date: employee.date,
@@ -121,7 +125,9 @@ const AdminAttendance = () => {
     .filter((employee) => {
       if (!employee) return false;
       return (
-        employee.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        employee.employeeId
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
         employee.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         employee.lastName?.toLowerCase().includes(searchQuery.toLowerCase())
       );

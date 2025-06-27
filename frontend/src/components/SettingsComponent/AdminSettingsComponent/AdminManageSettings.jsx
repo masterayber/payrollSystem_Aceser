@@ -66,7 +66,6 @@ const AdminManageSettings = () => {
       const res = await fetch("http://localhost:5000/api/dropdownOption");
       const data = await res.json();
       setDropdownOptions(data);
-      console.log("fetched dropdown options:", data);
     } catch (error) {
       console.error("Error fetching dropdowns:", error);
     }
