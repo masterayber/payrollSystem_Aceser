@@ -16,6 +16,7 @@ const AdminDashboard = () => {
   const { employeeData } = useContext(EmployeeContext);
   const navigate = useNavigate();
 
+  const [showDailyDropdown, setShowDailyDropdown] = useState(false);
   const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
   const [showPendingDropdown, setShowPendingDropdown] = useState(false);
   const [timedInCount, setTimedInCount] = useState(0);
@@ -23,12 +24,20 @@ const AdminDashboard = () => {
   const [onTimeCount, setOnTimeCount] = useState(0);
   const [lateCount, setLateCount] = useState(0);
   const [absentCount, setAbsentCount] = useState(0);
+  const [todayAttendance, setTodayAttendance] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
 
+  const dailyDropdownRef = useRef(null);
+  const dailySvgRef = useRef(null);
   const calendarDropdownRef = useRef(null);
   const calendarSvgRef = useRef(null);
   const pendingDropdownRef = useRef(null);
   const pendingSvgRef = useRef(null);
+
+  const toggleDailyDropdown = (event) => {
+    event.stopPropagation();
+    setShowDailyDropdown((prev) => !prev);
+  };
 
   const toggleCalendarDropdown = (event) => {
     event.stopPropagation();
@@ -53,6 +62,8 @@ const AdminDashboard = () => {
           `http://localhost:5000/api/attendance/attendance?date=${formattedToday}`
         );
         const attendance = attRes.data;
+
+        setTodayAttendance(attendance);
 
         if (attendance && attendance.length > 0) {
           const timedIn = attendance.filter((entry) => entry.timeIn).length;
@@ -112,11 +123,21 @@ const AdminDashboard = () => {
 
     const handleClickOutside = (event) => {
       if (
+        showDailyDropdown &&
+        dailyDropdownRef.current &&
+        !dailyDropdownRef.current.contains(event.target) &&
+        dailySvgRef.current &&
+        !dailySvgRef.current.contains(event.target)
+      ) {
+        setShowDailyDropdown(false);
+      }
+
+      if (
         showCalendarDropdown &&
         calendarDropdownRef.current &&
         !calendarDropdownRef.current.contains(event.target) &&
         calendarSvgRef.current &&
-        !pendingSvgRef.current.contains(event.target)
+        !calendarSvgRef.current.contains(event.target)
       ) {
         setShowCalendarDropdown(false);
       }
@@ -132,14 +153,14 @@ const AdminDashboard = () => {
       }
     };
 
-    if (showCalendarDropdown || showPendingDropdown) {
+    if (showDailyDropdown || showCalendarDropdown || showPendingDropdown) {
       document.addEventListener("click", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
-  }, [showPendingDropdown]);
+  });
 
   const todayAttendanceData = {
     onTime: onTimeCount,
@@ -167,15 +188,21 @@ const AdminDashboard = () => {
 
       <div className="user-track-container">
         <div className="user-track">
-          <p>Total Employees</p>
+          <div className="user-track-title">
+            <p>Total Employees</p>
+          </div>
           <div className="user-number">{employeeData.length}</div>
         </div>
         <div className="user-track">
-          <p>Total Employees Timed In</p>
+          <div className="user-track-title">
+            <p>Total Employees Timed In</p>
+          </div>
           <div className="user-number">{timedInCount}</div>
         </div>
         <div className="user-track">
-          <p>Total Employees Timed Out</p>
+          <div className="user-track-title">
+            <p>Total Employees Timed Out</p>
+          </div>
           <div className="user-number">{timedOutCount}</div>
         </div>
       </div>
@@ -183,19 +210,19 @@ const AdminDashboard = () => {
       <div className="user-track-container">
         <div className="user-track">
           <div className="user-track-title">
-            <p>Calendar</p>
+            <p>Recent Transaction</p>
             <div className="dots-button-container">
               <IconDotsVertical
                 stroke={2}
-                onClick={toggleCalendarDropdown}
-                ref={calendarSvgRef}
+                onClick={toggleDailyDropdown}
+                ref={dailySvgRef}
                 className="dots-button"
               />
-              {showCalendarDropdown && (
-                <div className="dropdown-details" ref={calendarDropdownRef}>
+              {showDailyDropdown && (
+                <div className="dropdown-details" ref={dailyDropdownRef}>
                   <button
                     className="dropdown-item-details"
-                    onClick={() => navigate("/admin-calendar")}
+                    onClick={() => navigate("/admin-attendance")}
                   >
                     View Details
                   </button>
@@ -203,15 +230,100 @@ const AdminDashboard = () => {
               )}
             </div>
           </div>
-          <Calendar />
+          <div className="table">
+            <div className="table-header">
+              <article className="table-header-container">
+                <p>Name</p>
+              </article>
+              <hr className="header-hr" />
+              <article className="table-header-container">
+                <p>Time</p>
+              </article>
+              <hr className="header-hr" />
+              <article className="table-header-container">
+                <p>Type</p>
+              </article>
+            </div>
+
+            {todayAttendance.length > 0 ? (
+              todayAttendance
+                .flatMap((record) => {
+                  const emp = employeeData.find(
+                    (e) =>
+                      e._id === record.userId ||
+                      e.employeeId === record.employeeId
+                  );
+                  const name = emp
+                    ? `${emp.firstName} ${emp.lastName}`
+                    : "Unknown Employee";
+                  const logs = [];
+                  if (record.timeIn)
+                    logs.push({
+                      name,
+                      time: record.timeIn,
+                      type: "IN",
+                      timestamp: record.timeIn,
+                    });
+                  if (record.timeOut)
+                    logs.push({
+                      name,
+                      time: record.timeOut,
+                      type: "OUT",
+                      timestamp: record.timeOut,
+                    });
+                  return logs;
+                })
+                // Sort by time descending (most recent first)
+                .sort((a, b) => b.time.localeCompare(a.time))
+                .map((log, idx) => (
+                  <div className="table-content" key={idx}>
+                    <article className="table-content-container">
+                      <p>{log.name}</p>
+                    </article>
+                    <article className="table-content-container">
+                      <p>{log.time}</p>
+                    </article>
+                    <article className="table-content-container">
+                      <p>{log.type}</p>
+                    </article>
+                  </div>
+                ))
+            ) : (
+              <p className="no-data">No attendance found this day.</p>
+            )}
+          </div>
         </div>
         <div className="user-track">
           <div className="user-track-title">
             <p>Today&apos;s Attendance</p>
-            <IconDotsVertical />
           </div>
           <AttendanceChart attendanceData={todayAttendanceData} />
         </div>
+      </div>
+
+      <div className="user-track">
+        <div className="user-track-title">
+          <p>Calendar</p>
+          <div className="dots-button-container">
+            <IconDotsVertical
+              stroke={2}
+              onClick={toggleCalendarDropdown}
+              ref={calendarSvgRef}
+              className="dots-button"
+            />
+            {showCalendarDropdown && (
+              <div className="dropdown-details" ref={calendarDropdownRef}>
+                <button
+                  className="dropdown-item-details"
+                  onClick={() => navigate("/admin-calendar")}
+                >
+                  View Details
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        <Calendar />
       </div>
 
       <div className="table-container">

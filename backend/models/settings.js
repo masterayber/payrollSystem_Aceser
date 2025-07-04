@@ -26,6 +26,14 @@ const settingsSchema = new mongoose.Schema({
       startDate: {
         type: Date,
       },
+      schedule: {
+        timeIn: {
+          type: String,
+        },
+        timeOut: {
+          type: String,
+        },
+      },
     },
     dateFormat: { type: String, default: "MM-DD-YYYY" },
     timeFormat: { type: String, default: "12 Hour" },

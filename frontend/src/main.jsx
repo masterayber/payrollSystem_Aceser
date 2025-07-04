@@ -29,6 +29,7 @@ import Settings from "./pages/UserPage/Settings";
 
 import "./index.css";
 import PrivateRoute from "./components/PrivateRoute";
+import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 import { UserProvider } from "./context/UserContext";
 import { EmployeeProvider } from "./context/EmployeeContext";
 import { SettingsProvider } from "./context/SettingsContext";
@@ -42,6 +43,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <SettingsProvider>
           <AttendanceProvider>
             <BrowserRouter>
+              <ScrollToTop />
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Login />} />

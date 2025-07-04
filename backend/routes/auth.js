@@ -10,10 +10,8 @@ const Dropdown = require("../models/dropdownOption");
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
-const Attendance = require("../models/attendance");
 
 const sendEmail = require("../utils/nodemailer");
-const settings = require("../models/settings");
 
 const router = express.Router();
 const JWT_SECRET = "your_jwt_secret_key_here";
@@ -70,12 +68,12 @@ router.post("/signup", async (req, res) => {
     await user.save();
 
     let employeeData = {
+      userId: user._id,
       firstName,
       lastName,
       email,
       role: user.role,
       createdAt: new Date(),
-      userId: user._id,
     };
 
     if (user.role === "Employee") {
@@ -92,8 +90,8 @@ router.post("/signup", async (req, res) => {
       }
 
       employeeData.employeeId = newEmployeeId;
-      employeeData.contactNumber = "";
       employeeData.birthday = "";
+      employeeData.contactNumber = "";
       employeeData.gender = gender || "Male";
       employeeData.emergencyDetails = {
         contactFirstName: "",
@@ -117,7 +115,11 @@ router.post("/signup", async (req, res) => {
           department: "",
           position: "",
           employmentType: defaultStatus,
-          startDate: "",
+          startDate: new Date(),
+          schedule: {
+            timeIn: "",
+            timeOut: "",
+          },
         },
       };
     }
@@ -137,6 +139,7 @@ router.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
     const user = await User.findOne({ username });
+    console.log("Username:", user);
 
     if (!user) {
       return res.status(401).json({ message: "Invalid Username" });
@@ -393,7 +396,19 @@ router.get("/employees", async (req, res) => {
           username: "$userDetails.username",
           password: "$userDetails.password",
           createdAt: "$userDetails.createdAt",
-          jobDescription: "$settings.general.jobDescription",
+          jobDescription: {
+            $ifNull: [
+              "$settings.general.jobDescription",
+              {
+                designation: "",
+                department: "",
+                position: "",
+                employmentType: "",
+                startDate: "",
+                schedule: { timeIn: "", timeOut: "" },
+              },
+            ],
+          },
         },
       },
     ]);
@@ -661,13 +676,13 @@ router.post("/add-employee-via-admin", async (req, res) => {
       position,
       employmentType,
       startDate,
+      timeIn,
+      timeOut,
     } = req.body;
-
-    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User({
       username,
-      password: hashedPassword,
+      password,
       email,
       role: "Employee",
       status: "Active",
@@ -676,22 +691,22 @@ router.post("/add-employee-via-admin", async (req, res) => {
     await user.save();
 
     let employeeData = {
+      userId: user._id,
       firstName,
       lastName,
       employeeId,
-      gender,
       email,
+      gender,
       role: user.role,
-      createdAt: new Date(),
-      userId: user._id,
-      contactNumber: "",
       birthday: "",
+      contactNumber: "",
       emergencyDetails: {
         contactFirstName: "",
         contactLastName: "",
         contactEmergency: "",
         contactAddress: "",
       },
+      createdAt: new Date(),
     };
 
     const employee = new Employee(employeeData);
@@ -706,6 +721,10 @@ router.post("/add-employee-via-admin", async (req, res) => {
           position: position,
           employmentType: employmentType,
           startDate: startDate,
+          schedule: {
+            timeIn: timeIn,
+            timeOut: timeOut,
+          },
         },
       },
     });
@@ -857,6 +876,26 @@ router.put("/employees/:id", async (req, res) => {
     res
       .status(500)
       .json({ message: "Error updating employee", error: error.message });
+  }
+});
+
+router.get("/latest-employeeId", async (req, res) => {
+  try {
+    const lastEmployee = await Employee.findOne({
+      employeeId: { $regex: /^AC-\d+$/ },
+    })
+      .sort({ employeeId: -1 })
+      .collation({ locale: "en_US", numeringOrdering: true });
+
+    let newEmployeeId = "AC-001";
+    if (lastEmployee && lastEmployee.employeeId) {
+      const lastNumber = parseInt(lastEmployee.employeeId.split("-")[1], 10);
+      newEmployeeId = `AC-${String(lastNumber + 1).padStart(3, "0")}`;
+    }
+
+    res.json({ newEmployeeId });
+  } catch (error) {
+    console.error("Error fetching latest Employee ID", error);
   }
 });
 

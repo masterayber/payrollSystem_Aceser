@@ -24,6 +24,8 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
     position: "",
     employmentType: "",
     startDate: "",
+    timeIn: "",
+    timeOut: "",
   });
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -48,6 +50,18 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
       .then((data) => setDropdownOptions(data))
       .catch((err) => console.error("Failed to fetch dropdowns", err));
   }, []);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/employee/latest-employeeId")
+      .then((res) => res.json())
+      .then((data) => {
+        setAddEmployee((prev) => ({
+          ...prev,
+          employeeId: data,
+        }));
+      })
+      .catch((err) => console.error("Failed to fetch Employee ID", err));
+  });
 
   const handleChange = (e) => {
     setAddEmployee({
@@ -162,6 +176,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                 <input
                   type="text"
                   name="firstName"
+                  placeholder="Enter First Name"
                   value={addEmployee.firstName}
                   onChange={handleChange}
                   required
@@ -177,6 +192,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                 <input
                   type="text"
                   name="lastName"
+                  placeholder="Enter Last Name"
                   value={addEmployee.lastName}
                   onChange={handleChange}
                   required
@@ -195,8 +211,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                   type="text"
                   name="employeeId"
                   value={addEmployee.employeeId}
-                  onChange={handleChange}
-                  required
+                  readOnly
                 />
               </div>
             </div>
@@ -221,6 +236,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                 <input
                   type="text"
                   name="email"
+                  placeholder="Enter Email"
                   value={addEmployee.email}
                   onChange={handleChange}
                   required
@@ -238,6 +254,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                 <input
                   type="text"
                   name="username"
+                  placeholder="Enter Username"
                   value={addEmployee.username}
                   onChange={handleChange}
                   required
@@ -253,6 +270,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                 <input
                   type="text"
                   name="password"
+                  placeholder="Enter Password"
                   value={addEmployee.password}
                   onChange={handleChange}
                   required
@@ -343,6 +361,40 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                   name="startDate"
                   value={addEmployee.startDate}
                   onChange={handleChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Scheduled Time In</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="timeIn"
+                  placeholder="HH:MM"
+                  value={addEmployee.timeIn}
+                  onChange={handleChange}
+                  maxLength={5}
+                />
+              </div>
+            </div>
+
+            <div className="input-container">
+              <div className="label-container">
+                <label>Scheduled Time Out</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="timeOut"
+                  placeholder="HH:MM"
+                  value={addEmployee.timeOut}
+                  onChange={handleChange}
+                  maxLength={5}
                 />
               </div>
             </div>

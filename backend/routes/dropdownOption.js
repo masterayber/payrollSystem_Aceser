@@ -12,7 +12,6 @@ function isValidField(field) {
 router.get("/", async (req, res) => {
   try {
     const dropdownOptions = await Dropdown.findOne();
-    console.log("Dropdown Options:", dropdownOptions);
     res.json(dropdownOptions);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch dropdown options" });

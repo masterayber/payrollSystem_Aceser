@@ -3,6 +3,7 @@ import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import "./CalendarComponent.css";
 
 const CalendarComponent = () => {
+  const [selectedDay, setSelectedDay] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const changeMonth = (offset) => {
@@ -83,9 +84,11 @@ const CalendarComponent = () => {
               {week.map((day, idx) => (
                 <td
                   key={idx}
-                  className={
-                    day && isCurrentMonth && day === today ? "today" : ""
-                  }
+                  onClick={() => day && setSelectedDay(day)}
+                  className={[
+                    day && isCurrentMonth && day === today ? "today" : "",
+                    day && day === selectedDay ? "selected" : "",
+                  ].join(" ")}
                 >
                   {day || ""}
                 </td>

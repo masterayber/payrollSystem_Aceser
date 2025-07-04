@@ -52,13 +52,27 @@
 
 .today {
   background: var(--gray-200);
-  font-weight: bold;
+  font-weight: bolder;
+}
+
+.selected {
+  background: var(--gray-200);
 }
 
 .calendar-button {
+  padding: 5px;
   cursor: pointer;
-  width: 25px;
-  height: 25px;
+  width: 35px;
+  height: 35px;
+}
+
+.calendar-button:hover {
+  background: var(--gray-200);
+  border-radius: 50px;
+}
+
+.calendar-button:active {
+  background: var(--gray-300);
 }
 
 .calendar-navigate {

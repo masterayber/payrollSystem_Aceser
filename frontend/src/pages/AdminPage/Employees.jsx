@@ -29,12 +29,12 @@ const Employees = () => {
 
   const itemsPerPage = 7;
 
-  const probationaryCount = employeeData.filter(
-    (employee) => employee.jobDescription.employmentType === "Probationary"
-  ).length;
-  const regularCount = employeeData.filter(
-    (employee) => employee.jobDescription.employmentType === "Regular"
-  ).length;
+  // const probationaryCount = employeeData.filter(
+  //   (employee) => employee.jobDescription.employmentType === "Probationary"
+  // ).length;
+  // const regularCount = employeeData.filter(
+  //   (employee) => employee.jobDescription.employmentType === "Regular"
+  // ).length;
 
   const filteredEmployees = employeeData.filter((employee) =>
     Object.values(employee).some((value) =>
@@ -116,11 +116,11 @@ const Employees = () => {
         </div>
         <div className="user-track">
           <p>Total Regural Employees</p>
-          <span className="user-number">{regularCount}</span>
+          {/* <span className="user-number">{regularCount}</span> */}
         </div>
         <div className="user-track">
           <p>Total Probationary Employees</p>
-          <span className="user-number">{probationaryCount}</span>
+          {/* <span className="user-number">{probationaryCount}</span> */}
         </div>
       </div>
 

@@ -152,7 +152,9 @@ const AdminAttendance = () => {
     <div className="main-content">
       <div className="user-track-container">
         <div className="user-track">
-          <p>On-time</p>
+          <div className="user-track-title">
+            <p>On-time</p>
+          </div>
           <span className="user-number">
             {
               filteredEmployees.filter(
@@ -167,7 +169,9 @@ const AdminAttendance = () => {
           </span>
         </div>
         <div className="user-track">
-          <p>Late</p>
+          <div className="user-track-title">
+            <p>Late</p>
+          </div>
           <span className="user-number">
             {
               filteredEmployees.filter(
@@ -177,7 +181,9 @@ const AdminAttendance = () => {
           </span>
         </div>
         <div className="user-track">
-          <p>Half-Day</p>
+          <div className="user-track-title">
+            <p>Half-Day</p>
+          </div>
           <span className="user-number">
             {
               filteredEmployees.filter(
@@ -188,7 +194,9 @@ const AdminAttendance = () => {
           </span>
         </div>
         <div className="user-track">
-          <p>Absent</p>
+          <div className="user-track-title">
+            <p>Absent</p>
+          </div>
           <span className="user-number">
             {
               filteredEmployees.filter(
@@ -198,8 +206,23 @@ const AdminAttendance = () => {
           </span>
         </div>
         <div className="user-track">
-          <p>On-Leave</p>
+          <div className="user-track-title">
+            <p>On-Leave</p>
+          </div>
           <span className="user-number">0</span>
+        </div>
+      </div>
+
+      <div className="table-container">
+        <div className="table-title">
+          <p>Leave Monitoring</p>
+          <div className="dots-button-container">
+            <IconDotsVertical
+              stroke={2}
+              // onClick={toggleLeave}
+              className="dots-button"
+            />
+          </div>
         </div>
       </div>
 
@@ -251,7 +274,6 @@ const AdminAttendance = () => {
             })}
             )
           </p>
-          <IconDotsVertical stroke={2} />
         </div>
         <div className="table">
           <div className="table-header">

@@ -131,7 +131,7 @@
   height: 100%;
 }
 
-.user-track p {
+.user-track-title p {
   color: var(--main-color-1);
   font-weight: 600;
   font-size: 22px;
