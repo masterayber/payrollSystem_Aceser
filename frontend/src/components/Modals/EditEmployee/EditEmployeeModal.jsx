@@ -17,14 +17,21 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   const [editEmployee, setEditEmployee] = useState({
     ...employee,
     gender: employee.gender || "",
-    password: "",
-    designation: employee.jobDescription.designation || "",
-    department: employee.jobDescription.department || "",
-    position: employee.jobDescription.position || "",
-    employmentType: employee.jobDescription.employmentType || "",
-    startDate: employee.jobDescription.startDate
-      ? new Date(employee.jobDescription.startDate).toISOString().split("T")[0]
-      : "",
+    jobDescription: {
+      designation: employee.jobDescription.designation || "",
+      department: employee.jobDescription.department || "",
+      position: employee.jobDescription.position || "",
+      employmentType: employee.jobDescription.employmentType || "",
+      startDate: employee.jobDescription.startDate
+        ? new Date(employee.jobDescription.startDate)
+            .toISOString()
+            .split("T")[0]
+        : "",
+      schedule: {
+        timeIn: employee.jobDescription.schedule.timeIn || "",
+        timeOut: employee.jobDescription.schedule.timeOut || "",
+      },
+    },
   });
 
   const [dropdownOptions, setDropdownOptions] = useState({
@@ -50,18 +57,64 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   }, []);
 
   const handleChange = (e) => {
-    setEditEmployee({
-      ...editEmployee,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    if (name === "startDate") {
+      setEditEmployee((prev) => ({
+        ...prev,
+        jobDescription: {
+          ...prev.jobDescription,
+          startDate: value,
+        },
+      }));
+    } else if (name === "timeIn" || name === "timeOut") {
+      setEditEmployee((prev) => ({
+        ...prev,
+        jobDescription: {
+          ...prev.jobDescription,
+          schedule: {
+            ...prev.jobDescription.schedule,
+            [name]: value,
+          },
+        },
+      }));
+    } else {
+      setEditEmployee((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
     setHasChanges(true);
   };
 
   const handleDropdownChange = (field, value) => {
-    setEditEmployee({
-      ...editEmployee,
-      [field]: value,
-    });
+    if (field === "department") {
+      setEditEmployee((prev) => ({
+        ...prev,
+        jobDescription: {
+          ...prev.jobDescription,
+          department: value,
+          position: "",
+        },
+      }));
+    } else if (["designation", "position", "employmentType"].includes(field)) {
+      setEditEmployee((prev) => ({
+        ...prev,
+        jobDescription: {
+          ...prev.jobDescription,
+          [field]: value,
+        },
+      }));
+    } else if (field === "gender") {
+      setEditEmployee((prev) => ({
+        ...prev,
+        gender: value,
+      }));
+    } else {
+      setEditEmployee((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
     setHasChanges(true);
   };
 
@@ -122,23 +175,36 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const payload = {
+      ...editEmployee,
+      designation: editEmployee.jobDescription.designation,
+      department: editEmployee.jobDescription.department,
+      position: editEmployee.jobDescription.position,
+      employmentType: editEmployee.jobDescription.employmentType,
+      startDate: editEmployee.jobDescription.startDate,
+      timeIn: editEmployee.jobDescription.schedule.timeIn,
+      timeOut: editEmployee.jobDescription.schedule.timeOut,
+    };
+    delete payload.jobDescription;
+
     try {
       const response = await fetch(
-        `http://localhost:5000/api/auth/employees/${employee._id}`,
+        `http://localhost:5000/api/employee/edit-employee-via-admin/${employee._id}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(editEmployee),
+          body: JSON.stringify(payload),
         }
       );
 
-      if (response.ok) {
-        onUpdateEmployee();
-      } else {
-        console.error("Failed to update employee data. Please try again later");
+      if (!response.ok) {
+        throw new Error("Failed to update employee data");
       }
+
+      setIsConfirmModalOpen(false);
+      setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (error) {
       console.error("Error updating employee:", error);
     }
@@ -193,6 +259,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                   value={editEmployee.employeeId}
                   onChange={handleChange}
                   required
+                  disabled
                 />
               </div>
             </div>
@@ -305,7 +372,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                   "--Select Designation--",
                   ...dropdownOptions.designations,
                 ]}
-                value={editEmployee.designation}
+                value={editEmployee.jobDescription.designation}
                 placeholder="--Select Designation--"
                 onSelect={(value) => handleDropdownChange("designation", value)}
               />
@@ -322,7 +389,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                   "--Select Department--",
                   ...dropdownOptions.departments,
                 ]}
-                value={editEmployee.department}
+                value={editEmployee.jobDescription.department}
                 placeholder="--Select Department--"
                 onSelect={(value) => handleDropdownChange("department", value)}
               />
@@ -334,16 +401,16 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
               </div>
               <Dropdown
                 options={
-                  editEmployee.department
+                  editEmployee.jobDescription.department
                     ? [
                         "--Select Position--",
                         ...(dropdownOptions.positions[
-                          editEmployee.department
+                          editEmployee.jobDescription.department
                         ] || []),
                       ]
                     : ["--Select Position--"]
                 }
-                value={editEmployee.position}
+                value={editEmployee.jobDescription.position}
                 placeholder="--Select Position--"
                 onSelect={(value) => handleDropdownChange("position", value)}
               />
@@ -360,7 +427,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                   "--Select EmploymentType--",
                   ...dropdownOptions.employmentTypes,
                 ]}
-                value={editEmployee.employmentType}
+                value={editEmployee.jobDescription.employmentType}
                 placeholder="--Select Employment Type--"
                 onSelect={(value) =>
                   handleDropdownChange("employmentType", value)
@@ -376,8 +443,42 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                 <input
                   type="date"
                   name="startDate"
-                  value={editEmployee.startDate}
+                  value={editEmployee.jobDescription.startDate}
                   onChange={handleChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Scheduled Time In</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="timeIn"
+                  placeholder="HH:HH"
+                  value={editEmployee.jobDescription.schedule.timeIn}
+                  onChange={handleChange}
+                  maxLength={5}
+                />
+              </div>
+            </div>
+
+            <div className="input-container">
+              <div className="label-container">
+                <label>Scheduled Time Out</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="timeOut"
+                  placeholder="HH:MM"
+                  value={editEmployee.jobDescription.schedule.timeOut}
+                  onChange={handleChange}
+                  maxLength={5}
                 />
               </div>
             </div>
@@ -430,6 +531,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
           message="Employee details updated successfully"
           onClose={() => {
             setIsConfirmedModalOpen(false);
+            if (onUpdateEmployee) onUpdateEmployee();
             onClose();
           }}
         />

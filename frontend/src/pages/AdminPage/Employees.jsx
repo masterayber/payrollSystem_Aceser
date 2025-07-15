@@ -14,6 +14,7 @@ import EditEmployeeModal from "../../components/Modals/EditEmployee/EditEmployee
 import ApproveEmployeeModal from "../../components/Modals/Approve/ApproveEmployeeModal";
 import "../../styles/AdminCSS/Employees.css";
 import ConfirmModal from "../../components/Modals/Confirm/ConfirmModal";
+import ConfirmedMessageModal from "../../components/Modals/Confirmed/ConfirmedMessageModal";
 
 const Employees = () => {
   const { employeeData, setEmployeeData } = useContext(EmployeeContext);
@@ -29,12 +30,12 @@ const Employees = () => {
 
   const itemsPerPage = 7;
 
-  // const probationaryCount = employeeData.filter(
-  //   (employee) => employee.jobDescription.employmentType === "Probationary"
-  // ).length;
-  // const regularCount = employeeData.filter(
-  //   (employee) => employee.jobDescription.employmentType === "Regular"
-  // ).length;
+  const probationaryCount = employeeData.filter(
+    (employee) => employee.jobDescription.employmentType === "Probationary"
+  ).length;
+  const regularCount = employeeData.filter(
+    (employee) => employee.jobDescription.employmentType === "Regular"
+  ).length;
 
   const filteredEmployees = employeeData.filter((employee) =>
     Object.values(employee).some((value) =>
@@ -100,8 +101,6 @@ const Employees = () => {
       if (!response.ok) throw new Error("Failed to delete employee");
 
       await handleUpdateEmployee();
-
-      setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (error) {
       console.error("Error deleting employee", error);
     }
@@ -116,11 +115,11 @@ const Employees = () => {
         </div>
         <div className="user-track">
           <p>Total Regural Employees</p>
-          {/* <span className="user-number">{regularCount}</span> */}
+          <span className="user-number">{regularCount}</span>
         </div>
         <div className="user-track">
           <p>Total Probationary Employees</p>
-          {/* <span className="user-number">{probationaryCount}</span> */}
+          <span className="user-number">{probationaryCount}</span>
         </div>
       </div>
 
@@ -281,10 +280,7 @@ const Employees = () => {
       </div>
 
       {isAddModalOpen && (
-        <AddEmployeeModal
-          onClose={() => setIsAddModalOpen(false)}
-          onUpdateEmployee={handleUpdateEmployee}
-        />
+        <AddEmployeeModal onClose={() => setIsAddModalOpen(false)} />
       )}
 
       {isEditModalOpen && selectedEmployee && (
@@ -326,7 +322,14 @@ const Employees = () => {
         />
       )}
 
-      {isConfirmedModalOpen}
+      {isConfirmedModalOpen && (
+        <ConfirmedMessageModal
+          message="Employee deleted successfully"
+          onClose={() => {
+            setIsConfirmedModalOpen(false);
+          }}
+        />
+      )}
 
       {isApproveModalOpen && (
         <ApproveEmployeeModal

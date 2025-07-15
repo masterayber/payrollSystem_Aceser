@@ -57,7 +57,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
       .then((data) => {
         setAddEmployee((prev) => ({
           ...prev,
-          employeeId: data,
+          employeeId: data.newEmployeeId || "",
         }));
       })
       .catch((err) => console.error("Failed to fetch Employee ID", err));
@@ -138,7 +138,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/add-employee-via-admin",
+        "http://localhost:5000/api/employee/add-employee-via-admin",
         {
           method: "POST",
           headers: {
@@ -211,7 +211,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                   type="text"
                   name="employeeId"
                   value={addEmployee.employeeId}
-                  readOnly
+                  disabled
                 />
               </div>
             </div>

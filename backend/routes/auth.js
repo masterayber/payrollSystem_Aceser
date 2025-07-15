@@ -139,7 +139,6 @@ router.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
     const user = await User.findOne({ username });
-    console.log("Username:", user);
 
     if (!user) {
       return res.status(401).json({ message: "Invalid Username" });
@@ -640,7 +639,6 @@ router.delete("/remove-profile-photo/:id", async (req, res) => {
       if (employee && employee.gender) {
         const gender = employee.gender;
 
-        console.log("Employee Gender:", gender);
         if (gender === "Male") {
           defaultPhoto = "/assets/genderIcons/male.svg";
         } else if (gender === "Female") {
@@ -657,89 +655,6 @@ router.delete("/remove-profile-photo/:id", async (req, res) => {
       .json({ message: "Profile photo set to default", user });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error", error });
-  }
-});
-
-// Route for adding employee via admin manually
-router.post("/add-employee-via-admin", async (req, res) => {
-  try {
-    const {
-      firstName,
-      lastName,
-      employeeId,
-      gender,
-      email,
-      username,
-      password,
-      designation,
-      department,
-      position,
-      employmentType,
-      startDate,
-      timeIn,
-      timeOut,
-    } = req.body;
-
-    const user = new User({
-      username,
-      password,
-      email,
-      role: "Employee",
-      status: "Active",
-      createdAt: new Date(),
-    });
-    await user.save();
-
-    let employeeData = {
-      userId: user._id,
-      firstName,
-      lastName,
-      employeeId,
-      email,
-      gender,
-      role: user.role,
-      birthday: "",
-      contactNumber: "",
-      emergencyDetails: {
-        contactFirstName: "",
-        contactLastName: "",
-        contactEmergency: "",
-        contactAddress: "",
-      },
-      createdAt: new Date(),
-    };
-
-    const employee = new Employee(employeeData);
-    await employee.save();
-
-    const settings = new Settings({
-      userId: user._id,
-      general: {
-        jobDescription: {
-          designation: designation,
-          department: department,
-          position: position,
-          employmentType: employmentType,
-          startDate: startDate,
-          schedule: {
-            timeIn: timeIn,
-            timeOut: timeOut,
-          },
-        },
-      },
-    });
-    await settings.save();
-
-    res.status(201).json({
-      message: "Employee account created successfully",
-      user,
-      employee,
-      settings,
-    });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Internal Server Error", error: error.message });
   }
 });
 
@@ -791,111 +706,6 @@ router.delete("/delete-employee/:employeeId", async (req, res) => {
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
-  }
-});
-
-router.put("/employees/:id", async (req, res) => {
-  try {
-    const userId = req.params.id;
-    console.log("Updating employee with ID:", userId);
-    const {
-      firstName,
-      lastName,
-      employeeId,
-      gender,
-      email,
-      username,
-      password,
-      designation,
-      department,
-      position,
-      employmentType,
-      startDate,
-    } = req.body;
-
-    // Auth collection update
-    const userUpdate = {
-      firstName,
-      lastName,
-      email,
-      username,
-    };
-    if (password && password.trim() !== "") {
-      userUpdate.password = await require("bcryptjs").hash(password, 10);
-    }
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $set: userUpdate },
-      { new: true }
-    );
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Employee collection update
-    const employeeUpdate = {
-      firstName,
-      lastName,
-      email,
-      gender,
-      employeeId,
-    };
-    const updatedEmployee = await Employee.findOneAndUpdate(
-      { userId },
-      { $set: employeeUpdate },
-      { new: true }
-    );
-    if (!updatedEmployee) {
-      return res.status(404).json({ message: "Employee not found" });
-    }
-
-    const jobDescriptionUpdate = {
-      "general.jobDescription.designation": designation,
-      "general.jobDescription.department": department,
-      "general.jobDescription.position": position,
-      "general.jobDescription.employmentType": employmentType,
-      "general.jobDescription.startDate": startDate,
-    };
-    const updatedSettings = await Settings.findOneAndUpdate(
-      { userId },
-      { $set: jobDescriptionUpdate },
-      { new: true }
-    );
-    if (!updatedSettings) {
-      return res.status(404).json({ message: "Settings not found" });
-    }
-
-    res.status(200).json({
-      message: "Employee updated successfully",
-      user: updatedUser,
-      employee: updatedEmployee,
-      settings: updatedSettings,
-    });
-  } catch (error) {
-    console.error("Error updating employee:", error);
-    res
-      .status(500)
-      .json({ message: "Error updating employee", error: error.message });
-  }
-});
-
-router.get("/latest-employeeId", async (req, res) => {
-  try {
-    const lastEmployee = await Employee.findOne({
-      employeeId: { $regex: /^AC-\d+$/ },
-    })
-      .sort({ employeeId: -1 })
-      .collation({ locale: "en_US", numeringOrdering: true });
-
-    let newEmployeeId = "AC-001";
-    if (lastEmployee && lastEmployee.employeeId) {
-      const lastNumber = parseInt(lastEmployee.employeeId.split("-")[1], 10);
-      newEmployeeId = `AC-${String(lastNumber + 1).padStart(3, "0")}`;
-    }
-
-    res.json({ newEmployeeId });
-  } catch (error) {
-    console.error("Error fetching latest Employee ID", error);
   }
 });
 
