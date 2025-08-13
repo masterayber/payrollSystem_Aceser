@@ -218,7 +218,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
           <div className="input-row">
             <div className="input-container">
               <div className="label-container">
-                <label>First Name</label>
+                <label>First Name</label> <span className="required">*</span>
               </div>
               <div className="input-group-signup">
                 <input
@@ -233,7 +233,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
 
             <div className="input-container">
               <div className="label-container">
-                <label>Last Name</label>
+                <label>Last Name</label> <span className="required">*</span>
               </div>
               <div className="input-group-signup">
                 <input
@@ -250,7 +250,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
           <div className="input-row">
             <div className="input-container">
               <div className="label-container">
-                <label>Employee ID</label>
+                <label>Employee ID</label> <span className="required">*</span>
               </div>
               <div className="input-group-signup">
                 <input
@@ -265,7 +265,9 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
             </div>
 
             <div className="input-container">
-              <div className="label-container">Gender</div>
+              <div className="label-container">
+                <label>Gender</label> <span className="required">*</span>
+              </div>
               <Dropdown
                 options={["--Select Gender--", ...dropdownOptions.gender]}
                 value={editEmployee.gender}
@@ -278,7 +280,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
           <div className="input-row">
             <div className="input-container">
               <div className="label-container">
-                <label>Email</label>
+                <label>Email</label> <span className="required">*</span>
               </div>
               <div className="input-group-signup">
                 <input
@@ -295,7 +297,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
           <div className="input-row">
             <div className="input-container">
               <div className="label-container">
-                <label>Username</label>
+                <label>Username</label> <span className="required">*</span>
               </div>
               <div className="input-group-signup">
                 <input
@@ -310,7 +312,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
 
             <div className="input-container">
               <div className="label-container">
-                <label>Password</label>
+                <label>Password</label> <span className="required">*</span>
               </div>
               <div className="password-container">
                 <div className="input-group-signup">
@@ -365,7 +367,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
           <div className="input-row">
             <div className="input-container">
               <div className="label-container">
-                <label>Designation</label>
+                <label>Designation</label> <span className="required">*</span>
               </div>
               <Dropdown
                 options={[
@@ -382,7 +384,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
           <div className="input-row">
             <div className="input-container">
               <div className="label-container">
-                <label>Department</label>
+                <label>Department</label> <span className="required">*</span>
               </div>
               <Dropdown
                 options={[
@@ -397,7 +399,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
 
             <div className="input-container">
               <div className="label-container">
-                <label>Position</label>
+                <label>Position</label> <span className="required">*</span>
               </div>
               <Dropdown
                 options={
@@ -420,7 +422,8 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
           <div className="input-row">
             <div className="input-container">
               <div className="label-container">
-                <label>Employment Type</label>
+                <label>Employment Type</label>{" "}
+                <span className="required">*</span>
               </div>
               <Dropdown
                 options={[
@@ -437,7 +440,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
 
             <div className="input-container">
               <div className="label-container">
-                <label>Start Date</label>
+                <label>Start Date</label> <span className="required">*</span>
               </div>
               <div className="input-group-signup">
                 <input
@@ -453,7 +456,8 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
           <div className="input-row">
             <div className="input-container">
               <div className="label-container">
-                <label>Scheduled Time In</label>
+                <label>Scheduled Time In</label>{" "}
+                <span className="required">*</span>
               </div>
               <div className="input-group-signup">
                 <input
@@ -469,7 +473,8 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
 
             <div className="input-container">
               <div className="label-container">
-                <label>Scheduled Time Out</label>
+                <label>Scheduled Time Out</label>{" "}
+                <span className="required">*</span>
               </div>
               <div className="input-group-signup">
                 <input

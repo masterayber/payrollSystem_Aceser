@@ -65,9 +65,25 @@ const AdminManageSettings = () => {
     try {
       const res = await fetch("http://localhost:5000/api/dropdownOption");
       const data = await res.json();
-      setDropdownOptions(data);
+
+      // Ensure all expected properties exists with default empty arrays
+      const safeData = {
+        designations: data?.designations || [],
+        departments: data?.departments || [],
+        employmentTypes: data?.employmentTypes || [],
+        positions: data?.positions || {},
+      };
+
+      setDropdownOptions(safeData);
     } catch (error) {
       console.error("Error fetching dropdowns:", error);
+      // Set Default empty state on error
+      setDropdownOptions({
+        designations: [],
+        departments: [],
+        employmentTypes: [],
+        positions: {},
+      });
     }
   };
 
@@ -79,12 +95,15 @@ const AdminManageSettings = () => {
     }));
   };
 
-  const handleAddClick = (type) => {
+  const handleAddClick = (type, department = "") => {
     setCurrentDropdownType(type);
     setShowDropdownOption((prev) => ({
       ...prev,
       [type]: false,
     }));
+    if (type === "positions") {
+      setSelectedDepartment(department);
+    }
     setIsAddModalOpen(true);
   };
 
@@ -115,34 +134,63 @@ const AdminManageSettings = () => {
 
   const handleConfirmedAction = async () => {
     try {
-      const dropdownMeta = DROPDOWN_TYPES.find(
-        (d) => d.key === currentDropdownType
-      );
-      if (!dropdownMeta) return;
-
-      let url = `http://localhost:5000/api/dropdownOption/${dropdownMeta.api}`;
-      let method = "PUT";
-      let body = {};
-      if (confirmAction === "add") {
-        url += "/add";
-        body = { option: optionToAdd };
-      } else if (confirmAction === "edit") {
-        url += "/edit";
-        body = { oldOption: selectedOption, newOption: optionToAdd };
-      } else if (confirmAction === "delete") {
-        url += "/delete";
-        method = "DELETE";
-        body = { option: selectedOption };
+      if (confirmAction === "add" && !optionToAdd?.trim()) {
+        alert("Please enter a valid option.");
+        return;
       }
 
-      console.log("API URL:", url);
+      const isPositions = currentDropdownType === "positions";
+
+      if (isPositions && !selectedDepartment) {
+        alert("Please select a department");
+        return;
+      }
+
+      const dropdownMeta = !isPositions
+        ? DROPDOWN_TYPES.find((d) => d.key === currentDropdownType)
+        : null;
+      if (!isPositions && !dropdownMeta) return;
+
+      const baseUrl = "http://localhost:5000/api/dropdownOption";
+      const url = isPositions
+        ? `${baseUrl}/positions/${selectedDepartment}/${confirmAction}`
+        : `${baseUrl}/${dropdownMeta.api}/${confirmAction}`;
+
+      const bodyMap = {
+        add: isPositions
+          ? { option: optionToAdd.trim(), department: selectedDepartment }
+          : { option: optionToAdd.trim() },
+        edit: isPositions
+          ? {
+              oldOption: selectedOption,
+              newOption: optionToAdd.trim(),
+              department: selectedDepartment,
+            }
+          : { oldOption: selectedOption, newOption: optionToAdd.trim() },
+        delete: { option: selectedOption },
+      };
+
+      const methodMap = {
+        add: "POST",
+        edit: "PUT",
+        delete: "DELETE",
+      };
+
+      const method = methodMap[confirmAction];
+      const body = bodyMap[confirmAction];
+
+      if (!method || !body) {
+        alert("Invalid Action.");
+        return;
+      }
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
-      if (!res.ok) throw new Error("Failed to process action");
+      if (!res.ok) throw new Error(`Failed to ${confirmAction}`);
 
       await fetchDropdowns();
 
@@ -153,6 +201,7 @@ const AdminManageSettings = () => {
       setTimeout(() => setIsConfirmedMessageModalOpen(true), 300);
     } catch (error) {
       console.error(`Error during ${confirmAction}:`, error);
+      alert("An error occurred while processing request.");
     }
   };
 
@@ -160,6 +209,14 @@ const AdminManageSettings = () => {
     if (type === "department") {
       setSelectedDepartment(value);
     }
+  };
+
+  const getDropdownOptions = (key) => {
+    return dropdownOptions[key] || [];
+  };
+
+  const getPositionsForDepartment = (department) => {
+    return dropdownOptions.positions?.[department] || [];
   };
 
   return (
@@ -203,29 +260,35 @@ const AdminManageSettings = () => {
                     <p>Action</p>
                   </article>
                 </div>
-                {dropdownOptions[dropdown.key]?.map((option, index) => (
-                  <div className="table-content" key={index}>
-                    <article className="table-content-container">
-                      <p>{option}</p>
-                    </article>
-                    <article className="table-content-container">
-                      <button
-                        className="action-button"
-                        onClick={() => handleEditClick(dropdown.key, option)}
-                      >
-                        <IconEdit stroke={2} />
-                        Edit
-                      </button>
-                      <button
-                        className="action-button"
-                        onClick={() => handleDeleteClick(dropdown.key, option)}
-                      >
-                        <IconSquareRoundedX stroke={2} />
-                        Delete
-                      </button>
-                    </article>
-                  </div>
-                ))}
+                {getDropdownOptions(dropdown.key).length > 0 ? (
+                  dropdownOptions[dropdown.key]?.map((option, index) => (
+                    <div className="table-content" key={index}>
+                      <article className="table-content-container">
+                        <p>{option}</p>
+                      </article>
+                      <article className="table-content-container">
+                        <button
+                          className="action-button"
+                          onClick={() => handleEditClick(dropdown.key, option)}
+                        >
+                          <IconEdit stroke={2} />
+                          Edit
+                        </button>
+                        <button
+                          className="action-button"
+                          onClick={() =>
+                            handleDeleteClick(dropdown.key, option)
+                          }
+                        >
+                          <IconSquareRoundedX stroke={2} />
+                          Delete
+                        </button>
+                      </article>
+                    </div>
+                  ))
+                ) : (
+                  <p className="no-data">No {dropdown.singular} found.</p>
+                )}
               </div>
             </div>
           </div>
@@ -248,55 +311,63 @@ const AdminManageSettings = () => {
               />
             </div>
             {selectedDepartment && (
-              <div className="table">
-                <div className="table-header">
-                  <article className="table-header-container">
-                    <p>Positions</p>
-                  </article>
-                  <hr className="header-hr" />
-                  <article className="table-header-container">
-                    <p>Action</p>
-                  </article>
+              <>
+                <div className="add-position-btn-container">
+                  <button
+                    className="action-button"
+                    onClick={() =>
+                      handleAddClick("positions", selectedDepartment)
+                    }
+                  >
+                    Add Position
+                  </button>
                 </div>
-                {(dropdownOptions.positions?.[selectedDepartment] || [])
-                  .length === 0 ? (
-                  <div className="table-content">
-                    <article className="table-content-container">
-                      <p style={{ color: "#888" }}>
-                        No positions for this department.
-                      </p>
+                <div className="table">
+                  <div className="table-header">
+                    <article className="table-header-container">
+                      <p>Positions</p>
+                    </article>
+                    <hr className="header-hr" />
+                    <article className="table-header-container">
+                      <p>Action</p>
                     </article>
                   </div>
-                ) : (
-                  dropdownOptions.positions[selectedDepartment].map(
-                    (option, index) => (
-                      <div className="table-content" key={index}>
-                        <tiarcle className="table-content-container">
-                          <p>{option}</p>
-                        </tiarcle>
-                        <article className="table-content-container">
-                          <button
-                            className="action-button"
-                            onClick={() => handleEditClick("positions", option)}
-                          >
-                            <IconEdit stroke={2} />
-                            Edit
-                          </button>
-                          <button
-                            className="action-button"
-                            onClick={() =>
-                              handleDeleteClick("positions", option)
-                            }
-                          >
-                            <IconSquareRoundedX stroke={2} />
-                            Delete
-                          </button>
-                        </article>
-                      </div>
+                  {(dropdownOptions.positions?.[selectedDepartment] || [])
+                    .length === 0 ? (
+                    <p className="no-data">No Positions for this department.</p>
+                  ) : (
+                    dropdownOptions.positions[selectedDepartment].map(
+                      (option, index) => (
+                        <div className="table-content" key={index}>
+                          <article className="table-content-container">
+                            <p>{option}</p>
+                          </article>
+                          <article className="table-content-container">
+                            <button
+                              className="action-button"
+                              onClick={() =>
+                                handleEditClick("positions", option)
+                              }
+                            >
+                              <IconEdit stroke={2} />
+                              Edit
+                            </button>
+                            <button
+                              className="action-button"
+                              onClick={() =>
+                                handleDeleteClick("positions", option)
+                              }
+                            >
+                              <IconSquareRoundedX stroke={2} />
+                              Delete
+                            </button>
+                          </article>
+                        </div>
+                      )
                     )
-                  )
-                )}
-              </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -305,12 +376,17 @@ const AdminManageSettings = () => {
       {isAddModalOpen && (
         <AddModal
           title={`Add Option`}
-          message={`Add a new ${
-            DROPDOWN_TYPES.find((d) => d.key === currentDropdownType)
-              ?.singular || ""
-          } option:`}
+          message={
+            currentDropdownType === "positions"
+              ? `Add a new position for ${selectedDepartment}:`
+              : `Add a new ${
+                  DROPDOWN_TYPES.find((d) => d.key === currentDropdownType)
+                    ?.singular || ""
+                } option:`
+          }
           onClose={() => setIsAddModalOpen(false)}
           onAddOption={handleConfirmAdd}
+          disabled={currentDropdownType === "positions" && !selectedDepartment}
         />
       )}
 
@@ -335,7 +411,13 @@ const AdminManageSettings = () => {
             confirmAction.charAt(0).toUpperCase() + confirmAction.slice(1)
           }`}
           message={
-            confirmAction === "add"
+            currentDropdownType === "positions"
+              ? confirmAction === "add"
+                ? `Are you sure you want to add ${optionToAdd} to the ${selectedDepartment} department?`
+                : confirmAction === "edit"
+                ? `Are you sure you want to change ${selectedOption} to ${optionToAdd} in the ${selectedDepartment} department?`
+                : `Are you sure you want to delete ${selectedOption} from the ${selectedDepartment} department?`
+              : confirmAction === "add"
               ? `Are you sure you want to add "${optionToAdd}" as a new ${
                   DROPDOWN_TYPES.find((d) => d.key === currentDropdownType)
                     ?.singular
@@ -359,11 +441,17 @@ const AdminManageSettings = () => {
               : "Added"
           }`}
           message={
-            confirmAction === "edit"
-              ? `${selectedOption} has been changed to ${optionToAdd} successfully!`
+            currentDropdownType === "positions"
+              ? confirmAction === "edit"
+                ? `"${selectedOption}" has been changed to "${optionToAdd}" in the "${selectedDepartment}" department successfully!`
+                : confirmAction === "delete"
+                ? `"${selectedOption}" has been deleted from the "${selectedDepartment}" department successfully!`
+                : `"${optionToAdd}" has been added to the "${selectedDepartment}" department successfully!`
+              : confirmAction === "edit"
+              ? `"${selectedOption}" has been changed to "${optionToAdd}" successfully!`
               : confirmAction === "delete"
-              ? `${selectedOption} has been deleted successfully!`
-              : `${optionToAdd} has been added successfully!`
+              ? `"${selectedOption}" has been deleted successfully!`
+              : `"${optionToAdd}" has been added successfully!`
           }
           onClose={() => setIsConfirmedMessageModalOpen(false)}
         />

@@ -78,9 +78,6 @@ const Employees = () => {
       }
 
       setEmployeeData(data);
-
-      setIsEditModalOpen(false);
-      setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (error) {
       console.error("Error refreshing employees after update:", error);
     }
@@ -101,6 +98,8 @@ const Employees = () => {
       if (!response.ok) throw new Error("Failed to delete employee");
 
       await handleUpdateEmployee();
+
+      setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (error) {
       console.error("Error deleting employee", error);
     }
@@ -280,7 +279,10 @@ const Employees = () => {
       </div>
 
       {isAddModalOpen && (
-        <AddEmployeeModal onClose={() => setIsAddModalOpen(false)} />
+        <AddEmployeeModal
+          onClose={() => setIsAddModalOpen(false)}
+          onUpdateEmployee={handleUpdateEmployee}
+        />
       )}
 
       {isEditModalOpen && selectedEmployee && (

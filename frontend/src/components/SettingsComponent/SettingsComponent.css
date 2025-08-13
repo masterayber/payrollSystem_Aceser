@@ -229,3 +229,9 @@
 .department-dropdown-container {
   margin: 0;
 }
+
+.add-position-btn-container {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}

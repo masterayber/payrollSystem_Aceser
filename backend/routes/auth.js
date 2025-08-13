@@ -105,7 +105,7 @@ router.post("/signup", async (req, res) => {
     await employee.save();
 
     let settingsData = {
-      userId: employee._id,
+      userId: user._id,
     };
 
     if (user.role === "Employee") {
