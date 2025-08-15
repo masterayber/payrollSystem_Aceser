@@ -9,6 +9,7 @@
 
 .settings-profile {
   justify-content: space-between;
+  margin-bottom: 20px;
 }
 
 .profile-photo-container {
@@ -51,8 +52,11 @@
 }
 
 .setting-tab {
+  display: flex;
   width: 100%;
-  margin-top: 20px;
+  gap: 20px;
+  flex-direction: column;
+  margin-bottom: 20px;
 }
 
 .setting-tab-title p {
@@ -112,7 +116,6 @@
 }
 
 .setting-tab-table {
-  margin-top: 20px;
   overflow: visible;
 }
 
@@ -234,4 +237,31 @@
   width: 100%;
   display: flex;
   justify-content: flex-start;
+}
+
+.setting-section {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setting-section-text-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.setting-section-text-description {
+  font-size: 14px;
+  color: var(--neutral-color-80);
+  font-style: italic;
+  margin-left: 3px;
+}
+
+.setting-section-text-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--neutral-color-100);
 }

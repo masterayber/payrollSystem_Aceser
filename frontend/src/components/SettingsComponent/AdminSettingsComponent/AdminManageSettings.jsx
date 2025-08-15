@@ -215,10 +215,6 @@ const AdminManageSettings = () => {
     return dropdownOptions[key] || [];
   };
 
-  const getPositionsForDepartment = (department) => {
-    return dropdownOptions.positions?.[department] || [];
-  };
-
   return (
     <div className="settings-content">
       <div className="setting-tab">

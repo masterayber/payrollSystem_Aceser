@@ -214,7 +214,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
     <div className="modal">
       <div className="modal-content">
         <h3>Edit Employee</h3>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="form-container">
           <div className="input-row">
             <div className="input-container">
               <div className="label-container">
