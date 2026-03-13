@@ -431,10 +431,10 @@ const AdminManageSettings = () => {
         <ConfirmedMessageModal
           title={`Option ${
             confirmAction === "edit"
-              ? "Edited"
+              ? "Edited Successfully"
               : confirmAction === "delete"
-              ? "Deleted"
-              : "Added"
+              ? "Deleted Successfully"
+              : "Added Successfully"
           }`}
           message={
             currentDropdownType === "positions"

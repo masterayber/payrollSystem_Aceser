@@ -109,7 +109,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
             username: addEmployee.username,
             employeeId: addEmployee.employeeId,
           }),
-        }
+        },
       );
       const data = await res.json();
       let errorMsg = "";
@@ -145,7 +145,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(addEmployee),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -457,7 +457,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
         />
       )}
     </div>,
-    document.body
+    document.body,
   );
 };
 

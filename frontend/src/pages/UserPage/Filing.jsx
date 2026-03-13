@@ -1,7 +1,14 @@
-import "react";
+import { useState } from "react";
+import ApplyLeaveModal from "../../components/Modals/ApplyLeave/ApplyLeaveModal";
 import "../../styles/UserCSS/Filing.css";
 
 const Filing = () => {
+  const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
+
+  const handleApplyLeave = () => {
+    setIsApplyLeaveOpen(true);
+  };
+
   return (
     <div className="main-content">
       <div className="user-track-container">
@@ -23,7 +30,7 @@ const Filing = () => {
       <div className="application-container">
         <div className="leave-application">
           <p>Application for Leave</p>
-          <button className="apply-button">
+          <button className="apply-button" onClick={() => handleApplyLeave()}>
             <svg
               width="24"
               height="24"
@@ -158,6 +165,10 @@ const Filing = () => {
           </div>
         </div>
       </div>
+
+      {isApplyLeaveOpen && (
+        <ApplyLeaveModal onClose={() => setIsApplyLeaveOpen(false)} />
+      )}
     </div>
   );
 };

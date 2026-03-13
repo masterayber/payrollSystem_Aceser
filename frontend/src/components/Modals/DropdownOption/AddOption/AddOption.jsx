@@ -3,7 +3,13 @@ import ReactDOM from "react-dom";
 import "../../Modal.css";
 import PropTypes from "prop-types";
 
-const AddOptionModal = ({ title, message, onClose, onAddOption }) => {
+const AddOptionModal = ({
+  title,
+  message,
+  onClose,
+  onAddOption,
+  confirmText = "Add",
+}) => {
   const [option, setOption] = useState("");
 
   useEffect(() => {
@@ -42,7 +48,7 @@ const AddOptionModal = ({ title, message, onClose, onAddOption }) => {
             Cancel
           </button>
           <button onClick={handleAddClick} className="modal-button">
-            Add
+            {confirmText}
           </button>
         </div>
       </div>

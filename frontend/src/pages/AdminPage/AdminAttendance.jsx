@@ -80,12 +80,27 @@ const AdminAttendance = () => {
     return "On-Time";
   };
 
+  const isRecordOnLeave = (record) => {
+    if (!record) return false;
+    const lowerKeys = (s) => (s || "").toString().toLowerCase();
+    if (record.onLeave === true) return true;
+    if (record.leaveType) return true;
+    if (lowerKeys(record.type).includes("leave")) return true;
+    if (
+      lowerKeys(record.status) === "approved" &&
+      !record.timeIn &&
+      !record.timeOut
+    )
+      return true;
+    return false;
+  };
+
   useEffect(() => {
     const fetchAttendanceByDate = async () => {
       try {
         const formattedDate = selectedDate.toISOString().split("T")[0];
         const res = await axios.get(
-          `http://localhost:5000/api/attendance/attendance?date=${formattedDate}`
+          `http://localhost:5000/api/attendance/attendance?date=${formattedDate}`,
         );
         setAttendanceData(res.data);
       } catch (error) {
@@ -120,6 +135,7 @@ const AdminAttendance = () => {
         timeIn: isBeforeHired ? "--:--:--" : attendanceRecord?.timeIn || "",
         timeOut: isBeforeHired ? "--:--:--" : attendanceRecord?.timeOut || "",
         isBeforeHired,
+        attendanceRecord,
       };
     })
     .filter((employee) => {
@@ -137,7 +153,7 @@ const AdminAttendance = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentEmployees = filteredEmployees.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   const handleEditClick = (employeeData) => {
@@ -162,8 +178,8 @@ const AdminAttendance = () => {
                   calculateBehavior(
                     emp.timeIn,
                     emp.timeOut,
-                    emp.isBeforeHired
-                  ) === "On-Time"
+                    emp.isBeforeHired,
+                  ) === "On-Time",
               ).length
             }
           </span>
@@ -175,7 +191,7 @@ const AdminAttendance = () => {
           <span className="user-number">
             {
               filteredEmployees.filter(
-                (emp) => calculateBehavior(emp.timeIn, emp.timeOut) === "Late"
+                (emp) => calculateBehavior(emp.timeIn, emp.timeOut) === "Late",
               ).length
             }
           </span>
@@ -188,7 +204,7 @@ const AdminAttendance = () => {
             {
               filteredEmployees.filter(
                 (emp) =>
-                  calculateBehavior(emp.timeIn, emp.timeOut) === "Half-Day"
+                  calculateBehavior(emp.timeIn, emp.timeOut) === "Half-Day",
               ).length
             }
           </span>
@@ -200,7 +216,8 @@ const AdminAttendance = () => {
           <span className="user-number">
             {
               filteredEmployees.filter(
-                (emp) => calculateBehavior(emp.timeIn, emp.timeOut) === "Absent"
+                (emp) =>
+                  calculateBehavior(emp.timeIn, emp.timeOut) === "Absent",
               ).length
             }
           </span>
@@ -209,7 +226,13 @@ const AdminAttendance = () => {
           <div className="user-track-title">
             <p>On-Leave</p>
           </div>
-          <span className="user-number">0</span>
+          <span className="user-number">
+            {
+              filteredEmployees.filter((emp) =>
+                isRecordOnLeave(emp.attendanceRecord),
+              ).length
+            }
+          </span>
         </div>
       </div>
 
@@ -217,12 +240,62 @@ const AdminAttendance = () => {
         <div className="table-title">
           <p>Leave Monitoring</p>
           <div className="dots-button-container">
-            <IconDotsVertical
-              stroke={2}
-              // onClick={toggleLeave}
-              className="dots-button"
-            />
+            <IconDotsVertical stroke={2} className="dots-button" />
           </div>
+        </div>
+        <div className="table">
+          <div className="table-header">
+            <article className="table-header-container">
+              <p>Employee Name</p>
+            </article>
+            <hr className="header-hr"></hr>
+            <article className="table-header-container">
+              <p>Date</p>
+            </article>
+            <hr className="header-hr"></hr>
+            <article className="table-header-container">
+              <p>Type</p>
+            </article>
+            <hr className="header-hr"></hr>
+            <article className="table-header-container">
+              <p>Action</p>
+            </article>
+          </div>
+          {/* Leave entries */}
+          {(
+            filteredEmployees.filter((emp) =>
+              isRecordOnLeave(emp.attendanceRecord),
+            ) || []
+          ).map((emp, idx) => {
+            const rec = emp.attendanceRecord || {};
+            const displayDate = rec.date
+              ? formatDate(new Date(rec.date))
+              : formatDate(selectedDate);
+            const leaveType = rec.leaveType || rec.type || "Leave";
+            return (
+              <div className="table-content" key={idx}>
+                <article className="table-content-container">
+                  <p>
+                    {emp.lastName}, {emp.firstName}
+                  </p>
+                </article>
+                <article className="table-content-container">
+                  <p>{displayDate}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{leaveType}</p>
+                </article>
+                <article className="table-content-container">
+                  <button
+                    className="action-button"
+                    onClick={() => handleEditClick(emp)}
+                  >
+                    <IconEdit stroke={2} />
+                  </button>
+                </article>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -327,7 +400,7 @@ const AdminAttendance = () => {
                   {calculateBehavior(
                     employeeData.timeIn,
                     employeeData.timeOut,
-                    employeeData.isBeforeHired
+                    employeeData.isBeforeHired,
                   )}
                 </p>
               </article>

@@ -55,6 +55,11 @@
   border-radius: 10px;
 }
 
+.modal-checkbox {
+  width: 20px;
+  height: 20px;
+}
+
 .employee-item {
   display: flex;
   justify-content: space-between;
