@@ -1,13 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ApplyLeaveModal from "../../components/Modals/ApplyLeave/ApplyLeaveModal";
 import "../../styles/UserCSS/Filing.css";
+import API from "../../api";
 
 const Filing = () => {
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
+  const [userLeaveRequests, setUserLeaveRequests] = useState([]);
 
   const handleApplyLeave = () => {
     setIsApplyLeaveOpen(true);
   };
+
+  const handleUserLeaveRequests = async () => {
+    try {
+      const response = await API.get("/api/filing/user-leave-requests");
+      setUserLeaveRequests(response.data);
+    } catch (error) {
+      console.error("Error fetching leave requests:", error);
+    }
+  };
+
+  useEffect(() => {
+    handleUserLeaveRequests();
+  }, []);
+
+  const pendingCount = userLeaveRequests.filter(
+    (request) => request.status === "Pending",
+  ).length;
 
   return (
     <div className="main-content">
@@ -15,7 +34,7 @@ const Filing = () => {
         <div className="user-track">
           <p>Total Leave Requests</p>
           <div className="total-user-track">
-            <span className="user-number">12</span>
+            <span className="user-number">{pendingCount}</span>
           </div>
         </div>
 
@@ -89,85 +108,57 @@ const Filing = () => {
               <p>Leave Type</p>
             </article>
             <article className="table-header-container">
-              <p>Attachment</p>
+              <p>Details</p>
             </article>
             <article className="table-header-container">
               <p>Status</p>
             </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>01/13/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>01/17/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>Vacation Leave</p>
-            </article>
-            <article className="table-content-container">
-              <p>N/A</p>
-            </article>
-            <article className="table-content-container">
-              <p>Pending</p>
+            <article className="table-header-container">
+              <p>Action</p>
             </article>
           </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>01/13/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>01/17/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>Vacation Leave</p>
-            </article>
-            <article className="table-content-container">
-              <p>N/A</p>
-            </article>
-            <article className="table-content-container">
-              <p>Pending</p>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>01/13/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>01/17/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>Vacation Leave</p>
-            </article>
-            <article className="table-content-container">
-              <p>N/A</p>
-            </article>
-            <article className="table-content-container">
-              <p>Pending</p>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>01/13/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>01/17</p>
-            </article>
-            <article className="table-content-container">
-              <p>Vacation Leave</p>
-            </article>
-            <article className="table-content-container">
-              <p>N/A</p>
-            </article>
-            <article className="table-content-container">
-              <p>Pending</p>
-            </article>
-          </div>
+          {userLeaveRequests.length === 0 ? (
+            <div className="table-content">
+              <article className="table-content-container">
+                <h6 className="no-data">No leave requests found.</h6>
+              </article>
+            </div>
+          ) : (
+            userLeaveRequests.map((user) => (
+              <div key={user._id} className="table-content">
+                <article className="table-content-container">
+                  <p>{new Date(user.appliedAt).toLocaleDateString()}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>
+                    {new Date(user.startDate).toLocaleDateString()} -{" "}
+                    {new Date(user.endDate).toLocaleDateString()}
+                  </p>
+                </article>
+                <article className="table-content-container">
+                  <p>{user.leaveType}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{user.leaveDetails}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{user.status}</p>
+                </article>
+                <article className="table-content-container">
+                  <button className="action-button">Edit</button>
+                  <button className="action-button">Delete</button>
+                </article>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
       {isApplyLeaveOpen && (
-        <ApplyLeaveModal onClose={() => setIsApplyLeaveOpen(false)} />
+        <ApplyLeaveModal
+          onClose={() => setIsApplyLeaveOpen(false)}
+          onUpdateLeaveRequests={handleUserLeaveRequests}
+        />
       )}
     </div>
   );

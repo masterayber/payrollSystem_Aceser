@@ -24,6 +24,20 @@ router.post("/apply-leave", auth, async (req, res) => {
   }
 });
 
+router.get("/user-leave-requests", auth, async (req, res) => {
+  try {
+    const leaveRequests = await LeaveApplication.find({
+      userId: req.user.userId,
+    }).sort({
+      appliedAt: -1,
+    });
+
+    res.json(leaveRequests);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.get("/", auth, async (req, res) => {
   if (!req.user.isAdmin) return res.status(400).json({ msg: "Access Denied" });
   const apps = await LeaveApplication.find().populate("userId", "name email");

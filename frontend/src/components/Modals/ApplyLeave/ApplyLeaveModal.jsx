@@ -7,7 +7,7 @@ import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
 import Dropdown from "../../Dropdown/Dropdown";
 import "../Modal.css";
 
-const ApplyLeaveModal = ({ onClose }) => {
+const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
   const leaveType = [
     "Vacation Leave",
     "Sick Leave",
@@ -122,6 +122,8 @@ const ApplyLeaveModal = ({ onClose }) => {
       }
 
       setIsConfirmModalOpen(false);
+
+      if (onUpdateLeaveRequests) onUpdateLeaveRequests();
 
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (err) {

@@ -216,5 +216,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </SettingsProvider>
       </EmployeeProvider>
     </UserProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

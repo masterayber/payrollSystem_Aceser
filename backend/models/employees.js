@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const employeeSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "Auth",
     default: null,
   },
   firstName: {

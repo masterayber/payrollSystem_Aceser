@@ -214,10 +214,10 @@
 .table-header-container,
 .table-content-container,
 .pay-period-container {
-  align-items: center;
   display: flex;
+  align-items: center;
+  justify-content: flex-start;
   flex: 1;
-  flex-grow: 1;
   overflow: hidden;
   padding: 19px 15px;
   background-color: var(--gray-200);
@@ -253,4 +253,6 @@
 .table-content-container p {
   font-size: 12px;
   font-weight: 600;
+  text-align: left;
+  width: 100%;
 }

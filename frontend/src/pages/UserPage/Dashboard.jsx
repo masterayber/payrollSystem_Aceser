@@ -4,6 +4,7 @@ import { IconDotsVertical, IconLogin2, IconLogout2 } from "@tabler/icons-react";
 import { UserContext } from "../../context/UserContext";
 import "../../styles/UserCSS/Dashboard.css";
 import TimeDate from "../../components/TimeDate/TimeDate";
+import API from "../../api";
 
 const Dashboard = () => {
   const { userData } = useContext(UserContext);
@@ -11,6 +12,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const [showLeaveDropdown, setShowLeaveDropdown] = useState(false);
+  const [userLeaveRequests, setUserLeaveRequests] = useState([]);
   const [showDailyDropdown, setShowDailyDropdown] = useState(false);
   const [timingMessage, setTimingMessage] = useState("");
   const [todayAttendance, setTodayAttendance] = useState(null);
@@ -42,7 +44,7 @@ const Dashboard = () => {
     const fetchAttendance = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/attendance/${userData?.employee?._id}/records`
+          `http://localhost:5000/api/attendance/${userData?.employee?._id}/records`,
         );
 
         if (res.ok) {
@@ -55,9 +57,7 @@ const Dashboard = () => {
 
           const todayDate = new Date().toISOString().slice(0, 10);
 
-          const todayRecord = attendance?.find(
-            (record) => record.date === todayDate
-          );
+          const todayRecord = data.find((record) => record.date === todayDate);
           setTodayAttendance(todayRecord);
 
           let foundToday = false;
@@ -86,28 +86,28 @@ const Dashboard = () => {
 
                 if (!record.timeIn) {
                   setTimingMessage(
-                    `You have no time in yet today! You forget, don't you?`
+                    `You have no time in yet today! You forget, don't you?`,
                   );
                 } else {
                   const scheduledTimeIn = new Date(`${record.date}T08:00:00`);
                   const actualTimeIn = new Date(
-                    `${record.date}T${record.timeIn}`
+                    `${record.date}T${record.timeIn}`,
                   );
                   const diffInMinutes = Math.floor(
-                    (actualTimeIn - scheduledTimeIn) / (1000 * 60)
+                    (actualTimeIn - scheduledTimeIn) / (1000 * 60),
                   );
 
                   if (diffInMinutes < 0) {
                     setTimingMessage(
                       `You timed in ${Math.abs(
-                        diffInMinutes
-                      )} minutes early today. Keep it up!`
+                        diffInMinutes,
+                      )} minutes early today. Keep it up!`,
                     );
                   } else if (diffInMinutes === 0) {
                     setTimingMessage(`You timed in exactly on time today.`);
                   } else {
                     setTimingMessage(
-                      `You timed in ${diffInMinutes} minutes late today`
+                      `You timed in ${diffInMinutes} minutes late today`,
                     );
                   }
                 }
@@ -117,7 +117,7 @@ const Dashboard = () => {
 
           if (!foundToday) {
             setTimingMessage(
-              `You have no time in yet today! You forget, don't you?`
+              `You have no time in yet today! You forget, don't you?`,
             );
           }
 
@@ -135,7 +135,7 @@ const Dashboard = () => {
     if (userData?.employee?._id) {
       fetchAttendance();
     }
-  });
+  }, [userData]);
 
   const formatTime = (time) => {
     if (!time) return "--:--";
@@ -177,6 +177,27 @@ const Dashboard = () => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, [showLeaveDropdown, showDailyDropdown]);
+
+  const handleUserLeaveRequests = async () => {
+    try {
+      const response = await API.get("/api/filing/user-leave-requests");
+      setUserLeaveRequests(response.data);
+    } catch (error) {
+      console.error("Error fetching leave requests:", error);
+    }
+  };
+
+  useEffect(() => {
+    handleUserLeaveRequests();
+  }, []);
+
+  const getLeaveDuration = (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return diffDays === 1 ? "1 day" : `${diffDays} days`;
+  };
 
   return (
     <div className="main-content">
@@ -315,10 +336,10 @@ const Dashboard = () => {
         <div className="table">
           <div className="table-header">
             <article className="table-header-container">
-              <p>Date</p>
+              <p>Date Filed</p>
             </article>
             <article className="table-header-container">
-              <p>Time</p>
+              <p>Date Requested</p>
             </article>
             <article className="table-header-container">
               <p>Leave Duration</p>
@@ -330,57 +351,36 @@ const Dashboard = () => {
               <p>Status</p>
             </article>
           </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>02/12/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>8:38 AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>1 Day</p>
-            </article>
-            <article className="table-content-container">
-              <p>Vacation Leave</p>
-            </article>
-            <article className="table-content-container">
-              <p>Pending</p>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>02/12/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>8:38 AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>1 Day</p>
-            </article>
-            <article className="table-content-container">
-              <p>Vacation Leave</p>
-            </article>
-            <article className="table-content-container">
-              <p>Pending</p>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>02/12/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>8:38 AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>1 Day</p>
-            </article>
-            <article className="table-content-container">
-              <p>Vacation Leave</p>
-            </article>
-            <article className="table-content-container">
-              <p>Pending</p>
-            </article>
-          </div>
+          {userLeaveRequests.length === 0 ? (
+            <div className="table-content">
+              <article className="table-content-container">
+                <h6 className="no-data">No pending requests available</h6>
+              </article>
+            </div>
+          ) : (
+            userLeaveRequests.slice(0, 3).map((leave) => (
+              <div key={leave._id} className="table-content">
+                <article className="table-content-container">
+                  <p>{new Date(leave.appliedAt).toLocaleDateString()}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>
+                    {new Date(leave.startDate).toLocaleDateString()} -{" "}
+                    {new Date(leave.endDate).toLocaleDateString()}
+                  </p>
+                </article>
+                <article className="table-content-container">
+                  <p>{getLeaveDuration(leave.startDate, leave.endDate)}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{leave.leaveType}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{leave.status}</p>
+                </article>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

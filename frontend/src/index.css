@@ -92,6 +92,7 @@ button {
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
   background-color: var(--default-button-color);
   color: #fff;
   transition: background-color 0.3s ease;
@@ -290,6 +291,7 @@ h3 {
 .dropdown-item-logout {
   padding: 10px 25px;
   margin-top: 10px;
+  display: inline-block;
 }
 
 .main-content {
