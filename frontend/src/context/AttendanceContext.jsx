@@ -10,7 +10,7 @@ export const AttendanceProvider = ({ children }) => {
     const fetchAttendance = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/attendance/attendance"
+          "http://localhost:5000/api/attendance/attendance",
         );
         const data = await response.json();
         setAttendanceData(data);

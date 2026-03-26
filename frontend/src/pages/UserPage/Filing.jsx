@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { formatDate } from "../../utils/dateFormatter";
 import ApplyLeaveModal from "../../components/Modals/ApplyLeave/ApplyLeaveModal";
 import "../../styles/UserCSS/Filing.css";
 import API from "../../api";
@@ -127,13 +128,10 @@ const Filing = () => {
             userLeaveRequests.map((user) => (
               <div key={user._id} className="table-content">
                 <article className="table-content-container">
-                  <p>{new Date(user.appliedAt).toLocaleDateString()}</p>
+                  <p>{formatDate(user.appliedAt)}</p>
                 </article>
                 <article className="table-content-container">
-                  <p>
-                    {new Date(user.startDate).toLocaleDateString()} -{" "}
-                    {new Date(user.endDate).toLocaleDateString()}
-                  </p>
+                  <p>{formatDate(user.startDate, user.endDate)}</p>
                 </article>
                 <article className="table-content-container">
                   <p>{user.leaveType}</p>

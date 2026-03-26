@@ -29,9 +29,11 @@ const settingsSchema = new mongoose.Schema({
       schedule: {
         timeIn: {
           type: String,
+          default: "08:00",
         },
         timeOut: {
           type: String,
+          default: "17:00",
         },
       },
     },

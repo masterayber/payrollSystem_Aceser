@@ -59,7 +59,7 @@ const AdminDashboard = () => {
 
         // Fetch today's attendance
         const attRes = await axios.get(
-          `http://localhost:5000/api/attendance/attendance?date=${formattedToday}`
+          `http://localhost:5000/api/attendance/attendance?date=${formattedToday}`,
         );
         const attendance = attRes.data;
 
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
     const fetchPendingUsers = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/auth/pending-users"
+          "http://localhost:5000/api/auth/pending-users",
         );
         setPendingUsers(response.data);
       } catch (error) {
@@ -251,7 +251,7 @@ const AdminDashboard = () => {
                   const emp = employeeData.find(
                     (e) =>
                       e._id === record.userId ||
-                      e.employeeId === record.employeeId
+                      e.employeeId === record.employeeId,
                   );
                   const name = emp
                     ? `${emp.firstName} ${emp.lastName}`
@@ -452,7 +452,7 @@ const AdminDashboard = () => {
                     {user.createdAt
                       ? format(
                           new Date(user.createdAt),
-                          "EEE, MMM dd, yyyy hh:mm a"
+                          "EEE, MMM dd, yyyy hh:mm a",
                         )
                       : "N/A"}
                   </p>

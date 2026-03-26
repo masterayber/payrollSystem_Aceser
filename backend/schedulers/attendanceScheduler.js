@@ -19,7 +19,7 @@ cron.schedule("30 7 * * 1-5", async () => {
     for (const emp of employees) {
       if (emp.role === "Admin") {
         console.log(
-          `Skipping attendance generation for admin: ${emp.firstName} ${emp.lastName}`
+          `Skipping attendance generation for admin: ${emp.firstName} ${emp.lastName}`,
         );
         continue;
       }
@@ -28,7 +28,7 @@ cron.schedule("30 7 * * 1-5", async () => {
 
       if (!user || user.status === "Pending") {
         console.log(
-          `Skipping attenance generation for pending employees: ${emp.firstName} ${emp.lastName}`
+          `Skipping attenance generation for pending employees: ${emp.firstName} ${emp.lastName}`,
         );
         continue;
       }

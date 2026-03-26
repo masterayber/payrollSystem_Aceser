@@ -2,6 +2,8 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconDotsVertical, IconLogin2, IconLogout2 } from "@tabler/icons-react";
 import { UserContext } from "../../context/UserContext";
+import { formatDate } from "../../utils/dateFormatter";
+import { calculateMonthlySummary } from "../../utils/attendance/summary";
 import "../../styles/UserCSS/Dashboard.css";
 import TimeDate from "../../components/TimeDate/TimeDate";
 import API from "../../api";
@@ -13,6 +15,7 @@ const Dashboard = () => {
 
   const [showLeaveDropdown, setShowLeaveDropdown] = useState(false);
   const [userLeaveRequests, setUserLeaveRequests] = useState([]);
+  const [userDailyAttendance, setUserDailyAttendance] = useState([]);
   const [showDailyDropdown, setShowDailyDropdown] = useState(false);
   const [timingMessage, setTimingMessage] = useState("");
   const [todayAttendance, setTodayAttendance] = useState(null);
@@ -44,88 +47,47 @@ const Dashboard = () => {
     const fetchAttendance = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/attendance/${userData?.employee?._id}/records`,
+          `http://localhost:5000/api/attendance/${userData?._id}/records`,
         );
 
         if (res.ok) {
           const data = await res.json();
+
           setAttendance(data);
 
-          let totalDaysWorked = 0;
-          let totalHoursWorked = 0;
-          let totalOvertimeHours = 0;
+          const summaryData = calculateMonthlySummary(data);
+          setSummary(summaryData);
 
           const todayDate = new Date().toISOString().slice(0, 10);
 
           const todayRecord = data.find((record) => record.date === todayDate);
+
           setTodayAttendance(todayRecord);
 
-          let foundToday = false;
-
-          data.forEach((record) => {
-            if (record.timeIn && record.timeOut) {
-              totalDaysWorked++;
-
-              const timeIn = new Date(`${record.date}T${record.timeIn}`);
-              const timeOut = new Date(`${record.date}T${record.timeOut}`);
-
-              const breakStart = new Date(`${record.date}T12:00:00`);
-              const breakEnd = new Date(`${record.date}T12:00:00`);
-
-              let workedHours =
-                (timeOut.getTime() - timeIn.getTime()) / (1000 * 60 * 60);
-
-              if (timeIn < breakEnd && timeOut > breakStart) {
-                workedHours -= 1;
-              }
-
-              totalHoursWorked += workedHours;
-
-              if (record.date === todayDate) {
-                foundToday = true;
-
-                if (!record.timeIn) {
-                  setTimingMessage(
-                    `You have no time in yet today! You forget, don't you?`,
-                  );
-                } else {
-                  const scheduledTimeIn = new Date(`${record.date}T08:00:00`);
-                  const actualTimeIn = new Date(
-                    `${record.date}T${record.timeIn}`,
-                  );
-                  const diffInMinutes = Math.floor(
-                    (actualTimeIn - scheduledTimeIn) / (1000 * 60),
-                  );
-
-                  if (diffInMinutes < 0) {
-                    setTimingMessage(
-                      `You timed in ${Math.abs(
-                        diffInMinutes,
-                      )} minutes early today. Keep it up!`,
-                    );
-                  } else if (diffInMinutes === 0) {
-                    setTimingMessage(`You timed in exactly on time today.`);
-                  } else {
-                    setTimingMessage(
-                      `You timed in ${diffInMinutes} minutes late today`,
-                    );
-                  }
-                }
-              }
-            }
-          });
-
-          if (!foundToday) {
+          if (!todayRecord || !todayRecord.timeIn) {
             setTimingMessage(
               `You have no time in yet today! You forget, don't you?`,
             );
-          }
+          } else {
+            const scheduledTimeIn = new Date(`${todayDate}T08:00:00`);
+            const actualTimeIn = new Date(`${todayDate}T${todayRecord.timeIn}`);
 
-          setSummary({
-            daysWorked: totalDaysWorked,
-            hoursWorked: totalHoursWorked.toFixed(2),
-            overtimeHours: totalOvertimeHours.toFixed(2),
-          });
+            const diffInMinutes = Math.floor(
+              (actualTimeIn - scheduledTimeIn) / (1000 * 60),
+            );
+
+            if (diffInMinutes < 0) {
+              setTimingMessage(
+                `You timed in ${Math.abs(diffInMinutes)} minutes early today. Keep it up!`,
+              );
+            } else if (diffInMinutes === 0) {
+              setTimingMessage(`You timed in exactly on time today.`);
+            } else {
+              setTimingMessage(
+                `You timed in ${diffInMinutes} minutes late today`,
+              );
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching attedance:", error);
@@ -187,8 +149,21 @@ const Dashboard = () => {
     }
   };
 
+  const handleUserDailyAttendance = async () => {
+    try {
+      const response = await API.get(`/api/attendance/${userData._id}`);
+      setUserDailyAttendance(response.data.data);
+    } catch (error) {
+      console.error("Error fetching user attendance:", error);
+    }
+  };
+
   useEffect(() => {
     handleUserLeaveRequests();
+  }, []);
+
+  useEffect(() => {
+    handleUserDailyAttendance();
   }, []);
 
   const getLeaveDuration = (startDate, endDate) => {
@@ -232,7 +207,7 @@ const Dashboard = () => {
               <IconLogout2 strokeWidth={1.5} width={40} height={40} />
               <div className="time-out-details">
                 <div className="time-timer">
-                  {attendance?.timeOut
+                  {todayAttendance?.timeOut
                     ? formatTime(attendance.timeOut)
                     : "--:--"}
                 </div>
@@ -245,9 +220,9 @@ const Dashboard = () => {
 
       <div className="user-track-container">
         <div className="user-track">
-          <p>Attendance Summary</p>
+          <p>Attendance This Month</p>
           <div className="total-user-track">
-            <span className="user-number">17</span>
+            <span className="user-number">{summary.daysWorked}</span>
             <span className="user-text">days</span>
           </div>
           <div className="data-user-track">
@@ -255,13 +230,15 @@ const Dashboard = () => {
               <div className="user-data">
                 <p>Total Hours</p>
               </div>
-              <div className="user-data-number">136 hrs</div>
+              <div className="user-data-number">{summary.hoursWorked} hrs</div>
             </div>
             <div className="user-data-container">
               <div className="user-data">
                 <p>Overtime</p>
               </div>
-              <div className="user-data-number">8 hrs</div>
+              <div className="user-data-number">
+                {summary.overtimeHours} hrs
+              </div>
             </div>
           </div>
         </div>
@@ -361,13 +338,10 @@ const Dashboard = () => {
             userLeaveRequests.slice(0, 3).map((leave) => (
               <div key={leave._id} className="table-content">
                 <article className="table-content-container">
-                  <p>{new Date(leave.appliedAt).toLocaleDateString()}</p>
+                  <p>{formatDate(leave.appliedAt)}</p>
                 </article>
                 <article className="table-content-container">
-                  <p>
-                    {new Date(leave.startDate).toLocaleDateString()} -{" "}
-                    {new Date(leave.endDate).toLocaleDateString()}
-                  </p>
+                  <p>{formatDate(leave.startDate, leave.endDate)}</p>
                 </article>
                 <article className="table-content-container">
                   <p>{getLeaveDuration(leave.startDate, leave.endDate)}</p>
@@ -421,62 +395,30 @@ const Dashboard = () => {
               <p>Behavior</p>
             </article>
           </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>02/03/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>7:38 AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>5:09 PM</p>
-            </article>
-            <article className="table-content-container">
-              <p>On-Time</p>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>02/04/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>7:40 AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>5:16 PM</p>
-            </article>
-            <article className="table-content-container">
-              <p>On-Time</p>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>02/05/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>8:05 AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>5:19 PM</p>
-            </article>
-            <article className="table-content-container">
-              <p>Late</p>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>02/06/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>--:-- AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>--:-- PM</p>
-            </article>
-            <article className="table-content-container">
-              <p>Absent</p>
-            </article>
-          </div>
+          {userDailyAttendance.length === 0 ? (
+            <div className="table-content">
+              <article className="table-content-container">
+                <h6 className="no-data">No Attendance Available</h6>
+              </article>
+            </div>
+          ) : (
+            userDailyAttendance.slice(0, 3).map((att) => (
+              <div key={att._id} className="table-content">
+                <article className="table-content-container">
+                  <p>{formatDate(att.date)}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{att.timeIn}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{att.timeOut}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{att.behavior}</p>
+                </article>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
