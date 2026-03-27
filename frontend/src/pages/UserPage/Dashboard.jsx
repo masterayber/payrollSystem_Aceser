@@ -4,6 +4,8 @@ import { IconDotsVertical, IconLogin2, IconLogout2 } from "@tabler/icons-react";
 import { UserContext } from "../../context/UserContext";
 import { formatDate } from "../../utils/dateFormatter";
 import { calculateMonthlySummary } from "../../utils/attendance/summary";
+import { calculateLeaveSummary } from "../../utils/leave/summary";
+import { calculateWeeklySummary } from "../../utils/attendance/weeklySummary";
 import "../../styles/UserCSS/Dashboard.css";
 import TimeDate from "../../components/TimeDate/TimeDate";
 import API from "../../api";
@@ -19,10 +21,20 @@ const Dashboard = () => {
   const [showDailyDropdown, setShowDailyDropdown] = useState(false);
   const [timingMessage, setTimingMessage] = useState("");
   const [todayAttendance, setTodayAttendance] = useState(null);
-  const [summary, setSummary] = useState({
+  const [attendanceSummary, setAttendanceSummary] = useState({
     daysWorked: "",
     hoursWorked: "",
     overtimeHours: "",
+  });
+  const [leaveSummary, setLeaveSummary] = useState({
+    total: 0,
+    approved: 0,
+    pending: 0,
+  });
+  const [weeklySummary, setWeeklySummary] = useState({
+    onTime: 0,
+    late: 0,
+    absent: 0,
   });
 
   const leaveDropdownRef = useRef(null);
@@ -56,7 +68,10 @@ const Dashboard = () => {
           setAttendance(data);
 
           const summaryData = calculateMonthlySummary(data);
-          setSummary(summaryData);
+          setAttendanceSummary(summaryData);
+
+          const weeklySummaryData = calculateWeeklySummary(data);
+          setWeeklySummary(weeklySummaryData);
 
           const todayDate = new Date().toISOString().slice(0, 10);
 
@@ -144,6 +159,9 @@ const Dashboard = () => {
     try {
       const response = await API.get("/api/filing/user-leave-requests");
       setUserLeaveRequests(response.data);
+
+      const summary = calculateLeaveSummary(response.data);
+      setLeaveSummary(summary);
     } catch (error) {
       console.error("Error fetching leave requests:", error);
     }
@@ -196,7 +214,7 @@ const Dashboard = () => {
               <div className="time-in-details">
                 <div className="time-timer">
                   {todayAttendance?.timeIn
-                    ? formatTime(todayAttendance.timeIn)
+                    ? formatTime(todayAttendance?.timeIn)
                     : "--:--"}
                 </div>
                 <p>Time IN</p>
@@ -208,7 +226,7 @@ const Dashboard = () => {
               <div className="time-out-details">
                 <div className="time-timer">
                   {todayAttendance?.timeOut
-                    ? formatTime(attendance.timeOut)
+                    ? formatTime(todayAttendance?.timeOut)
                     : "--:--"}
                 </div>
                 <p>Time OUT</p>
@@ -222,7 +240,7 @@ const Dashboard = () => {
         <div className="user-track">
           <p>Attendance This Month</p>
           <div className="total-user-track">
-            <span className="user-number">{summary.daysWorked}</span>
+            <span className="user-number">{attendanceSummary.daysWorked}</span>
             <span className="user-text">days</span>
           </div>
           <div className="data-user-track">
@@ -230,14 +248,16 @@ const Dashboard = () => {
               <div className="user-data">
                 <p>Total Hours</p>
               </div>
-              <div className="user-data-number">{summary.hoursWorked} hrs</div>
+              <div className="user-data-number">
+                {attendanceSummary.hoursWorked} hrs
+              </div>
             </div>
             <div className="user-data-container">
               <div className="user-data">
                 <p>Overtime</p>
               </div>
               <div className="user-data-number">
-                {summary.overtimeHours} hrs
+                {attendanceSummary.overtimeHours} hrs
               </div>
             </div>
           </div>
@@ -246,43 +266,51 @@ const Dashboard = () => {
         <div className="user-track">
           <p>Leaves Taken</p>
           <div className="total-user-track">
-            <span className="user-number">3</span>
+            <span className="user-number">{leaveSummary.total}</span>
             <span className="user-text">days</span>
           </div>
           <div className="data-user-track">
             <div className="user-data-container">
               <div className="user-data">
-                <p>Sick Leave</p>
+                <p>Approved</p>
               </div>
-              <div className="user-data-number">2</div>
+              <div className="user-data-number">{leaveSummary.approved}</div>
             </div>
             <div className="user-data-container">
               <div className="user-data">
-                <p>Vacation Leave</p>
+                <p>Pending</p>
               </div>
-              <div className="user-data-number">1</div>
+              <div className="user-data-number">{leaveSummary.pending}</div>
             </div>
           </div>
         </div>
 
         <div className="user-track">
-          <p>Work Performance</p>
+          <p>This Week</p>
           <div className="total-user-track">
-            <span className="user-number">95%</span>
-            <span className="user-text">efficiency</span>
+            <span className="user-number">
+              {weeklySummary.onTime + weeklySummary.late + weeklySummary.absent}
+            </span>
+            <span className="user-text">days tracked</span>
           </div>
           <div className="data-user-track">
             <div className="user-data-container">
               <div className="user-data">
-                <p>Tasks Completed</p>
+                <p>On-Time</p>
               </div>
-              <div className="user-data-number">42</div>
+              <div className="user-data-number">{weeklySummary.onTime}</div>
             </div>
             <div className="user-data-container">
               <div className="user-data">
-                <p>Pending Tasks</p>
+                <p>Late</p>
               </div>
-              <div className="user-data-number">5</div>
+              <div className="user-data-number">{weeklySummary.late}</div>
+            </div>
+            <div className="user-data-container">
+              <div className="user-data">
+                <p>Absent</p>
+              </div>
+              <div className="user-data-number">{weeklySummary.absent}</div>
             </div>
           </div>
         </div>
