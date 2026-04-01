@@ -1,15 +1,23 @@
 import { useState, useEffect } from "react";
 import { formatDate } from "../../utils/dateFormatter";
-import ApplyLeaveModal from "../../components/Modals/ApplyLeave/ApplyLeaveModal";
+import ApplyLeaveModal from "../../components/Modals/Filing/ApplyLeave/ApplyLeaveModal";
+import ApplyOvertimeModal from "../../components/Modals/Filing/ApplyOvertime/ApplyOvertimeModal";
+import { IconPlus } from "@tabler/icons-react";
 import "../../styles/UserCSS/Filing.css";
 import API from "../../api";
 
 const Filing = () => {
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
+  const [isApplyOvertimeOpen, setIsApplyOvertimeOpen] = useState(false);
   const [userLeaveRequests, setUserLeaveRequests] = useState([]);
+  const [userOvertimeLists, setUserOvertimeLists] = useState([]);
 
   const handleApplyLeave = () => {
     setIsApplyLeaveOpen(true);
+  };
+
+  const handleApplyOvertime = () => {
+    setIsApplyOvertimeOpen(true);
   };
 
   const handleUserLeaveRequests = async () => {
@@ -21,8 +29,18 @@ const Filing = () => {
     }
   };
 
+  const handleUserOvertimeLists = async () => {
+    try {
+      const response = await API.get("/api/filing/user-overtime-candidates");
+      setUserOvertimeLists(response.data);
+    } catch (error) {
+      console.error("Error fetching ovetime requests:", error);
+    }
+  };
+
   useEffect(() => {
     handleUserLeaveRequests();
+    handleUserOvertimeLists();
   }, []);
 
   const pendingCount = userLeaveRequests.filter(
@@ -51,43 +69,18 @@ const Filing = () => {
         <div className="leave-application">
           <p>Application for Leave</p>
           <button className="apply-button" onClick={() => handleApplyLeave()}>
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M5.5 12H19.5M12.5 5V19"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <IconPlus stroke={2} />
             Apply
           </button>
         </div>
 
         <div className="overtime-application">
           <p>Application for Overtime</p>
-          <button className="apply-button">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M5.5 12H19.5M12.5 5V19"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <button
+            className="apply-button"
+            onClick={() => handleApplyOvertime()}
+          >
+            <IconPlus stroke={2} />
             Apply
           </button>
         </div>
@@ -152,10 +145,67 @@ const Filing = () => {
         </div>
       </div>
 
+      <div className="table-container">
+        <div className="table-title">
+          <p>Overtime Application</p>
+        </div>
+        <div className="table">
+          <div className="table-header">
+            <article className="table-header-container">
+              <p>Date</p>
+            </article>
+            <article className="table-header-container">
+              <p>Time In</p>
+            </article>
+            <article className="table-header-container">
+              <p>Time Out</p>
+            </article>
+            <article className="table-header-container">
+              <p>Details</p>
+            </article>
+            <article className="table-header-container">
+              <p>Status</p>
+            </article>
+          </div>
+
+          {userOvertimeLists.length === 0 ? (
+            <div className="table-content">
+              <article className="table-content-container">
+                <h6 className="no-data">No Overtime Requests</h6>
+              </article>
+            </div>
+          ) : (
+            userOvertimeLists.map((overtime) => (
+              <div key={overtime._id} className="table-content">
+                <article className="table-content-container">
+                  <p>{formatDate(overtime.date)}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{overtime.timeIn}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{overtime.timeOut}</p>
+                </article>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {isApplyLeaveOpen && (
         <ApplyLeaveModal
           onClose={() => setIsApplyLeaveOpen(false)}
-          onUpdateLeaveRequests={handleUserLeaveRequests}
+          onUpdateLeaveLists={handleUserLeaveRequests}
+        />
+      )}
+
+      {isApplyOvertimeOpen && (
+        <ApplyOvertimeModal
+          overtimeList={userOvertimeLists}
+          onClose={() => {
+            setIsApplyOvertimeOpen(false);
+          }}
+          onUpateOvertimeRequests={handleUserOvertimeLists}
         />
       )}
     </div>

@@ -73,8 +73,6 @@ router.post("/login", async (req, res) => {
       settings: settings || null,
     };
 
-    console.log("Combined Data:", combinedData);
-
     res.status(200).json({
       token,
       user: combinedData,

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
-import CancelModal from "../Cancel/CancelModal";
-import ConfirmModal from "../Confirm/ConfirmModal";
-import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
-import Dropdown from "../../Dropdown/Dropdown";
-import "../Modal.css";
+import CancelModal from "../../Cancel/CancelModal";
+import ConfirmModal from "../../Confirm/ConfirmModal";
+import ConfirmedMessageModal from "../../Confirmed/ConfirmedMessageModal";
+import Dropdown from "../../../Dropdown/Dropdown";
+import "../../Modal.css";
 
 const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
   const leaveType = [

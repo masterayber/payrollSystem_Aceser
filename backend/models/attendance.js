@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
-const {
-  calculateBehavior,
-} = require("../../frontend/src/utils/attendance/behavior");
+const { calculateBehavior } = require("../utils/attendance/behavior");
 
 const attendanceSchema = new mongoose.Schema({
   userId: {
@@ -32,6 +30,22 @@ const attendanceSchema = new mongoose.Schema({
       "No Time-Out",
     ],
   },
+  overtime: {
+    isEligible: {
+      type: Boolean,
+      default: false,
+    },
+    hours: {
+      type: Number,
+      default: 0,
+    },
+    start: String,
+    end: String,
+    isFiled: {
+      type: Boolean,
+      default: false,
+    },
+  },
 });
 
 attendanceSchema.pre("save", async function (next) {
@@ -50,6 +64,37 @@ attendanceSchema.pre("save", async function (next) {
     timeOut: this.timeOut,
     schedule,
   });
+
+  if (this.timeOut) {
+    const [hour, minute] = this.timeOut.split(":").map(Number);
+
+    const timeOutInMinutes = hour * 60 + minute;
+
+    const overtimeStartHour = 18;
+    const overtimeStartMinutes = overtimeStartHour * 60;
+
+    const minimumOvertimeMinutes = 60;
+
+    const overtimeDuration = timeOutInMinutes - overtimeStartMinutes;
+
+    if (overtimeDuration >= minimumOvertimeMinutes) {
+      const overtimeHours = overtimeDuration / 60;
+
+      this.overtime = {
+        ...this.overtime,
+        isEligible: true,
+        hours: overtimeHours,
+        start: "18:00",
+        end: this.timeOut,
+        isFiled: false,
+      };
+    } else {
+      this.overtime = {
+        isEligible: false,
+        hours: 0,
+      };
+    }
+  }
 
   next();
 });

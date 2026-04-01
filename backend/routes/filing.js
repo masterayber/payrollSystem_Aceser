@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 const LeaveApplication = require("../models/leaveApplication");
+const Attendance = require("../models/attendance");
 const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -53,6 +54,23 @@ router.patch("/:id/status", auth, async (req, res) => {
     { new: true },
   );
   res.json(app);
+});
+
+router.get("/user-overtime-candidates", auth, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const attendance = await Attendance.find({
+      userId,
+      "overtime.isEligible": true,
+      "overtime.isFiled": false,
+    });
+
+    res.json(attendance);
+  } catch (error) {
+    console.error("Error fetching overtime:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
 });
 
 module.exports = router;

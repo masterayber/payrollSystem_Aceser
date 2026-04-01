@@ -42,7 +42,7 @@ cron.schedule("30 7 * * 1-5", async () => {
 
       if (!existing) {
         const timeIn = getRandomTime("07:30", "08:15");
-        const timeOut = getRandomTime("17:00", "18:00");
+        const timeOut = getRandomTime("17:00", "20:00");
 
         await Attendance.create({
           userId: user._id,
