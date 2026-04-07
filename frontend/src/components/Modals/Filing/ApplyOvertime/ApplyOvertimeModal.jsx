@@ -1,19 +1,22 @@
 import { useState, useEffect } from "react";
+import { formatDate } from "../../../../utils/dateFormatter";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import CancelModal from "../../Cancel/CancelModal";
 import ConfirmModal from "../../Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../../Confirmed/ConfirmedMessageModal";
-import Dropdown from "../../../Dropdown/Dropdown";
 import Pagination from "../../../Pagination/Pagination";
 import "../../Modal.css";
 
 const ApplyOvertimeModal = ({
-  overtimeList,
+  overtimeList = [],
   onClose,
   onUpdateOvertimeLists,
 }) => {
-  const [details, setDetails] = useState(false);
+  const [selectedOvertime, setSelectedOvertime] = useState(null);
+  const [isTableMinimized, setIsTableMinimized] = useState(false);
+  const [overtimeDetails, setOvertimeDetails] = useState("");
+
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
@@ -35,7 +38,20 @@ const ApplyOvertimeModal = ({
     }
   }, [overtimeList, totalPages]);
 
-  const handleChange = () => {};
+  const handleSelect = (att) => {
+    setSelectedOvertime(att);
+    setIsTableMinimized(true);
+    setHasChanges(true);
+  };
+
+  const handleChange = (e) => {
+    setOvertimeDetails(e.target.value);
+    setHasChanges(true);
+  };
+
+  const isFormValid = () => {
+    return selectedOvertime && overtimeDetails.trim() !== "";
+  };
 
   const handleCancelClick = (e) => {
     e.preventDefault();
@@ -47,10 +63,10 @@ const ApplyOvertimeModal = ({
   };
 
   const handleConfirmClick = async () => {
-    // if (!isFormValid()) {
-    //   alert("Inputs cannot be empty");
-    //   return;
-    // }
+    if (!isFormValid()) {
+      alert("Inputs cannot be empty");
+      return;
+    }
     setIsConfirmModalOpen(true);
   };
 
@@ -59,7 +75,53 @@ const ApplyOvertimeModal = ({
     onClose();
   };
 
-  const handleSubmit = () => {};
+  const handleSubmit = async () => {
+    if (!isFormValid()) {
+      11;
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("No authentication token found. Please retry logging in.");
+        return;
+      }
+
+      const formData = {
+        overtimeId: selectedOvertime._id,
+        date: selectedOvertime.date,
+        timeIn: selectedOvertime.timeIn,
+        timeOut: selectedOvertime.timeOut,
+        overtimeDetails: overtimeDetails.trim(),
+      };
+
+      const res = await fetch(
+        "http://localhost:5000/api/filing/apply-overtime",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        },
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Submission failed");
+      }
+
+      setIsConfirmModalOpen(false);
+
+      if (onUpdateOvertimeLists) onUpdateOvertimeLists();
+
+      setTimeout(() => setIsConfirmedModalOpen(true), 300);
+    } catch (err) {
+      console.error("Failed applying for overtime:", err);
+    }
+  };
 
   return ReactDOM.createPortal(
     <div className="modal">
@@ -67,43 +129,91 @@ const ApplyOvertimeModal = ({
         <h3>Apply for Overtime</h3>
         <form onSubmit={handleSubmit} className="form-container">
           <div className="table">
-            <div className="table-header">
-              <article className="table-header-container">
-                <p>Date</p>
-              </article>
-              <article className="table-header-container">
-                <p>Time In</p>
-              </article>
-              <article className="table-header-container">
-                <p>Time Out</p>
-              </article>
+            <div className="table-toggler">
+              <p>Overtime Records</p>
+              <button
+                type="button"
+                onClick={() => setIsTableMinimized(!isTableMinimized)}
+                className="toggle-btn"
+              >
+                {isTableMinimized ? "Show" : "Hide"}
+              </button>
             </div>
-
-            {overtimeList
-              ?.slice(
-                (currentPage - 1) * itemsPerPage,
-                currentPage * itemsPerPage,
-              )
-              .map((att) => (
-                <div key={att._id} className="table-content">
-                  <article className="table-content-container">
-                    <p>{att.date}</p>
+            {!isTableMinimized && (
+              <>
+                <div className="table-header">
+                  <article className="table-header-container">
+                    <p>Date</p>
                   </article>
-                  <article className="table-content-container">
-                    <p>{att.timeIn}</p>
+                  <article className="table-header-container">
+                    <p>Time In</p>
                   </article>
-                  <article className="table-content-container">
-                    <p>{att.timeOut}</p>
+                  <article className="table-header-container">
+                    <p>Time Out</p>
+                  </article>
+                  <article className="table-header-container">
+                    <p>Action</p>
                   </article>
                 </div>
-              ))}
 
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+                {overtimeList
+                  ?.slice(
+                    (currentPage - 1) * itemsPerPage,
+                    currentPage * itemsPerPage,
+                  )
+                  .map((att) => (
+                    <div
+                      key={att._id}
+                      className={`table-content ${
+                        selectedOvertime?._id === att._id ? "selected-row" : ""
+                      }`}
+                    >
+                      <article className="table-content-container">
+                        <p>{formatDate(att.date)}</p>
+                      </article>
+                      <article className="table-content-container">
+                        <p>{att.timeIn}</p>
+                      </article>
+                      <article className="table-content-container">
+                        <p>{att.timeOut}</p>
+                      </article>
+                      <article className="table-content-container">
+                        <button
+                          type="button"
+                          className="action-button"
+                          onClick={() => handleSelect(att)}
+                        >
+                          Select
+                        </button>
+                      </article>
+                    </div>
+                  ))}
+
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            )}
           </div>
+
+          {isTableMinimized && selectedOvertime && (
+            <div className="selected-summary">
+              <p>
+                <strong>Selected: </strong>
+                {formatDate(selectedOvertime.date)} | {selectedOvertime.timeIn}{" "}
+                - {selectedOvertime.timeOut}
+              </p>
+              <button
+                type="button"
+                className="modal-button"
+                onClick={() => setIsTableMinimized(false)}
+              >
+                Change
+              </button>
+            </div>
+          )}
 
           <div className="input-container">
             <div className="label-container">
@@ -112,6 +222,7 @@ const ApplyOvertimeModal = ({
             <div className="input-group-signup">
               <input
                 type="text"
+                value={overtimeDetails}
                 placeholder="Details of Overtime"
                 onChange={handleChange}
                 required
@@ -131,8 +242,8 @@ const ApplyOvertimeModal = ({
             <button
               type="button"
               onClick={handleConfirmClick}
-              className={`modal-button ${!hasChanges ? "disabled" : ""}`}
-              // disabled={!isFormValid()}
+              className={`modal-button ${!isFormValid() ? "disabled" : ""}`}
+              disabled={!isFormValid()}
             >
               Apply
             </button>
@@ -179,5 +290,7 @@ const ApplyOvertimeModal = ({
 export default ApplyOvertimeModal;
 
 ApplyOvertimeModal.propTypes = {
+  overtimeList: PropTypes.array,
   onClose: PropTypes.func,
+  onUpdateOvertimeLists: PropTypes.func,
 };

@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 const LeaveApplication = require("../models/leaveApplication");
+const OvertimeApplication = require("../models/overtimeApplication");
 const Attendance = require("../models/attendance");
 const auth = require("../middleware/authMiddleware");
 
@@ -70,6 +71,22 @@ router.get("/user-overtime-candidates", auth, async (req, res) => {
   } catch (error) {
     console.error("Error fetching overtime:", error);
     res.status(500).json({ message: "Server Error" });
+  }
+});
+
+router.post("/apply-overtime", auth, async (req, res) => {
+  const { selectedOvertime, overtimeDetails } = req.body;
+
+  try {
+    const app = new OvertimeApplication({
+      userId: req.user.userId,
+      selectedOvertime,
+      overtimeDetails,
+    });
+    await app.save();
+    res.status(201).json(app);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
