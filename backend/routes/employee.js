@@ -147,7 +147,7 @@ router.put("/edit-employee-via-admin/:id", async (req, res) => {
         email,
         gender,
       },
-      { new: true }
+      { new: true },
     );
     console.log("Updated User:", updateUser);
 
@@ -161,12 +161,12 @@ router.put("/edit-employee-via-admin/:id", async (req, res) => {
         email,
         gender,
       },
-      { new: true }
+      { new: true },
     );
     console.log("Updated Employee:", updateEmployee);
 
     // Update Settings
-    const updateSettings = await Settings.findOneAndUpdate(
+    await Settings.findOneAndUpdate(
       { userId },
       {
         $set: {
@@ -179,9 +179,8 @@ router.put("/edit-employee-via-admin/:id", async (req, res) => {
           "general.jobDescription.schedule.timeOut": timeOut,
         },
       },
-      { new: true }
+      { new: true },
     );
-    console.log("Updated Settings:", updateSettings);
 
     res.status(200).json({
       message: "Employee updated successfully",

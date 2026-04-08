@@ -10,13 +10,15 @@ const Filing = () => {
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
   const [isApplyOvertimeOpen, setIsApplyOvertimeOpen] = useState(false);
   const [userLeaveRequests, setUserLeaveRequests] = useState([]);
+  const [userOvertimeRequests, setUserOvertimeRequests] = useState([]);
   const [userOvertimeLists, setUserOvertimeLists] = useState([]);
 
   const handleApplyLeave = () => {
     setIsApplyLeaveOpen(true);
   };
 
-  const handleApplyOvertime = () => {
+  const handleApplyOvertime = async () => {
+    await handleUserOvertimeLists();
     setIsApplyOvertimeOpen(true);
   };
 
@@ -29,21 +31,34 @@ const Filing = () => {
     }
   };
 
-  const handleUserOvertimeLists = async () => {
+  const handleUserOvertimeRequests = async () => {
     try {
-      const response = await API.get("/api/filing/user-overtime-candidates");
-      setUserOvertimeLists(response.data);
+      const response = await API.get("/api/filing/user-overtime-requests");
+      setUserOvertimeRequests(response.data);
     } catch (error) {
       console.error("Error fetching ovetime requests:", error);
     }
   };
 
+  const handleUserOvertimeLists = async () => {
+    try {
+      const response = await API.get("/api/filing/user-overtime-candidates");
+      setUserOvertimeLists(response.data);
+    } catch (error) {
+      console.error("Error fetching overtime candidates:", error);
+    }
+  };
+
   useEffect(() => {
     handleUserLeaveRequests();
-    handleUserOvertimeLists();
+    handleUserOvertimeRequests();
   }, []);
 
-  const pendingCount = userLeaveRequests.filter(
+  const leavePendingCount = userLeaveRequests.filter(
+    (request) => request.status === "Pending",
+  ).length;
+
+  const overtimePendingCount = userOvertimeRequests.filter(
     (request) => request.status === "Pending",
   ).length;
 
@@ -53,14 +68,14 @@ const Filing = () => {
         <div className="user-track">
           <p>Total Leave Requests</p>
           <div className="total-user-track">
-            <span className="user-number">{pendingCount}</span>
+            <span className="user-number">{leavePendingCount}</span>
           </div>
         </div>
 
         <div className="user-track">
           <p>Total Overtime Request</p>
           <div className="total-user-track">
-            <span className="user-number">1</span>
+            <span className="user-number">{overtimePendingCount}</span>
           </div>
         </div>
       </div>
@@ -166,25 +181,38 @@ const Filing = () => {
             <article className="table-header-container">
               <p>Status</p>
             </article>
+            <article className="table-header-container">
+              <p>Action</p>
+            </article>
           </div>
 
-          {userOvertimeLists.length === 0 ? (
+          {userOvertimeRequests.length === 0 ? (
             <div className="table-content">
               <article className="table-content-container">
                 <h6 className="no-data">No Overtime Requests</h6>
               </article>
             </div>
           ) : (
-            userOvertimeLists.map((overtime) => (
+            userOvertimeRequests.map((overtime) => (
               <div key={overtime._id} className="table-content">
                 <article className="table-content-container">
-                  <p>{formatDate(overtime.date)}</p>
+                  <p>{formatDate(overtime.selectedOvertime)}</p>
                 </article>
                 <article className="table-content-container">
-                  <p>{overtime.timeIn}</p>
+                  <p>{overtime.start}</p>
                 </article>
                 <article className="table-content-container">
-                  <p>{overtime.timeOut}</p>
+                  <p>{overtime.end}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{overtime.overtimeDetails}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{overtime.status}</p>
+                </article>
+                <article className="table-content-container">
+                  <button className="action-button">Edit</button>
+                  <button className="action-button">Delete</button>
                 </article>
               </div>
             ))
@@ -205,7 +233,7 @@ const Filing = () => {
           onClose={() => {
             setIsApplyOvertimeOpen(false);
           }}
-          onUpateOvertimeRequests={handleUserOvertimeLists}
+          onUpdateOvertimeRequests={handleUserOvertimeRequests}
         />
       )}
     </div>

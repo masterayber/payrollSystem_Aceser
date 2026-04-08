@@ -11,7 +11,7 @@ import "../../Modal.css";
 const ApplyOvertimeModal = ({
   overtimeList = [],
   onClose,
-  onUpdateOvertimeLists,
+  onUpdateOvertimeRequests,
 }) => {
   const [selectedOvertime, setSelectedOvertime] = useState(null);
   const [isTableMinimized, setIsTableMinimized] = useState(false);
@@ -77,7 +77,6 @@ const ApplyOvertimeModal = ({
 
   const handleSubmit = async () => {
     if (!isFormValid()) {
-      11;
       return;
     }
 
@@ -90,9 +89,9 @@ const ApplyOvertimeModal = ({
 
       const formData = {
         overtimeId: selectedOvertime._id,
-        date: selectedOvertime.date,
-        timeIn: selectedOvertime.timeIn,
-        timeOut: selectedOvertime.timeOut,
+        selectedOvertime: selectedOvertime.date,
+        start: selectedOvertime.overtime?.start,
+        end: selectedOvertime.overtime?.end,
         overtimeDetails: overtimeDetails.trim(),
       };
 
@@ -115,7 +114,7 @@ const ApplyOvertimeModal = ({
 
       setIsConfirmModalOpen(false);
 
-      if (onUpdateOvertimeLists) onUpdateOvertimeLists();
+      if (onUpdateOvertimeRequests) onUpdateOvertimeRequests();
 
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (err) {
@@ -136,7 +135,7 @@ const ApplyOvertimeModal = ({
                 onClick={() => setIsTableMinimized(!isTableMinimized)}
                 className="toggle-btn"
               >
-                {isTableMinimized ? "Show" : "Hide"}
+                {isTableMinimized ? "[Show]" : "[Hide]"}
               </button>
             </div>
             {!isTableMinimized && (
@@ -172,10 +171,10 @@ const ApplyOvertimeModal = ({
                         <p>{formatDate(att.date)}</p>
                       </article>
                       <article className="table-content-container">
-                        <p>{att.timeIn}</p>
+                        <p>{att.overtime?.start}</p>
                       </article>
                       <article className="table-content-container">
-                        <p>{att.timeOut}</p>
+                        <p>{att.overtime?.end}</p>
                       </article>
                       <article className="table-content-container">
                         <button
@@ -202,8 +201,9 @@ const ApplyOvertimeModal = ({
             <div className="selected-summary">
               <p>
                 <strong>Selected: </strong>
-                {formatDate(selectedOvertime.date)} | {selectedOvertime.timeIn}{" "}
-                - {selectedOvertime.timeOut}
+                {formatDate(selectedOvertime.date)} |{" "}
+                {selectedOvertime.overtime?.start} -{" "}
+                {selectedOvertime.overtime?.end}
               </p>
               <button
                 type="button"

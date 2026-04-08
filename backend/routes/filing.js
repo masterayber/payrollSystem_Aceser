@@ -75,18 +75,43 @@ router.get("/user-overtime-candidates", auth, async (req, res) => {
 });
 
 router.post("/apply-overtime", auth, async (req, res) => {
-  const { selectedOvertime, overtimeDetails } = req.body;
+  const { selectedOvertime, start, end, overtimeDetails } = req.body;
 
   try {
     const app = new OvertimeApplication({
       userId: req.user.userId,
       selectedOvertime,
+      start,
+      end,
       overtimeDetails,
     });
     await app.save();
+
+    if (req.body.overtimeId) {
+      await Attendance.findByIdAndUpdate(
+        req.body.overtimeId,
+        { "overtime.isFiled": true },
+        { new: true },
+      );
+    }
+
     res.status(201).json(app);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.get("/user-overtime-requests", auth, async (req, res) => {
+  try {
+    const overtimeRequests = await OvertimeApplication.find({
+      userId: req.user.userId,
+    }).sort({
+      appliedAt: -1,
+    });
+
+    res.json(overtimeRequests);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

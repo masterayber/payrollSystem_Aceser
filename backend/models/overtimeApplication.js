@@ -7,8 +7,8 @@ const overtimeApplicationSchema = new mongoose.Schema({
     required: true,
   },
   selectedOvertime: { type: Date, required: true },
-  timeIn: { type: String, default: "18:00" },
-  timeOut: { type: String, required: true },
+  start: { type: String, default: "18:00" },
+  end: { type: String, required: true },
   overtimeDetails: { type: String, required: true },
   status: {
     type: String,
