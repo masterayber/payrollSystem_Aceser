@@ -1,17 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useContext, useEffect } from "react";
 import { formatDate } from "../../utils/dateFormatter";
 import ApplyLeaveModal from "../../components/Modals/Filing/ApplyLeave/ApplyLeaveModal";
 import ApplyOvertimeModal from "../../components/Modals/Filing/ApplyOvertime/ApplyOvertimeModal";
 import { IconPlus } from "@tabler/icons-react";
 import "../../styles/UserCSS/Filing.css";
 import API from "../../api";
+import { FilingContext } from "../../context/FilingContext";
 
 const Filing = () => {
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
   const [isApplyOvertimeOpen, setIsApplyOvertimeOpen] = useState(false);
-  const [userLeaveRequests, setUserLeaveRequests] = useState([]);
-  const [userOvertimeRequests, setUserOvertimeRequests] = useState([]);
   const [userOvertimeLists, setUserOvertimeLists] = useState([]);
+  const {
+    leaveRequests: userLeaveRequests,
+    overtimeRequests: userOvertimeRequests,
+    refreshFilingData,
+  } = useContext(FilingContext);
 
   const handleApplyLeave = () => {
     setIsApplyLeaveOpen(true);
@@ -23,21 +27,11 @@ const Filing = () => {
   };
 
   const handleUserLeaveRequests = async () => {
-    try {
-      const response = await API.get("/api/filing/user-leave-requests");
-      setUserLeaveRequests(response.data);
-    } catch (error) {
-      console.error("Error fetching leave requests:", error);
-    }
+    await refreshFilingData();
   };
 
   const handleUserOvertimeRequests = async () => {
-    try {
-      const response = await API.get("/api/filing/user-overtime-requests");
-      setUserOvertimeRequests(response.data);
-    } catch (error) {
-      console.error("Error fetching ovetime requests:", error);
-    }
+    await refreshFilingData();
   };
 
   const handleUserOvertimeLists = async () => {
@@ -50,9 +44,8 @@ const Filing = () => {
   };
 
   useEffect(() => {
-    handleUserLeaveRequests();
-    handleUserOvertimeRequests();
-  }, []);
+    refreshFilingData();
+  }, [refreshFilingData]);
 
   const leavePendingCount = userLeaveRequests.filter(
     (request) => request.status === "Pending",
