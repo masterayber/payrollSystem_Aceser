@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { formatDate } from "../../utils/dateFormatter";
-import ApplyLeaveModal from "../../components/Modals/Filing/ApplyLeave/ApplyLeaveModal";
-import ApplyOvertimeModal from "../../components/Modals/Filing/ApplyOvertime/ApplyOvertimeModal";
+import LeaveModal from "../../components/Modals/Filing/Leave/LeaveModal";
+import OvertimeModal from "../../components/Modals/Filing/Overtime/OvertimeModal";
 import { IconPlus } from "@tabler/icons-react";
 import "../../styles/UserCSS/Filing.css";
 import API from "../../api";
@@ -9,8 +9,12 @@ import { FilingContext } from "../../context/FilingContext";
 
 const Filing = () => {
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
+  const [isEditLeaveOpen, setIsEditLeaveOpen] = useState(false);
   const [isApplyOvertimeOpen, setIsApplyOvertimeOpen] = useState(false);
+  const [isEditOvertimeOpen, setIsEditOvertimeOpen] = useState(false);
   const [userOvertimeLists, setUserOvertimeLists] = useState([]);
+  const [selectedLeaveRequest, setSelectedLeaveRequest] = useState(null);
+  const [selectedOvertimeRequest, setSelectedOvertimeRequest] = useState(null);
   const {
     leaveRequests: userLeaveRequests,
     overtimeRequests: userOvertimeRequests,
@@ -21,9 +25,19 @@ const Filing = () => {
     setIsApplyLeaveOpen(true);
   };
 
+  const handleEditLeave = (request) => {
+    setSelectedLeaveRequest(request);
+    setIsEditLeaveOpen(true);
+  };
+
   const handleApplyOvertime = async () => {
     await handleUserOvertimeLists();
     setIsApplyOvertimeOpen(true);
+  };
+
+  const handleEditOvertime = (request) => {
+    setSelectedOvertimeRequest(request);
+    setIsEditOvertimeOpen(true);
   };
 
   const handleUserLeaveRequests = async () => {
@@ -144,7 +158,12 @@ const Filing = () => {
                   <p>{user.status}</p>
                 </article>
                 <article className="table-content-container">
-                  <button className="action-button">Edit</button>
+                  <button
+                    className="action-button"
+                    onClick={() => handleEditLeave(user)}
+                  >
+                    Edit
+                  </button>
                   <button className="action-button">Delete</button>
                 </article>
               </div>
@@ -204,7 +223,12 @@ const Filing = () => {
                   <p>{overtime.status}</p>
                 </article>
                 <article className="table-content-container">
-                  <button className="action-button">Edit</button>
+                  <button
+                    className="action-button"
+                    onClick={() => handleEditOvertime(overtime)}
+                  >
+                    Edit
+                  </button>
                   <button className="action-button">Delete</button>
                 </article>
               </div>
@@ -214,17 +238,41 @@ const Filing = () => {
       </div>
 
       {isApplyLeaveOpen && (
-        <ApplyLeaveModal
+        <LeaveModal
+          mode="add"
           onClose={() => setIsApplyLeaveOpen(false)}
-          onUpdateLeaveLists={handleUserLeaveRequests}
+          onUpdateLeaveRequests={handleUserLeaveRequests}
+        />
+      )}
+
+      {isEditLeaveOpen && selectedLeaveRequest && (
+        <LeaveModal
+          mode="edit"
+          request={selectedLeaveRequest}
+          onClose={() => {
+            setIsEditLeaveOpen(false);
+            setSelectedLeaveRequest(null);
+          }}
+          onUpdateLeaveRequests={handleUserLeaveRequests}
         />
       )}
 
       {isApplyOvertimeOpen && (
-        <ApplyOvertimeModal
+        <OvertimeModal
+          mode="add"
           overtimeList={userOvertimeLists}
+          onClose={() => setIsApplyOvertimeOpen(false)}
+          onUpdateOvertimeRequests={handleUserOvertimeRequests}
+        />
+      )}
+
+      {isEditOvertimeOpen && selectedOvertimeRequest && (
+        <OvertimeModal
+          mode="edit"
+          request={selectedOvertimeRequest}
           onClose={() => {
-            setIsApplyOvertimeOpen(false);
+            setIsEditOvertimeOpen(false);
+            setSelectedOvertimeRequest(null);
           }}
           onUpdateOvertimeRequests={handleUserOvertimeRequests}
         />

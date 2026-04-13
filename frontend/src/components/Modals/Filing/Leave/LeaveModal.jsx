@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import CancelModal from "../../Cancel/CancelModal";
 import ConfirmModal from "../../Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../../Confirmed/ConfirmedMessageModal";
-import Dropdown from "../../../Dropdown/Dropdown";
 import "../../Modal.css";
+import Dropdown from "../../../Dropdown/Dropdown";
 
-const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
-  const leaveType = [
+const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
+  const leaveTypeOptions = [
     "Vacation Leave",
     "Sick Leave",
     "Maternity Leave",
@@ -20,17 +20,35 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
     "Adoption Leave",
     "Leave Without Pay (LWOP)",
   ];
-  const [formData, setFormData] = useState({
-    leaveType: "",
-    leaveDetails: "",
-    startDate: "",
-    endDate: "",
-  });
+
+  const isEdit = mode === "edit";
+  const initialFormData =
+    isEdit && request
+      ? {
+          leaveType: request.leaveType || "",
+          leaveDetails: request.leaveDetails || "",
+          startDate: request.startDate
+            ? new Date(request.startDate).toISOString().slice(0, 10)
+            : "",
+          endDate: request.endDate
+            ? new Date(request.endDate).toISOString().slice(0, 10)
+            : "",
+        }
+      : {
+          leaveType: "",
+          leaveDetails: "",
+          startDate: "",
+          endDate: "",
+        };
+
+  const [formData, setFormData] = useState(initialFormData);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const [isSingleDayLeave, setIsSingleDayLeave] = useState(false);
+  const [isSingleDayLeave, setIsSingleDayLeave] = useState(
+    isEdit ? formData.startDate === formData.endDate : false,
+  );
 
   useEffect(() => {
     document.documentElement.style.overflow = "hidden";
@@ -41,18 +59,12 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     setHasChanges(true);
   };
 
   const handleLeaveTypeChange = (selectedType) => {
-    setFormData((prev) => ({
-      ...prev,
-      leaveType: selectedType,
-    }));
+    setFormData((prev) => ({ ...prev, leaveType: selectedType }));
     setHasChanges(true);
   };
 
@@ -68,10 +80,7 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
 
   const handleEndDateChange = (e) => {
     const { value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      endDate: value,
-    }));
+    setFormData((prev) => ({ ...prev, endDate: value }));
     setHasChanges(true);
   };
 
@@ -79,17 +88,14 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
     const checked = e.target.checked;
     setIsSingleDayLeave(checked);
     if (checked && formData.startDate) {
-      setFormData((prev) => ({
-        ...prev,
-        endDate: prev.startDate,
-      }));
+      setFormData((prev) => ({ ...prev, endDate: prev.startDate }));
     }
+    setHasChanges(true);
   };
 
   const isFormValid = () => {
     const start = new Date(formData.startDate);
     const end = new Date(formData.endDate);
-
     return (
       formData.leaveType &&
       formData.leaveDetails.trim() &&
@@ -99,16 +105,22 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
     );
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("No authentication token found. Please log in.");
+        alert("No authentication token found. Pleave log in again.");
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/filing/apply-leave", {
-        method: "POST",
+      const url = isEdit
+        ? `http://localhost:5000/api/filing/leave/${request._id}`
+        : "http://localhost:5000/api/filing/apply-leave";
+      const method = isEdit ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -118,16 +130,19 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Submission failed");
+        throw new Error(
+          errorData.error || `${isEdit ? "Update" : "Submission"} failed`,
+        );
       }
 
       setIsConfirmModalOpen(false);
-
       if (onUpdateLeaveRequests) onUpdateLeaveRequests();
-
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (err) {
-      console.error("Failed applying for leave:", err);
+      console.error(
+        `Failed ${isEdit ? "updating" : "applying for"} leave:`,
+        err,
+      );
     }
   };
 
@@ -140,7 +155,7 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
     }
   };
 
-  const handleConfirmClick = async () => {
+  const handleConfirmClick = () => {
     if (!isFormValid()) {
       alert("Inputs cannot be empty");
       return;
@@ -153,13 +168,18 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
     onClose();
   };
 
+  const closeConfirmed = () => {
+    setIsConfirmedModalOpen(false);
+    onClose();
+  };
+
   return ReactDOM.createPortal(
     <div className="modal">
       <div className="modal-content">
-        <h3>Apply for Leave</h3>
+        <h3>{isEdit ? "Edit Leave Request" : "Apply for Leave"}</h3>
         <form onSubmit={handleSubmit} className="form-container">
           <Dropdown
-            options={leaveType}
+            options={leaveTypeOptions}
             value={formData.leaveType}
             onSelect={handleLeaveTypeChange}
             placeholder="Select Leave Type"
@@ -177,7 +197,6 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
                 value={formData.leaveDetails}
                 onChange={handleInputChange}
                 placeholder="Enter text here"
-                required
               />
             </div>
           </div>
@@ -188,7 +207,6 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
                 <label>Single Day Leave</label>
               </div>
             </div>
-
             <div className="input-container">
               <input
                 type="checkbox"
@@ -210,7 +228,6 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
                   name="startDate"
                   value={formData.startDate}
                   onChange={handleStartDateChange}
-                  placeholder=""
                   required
                 />
               </div>
@@ -226,7 +243,6 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
                   name="endDate"
                   value={formData.endDate}
                   onChange={handleEndDateChange}
-                  placeholder=""
                   required
                   disabled={isSingleDayLeave}
                   style={{ opacity: isSingleDayLeave ? 0.5 : 1 }}
@@ -247,9 +263,9 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
               type="button"
               onClick={handleConfirmClick}
               className={`modal-button ${!hasChanges ? "disabled" : ""}`}
-              disabled={!isFormValid()}
+              disabled={!hasChanges || !isFormValid()}
             >
-              Apply
+              {isEdit ? "Save Changes" : "Apply"}
             </button>
           </div>
         </form>
@@ -258,7 +274,7 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
       {isCancelModalOpen && (
         <CancelModal
           title="Cancel Changes"
-          message="Are you sure you want to cancel your leave application?"
+          message={`You have unsaved changes. Do you want to discard them?`}
           onClose={() => setIsCancelModalOpen(false)}
           onConfirm={handleCancel}
           cancelText="No"
@@ -268,22 +284,27 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
 
       {isConfirmModalOpen && (
         <ConfirmModal
-          title="Confirm Application"
-          message={`Are you sure you want to confirm application for ${formData.leaveType}?`}
+          title={isEdit ? "Update Leave Request" : "Confirm Application"}
+          message={
+            isEdit
+              ? "Save changes to this leave request?"
+              : `Are you sure you want to confirm application for ${formData.leaveType}?`
+          }
           onClose={() => setIsConfirmModalOpen(false)}
           onConfirm={handleSubmit}
-          cancelText="No"
-          confirmText="Yes"
+          confirmtext={isEdit ? "Save" : "Yes"}
+          cancelText={isEdit ? "Cancel" : "No"}
         />
       )}
 
       {isConfirmedModalOpen && (
         <ConfirmedMessageModal
-          message="Application submitted successfully!"
-          onClose={() => {
-            setIsConfirmedModalOpen(false);
-            onClose();
-          }}
+          message={
+            isEdit
+              ? "Leave request successfully updated."
+              : "Application submitted successfully."
+          }
+          onClose={closeConfirmed}
         />
       )}
     </div>,
@@ -291,8 +312,11 @@ const ApplyLeaveModal = ({ onClose, onUpdateLeaveRequests }) => {
   );
 };
 
-export default ApplyLeaveModal;
-
-ApplyLeaveModal.propTypes = {
-  onClose: PropTypes.func,
+LeaveModal.propTypes = {
+  mode: PropTypes.oneOf(["add", "edit"]).isRequired,
+  request: PropTypes.object,
+  onClose: PropTypes.func.isRequired,
+  onUpdateLeaveRequests: PropTypes.func,
 };
+
+export default LeaveModal;
