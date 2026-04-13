@@ -173,7 +173,8 @@ const EditLeaveModal = ({ request, onClose, onUpdateLeaveRequests }) => {
 
           <div className="input-container">
             <div className="label-container">
-              <label>Details of Leave</label> <span className="required">*</span>
+              <label>Details of Leave</label>{" "}
+              <span className="required">*</span>
             </div>
             <div className="input-group-signup">
               <input
