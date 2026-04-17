@@ -6,10 +6,14 @@ const overtimeApplicationSchema = new mongoose.Schema({
     ref: "AuthUser",
     required: true,
   },
+  attendanceId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Attendance",
+  },
   selectedOvertime: { type: Date, required: true },
   start: { type: String, default: "18:00" },
   end: { type: String, required: true },
-  overtimeDetails: { type: String, required: true },
+  overtimeDetails: { type: String, default: "" },
   status: {
     type: String,
     enum: ["Pending", "Approved", "Rejected"],

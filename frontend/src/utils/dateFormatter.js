@@ -23,3 +23,12 @@ export const formatDate = (startDate, endDate = null) => {
 
   return `${startMonthDay}, ${startYear}`;
 };
+
+export const formatFullMonthDate = (date) => {
+  if (!date) return "--";
+
+  const d = new Date(date);
+  const options = { month: "long", day: "numeric", year: "numeric" };
+
+  return d.toLocaleDateString("en-US", options);
+};

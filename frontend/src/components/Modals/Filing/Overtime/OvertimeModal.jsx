@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { formatDate } from "../../../../utils/dateFormatter";
+import {
+  formatDate,
+  formatFullMonthDate,
+} from "../../../../utils/dateFormatter";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import CancelModal from "../../Cancel/CancelModal";
@@ -17,7 +20,18 @@ const OvertimeModal = ({
 }) => {
   const isEdit = mode === "edit";
 
-  const [selectedOvertime, setSelectedOvertime] = useState(null);
+  const [selectedOvertime, setSelectedOvertime] = useState(() => {
+    if (!isEdit || !request) return null;
+
+    return {
+      _id: request.attendanceId || null,
+      date: request.selectedOvertime,
+      overtime: {
+        start: request.start || "",
+        end: request.end || "",
+      },
+    };
+  });
   const [isTableMinimized, setIsTableMinimized] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -54,6 +68,28 @@ const OvertimeModal = ({
     }
   }, [overtimeList, totalPages, isEdit, currentPage]);
 
+  useEffect(() => {
+    if (!isEdit || !request) return;
+
+    const matchingRecord = overtimeList?.find(
+      (att) =>
+        att._id === request.attendanceId ||
+        new Date(att.date).toISOString().slice(0, 10) ===
+          new Date(request.selectedOvertime).toISOString().slice(0, 10),
+    );
+
+    if (matchingRecord) {
+      setSelectedOvertime(matchingRecord);
+      setStart(matchingRecord.overtime?.start || request.start || "");
+      setEnd(matchingRecord.overtime?.end || request.end || "");
+      setSelectedDate(
+        new Date(matchingRecord.date || request.selectedOvertime)
+          .toISOString()
+          .slice(0, 10),
+      );
+    }
+  }, [isEdit, request, overtimeList]);
+
   const handleSelectedOvertime = (att) => {
     setSelectedOvertime(att);
     setIsTableMinimized(true);
@@ -65,21 +101,6 @@ const OvertimeModal = ({
 
   const handleDetailsChange = (e) => {
     setOvertimeDetails(e.target.value);
-    setHasChanges(true);
-  };
-
-  const handleDateChange = (e) => {
-    setSelectedDate(e.target.value);
-    setHasChanges(true);
-  };
-
-  const handleTimeInChange = (e) => {
-    setStart(e.target.value);
-    setHasChanges(true);
-  };
-
-  const handleTimeOutChange = (e) => {
-    setEnd(e.target.value);
     setHasChanges(true);
   };
 
@@ -106,21 +127,23 @@ const OvertimeModal = ({
       let url, method, body;
 
       if (isEdit) {
-        url = `http://localhost:5000/api/filing/overtime/${request._id}`;
+        url = `http://localhost:5000/api/filing/edit-overtime/${request._id}`;
         method = "PATCH";
         body = JSON.stringify({
+          attendanceId: request.attendanceId,
           selectedOvertime: selectedDate,
           start,
           end,
-          overtimeDetails,
+          overtimeDetails: overtimeDetails.trim(),
         });
       } else {
         url = "http://localhost:5000/api/filing/apply-overtime";
-        method = JSON.stringify({
-          overtimeId: selectedOvertime._id,
-          selectedOvertime: selectedOvertime.date,
-          start: selectedOvertime.overtime?.start,
-          end: selectedOvertime.overtime?.end,
+        method = "POST";
+        body = JSON.stringify({
+          attendanceId: selectedOvertime?._id,
+          selectedOvertime: selectedOvertime?.date,
+          start: selectedOvertime?.overtime?.start,
+          end: selectedOvertime?.overtime?.end,
           overtimeDetails: overtimeDetails.trim(),
         });
       }
@@ -129,7 +152,7 @@ const OvertimeModal = ({
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorizaton: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body,
       });
@@ -184,91 +207,112 @@ const OvertimeModal = ({
       <div className="modal-content">
         <h3>{isEdit ? "Edit Overtime Request:" : "Apply for Overtime"}</h3>
         <form onSubmit={handleSubmit} className="form-container">
-          {!isEdit && (
-            <div className="table">
-              <div className="table-toggler">
-                <p>Overtime Records</p>
-                <button
-                  type="button"
-                  onClick={() => setIsTableMinimized(!isTableMinimized)}
-                  className="toggle-btn"
-                >
-                  {isTableMinimized ? "[Show]" : "[Hide]"}
-                </button>
-              </div>
-              {!isTableMinimized && (
-                <>
-                  <div className="table-header">
-                    <article className="table-header-container">
-                      <p>Date</p>
-                    </article>
-                    <article className="table-header-container">
-                      <p>Time In</p>
-                    </article>
-                    <article className="table-header-container">
-                      <p>Time Out</p>
-                    </article>
-                    <article className="table-header-container">
-                      <p>Details</p>
-                    </article>
-                    <article className="table-header-container">
-                      <p>Action</p>
+          <div className="table">
+            <div className="table-toggler">
+              <p>Overtime Records</p>
+              <button
+                type="button"
+                onClick={() => setIsTableMinimized(!isTableMinimized)}
+                className="toggle-btn"
+              >
+                {isTableMinimized ? "[Show]" : "[Hide]"}
+              </button>
+            </div>
+            {!isTableMinimized && (
+              <>
+                <div className="table-header">
+                  <article className="table-header-container">
+                    <p>Date</p>
+                  </article>
+                  <article className="table-header-container">
+                    <p>Time In</p>
+                  </article>
+                  <article className="table-header-container">
+                    <p>Time Out</p>
+                  </article>
+                  <article className="table-header-container">
+                    <p>Details</p>
+                  </article>
+                  <article className="table-header-container">
+                    <p>Action</p>
+                  </article>
+                </div>
+
+                {overtimeList.length === 0 ? (
+                  <div className="table-content">
+                    <article className="table-content-container">
+                      <h6 className="no-data">No leave requests found</h6>
                     </article>
                   </div>
+                ) : (
+                  () => {
+                    const sortedList = [...overtimeList].sort(
+                      (a, b) => new Date(b.date) - new Date(a.date),
+                    );
 
-                  {overtimeList
-                    ?.slice(
-                      (currentPage - 1) * itemsPerPage,
-                      currentPage * itemsPerPage,
-                    )
-                    .map((att) => (
-                      <div
-                        key={att._id}
-                        className={`table-content ${
-                          selectedOvertime?._id === att._id
-                            ? "selected-row"
-                            : ""
-                        }`}
-                      >
-                        <article className="table-content-container">
-                          <p>{formatDate(att.date)}</p>
-                        </article>
-                        <article className="table-content-container">
-                          <p>{att.overtime?.start}</p>
-                        </article>
-                        <article className="table-content-container">
-                          <p>{att.overtime?.end}</p>
-                        </article>
-                        <article className="table-content-container">
-                          <p>{att.overtime?.overtimeDetails}</p>
-                        </article>
-                        <article className="table-content-container">
-                          <button
-                            type="button"
-                            className="action-button"
-                            onClick={() => handleSelectedOvertime(att)}
-                          >
-                            Select
-                          </button>
-                        </article>
-                      </div>
-                    ))}
+                    const selectedIndex = sortedList.findIndex(
+                      (att) => att._id === selectedOvertime?._id,
+                    );
 
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                  />
-                </>
-              )}
-            </div>
-          )}
+                    if (selectedIndex > 0) {
+                      const [selected] = sortedList.splice(selectedIndex, 1);
+                      sortedList.unshift(selected);
+                    }
 
-          {!isEdit && isTableMinimized && selectedOvertime && (
+                    return sortedList
+                      ?.slice(
+                        (currentPage - 1) * itemsPerPage,
+                        currentPage * itemsPerPage,
+                      )
+                      .map((att) => (
+                        <div
+                          key={att._id}
+                          className={`table-content ${
+                            selectedOvertime?._id === att._id
+                              ? "selected-row"
+                              : ""
+                          }`}
+                        >
+                          <article className="table-content-container">
+                            <p>{formatDate(att.date)}</p>
+                          </article>
+                          <article className="table-content-container">
+                            <p>{att.overtime?.start}</p>
+                          </article>
+                          <article className="table-content-container">
+                            <p>{att.overtime?.end}</p>
+                          </article>
+                          <article className="table-content-container">
+                            <p>{att.overtimeDetails}</p>
+                          </article>
+                          <article className="table-content-container">
+                            <button
+                              type="button"
+                              className="action-button"
+                              onClick={() => handleSelectedOvertime(att)}
+                            >
+                              Select
+                            </button>
+                          </article>
+                        </div>
+                      ));
+                  }
+                )}
+
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            )}
+          </div>
+
+          {isTableMinimized && selectedOvertime && (
             <div className="selected-summary">
               <p>
                 <strong>Selected: </strong>
-                {formatDate(selectedOvertime.date)} |{" "}
+                {formatFullMonthDate(selectedOvertime.date)} |{" "}
                 {selectedOvertime.overtime?.start} -{" "}
                 {selectedOvertime.overtime?.end}
               </p>
@@ -279,54 +323,6 @@ const OvertimeModal = ({
               >
                 Change
               </button>
-            </div>
-          )}
-
-          {isEdit && (
-            <div className="input-row">
-              <div className="input-container">
-                <div className="label-container">
-                  <label>Date</label> <span className="required">*</span>
-                </div>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={handleDateChange}
-                  required
-                />
-              </div>
-
-              <div className="input-container">
-                <div className="label-container">
-                  <label>Time In</label> <span className="required"></span>
-                </div>
-                <div className="input-group-signup">
-                  <input
-                    type="text"
-                    value={start}
-                    onChange={handleTimeInChange}
-                    placeholder="Start Time"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="input-container">
-                <div className="label-container">
-                  <label>Time Out</label> <span className="required">*</span>
-                </div>
-                <div className="input-group-signup">
-                  <input
-                    type="text"
-                    value={end}
-                    onChange={handleTimeOutChange}
-                    placeholder="End Time"
-                    required
-                  />
-                </div>
-              </div>
             </div>
           )}
 
@@ -356,7 +352,7 @@ const OvertimeModal = ({
             <button
               type="button"
               onClick={handleConfirmClick}
-              className={`modal button ${!hasChanges ? "disabled" : ""}`}
+              className={`modal-button ${!hasChanges ? "disabled" : ""}`}
               disabled={!hasChanges || !isFormValid()}
             >
               {isEdit ? "Save Changes" : "Apply"}

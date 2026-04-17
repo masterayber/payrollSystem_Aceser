@@ -1,20 +1,28 @@
 import { useState, useContext, useEffect } from "react";
-import { formatDate } from "../../utils/dateFormatter";
+import { formatDate, formatFullMonthDate } from "../../utils/dateFormatter";
 import LeaveModal from "../../components/Modals/Filing/Leave/LeaveModal";
 import OvertimeModal from "../../components/Modals/Filing/Overtime/OvertimeModal";
+import DeleteModal from "../../components/Modals/Delete/DeleteModal";
 import { IconPlus } from "@tabler/icons-react";
 import "../../styles/UserCSS/Filing.css";
 import API from "../../api";
 import { FilingContext } from "../../context/FilingContext";
+import ConfirmedMessageModal from "../../components/Modals/Confirmed/ConfirmedMessageModal";
 
 const Filing = () => {
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
   const [isEditLeaveOpen, setIsEditLeaveOpen] = useState(false);
   const [isApplyOvertimeOpen, setIsApplyOvertimeOpen] = useState(false);
   const [isEditOvertimeOpen, setIsEditOvertimeOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
   const [userOvertimeLists, setUserOvertimeLists] = useState([]);
   const [selectedLeaveRequest, setSelectedLeaveRequest] = useState(null);
   const [selectedOvertimeRequest, setSelectedOvertimeRequest] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState({
+    type: null,
+    request: null,
+  });
   const {
     leaveRequests: userLeaveRequests,
     overtimeRequests: userOvertimeRequests,
@@ -35,9 +43,48 @@ const Filing = () => {
     setIsApplyOvertimeOpen(true);
   };
 
-  const handleEditOvertime = (request) => {
+  const handleEditOvertime = async (request) => {
     setSelectedOvertimeRequest(request);
+    await handleUserOvertimeLists("edit");
     setIsEditOvertimeOpen(true);
+  };
+
+  const handleDeleteTarget = (request, type) => {
+    setDeleteTarget({ type, request });
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget?.request || !deleteTarget?.type) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("No authentication token found. Please log in again.");
+        return;
+      }
+
+      const url = `http://localhost:5000/api/filing/${deleteTarget.type}/${deleteTarget.request._id}`;
+      const res = await fetch(url, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Delete failed");
+      }
+
+      setIsDeleteModalOpen(false);
+      setDeleteTarget({ type: null, request: null });
+      await refreshFilingData();
+
+      setTimeout(() => setIsConfirmedModalOpen(true), 300);
+    } catch (err) {
+      console.error("Failed deleting request:", err);
+    }
   };
 
   const handleUserLeaveRequests = async () => {
@@ -48,13 +95,19 @@ const Filing = () => {
     await refreshFilingData();
   };
 
-  const handleUserOvertimeLists = async () => {
+  const handleUserOvertimeLists = async (mode = "add") => {
     try {
-      const response = await API.get("/api/filing/user-overtime-candidates");
+      const response = await API.get(
+        `/api/filing/user-overtime-candidates?mode=${mode}`,
+      );
       setUserOvertimeLists(response.data);
     } catch (error) {
       console.error("Error fetching overtime candidates:", error);
     }
+  };
+
+  const closeConfirmed = () => {
+    setIsConfirmedModalOpen(false);
   };
 
   useEffect(() => {
@@ -164,7 +217,12 @@ const Filing = () => {
                   >
                     Edit
                   </button>
-                  <button className="action-button">Delete</button>
+                  <button
+                    className="action-button"
+                    onClick={() => handleDeleteTarget(user, "leave")}
+                  >
+                    Delete
+                  </button>
                 </article>
               </div>
             ))
@@ -229,7 +287,12 @@ const Filing = () => {
                   >
                     Edit
                   </button>
-                  <button className="action-button">Delete</button>
+                  <button
+                    className="action-button"
+                    onClick={() => handleDeleteTarget(overtime, "overtime")}
+                  >
+                    Delete
+                  </button>
                 </article>
               </div>
             ))
@@ -270,11 +333,38 @@ const Filing = () => {
         <OvertimeModal
           mode="edit"
           request={selectedOvertimeRequest}
+          overtimeList={userOvertimeLists}
           onClose={() => {
             setIsEditOvertimeOpen(false);
             setSelectedOvertimeRequest(null);
           }}
           onUpdateOvertimeRequests={handleUserOvertimeRequests}
+        />
+      )}
+
+      {isDeleteModalOpen && (
+        <DeleteModal
+          title={
+            deleteTarget.type === "leave"
+              ? "Delete Leave Application"
+              : "Delete Overtime Application"
+          }
+          message={
+            deleteTarget.type === "leave"
+              ? `Are you sure you want to delete this leave request from ${deleteTarget.request?.leaveType || "this request"}? This action cannot be undone.`
+              : `Are you sure you want to delete this overtime request for ${formatFullMonthDate(deleteTarget.request?.selectedOvertime) || "this requst"}? This action cannot be undone.`
+          }
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleConfirmDelete}
+          confirmText="Yes"
+          cancelText="No"
+        />
+      )}
+
+      {isConfirmedModalOpen && (
+        <ConfirmedMessageModal
+          message="Request deleted successfully."
+          onClose={closeConfirmed}
         />
       )}
     </div>

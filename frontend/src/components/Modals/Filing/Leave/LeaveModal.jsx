@@ -115,7 +115,7 @@ const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
       }
 
       const url = isEdit
-        ? `http://localhost:5000/api/filing/leave/${request._id}`
+        ? `http://localhost:5000/api/filing/edit-leave/${request._id}`
         : "http://localhost:5000/api/filing/apply-leave";
       const method = isEdit ? "PATCH" : "POST";
 

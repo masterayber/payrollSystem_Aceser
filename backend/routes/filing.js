@@ -8,6 +8,28 @@ const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+router.get("/", auth, async (req, res) => {
+  if (!req.user.isAdmin) return res.status(400).json({ msg: "Access Denied" });
+  const apps = await LeaveApplication.find().populate("userId", "name email");
+  res.json(apps);
+});
+
+// Route for getting all the leave requests of the user
+router.get("/user-leave-requests", auth, async (req, res) => {
+  try {
+    const leaveRequests = await LeaveApplication.find({
+      userId: req.user.userId,
+    }).sort({
+      appliedAt: -1,
+    });
+
+    res.json(leaveRequests);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Route for applying for leave
 router.post("/apply-leave", auth, async (req, res) => {
   const { leaveType, leaveDetails, startDate, endDate } = req.body;
 
@@ -26,24 +48,49 @@ router.post("/apply-leave", auth, async (req, res) => {
   }
 });
 
-router.get("/user-leave-requests", auth, async (req, res) => {
-  try {
-    const leaveRequests = await LeaveApplication.find({
-      userId: req.user.userId,
-    }).sort({
-      appliedAt: -1,
-    });
+// Route for editing leave request
+router.patch("/edit-leave/:id", auth, async (req, res) => {
+  const { leaveType, leaveDetails, startDate, endDate } = req.body;
 
-    res.json(leaveRequests);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  try {
+    const updatedLeave = await LeaveApplication.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.userId },
+      {
+        leaveType,
+        leaveDetails,
+        startDate,
+        endDate,
+      },
+      { new: true },
+    );
+
+    if (!updatedLeave) {
+      return res.status(404).json({ error: "Leave request not found." });
+    }
+
+    res.json(updatedLeave);
+  } catch (err) {
+    console.error({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
-router.get("/", auth, async (req, res) => {
-  if (!req.user.isAdmin) return res.status(400).json({ msg: "Access Denied" });
-  const apps = await LeaveApplication.find().populate("userId", "name email");
-  res.json(apps);
+// Route for deleting leave request of the user
+router.delete("/leave/:id", auth, async (req, res) => {
+  try {
+    const leave = await LeaveApplication.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.userId,
+    });
+
+    if (!leave) {
+      return res.status(404).json({ error: "Leave request not found" });
+    }
+
+    res.json({ message: "Leave request deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.patch("/:id/status", auth, async (req, res) => {
@@ -57,15 +104,22 @@ router.patch("/:id/status", auth, async (req, res) => {
   res.json(app);
 });
 
+// Route for getting the eligible overtime of the user
 router.get("/user-overtime-candidates", auth, async (req, res) => {
   try {
     const userId = req.user.userId;
+    const { mode } = req.query;
 
-    const attendance = await Attendance.find({
+    const query = {
       userId,
       "overtime.isEligible": true,
-      "overtime.isFiled": false,
-    });
+    };
+
+    if (mode !== "edit") {
+      query["overtime.isFiled"] = false;
+    }
+
+    const attendance = await Attendance.find(query);
 
     res.json(attendance);
   } catch (error) {
@@ -74,33 +128,7 @@ router.get("/user-overtime-candidates", auth, async (req, res) => {
   }
 });
 
-router.post("/apply-overtime", auth, async (req, res) => {
-  const { selectedOvertime, start, end, overtimeDetails } = req.body;
-
-  try {
-    const app = new OvertimeApplication({
-      userId: req.user.userId,
-      selectedOvertime,
-      start,
-      end,
-      overtimeDetails,
-    });
-    await app.save();
-
-    if (req.body.overtimeId) {
-      await Attendance.findByIdAndUpdate(
-        req.body.overtimeId,
-        { "overtime.isFiled": true },
-        { new: true },
-      );
-    }
-
-    res.status(201).json(app);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
+// Route for getting overtime requests of the user
 router.get("/user-overtime-requests", auth, async (req, res) => {
   try {
     const overtimeRequests = await OvertimeApplication.find({
@@ -112,6 +140,90 @@ router.get("/user-overtime-requests", auth, async (req, res) => {
     res.json(overtimeRequests);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Route for applying overtime of the user
+router.post("/apply-overtime", auth, async (req, res) => {
+  const { attendanceId, selectedOvertime, start, end, overtimeDetails } =
+    req.body;
+
+  try {
+    const app = new OvertimeApplication({
+      userId: req.user.userId,
+      attendanceId,
+      selectedOvertime,
+      start,
+      end,
+      overtimeDetails,
+    });
+    await app.save();
+
+    if (attendanceId) {
+      await Attendance.findByIdAndUpdate(
+        attendanceId,
+        { "overtime.isFiled": true },
+        { new: true },
+      );
+    }
+
+    res.status(201).json(app);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Route for editing overtime of the user
+router.patch("/edit-overtime/:id", auth, async (req, res) => {
+  const { attendanceId, selectedOvertime, start, end, overtimeDetails } =
+    req.body;
+
+  try {
+    const app = await OvertimeApplication.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.userId },
+      {
+        attendanceId,
+        selectedOvertime,
+        start,
+        end,
+        overtimeDetails,
+      },
+      { new: true },
+    );
+
+    if (!app) {
+      return res.status(404).json({ error: "Overtime request not found." });
+    }
+
+    res.json(app);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete("/overtime/:id", auth, async (req, res) => {
+  try {
+    const overtime = await OvertimeApplication.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.userId,
+    });
+
+    if (!overtime) {
+      return res.status(404).json({ error: "Overtime request not found" });
+    }
+
+    const attendanceId = overtime.attendanceId;
+    if (attendanceId) {
+      await Attendance.findByIdAndUpdate(
+        attendanceId,
+        { "overtime.isFiled": false },
+        { new: true },
+      );
+    }
+
+    res.json({ message: "Overtime request deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
