@@ -182,7 +182,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     handleUserDailyAttendance();
-  }, []);
+  });
 
   const getLeaveDuration = (startDate, endDate) => {
     const start = new Date(startDate);

@@ -1,8 +1,13 @@
-import React from "react";
+import { useState, useContext, useEffect } from "react";
+import { UserContext } from "../../context/UserContext";
+import { formatDate, formatFullMonthDate } from "../../utils/dateFormatter";
 import "../../styles/UserCSS/Attendance.css";
 import Dropdown from "../../components/Dropdown/Dropdown";
+import API from "../../api";
+import Pagination from "../../components/Pagination/Pagination";
 
 const Attendance = () => {
+  const { userData } = useContext(UserContext);
   const months = [
     "January",
     "February",
@@ -17,6 +22,21 @@ const Attendance = () => {
     "November",
     "December",
   ];
+
+  const [userAttendance, setUserAttendance] = useState([]);
+
+  const handleUserAttendance = async () => {
+    try {
+      const response = await API.get(`/api/attendance/${userData._id}`);
+      setUserAttendance(response.data.data);
+    } catch (error) {
+      console.error("Error fetching user attendance:", error);
+    }
+  };
+
+  useEffect(() => {
+    handleUserAttendance();
+  });
 
   return (
     <div className="main-content">
@@ -49,7 +69,7 @@ const Attendance = () => {
         </div>
       </div>
 
-      <Dropdown options={months} placeholder="Select A Month" />
+      <Dropdown options={months} value="" placeholder="Select A Month" />
 
       <div className="table-container">
         <div className="table-title">
@@ -73,91 +93,33 @@ const Attendance = () => {
               <p>Behavior</p>
             </article>
           </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>01/13/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>07:43:00 AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>05:12:00 PM</p>
-            </article>
-            <article className="table-content-container">
-              <p>--:--:--</p>
-            </article>
-            <article className="table-content-container">
-              <p>On-Time</p>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>01/13/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>07:43:00 AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>05:12:00 PM</p>
-            </article>
-            <article className="table-content-container">
-              <p>--:--:--</p>
-            </article>
-            <article className="table-content-container">
-              <p>On-Time</p>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>01/13/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>07:43:00 AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>05:12:00 PM</p>
-            </article>
-            <article className="table-content-container">
-              <p>--:--:--</p>
-            </article>
-            <article className="table-content-container">
-              <p>On-Time</p>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>01/13/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>07:43:00 AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>05:12:00 PM</p>
-            </article>
-            <article className="table-content-container">
-              <p>--:--:--</p>
-            </article>
-            <article className="table-content-container">
-              <p>On-Time</p>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>01/13/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>07:43:00 AM</p>
-            </article>
-            <article className="table-content-container">
-              <p>05:12:00 PM</p>
-            </article>
-            <article className="table-content-container">
-              <p>--:--:--</p>
-            </article>
-            <article className="table-content-container">
-              <p>On-Time</p>
-            </article>
-          </div>
+          {userAttendance.length === 0 ? (
+            <div className="table-content">
+              <article className="table-content-container">
+                <h6 className="no-data">No Attendance Available</h6>
+              </article>
+            </div>
+          ) : (
+            userAttendance.slice(0, 7).map((att) => (
+              <div key={att._id} className="table-content">
+                <article className="table-content-container">
+                  <p>{formatFullMonthDate(att.date)}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{att.timeIn}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{att.timeOut}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>zzz</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{att.behavior}</p>
+                </article>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
