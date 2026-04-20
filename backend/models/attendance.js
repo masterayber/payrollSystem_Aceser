@@ -70,8 +70,12 @@ attendanceSchema.pre("save", async function (next) {
 
     const timeOutInMinutes = hour * 60 + minute;
 
-    const overtimeStartHour = 18;
-    const overtimeStartMinutes = overtimeStartHour * 60;
+    const [timeOutHour, timeOutMinute] = schedule.timeOut
+      .split(":")
+      .map(Number);
+    const overtimeStartHour = timeOutHour + 1;
+    const overtimeStart = `${overtimeStartHour.toString().padStart(2, "0")}:${timeOutMinute.toString().padStart(2, "0")}`;
+    const overtimeStartMinutes = overtimeStartHour * 60 + timeOutMinute;
 
     const minimumOvertimeMinutes = 60;
 
@@ -84,7 +88,7 @@ attendanceSchema.pre("save", async function (next) {
         ...this.overtime,
         isEligible: true,
         hours: overtimeHours,
-        start: "18:00",
+        start: overtimeStart,
         end: this.timeOut,
         isFiled: false,
       };

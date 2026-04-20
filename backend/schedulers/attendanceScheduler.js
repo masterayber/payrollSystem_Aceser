@@ -16,42 +16,44 @@ cron.schedule("30 7 * * 1-5", async () => {
   try {
     const employees = await Employee.find();
 
-    for (const emp of employees) {
-      if (emp.role === "Admin") {
-        console.log(
-          `Skipping attendance generation for admin: ${emp.firstName} ${emp.lastName}`,
-        );
-        continue;
-      }
+    // Temporary: Generate for last 30 days continuously
+    // TODO: After backfilling, remove the date loop and change back to single date (yesterday)
+    for (let dayOffset = 0; dayOffset < 30; dayOffset++) {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() - dayOffset);
+      const dateStr = targetDate.toISOString().split("T")[0];
 
-      const user = await User.findOne({ email: emp.email });
+      for (const emp of employees) {
+        if (emp.role === "Admin") {
+          continue;
+        }
 
-      if (!user || user.status === "Pending") {
-        console.log(
-          `Skipping attenance generation for pending employees: ${emp.firstName} ${emp.lastName}`,
-        );
-        continue;
-      }
+        const user = await User.findOne({ email: emp.email });
 
-      const dateToday = new Date().toISOString().split("T")[0];
+        if (!user || user.status === "Pending") {
+          continue;
+        }
 
-      const existing = await Attendance.findOne({
-        employeeId: emp._id,
-        date: dateToday,
-      });
-
-      if (!existing) {
-        const timeIn = getRandomTime("07:30", "08:15");
-        const timeOut = getRandomTime("17:00", "20:00");
-
-        await Attendance.create({
+        const existing = await Attendance.findOne({
           userId: user._id,
-          date: dateToday,
-          timeIn,
-          timeOut,
+          date: dateStr,
         });
 
-        console.log(`Attendance saved from ${emp.firstName} ${emp.lastName}`);
+        if (!existing) {
+          const timeIn = getRandomTime("07:30", "08:30");
+          const timeOut = getRandomTime("17:00", "20:00");
+
+          await Attendance.create({
+            userId: user._id,
+            date: dateStr,
+            timeIn,
+            timeOut,
+          });
+
+          console.log(
+            `Attendance saved for ${emp.firstName} ${emp.lastName} on ${dateStr}`,
+          );
+        }
       }
     }
   } catch (err) {

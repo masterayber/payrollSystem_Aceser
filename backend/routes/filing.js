@@ -179,7 +179,18 @@ router.patch("/edit-overtime/:id", auth, async (req, res) => {
     req.body;
 
   try {
-    const app = await OvertimeApplication.findOneAndUpdate(
+    const existingApp = await OvertimeApplication.findOne({
+      _id: req.params.id,
+      userId: req.user.userId,
+    });
+
+    if (!existingApp) {
+      return res.status(404).json({ error: "Overtime request not found." });
+    }
+
+    const previousAttendanceId = existingApp.attendanceId?.toString();
+
+    const updatedApp = await OvertimeApplication.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.userId },
       {
         attendanceId,
@@ -191,11 +202,26 @@ router.patch("/edit-overtime/:id", auth, async (req, res) => {
       { new: true },
     );
 
-    if (!app) {
+    if (!updatedApp) {
       return res.status(404).json({ error: "Overtime request not found." });
     }
 
-    res.json(app);
+    if (
+      previousAttendanceId &&
+      previousAttendanceId !== attendanceId?.toString()
+    ) {
+      await Attendance.findByIdAndUpdate(previousAttendanceId, {
+        "overtime.isFiled": false,
+      });
+    }
+
+    if (attendanceId) {
+      await Attendance.findByIdAndUpdate(attendanceId, {
+        "overtime.isFiled": true,
+      });
+    }
+
+    res.json(updatedApp);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

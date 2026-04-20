@@ -130,8 +130,8 @@ const OvertimeModal = ({
         url = `http://localhost:5000/api/filing/edit-overtime/${request._id}`;
         method = "PATCH";
         body = JSON.stringify({
-          attendanceId: request.attendanceId,
-          selectedOvertime: selectedDate,
+          attendanceId: selectedOvertime?._id,
+          selectedOvertime: selectedOvertime?.date,
           start,
           end,
           overtimeDetails: overtimeDetails.trim(),
@@ -245,7 +245,7 @@ const OvertimeModal = ({
                     </article>
                   </div>
                 ) : (
-                  () => {
+                  (() => {
                     const sortedList = [...overtimeList].sort(
                       (a, b) => new Date(b.date) - new Date(a.date),
                     );
@@ -296,7 +296,7 @@ const OvertimeModal = ({
                           </article>
                         </div>
                       ));
-                  }
+                  })()
                 )}
 
                 <Pagination
@@ -391,7 +391,7 @@ const OvertimeModal = ({
         <ConfirmedMessageModal
           message={
             isEdit
-              ? "Overtime request successfully updated/"
+              ? "Overtime request successfully updated."
               : "Appication sumitted successfully!"
           }
           onClose={closeConfirmed}
