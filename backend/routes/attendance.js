@@ -61,19 +61,13 @@ router.get("/:userId/records", async (req, res) => {
 router.get("/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = 5;
-    const skip = (page - 1) * limit;
 
-    const total = await Attendance.countDocuments({ userId });
-    const attendanceRecords = await Attendance.find({ userId })
-      .sort({ date: -1 })
-      .skip(skip)
-      .limit(limit);
+    const attendanceRecords = await Attendance.find({ userId }).sort({
+      date: -1,
+    });
 
     res.json({
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
+      total: attendanceRecords.length,
       data: attendanceRecords,
     });
   } catch (error) {
