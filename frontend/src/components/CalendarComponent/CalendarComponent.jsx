@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import PropTypes from "prop-types";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import "./CalendarComponent.css";
 
-const CalendarComponent = () => {
+const CalendarComponent = ({ attendanceData = [], leaveRequests = [] }) => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -11,7 +12,7 @@ const CalendarComponent = () => {
       const newDate = new Date(
         prevDate.getFullYear(),
         prevDate.getMonth() + offset,
-        1
+        1,
       );
       return newDate;
     });
@@ -35,9 +36,58 @@ const CalendarComponent = () => {
     return daysArray;
   };
 
+  const getAttendanceStatus = (day) => {
+    const dateStr = `${currentDate.getFullYear()}-${String(
+      currentDate.getMonth() + 1,
+    ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+    const attendance = attendanceData.find((record) => record.date === dateStr);
+    return attendance ? attendance.behavior : null;
+  };
+
+  const getLeaveStatus = useMemo(() => {
+    return (day) => {
+      const currentDateObj = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        day,
+      );
+
+      const leave = leaveRequests.find((req) => {
+        const startDate = new Date(req.startDate);
+        const endDate = new Date(req.endDate);
+
+        return (
+          currentDateObj >= startDate &&
+          currentDateObj <= endDate &&
+          req.status === "Approved"
+        );
+      });
+
+      return leave ? leave.status : null;
+    };
+  }, [leaveRequests, currentDate]);
+
+  const getDayBadge = (day) => {
+    const leaveStatus = getLeaveStatus(day);
+    if (leaveStatus === "Approved") {
+      return "leave";
+    }
+
+    const attendanceStatus = getAttendanceStatus(day);
+    if (attendanceStatus === "On-Time") return "present";
+    if (attendanceStatus === "Late") return "late";
+    if (attendanceStatus === "Absent") return "absent";
+    if (attendanceStatus === "Early-Out") return "early-out";
+    if (attendanceStatus === "Half-Day") return "half-day";
+    if (attendanceStatus === "On-Leave") return "leave";
+
+    return null;
+  };
+
   const monthDays = getMonthDays(
     currentDate.getFullYear(),
-    currentDate.getMonth()
+    currentDate.getMonth(),
   );
   const today = new Date().getDate();
   const isCurrentMonth =
@@ -81,24 +131,64 @@ const CalendarComponent = () => {
         <tbody>
           {monthDays.map((week, index) => (
             <tr key={index}>
-              {week.map((day, idx) => (
-                <td
-                  key={idx}
-                  onClick={() => day && setSelectedDay(day)}
-                  className={[
-                    day && isCurrentMonth && day === today ? "today" : "",
-                    day && day === selectedDay ? "selected" : "",
-                  ].join(" ")}
-                >
-                  {day || ""}
-                </td>
-              ))}
+              {week.map((day, idx) => {
+                const dayBadge = day ? getDayBadge(day) : null;
+
+                return (
+                  <td
+                    key={idx}
+                    onClick={() => day && setSelectedDay(day)}
+                    className={[
+                      day && isCurrentMonth && day === today ? "today" : "",
+                      day && day === selectedDay ? "selected" : "",
+                      day && dayBadge ? `attendance-${dayBadge}` : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    <div className="day-content">
+                      {day || ""}
+                      {day && dayBadge && (
+                        <div className={`day-badge badge-${dayBadge}`}></div>
+                      )}
+                    </div>
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>
       </table>
+
+      <div className="calendar-legend">
+        <div className="legend-item">
+          <div className="legend-badge present"></div>
+          <span>Present</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-badge late"></div>
+          <span>Late</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-badge absent"></div>
+          <span>Absent</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-badge leave"></div>
+          <span>Leave</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-badge half-day"></div>
+          <span>Half-Day</span>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default CalendarComponent;
+
+CalendarComponent.propTypes = {
+  attendanceData: PropTypes.Array,
+  leaveRequests: PropTypes.Array,
+};

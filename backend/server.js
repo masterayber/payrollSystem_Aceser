@@ -59,6 +59,7 @@ mongoose
   .catch((err) => console.error("MongoDB connection error:", err));
 
 require("./schedulers/attendanceScheduler");
+require("./schedulers/dailyBlankAttendanceScheduler");
 
 // Routes
 app.get("/", (req, res) => {

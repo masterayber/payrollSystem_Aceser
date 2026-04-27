@@ -20,16 +20,35 @@ export const calculateBehavior = ({
 
   if (isBeforeHired) return "Not Hired Yet";
 
+  const hasTimeIn = timeIn && timeIn !== "--:--";
+  const hasTimeOut = timeOut && timeOut !== "--:--";
+
   if (dayOfWeek === 0 || dayOfWeek === 6) {
-    if (!timeIn && !timeOut) return "Weekend";
+    if (!hasTimeIn && !hasTimeOut) return "Weekend";
   }
 
-  if (!timeIn && !timeOut) return "Absent";
-  if (!timeIn) return "No Time In";
+  if (!hasTimeIn && !hasTimeOut) {
+    const recordDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    recordDate.setHours(0, 0, 0, 0);
+
+    const now = new Date();
+    const officeEndTime = new Date(date);
+    officeEndTime.setHours(17, 0, 0, 0);
+
+    if (recordDate < today || now >= officeEndTime) {
+      return "Absent";
+    }
+
+    return "Pending";
+  }
+
+  if (!hasTimeIn) return "No Time In";
 
   const timeInDate = new Date(`${date}T${timeIn}`);
 
-  if (!timeOut) {
+  if (!hasTimeOut) {
     const todayStr = new Date().toISOString().split("T")[0];
     const recordDateStr = new Date(date).toISOString().split("T")[0];
 

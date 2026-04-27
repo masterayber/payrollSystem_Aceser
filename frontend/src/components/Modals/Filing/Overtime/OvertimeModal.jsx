@@ -231,9 +231,6 @@ const OvertimeModal = ({
                     <p>Time Out</p>
                   </article>
                   <article className="table-header-container">
-                    <p>Details</p>
-                  </article>
-                  <article className="table-header-container">
                     <p>Action</p>
                   </article>
                 </div>
@@ -281,9 +278,6 @@ const OvertimeModal = ({
                           </article>
                           <article className="table-content-container">
                             <p>{att.overtime?.end}</p>
-                          </article>
-                          <article className="table-content-container">
-                            <p>{att.overtimeDetails}</p>
                           </article>
                           <article className="table-content-container">
                             <button

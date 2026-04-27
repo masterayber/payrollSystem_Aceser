@@ -28,6 +28,7 @@ const attendanceSchema = new mongoose.Schema({
       "On-Leave",
       "No Time-In",
       "No Time-Out",
+      "Pending",
     ],
   },
   overtime: {

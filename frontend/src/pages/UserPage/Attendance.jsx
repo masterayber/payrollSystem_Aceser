@@ -40,11 +40,16 @@ const Attendance = () => {
   const calculateMetrics = () => {
     let totalHours = 0;
     let totalOvertimeHours = 0;
-    let totalLates = 0;
+    let totalOnTime = 0;
     let totalAbsences = 0;
 
     filteredAttendance.forEach((att) => {
-      if (att.timeIn && att.timeOut) {
+      if (
+        att.timeIn &&
+        att.timeOut &&
+        att.timeIn !== "--:--" &&
+        att.timeOut !== "--:--"
+      ) {
         const [inHour, inMin] = att.timeIn.split(":").map(Number);
         const [outHour, outMin] = att.timeOut.split(":").map(Number);
         const inMinutes = inHour * 60 + inMin;
@@ -57,14 +62,14 @@ const Attendance = () => {
         totalOvertimeHours += att.overtime.hours;
       }
 
-      if (att.behavior === "Late") totalLates++;
-      if (att.behavior === "Absent") totalAbsences;
+      if (att.behavior === "On-Time") totalOnTime++;
+      if (att.behavior === "Absent") totalAbsences++;
     });
 
     return {
       totalHours: totalHours.toFixed(2),
       totalOvertimeHours: totalOvertimeHours.toFixed(2),
-      totalLates,
+      totalOnTime,
       totalAbsences,
     };
   };
@@ -111,9 +116,9 @@ const Attendance = () => {
           </div>
         </div>
         <div className="user-track">
-          <p>Total Lates</p>
+          <p>Total On-Time</p>
           <div className="total-user-track">
-            <span className="user-number">{metrics.totalLates}</span>
+            <span className="user-number">{metrics.totalOnTime}</span>
           </div>
         </div>
         <div className="user-track">
