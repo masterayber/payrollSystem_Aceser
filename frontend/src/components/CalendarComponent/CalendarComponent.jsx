@@ -3,9 +3,13 @@ import PropTypes from "prop-types";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import "./CalendarComponent.css";
 
-const CalendarComponent = ({ attendanceData = [], leaveRequests = [] }) => {
+const CalendarComponent = ({
+  attendanceData = [],
+  leaveRequests = [],
+  currentDate,
+  setCurrentDate,
+}) => {
   const [selectedDay, setSelectedDay] = useState(null);
-  const [currentDate, setCurrentDate] = useState(new Date());
 
   const changeMonth = (offset) => {
     setCurrentDate((prevDate) => {
@@ -42,7 +46,21 @@ const CalendarComponent = ({ attendanceData = [], leaveRequests = [] }) => {
     ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
     const attendance = attendanceData.find((record) => record.date === dateStr);
-    return attendance ? attendance.behavior : null;
+
+    if (attendance) return attendance.behavior;
+
+    const dateObj = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day,
+    );
+    const dayOfWeek = dateObj.getDay();
+
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      return "Absent";
+    }
+
+    return null;
   };
 
   const getLeaveStatus = useMemo(() => {
@@ -191,4 +209,6 @@ export default CalendarComponent;
 CalendarComponent.propTypes = {
   attendanceData: PropTypes.Array,
   leaveRequests: PropTypes.Array,
+  currentDate: PropTypes.func,
+  setCurrentDate: PropTypes.func,
 };

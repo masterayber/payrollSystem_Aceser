@@ -24,7 +24,7 @@ export const AttendanceProvider = ({ children }) => {
     };
 
     fetchAttendance();
-  }, [attendanceData, setAttendanceData]);
+  }, []);
 
   return (
     <AttendanceContext.Provider value={{ attendanceData, setAttendanceData }}>

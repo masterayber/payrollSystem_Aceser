@@ -27,13 +27,19 @@ const Attendance = () => {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
-  const filteredAttendance = selectedMonth
-    ? userAttendance.filter((att) => {
-        const attendanceMonth = new Date(att.date).getMonth();
-        const selectedMonthIndex = months.indexOf(selectedMonth);
-        return attendanceMonth === selectedMonthIndex;
-      })
-    : userAttendance;
+
+  const filteredAttendance = (() => {
+    if (!selectedMonth) return userAttendance;
+
+    const selectedMonthIndex = months.indexOf(selectedMonth);
+    const currentYear = new Date().getFullYear();
+
+    return generateFullMonthAttendance(
+      userAttendance,
+      selectedMonthIndex,
+      currentYear,
+    );
+  })();
 
   const totalPages = Math.ceil(filteredAttendance.length / itemsPerPage);
 
@@ -97,6 +103,49 @@ const Attendance = () => {
       handleUserAttendance();
     }
   }, [userData._id]);
+
+  const formatKey = (date) => {
+    if (typeof date === "string") return date;
+
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const generateFullMonthAttendance = (attendance, monthIndex, year) => {
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+
+    const attendanceMap = new Map(
+      attendance.map((att) => [formatKey(att.date), att]),
+    );
+
+    const fullData = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, monthIndex, day);
+      const key = formatKey(date);
+
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+
+      if (attendanceMap.has(key)) {
+        fullData.push(attendanceMap.get(key));
+      } else {
+        fullData.push({
+          _id: `absent-${key}`,
+          date: key,
+          timeIn: "--:--",
+          timeOut: "--:--",
+          overtime: null,
+          behavior: isWeekend ? "Rest Day" : "Absent",
+        });
+      }
+    }
+
+    return fullData;
+  };
 
   return (
     <div className="main-content">
