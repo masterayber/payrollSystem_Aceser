@@ -8,6 +8,7 @@ const CalendarComponent = ({
   leaveRequests = [],
   currentDate,
   setCurrentDate,
+  userId,
 }) => {
   const [selectedDay, setSelectedDay] = useState(null);
 
@@ -45,20 +46,31 @@ const CalendarComponent = ({
       currentDate.getMonth() + 1,
     ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-    const attendance = attendanceData.find((record) => record.date === dateStr);
-
-    if (attendance) return attendance.behavior;
-
     const dateObj = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
       day,
     );
-    const dayOfWeek = dateObj.getDay();
+    const todayObj = new Date();
+    todayObj.setHours(0, 0, 0, 0);
 
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      return "Absent";
-    }
+    if (dateObj >= todayObj) return null;
+
+    const attendance = attendanceData.find((record) => {
+      const recordDate = record.date.split("T")[0];
+      const [y, m] = recordDate.split("-").map(Number);
+      const recordUserId = record.userId?._id || record.userId;
+      return (
+        String(recordUserId) === String(userId) &&
+        y === currentDate.getFullYear() &&
+        m === currentDate.getMonth() + 1 &&
+        recordDate === dateStr
+      );
+    });
+
+    if (attendance) return attendance.behavior;
+
+    if (dateObj.getDay() !== 0 && dateObj.getDay() !== 6) return "Absent";
 
     return null;
   };
@@ -207,8 +219,9 @@ const CalendarComponent = ({
 export default CalendarComponent;
 
 CalendarComponent.propTypes = {
-  attendanceData: PropTypes.Array,
-  leaveRequests: PropTypes.Array,
-  currentDate: PropTypes.func,
+  attendanceData: PropTypes.array,
+  leaveRequests: PropTypes.array,
+  currentDate: PropTypes.instanceOf(Date),
   setCurrentDate: PropTypes.func,
+  userId: PropTypes.string,
 };

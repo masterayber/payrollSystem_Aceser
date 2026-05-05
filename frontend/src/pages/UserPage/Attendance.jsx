@@ -5,6 +5,7 @@ import "../../styles/UserCSS/Attendance.css";
 import Dropdown from "../../components/Dropdown/Dropdown";
 import API from "../../api";
 import Pagination from "../../components/Pagination/Pagination";
+import { isWeekend } from "date-fns";
 
 const Attendance = () => {
   const { userData } = useContext(UserContext);
@@ -24,21 +25,83 @@ const Attendance = () => {
   ];
 
   const [userAttendance, setUserAttendance] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(
+    months[new Date().getMonth()],
+  ); // ✅ default to current month
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
 
-  const filteredAttendance = (() => {
-    if (!selectedMonth) return userAttendance;
+  const formatKey = (date) => {
+    if (typeof date === "string") return date.split("T")[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
-    const selectedMonthIndex = months.indexOf(selectedMonth);
-    const currentYear = new Date().getFullYear();
+  const generateFullMonthAttendance = (attendance, monthIndex, year) => {
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    const todayKey = formatKey(new Date());
+    const hireKey = userData.createdAt?.split("T")[0];
 
-    return generateFullMonthAttendance(
-      userAttendance,
-      selectedMonthIndex,
-      currentYear,
+    const monthlyAttendance = attendance.filter((att) => {
+      const [y, m] = att.date.split("-").map(Number);
+      return m - 1 === monthIndex && y === year;
+    });
+
+    const attendanceMap = new Map(
+      monthlyAttendance.map((att) => [att.date.split("T")[0], att]),
     );
+
+    const fullData = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, monthIndex, day);
+      const key = formatKey(date);
+      const existing = attendanceMap.get(key);
+
+      if (existing) {
+        fullData.push(existing);
+      } else {
+        const isFuture = key > todayKey;
+        const isToday = key === todayKey;
+        const isBeforeHire = hireKey && key < hireKey;
+        const weekend = isWeekend(date);
+
+        let behavior;
+        if (isBeforeHire) {
+          behavior = "-";
+        } else if (weekend) {
+          if (isFuture) continue;
+          behavior = "Rest Day";
+        } else if (isToday) {
+          behavior = "Pending";
+        } else if (isFuture) {
+          continue;
+        } else {
+          behavior = "Absent";
+        }
+
+        fullData.push({
+          _id: `absent-${key}`,
+          date: key,
+          timeIn: "--:--",
+          timeOut: "--:--",
+          overtime: null,
+          behavior,
+        });
+      }
+    }
+
+    return fullData.reverse();
+  };
+
+  const filteredAttendance = (() => {
+    const currentYear = new Date().getFullYear();
+    const monthIndex = selectedMonth
+      ? months.indexOf(selectedMonth)
+      : new Date().getMonth();
+    return generateFullMonthAttendance(userAttendance, monthIndex, currentYear);
   })();
 
   const totalPages = Math.ceil(filteredAttendance.length / itemsPerPage);
@@ -58,16 +121,11 @@ const Attendance = () => {
       ) {
         const [inHour, inMin] = att.timeIn.split(":").map(Number);
         const [outHour, outMin] = att.timeOut.split(":").map(Number);
-        const inMinutes = inHour * 60 + inMin;
-        const outMinutes = outHour * 60 + outMin;
-        const workedMinutes = outMinutes - inMinutes;
+        const workedMinutes = outHour * 60 + outMin - (inHour * 60 + inMin);
         totalHours += workedMinutes / 60;
       }
-
-      if (att.overtime?.isEligible && att.overtime?.hours) {
+      if (att.overtime?.isEligible && att.overtime?.hours)
         totalOvertimeHours += att.overtime.hours;
-      }
-
       if (att.behavior === "On-Time") totalOnTime++;
       if (att.behavior === "Absent") totalAbsences++;
     });
@@ -93,59 +151,12 @@ const Attendance = () => {
         const response = await API.get(`/api/attendance/${userData._id}`);
         setUserAttendance(response.data.data);
         setCurrentPage(1);
-        setSelectedMonth("");
       } catch (error) {
         console.error("Error fetching user attendance:", error);
       }
     };
-
-    if (userData._id) {
-      handleUserAttendance();
-    }
+    if (userData._id) handleUserAttendance();
   }, [userData._id]);
-
-  const formatKey = (date) => {
-    if (typeof date === "string") return date;
-
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-  };
-
-  const generateFullMonthAttendance = (attendance, monthIndex, year) => {
-    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-
-    const attendanceMap = new Map(
-      attendance.map((att) => [formatKey(att.date), att]),
-    );
-
-    const fullData = [];
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, monthIndex, day);
-      const key = formatKey(date);
-
-      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-
-      if (attendanceMap.has(key)) {
-        fullData.push(attendanceMap.get(key));
-      } else {
-        fullData.push({
-          _id: `absent-${key}`,
-          date: key,
-          timeIn: "--:--",
-          timeOut: "--:--",
-          overtime: null,
-          behavior: isWeekend ? "Rest Day" : "Absent",
-        });
-      }
-    }
-
-    return fullData;
-  };
 
   return (
     <div className="main-content">
@@ -244,7 +255,6 @@ const Attendance = () => {
               ))
           )}
         </div>
-
         {filteredAttendance.length > 0 && (
           <Pagination
             currentPage={currentPage}

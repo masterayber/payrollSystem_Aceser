@@ -2,13 +2,18 @@ import { useState, useContext } from "react";
 import "../../styles/UserCSS/Calendar.css";
 import CalendarComponent from "../../components/CalendarComponent/CalendarComponent";
 import { AttendanceContext } from "../../context/AttendanceContext";
+import { UserContext } from "../../context/UserContext";
 import { FilingContext } from "../../context/FilingContext";
 
 const Calendar = () => {
+  const { userData } = useContext(UserContext);
   const { attendanceData } = useContext(AttendanceContext);
   const { leaveRequests } = useContext(FilingContext);
 
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const formatDateISO = (date) =>
     new Date(date.getTime() - date.getTimezoneOffset() * 60000)
@@ -17,7 +22,10 @@ const Calendar = () => {
 
   const currentMonthAttendance = attendanceData.filter((record) => {
     const recordDate = new Date(record.date + "T00:00:00");
+    const recordUserId = record.userId?._id || record.userId;
+
     return (
+      String(recordUserId) === String(userData._id) &&
       recordDate.getMonth() === currentDate.getMonth() &&
       recordDate.getFullYear() === currentDate.getFullYear()
     );
@@ -29,8 +37,10 @@ const Calendar = () => {
 
     while (date.getMonth() === month) {
       const day = date.getDay();
-      if (day !== 0 && day !== 6) {
-        days.push(formatDateISO(date));
+      const dateISO = formatDateISO(date);
+      // ✅ only past weekdays (exclude future and today if no record)
+      if (day !== 0 && day !== 6 && new Date(date) < today) {
+        days.push(dateISO);
       }
       date.setDate(date.getDate() + 1);
     }
@@ -47,6 +57,7 @@ const Calendar = () => {
     currentMonthAttendance.map((rec) => rec.date.split("T")[0]),
   );
 
+  // ✅ only past workdays with no attendance record
   const absentDays = workDaysList.filter(
     (date) => !attendanceMap.has(date),
   ).length;
@@ -60,7 +71,6 @@ const Calendar = () => {
       attendanceByDate.set(dateKey, rec.behavior);
     } else {
       const existing = attendanceByDate.get(dateKey);
-
       if (existing === "On-Time" && rec.behavior === "Late") {
         attendanceByDate.set(dateKey, "Late");
       }
@@ -75,11 +85,10 @@ const Calendar = () => {
     if (behavior === "Late") lateDays++;
   });
 
-  const uniqueAttendanceDays = new Set(
-    currentMonthAttendance.map((rec) => rec.date.split("T")[0]),
-  );
-
-  const workDays = uniqueAttendanceDays.size;
+  // ✅ only count days up to and including today
+  const workDays = [
+    ...new Set(currentMonthAttendance.map((rec) => rec.date.split("T")[0])),
+  ].filter((date) => new Date(date + "T00:00:00") <= today).length;
 
   return (
     <div className="main-content">
@@ -122,6 +131,7 @@ const Calendar = () => {
           leaveRequests={leaveRequests}
           currentDate={currentDate}
           setCurrentDate={setCurrentDate}
+          userId={userData._id}
         />
       </div>
     </div>
