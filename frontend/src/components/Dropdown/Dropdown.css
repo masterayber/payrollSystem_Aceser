@@ -46,6 +46,10 @@
   list-style: none;
   margin: 0;
   z-index: 10;
+
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 3px;
 }
 
 .dropdown-option {
@@ -70,4 +74,13 @@
 
 .dropdown-month:hover {
   background: var(--gray-200);
+}
+
+.dropdown-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb {
+  background: var(--gray-200);
+  border-radius: 4px;
 }
