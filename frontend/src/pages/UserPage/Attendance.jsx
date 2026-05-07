@@ -1,4 +1,5 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
+import * as XLSX from "xlsx";
 import { UserContext } from "../../context/UserContext";
 import { formatFullMonthDate } from "../../utils/dateFormatter";
 import "../../styles/UserCSS/Attendance.css";
@@ -6,9 +7,11 @@ import Dropdown from "../../components/Dropdown/Dropdown";
 import API from "../../api";
 import Pagination from "../../components/Pagination/Pagination";
 import { isWeekend } from "date-fns";
+import { IconDotsVertical } from "@tabler/icons-react";
 
 const Attendance = () => {
   const { userData } = useContext(UserContext);
+
   const months = [
     "January",
     "February",
@@ -24,12 +27,50 @@ const Attendance = () => {
     "December",
   ];
 
+  const generateCutoffOptions = () => {
+    const options = [];
+    months.forEach((month) => {
+      options.push(`${month} 1st Cut-off`);
+      options.push(`${month} 2nd Cut-off`);
+    });
+    return options;
+  };
+
+  const cutoffOptions = generateCutoffOptions();
+
+  const getDefaultCutoff = () => {
+    const today = new Date();
+    const day = today.getDate();
+    const monthName = months[today.getMonth()];
+    const cutoff = day <= 10 || day >= 26 ? "1st" : "2nd";
+    return `${monthName} ${cutoff} Cut-off`;
+  };
+
+  const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
   const [userAttendance, setUserAttendance] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState(
-    months[new Date().getMonth()],
-  ); // ✅ default to current month
+  const [selectedCutoff, setSelectedCutoff] = useState(getDefaultCutoff());
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
+
+  const downloadDropdownRef = useRef(null);
+  const downloadSvgRef = useRef(null);
+
+  const parseCutoff = (cutoffStr) => {
+    const isFirst = cutoffStr.includes("1st");
+    const monthName = cutoffStr
+      .replace(" 1st Cut-off", "")
+      .replace(" 2nd Cut-off", "");
+    return {
+      monthIndex: months.indexOf(monthName),
+      monthName,
+      cutoff: isFirst ? "1st" : "2nd",
+    };
+  };
+
+  const toggleDownloadDropdown = (event) => {
+    event.stopPropagation();
+    setShowDownloadDropdown((prev) => !prev);
+  };
 
   const formatKey = (date) => {
     if (typeof date === "string") return date.split("T")[0];
@@ -39,25 +80,45 @@ const Attendance = () => {
     return `${year}-${month}-${day}`;
   };
 
-  const generateFullMonthAttendance = (attendance, monthIndex, year) => {
-    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  const getCutoffRange = (monthIndex, year, cutoff) => {
+    if (cutoff === "2nd") {
+      const start = `${year}-${String(monthIndex + 1).padStart(2, "0")}-11`;
+      const end = `${year}-${year}-${String(monthIndex + 1).padStart(2, "0")}-25`;
+      return { start, end };
+    } else {
+      const prevMonthIndex = monthIndex === 0 ? 11 : monthIndex - 1;
+      const prevYear = monthIndex === 0 ? year - 1 : year;
+      const prevDaysInMonth = new Date(
+        prevYear,
+        prevMonthIndex + 1,
+        0,
+      ).getDate();
+      const startDay = Math.min(26, prevDaysInMonth);
+      const start = `${prevYear}-${String(prevMonthIndex + 1).padStart(2, "0")}-${String(startDay).padStart(2, "0")}`;
+      const end = `${year}-${String(monthIndex + 1).padStart(2, "0")}-10`;
+      return { start, end };
+    }
+  };
+
+  const generateCutoffAttendance = (attendance, monthIndex, year, cutoff) => {
+    const { start, end } = getCutoffRange(monthIndex, year, cutoff);
     const todayKey = formatKey(new Date());
     const hireKey = userData.createdAt?.split("T")[0];
 
-    const monthlyAttendance = attendance.filter((att) => {
-      const [y, m] = att.date.split("-").map(Number);
-      return m - 1 === monthIndex && y === year;
-    });
-
     const attendanceMap = new Map(
-      monthlyAttendance.map((att) => [att.date.split("T")[0], att]),
+      attendance.map((att) => [att.date.split("T")[0], att]),
     );
 
     const fullData = [];
+    const startDate = new Date(start);
+    const endDate = new Date(end);
 
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, monthIndex, day);
-      const key = formatKey(date);
+    for (
+      let d = new Date(startDate);
+      d <= endDate;
+      d.setDate(d.getDate() + 1)
+    ) {
+      const key = formatKey(new Date(d));
       const existing = attendanceMap.get(key);
 
       if (existing) {
@@ -66,7 +127,7 @@ const Attendance = () => {
         const isFuture = key > todayKey;
         const isToday = key === todayKey;
         const isBeforeHire = hireKey && key < hireKey;
-        const weekend = isWeekend(date);
+        const weekend = isWeekend(new Date(d));
 
         let behavior;
         if (isBeforeHire) {
@@ -96,13 +157,15 @@ const Attendance = () => {
     return fullData.reverse();
   };
 
-  const filteredAttendance = (() => {
-    const currentYear = new Date().getFullYear();
-    const monthIndex = selectedMonth
-      ? months.indexOf(selectedMonth)
-      : new Date().getMonth();
-    return generateFullMonthAttendance(userAttendance, monthIndex, currentYear);
-  })();
+  const currentYear = new Date().getFullYear();
+  const { monthIndex, monthName, cutoff } = parseCutoff(selectedCutoff);
+
+  const filteredAttendance = generateCutoffAttendance(
+    userAttendance,
+    monthIndex,
+    currentYear,
+    cutoff,
+  );
 
   const totalPages = Math.ceil(filteredAttendance.length / itemsPerPage);
 
@@ -140,8 +203,62 @@ const Attendance = () => {
 
   const metrics = calculateMetrics();
 
-  const handleMonthChange = (month) => {
-    setSelectedMonth(month);
+  const handleDownload = () => {
+    const rows = filteredAttendance.map((att) => ({
+      Date: formatFullMonthDate(att.date),
+      "Time In": att.timeIn,
+      "Time Out": att.timeOut,
+      Overtime: att.overtime?.isEligible
+        ? `${att.overtime.hours.toFixed(2)} hrs`
+        : "-",
+      Behavior: att.behavior,
+    }));
+
+    const { start, end } = getCutoffRange(monthIndex, currentYear, cutoff);
+    const payday = cutoff === "1st" ? "15th" : "End of Month";
+
+    const summaryRows = [
+      {},
+      { Date: `--- ${selectedCutoff} Summary (${start} to ${end}) ---` },
+      { Date: "Payday", "Time In": payday },
+      { Date: "Total Hours Worked", "Time In": `${metrics.totalHours} hrs` },
+      {
+        Date: "Total Overtime Hours",
+        "Time In": `${metrics.totalOvetimeHours} hrs`,
+      },
+      { Date: "Total On-Time", "Time In": metrics.totalOnTime },
+      { Date: "Total Absences", "Time In": metrics.totalAbsences },
+    ];
+
+    const allRows = [...rows, ...summaryRows];
+    const workSheet = XLSX.utils.json_to_sheet(allRows);
+
+    workSheet["!cols"] = [
+      { wch: 26 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 16 },
+      { wch: 14 },
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    const sheetName = `${monthName} ${cutoff} Cutoff`;
+    XLSX.utils.book_append_sheet(workbook, workSheet, sheetName);
+
+    const employeeName = userData?.name
+      ? userData.name.replace(/\s+/g, "_")
+      : "Employee";
+
+    XLSX.writeFile(
+      workbook,
+      `Attendance_${employeeName}_${monthName}_${cutoff}Cutoff_${currentYear}.xlsx`,
+    );
+
+    setShowDownloadDropdown(false);
+  };
+
+  const handleMonthChange = (option) => {
+    setSelectedCutoff(option);
     setCurrentPage(1);
   };
 
@@ -157,6 +274,28 @@ const Attendance = () => {
     };
     if (userData._id) handleUserAttendance();
   }, [userData._id]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        showDownloadDropdown &&
+        downloadDropdownRef.current &&
+        !downloadDropdownRef.current.contains(event.target) &&
+        downloadSvgRef.current &&
+        !downloadSvgRef.current.contains(event.target)
+      ) {
+        setShowDownloadDropdown(false);
+      }
+    };
+
+    if (showDownloadDropdown) {
+      document.addEventListener("click", handleClickOutside);
+    }
+
+    return () => {
+      document.addEventListener("click", handleClickOutside);
+    };
+  }, [showDownloadDropdown]);
 
   return (
     <div className="main-content">
@@ -190,15 +329,34 @@ const Attendance = () => {
       </div>
 
       <Dropdown
-        options={months}
-        value={selectedMonth}
-        placeholder="Select A Month"
+        options={cutoffOptions}
+        value={selectedCutoff}
+        placeholder="Select Cut-off period"
         onSelect={handleMonthChange}
       />
 
       <div className="table-container">
         <div className="table-title">
           <p>Daily Attendance Log</p>
+
+          <div className="dots-button-container">
+            <IconDotsVertical
+              stroke={2}
+              onClick={toggleDownloadDropdown}
+              ref={downloadSvgRef}
+              className="dots-button"
+            />
+            {showDownloadDropdown && (
+              <div className="dropdown-details" ref={downloadDropdownRef}>
+                <button
+                  className="dropdown-item-details"
+                  onClick={handleDownload}
+                >
+                  Download
+                </button>
+              </div>
+            )}
+          </div>
         </div>
         <div className="table">
           <div className="table-header">
