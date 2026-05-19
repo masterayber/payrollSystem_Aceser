@@ -6,17 +6,22 @@ import "./CalendarComponent.css";
 const CalendarComponent = ({
   attendanceData = [],
   leaveRequests = [],
-  currentDate,
-  setCurrentDate,
+  currentDate: currentDateProp,
+  setCurrentDate: setCurrentDateProp,
   userId,
 }) => {
   const [selectedDay, setSelectedDay] = useState(null);
+  const [internalDate, setInternalDate] = useState(new Date());
+
+  const currentDate = currentDateProp || internalDate;
+  const setCurrentDate = setCurrentDateProp || setInternalDate;
 
   const changeMonth = (offset) => {
     setCurrentDate((prevDate) => {
+      const dateToUse = prevDate || new Date();
       const newDate = new Date(
-        prevDate.getFullYear(),
-        prevDate.getMonth() + offset,
+        dateToUse.getFullYear(),
+        dateToUse.getMonth() + offset,
         1,
       );
       return newDate;

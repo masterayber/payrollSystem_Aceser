@@ -15,7 +15,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { setUserData } = useContext(UserContext);
+  const { setInitialUserData } = useContext(UserContext);
 
   const handlelogin = async (e) => {
     e.preventDefault();
@@ -25,7 +25,7 @@ const Login = () => {
         {
           username,
           password,
-        }
+        },
       );
 
       alert(response.data.message);
@@ -35,9 +35,8 @@ const Login = () => {
       const updatedUserData = { ...(user || null) };
 
       localStorage.setItem("token", response.data.token);
-      localStorage.setItem("userData", JSON.stringify(updatedUserData));
 
-      setUserData(response.data.user);
+      setInitialUserData(updatedUserData);
 
       if (response.data.user.role === "Admin") {
         navigate("/admin-dashboard");

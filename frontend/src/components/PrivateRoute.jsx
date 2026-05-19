@@ -1,18 +1,28 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext } from "react";
 import { Navigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 
+const INACTIVITY_LIMIT = 60 * 60 * 1000;
+
 const PrivateRoute = ({ children, allowedRoles }) => {
-  const { userData } = useContext(UserContext);
+  const { userData, clearSession, loading } = useContext(UserContext);
   const token = localStorage.getItem("token");
-  const [isLoading, setIsLoading] = useState(true);
+  const lastActivity = Number(localStorage.getItem("lastActivity"));
 
-  useEffect(() => {
-    setIsLoading(false);
-  }, [userData]);
-
-  if (isLoading) {
+  if (loading) {
     return <div>Loading...</div>;
+  }
+
+  if (token && lastActivity && Date.now() - lastActivity > INACTIVITY_LIMIT) {
+    if (typeof clearSession === "function") {
+      clearSession("inactive");
+    } else {
+      localStorage.removeItem("token");
+      localStorage.removeItem("userData");
+      localStorage.removeItem("lastActivity");
+      window.alert("session ended due to inactivity.");
+    }
+    return <Navigate to="/" replace />;
   }
 
   if (!token || !userData) {

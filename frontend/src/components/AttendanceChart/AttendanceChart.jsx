@@ -1,3 +1,4 @@
+import React, { useMemo } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import "./AttendanceChart.css";
@@ -8,31 +9,66 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 const rootStyles = getComputedStyle(document.documentElement);
 
 const AttendanceChart = ({ attendanceData }) => {
-  const { onTime, late, absent, leave } = attendanceData;
+  const { onTime = 0, late = 0, absent = 0, leave = 0 } = attendanceData || {};
 
-  const data = {
-    labels: ["On Time", "Late", "Absent", "Leave"],
-    datasets: [
-      {
-        data: [onTime, late, absent, leave],
-        backgroundColor: [
-          rootStyles.getPropertyValue("--green-status").trim(),
-          rootStyles.getPropertyValue("--yellow-status").trim(),
-          rootStyles.getPropertyValue("--red-status").trim(),
-          rootStyles.getPropertyValue("--gray-status").trim(),
-        ],
-        borderColor: ["#fff", "#fff", "#fff", "#fff"],
-        borderWidth: 2,
+  const data = useMemo(
+    () => ({
+      labels: ["On Time", "Late", "Absent", "Leave"],
+      datasets: [
+        {
+          data: [onTime, late, absent, leave],
+          backgroundColor: [
+            rootStyles.getPropertyValue("--green-status").trim(),
+            rootStyles.getPropertyValue("--yellow-status").trim(),
+            rootStyles.getPropertyValue("--red-status").trim(),
+            rootStyles.getPropertyValue("--gray-status").trim(),
+          ],
+          borderColor: ["#fff", "#fff", "#fff", "#fff"],
+          borderWidth: 2,
+          hoverOffset: 2,
+        },
+      ],
+    }),
+    [onTime, late, absent, leave],
+  );
+
+  const options = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+
+      cutout: "70%",
+
+      animation: {
+        duration: 1000,
       },
-    ],
-  };
 
-  const options = {
-    cutout: "70%",
-    plugins: {
-      legend: { display: false },
-    },
-  };
+      transitions: {
+        active: {
+          animation: {
+            duration: 0,
+          },
+        },
+      },
+
+      interaction: {
+        mode: "nearest",
+        intersect: true,
+      },
+
+      events: ["mousemove", "mouseout", "click"],
+
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          enable: true,
+        },
+      },
+    }),
+    [],
+  );
 
   return (
     <div className="attendance-chart">
@@ -60,8 +96,13 @@ const AttendanceChart = ({ attendanceData }) => {
   );
 };
 
-export default AttendanceChart;
+export default React.memo(AttendanceChart);
 
 AttendanceChart.propTypes = {
-  attendanceData: PropTypes.string.isRequired,
+  attendanceData: PropTypes.shape({
+    onTime: PropTypes.number,
+    late: PropTypes.number,
+    absent: PropTypes.number,
+    leave: PropTypes.number,
+  }).isRequired,
 };

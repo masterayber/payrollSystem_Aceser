@@ -15,6 +15,13 @@
   align-items: center;
   width: 300px;
   height: 300px;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.chart-container canvas {
+  width: 300px !important;
+  height: 300px !important;
 }
 
 .chart-center {

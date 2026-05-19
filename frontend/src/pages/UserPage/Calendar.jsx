@@ -1,14 +1,12 @@
 import { useState, useContext } from "react";
 import "../../styles/UserCSS/Calendar.css";
 import CalendarComponent from "../../components/CalendarComponent/CalendarComponent";
-import { AttendanceContext } from "../../context/AttendanceContext";
 import { UserContext } from "../../context/UserContext";
-import { FilingContext } from "../../context/FilingContext";
 
 const Calendar = () => {
   const { userData } = useContext(UserContext);
-  const { attendanceData } = useContext(AttendanceContext);
-  const { leaveRequests } = useContext(FilingContext);
+  const attendanceData = userData?.attendance || [];
+  const leaveRequestsData = userData?.leaveRequests || [];
 
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -128,7 +126,7 @@ const Calendar = () => {
       <div className="table-container">
         <CalendarComponent
           attendanceData={attendanceData}
-          leaveRequests={leaveRequests}
+          leaveRequests={leaveRequestsData}
           currentDate={currentDate}
           setCurrentDate={setCurrentDate}
           userId={userData._id}

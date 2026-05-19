@@ -8,34 +8,13 @@ import { calculateLeaveSummary } from "../../utils/leave/summary";
 import { calculateWeeklySummary } from "../../../../backend/utils/attendance/weeklySummary";
 import "../../styles/UserCSS/Dashboard.css";
 import TimeDate from "../../components/TimeDate/TimeDate";
-import API from "../../api";
 
 const Dashboard = () => {
-  const { userData } = useContext(UserContext);
-  const [attendance, setAttendance] = useState(null);
-  const navigate = useNavigate();
-
+  const { userData, loading } = useContext(UserContext);
   const [showLeaveDropdown, setShowLeaveDropdown] = useState(false);
-  const [userLeaveRequests, setUserLeaveRequests] = useState([]);
-  const [userDailyAttendance, setUserDailyAttendance] = useState([]);
   const [showDailyDropdown, setShowDailyDropdown] = useState(false);
-  const [timingMessage, setTimingMessage] = useState("");
-  const [todayAttendance, setTodayAttendance] = useState(null);
-  const [attendanceSummary, setAttendanceSummary] = useState({
-    daysWorked: "",
-    hoursWorked: "",
-    overtimeHours: "",
-  });
-  const [leaveSummary, setLeaveSummary] = useState({
-    total: 0,
-    approved: 0,
-    pending: 0,
-  });
-  const [weeklySummary, setWeeklySummary] = useState({
-    onTime: 0,
-    late: 0,
-    absent: 0,
-  });
+
+  const navigate = useNavigate();
 
   const leaveDropdownRef = useRef(null);
   const leaveSvgRef = useRef(null);
@@ -55,64 +34,39 @@ const Dashboard = () => {
     setShowLeaveDropdown(false);
   };
 
-  useEffect(() => {
-    const fetchAttendance = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:5000/api/attendance/${userData?._id}/records`,
-        );
+  const attendanceData = userData?.attendance || [];
+  const leaveRequestsData = userData?.leaveRequests || [];
 
-        if (res.ok) {
-          const data = await res.json();
+  const attendanceSummary = calculateMonthlySummary(attendanceData);
+  const weeklySummary = calculateWeeklySummary(attendanceData);
+  const leaveSummary = calculateLeaveSummary(leaveRequestsData);
 
-          setAttendance(data);
+  const todayDate = new Date().toISOString().slice(0, 10);
 
-          const summaryData = calculateMonthlySummary(data);
-          setAttendanceSummary(summaryData);
+  const todayAttendance = attendanceData.find(
+    (record) => record.date === todayDate,
+  );
 
-          const weeklySummaryData = calculateWeeklySummary(data);
-          setWeeklySummary(weeklySummaryData);
-
-          const todayDate = new Date().toISOString().slice(0, 10);
-
-          const todayRecord = data.find((record) => record.date === todayDate);
-
-          setTodayAttendance(todayRecord);
-
-          if (!todayRecord || !todayRecord.timeIn) {
-            setTimingMessage(
-              `You have no time in yet today! You forget, don't you?`,
-            );
-          } else {
-            const scheduledTimeIn = new Date(`${todayDate}T08:00:00`);
-            const actualTimeIn = new Date(`${todayDate}T${todayRecord.timeIn}`);
-
-            const diffInMinutes = Math.floor(
-              (actualTimeIn - scheduledTimeIn) / (1000 * 60),
-            );
-
-            if (diffInMinutes < 0) {
-              setTimingMessage(
-                `You timed in ${Math.abs(diffInMinutes)} minutes early today. Keep it up!`,
-              );
-            } else if (diffInMinutes === 0) {
-              setTimingMessage(`You timed in exactly on time today.`);
-            } else {
-              setTimingMessage(
-                `You timed in ${diffInMinutes} minutes late today`,
-              );
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching attedance:", error);
-      }
-    };
-
-    if (userData?.employee?._id) {
-      fetchAttendance();
+  const getTimingMessage = () => {
+    if (!todayAttendance || !todayAttendance.timeIn) {
+      return `You have no time in yet today! You forget, don't you?`;
     }
-  }, [userData]);
+    const scheduledTimeIn = new Date(`${todayDate}T08:00:00`);
+    const actualTimeIn = new Date(`${todayDate}T${todayAttendance.timeIn}`);
+    const diffInMinutes = Math.floor(
+      (actualTimeIn - scheduledTimeIn) / (1000 * 60),
+    );
+
+    if (diffInMinutes < 0) {
+      return `You timed in ${Math.abs(diffInMinutes)} minutes early today. Keep it up!`;
+    } else if (diffInMinutes === 0) {
+      return `You timed in exactly on time today.`;
+    } else {
+      return `You timed in ${diffInMinutes} minutes late today`;
+    }
+  };
+
+  const timingMessage = getTimingMessage();
 
   const formatTime = (time) => {
     if (!time) return "--:--";
@@ -155,35 +109,6 @@ const Dashboard = () => {
     };
   }, [showLeaveDropdown, showDailyDropdown]);
 
-  const handleUserLeaveRequests = async () => {
-    try {
-      const response = await API.get("/api/filing/user-leave-requests");
-      setUserLeaveRequests(response.data);
-
-      const summary = calculateLeaveSummary(response.data);
-      setLeaveSummary(summary);
-    } catch (error) {
-      console.error("Error fetching leave requests:", error);
-    }
-  };
-
-  const handleUserDailyAttendance = async () => {
-    try {
-      const response = await API.get(`/api/attendance/${userData._id}`);
-      setUserDailyAttendance(response.data.data);
-    } catch (error) {
-      console.error("Error fetching user attendance:", error);
-    }
-  };
-
-  useEffect(() => {
-    handleUserLeaveRequests();
-  }, []);
-
-  useEffect(() => {
-    handleUserDailyAttendance();
-  });
-
   const getLeaveDuration = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -191,6 +116,10 @@ const Dashboard = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
     return diffDays === 1 ? "1 day" : `${diffDays} days`;
   };
+
+  if (loading || !userData) {
+    return <div className="main-content">Loading...</div>;
+  }
 
   return (
     <div className="main-content">
@@ -356,14 +285,14 @@ const Dashboard = () => {
               <p>Status</p>
             </article>
           </div>
-          {userLeaveRequests.length === 0 ? (
+          {leaveRequestsData.length === 0 ? (
             <div className="table-content">
               <article className="table-content-container">
                 <h6 className="no-data">No pending requests available</h6>
               </article>
             </div>
           ) : (
-            userLeaveRequests.slice(0, 3).map((leave) => (
+            leaveRequestsData.slice(0, 3).map((leave) => (
               <div key={leave._id} className="table-content">
                 <article className="table-content-container">
                   <p>{formatDate(leave.appliedAt)}</p>
@@ -423,14 +352,14 @@ const Dashboard = () => {
               <p>Behavior</p>
             </article>
           </div>
-          {userDailyAttendance.length === 0 ? (
+          {attendanceData.length === 0 ? (
             <div className="table-content">
               <article className="table-content-container">
                 <h6 className="no-data">No Attendance Available</h6>
               </article>
             </div>
           ) : (
-            userDailyAttendance.slice(0, 3).map((att) => (
+            attendanceData.slice(0, 3).map((att) => (
               <div key={att._id} className="table-content">
                 <article className="table-content-container">
                   <p>{formatDate(att.date)}</p>

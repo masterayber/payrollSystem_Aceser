@@ -10,6 +10,9 @@ const Dropdown = require("../models/dropdownOption");
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
+const Attendance = require("../models/attendance");
+const LeaveApplication = require("../models/leaveApplication");
+const OvertimeApplication = require("../models/overtimeApplication");
 
 const sendEmail = require("../utils/nodemailer");
 
@@ -56,13 +59,17 @@ router.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "24h",
     });
 
-    const [employee, settings] = await Promise.all([
-      Employee.findOne({ userId: user._id }),
-      Settings.findOne({ userId: user._id }),
-    ]);
+    const [employee, settings, attendance, leaveRequests, overtimeRequests] =
+      await Promise.all([
+        Employee.findOne({ userId: user._id }).lean(),
+        Settings.findOne({ userId: user._id }).lean(),
+        Attendance.find({ userId: user._id }).lean(),
+        LeaveApplication.find({ userId: user._id }).lean(),
+        OvertimeApplication.find({ userId: user._id }).lean(),
+      ]);
 
     const userObj = user.toObject();
     delete userObj.password;
@@ -71,6 +78,9 @@ router.post("/login", async (req, res) => {
       ...userObj,
       employee: employee || null,
       settings: settings || null,
+      attendance: attendance || [],
+      leaveRequests: leaveRequests || [],
+      overtimeRequests: overtimeRequests || [],
     };
 
     res.status(200).json({
@@ -348,6 +358,39 @@ router.get("/created-account/:id", async (req, res) => {
 
 router.get("/dashboard-data", authMiddleware, async (req, res) => {
   res.status(200).json({ message: "Protected Data" });
+});
+
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).lean();
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const [employee, settings, attendance, leaveRequests, overtimeRequests] =
+      await Promise.all([
+        Employee.findOne({ userId: user._id }).lean(),
+        Settings.findOne({ userId: user._id }).lean(),
+        Attendance.find({ userId: user._id }).lean(),
+        LeaveApplication.find({ userId: user._id }).lean(),
+        OvertimeApplication.find({ userId: user._id }).lean(),
+      ]);
+
+    delete user.password;
+
+    res.status(200).json({
+      user: {
+        ...user,
+        employee: employee || null,
+        settings: settings || null,
+        attendance: attendance || [],
+        leaveRequests: leaveRequests || [],
+        overtimeRequests: overtimeRequests || [],
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
 });
 
 // Router for getting all the employees data
