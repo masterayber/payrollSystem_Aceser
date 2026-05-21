@@ -171,39 +171,39 @@ const AdminDashboard = () => {
 
   return (
     <div className="main-content">
-      <div className="user-greetings-container">
+      <div className="greetings-card">
         <div className="message-container">
-          <div className="user-message">
+          <div className="greetings-message">
             <span>Good Day, </span>
             <span className="user-highlight">
               {userData?.employee.firstName}
             </span>
             <span>!</span>
           </div>
-          <p>{timedInCount} Employees have timed in today!</p>
+          <p>{timedInCount} Employees have timed in today.</p>
         </div>
 
         <TimeDate />
       </div>
 
       <div className="user-track-container">
-        <div className="user-track">
-          <div className="user-track-title">
+        <div className="metrics-card">
+          <div className="metrics-title">
             <p>Total Employees</p>
           </div>
-          <div className="user-number">{employeeData.length}</div>
+          <div className="metrics-value">{employeeData.length}</div>
         </div>
-        <div className="user-track">
-          <div className="user-track-title">
+        <div className="metrics-card">
+          <div className="metrics-title">
             <p>Total Employees Timed In</p>
           </div>
-          <div className="user-number">{timedInCount}</div>
+          <div className="metrics-value">{timedInCount}</div>
         </div>
-        <div className="user-track">
-          <div className="user-track-title">
+        <div className="metrics-card">
+          <div className="metrics-title">
             <p>Total Employees Timed Out</p>
           </div>
-          <div className="user-number">{timedOutCount}</div>
+          <div className="metrics-value">{timedOutCount}</div>
         </div>
       </div>
 

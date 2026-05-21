@@ -167,11 +167,11 @@ const AdminAttendance = () => {
   return (
     <div className="main-content">
       <div className="user-track-container">
-        <div className="user-track">
-          <div className="user-track-title">
-            <p>On-time</p>
+        <div className="metrics-card">
+          <div className="metrics-title">
+            <p>On-Time</p>
           </div>
-          <span className="user-number">
+          <span className="metrics-value">
             {
               filteredEmployees.filter(
                 (emp) =>
@@ -184,11 +184,12 @@ const AdminAttendance = () => {
             }
           </span>
         </div>
-        <div className="user-track">
-          <div className="user-track-title">
+
+        <div className="metrics-card">
+          <div className="metrics-title">
             <p>Late</p>
           </div>
-          <span className="user-number">
+          <span className="metrics-value">
             {
               filteredEmployees.filter(
                 (emp) => calculateBehavior(emp.timeIn, emp.timeOut) === "Late",
@@ -196,11 +197,12 @@ const AdminAttendance = () => {
             }
           </span>
         </div>
-        <div className="user-track">
-          <div className="user-track-title">
+
+        <div className="metrics-card">
+          <div className="metrics-title">
             <p>Half-Day</p>
           </div>
-          <span className="user-number">
+          <span className="metric-value">
             {
               filteredEmployees.filter(
                 (emp) =>
@@ -209,11 +211,12 @@ const AdminAttendance = () => {
             }
           </span>
         </div>
-        <div className="user-track">
-          <div className="user-track-title">
+
+        <div className="metrics-card">
+          <div className="metrics-title">
             <p>Absent</p>
           </div>
-          <span className="user-number">
+          <span className="metrics-value">
             {
               filteredEmployees.filter(
                 (emp) =>
@@ -222,11 +225,12 @@ const AdminAttendance = () => {
             }
           </span>
         </div>
-        <div className="user-track">
-          <div className="user-track-title">
+
+        <div className="metrics-card">
+          <div className="metrics-title">
             <p>On-Leave</p>
           </div>
-          <span className="user-number">
+          <span className="metrics-value">
             {
               filteredEmployees.filter((emp) =>
                 isRecordOnLeave(emp.attendanceRecord),

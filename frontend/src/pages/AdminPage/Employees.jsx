@@ -31,23 +31,23 @@ const Employees = () => {
   const itemsPerPage = 7;
 
   const probationaryCount = employeeData.filter(
-    (employee) => employee.jobDescription.employmentType === "Probationary"
+    (employee) => employee.jobDescription.employmentType === "Probationary",
   ).length;
   const regularCount = employeeData.filter(
-    (employee) => employee.jobDescription.employmentType === "Regular"
+    (employee) => employee.jobDescription.employmentType === "Regular",
   ).length;
 
   const filteredEmployees = employeeData.filter((employee) =>
     Object.values(employee).some((value) =>
-      value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-    )
+      value.toString().toLowerCase().includes(searchQuery.toLowerCase()),
+    ),
   );
 
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentEmployees = filteredEmployees.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   const handleAddClick = () => {
@@ -92,7 +92,7 @@ const Employees = () => {
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Failed to delete employee");
@@ -108,17 +108,23 @@ const Employees = () => {
   return (
     <div className="main-content">
       <div className="user-track-container">
-        <div className="user-track">
-          <p>Total Employees</p>
-          <span className="user-number">{employeeData.length}</span>
+        <div className="metrics-card">
+          <div className="metrics-title">
+            <p>Total Employees</p>
+          </div>
+          <span className="metrics-value">{employeeData.length}</span>
         </div>
-        <div className="user-track">
-          <p>Total Regural Employees</p>
-          <span className="user-number">{regularCount}</span>
+        <div className="metrics-card">
+          <div className="metrics-title">
+            <p>Total Regural Employees</p>
+          </div>
+          <span className="metrics-value">{regularCount}</span>
         </div>
-        <div className="user-track">
-          <p>Total Probationary Employees</p>
-          <span className="user-number">{probationaryCount}</span>
+        <div className="metrics-card">
+          <div className="metrics-title">
+            <p>Total Probationary Employees</p>
+          </div>
+          <span className="metrics-value">{probationaryCount}</span>
         </div>
       </div>
 
@@ -226,7 +232,7 @@ const Employees = () => {
               <p>
                 {employee.jobDescription?.startDate
                   ? new Date(
-                      employee.jobDescription.startDate
+                      employee.jobDescription.startDate,
                     ).toLocaleDateString("en-CA")
                   : ""}
               </p>

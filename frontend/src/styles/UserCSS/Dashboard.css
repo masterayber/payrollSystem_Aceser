@@ -32,7 +32,6 @@
   color: var(--neutral-color-100);
 }
 
-.user-greetings-container,
 .user-track-container,
 .table-container,
 .application-container,
@@ -68,10 +67,16 @@
   gap: 10px;
 }
 
-.user-message {
-  font-size: 22px;
-  font-weight: 600;
+.greetings-card {
+  display: flex;
+  justify-content: space-between;
+}
+
+.greetings-message {
+  margin: 0;
   color: var(--neutral-color-100);
+  font-size: 1.75rem;
+  font-weight: 700;
 }
 
 .user-highlight {
