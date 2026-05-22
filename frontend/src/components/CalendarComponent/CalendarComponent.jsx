@@ -9,6 +9,7 @@ const CalendarComponent = ({
   currentDate: currentDateProp,
   setCurrentDate: setCurrentDateProp,
   userId,
+  isAdmin = false,
 }) => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [internalDate, setInternalDate] = useState(new Date());
@@ -47,6 +48,8 @@ const CalendarComponent = ({
   };
 
   const getAttendanceStatus = (day) => {
+    if (!userId || isAdmin) return null;
+
     const dateStr = `${currentDate.getFullYear()}-${String(
       currentDate.getMonth() + 1,
     ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -229,4 +232,5 @@ CalendarComponent.propTypes = {
   currentDate: PropTypes.instanceOf(Date),
   setCurrentDate: PropTypes.func,
   userId: PropTypes.string,
+  isAdmin: PropTypes.bool,
 };

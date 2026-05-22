@@ -171,7 +171,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="main-content">
-      <div className="greetings-card">
+      <div className="data-card greetings-card">
         <div className="message-container">
           <div className="greetings-message">
             <span>Good Day, </span>
@@ -186,29 +186,31 @@ const AdminDashboard = () => {
         <TimeDate />
       </div>
 
-      <div className="user-track-container">
-        <div className="metrics-card">
-          <div className="metrics-title">
-            <p>Total Employees</p>
+      <div className="data-card-container">
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total employees</div>
+            <div className="data-value">{employeeData.length}</div>
           </div>
-          <div className="metrics-value">{employeeData.length}</div>
         </div>
-        <div className="metrics-card">
-          <div className="metrics-title">
-            <p>Total Employees Timed In</p>
+
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total employees timed in</div>
+            <div className="data-value">{timedInCount}</div>
           </div>
-          <div className="metrics-value">{timedInCount}</div>
         </div>
-        <div className="metrics-card">
-          <div className="metrics-title">
-            <p>Total Employees Timed Out</p>
+
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total employees timed out</div>
+            <div className="data-value">{timedOutCount}</div>
           </div>
-          <div className="metrics-value">{timedOutCount}</div>
         </div>
       </div>
 
-      <div className="user-track-container">
-        <div className="user-track">
+      <div className="data-card-container">
+        <div className="data-card">
           <div className="user-track-title">
             <p>Recent Transaction</p>
             <div className="dots-button-container">
@@ -293,7 +295,8 @@ const AdminDashboard = () => {
             )}
           </div>
         </div>
-        <div className="user-track">
+
+        <div className="data-card">
           <div className="user-track-title">
             <p>Today&apos;s Attendance</p>
           </div>
@@ -301,7 +304,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="user-track">
+      <div className="metrics-card">
         <div className="user-track-title">
           <p>Calendar</p>
           <div className="dots-button-container">

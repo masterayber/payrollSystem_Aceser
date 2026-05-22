@@ -171,8 +171,10 @@
 }
 
 .today {
-  border: 2px solid var(--main-color-1);
-  font-weight: bolder;
+  border: 2px solid var(--neutral-color-80);
+  outline: 2px solid var(--neutral-color-80);
+  outline-offset: -2px;
+  font-weight: 700;
 }
 
 .selected {

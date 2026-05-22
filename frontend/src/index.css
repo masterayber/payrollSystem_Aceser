@@ -424,35 +424,42 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
-.text-card-container {
+.data-card-container {
   gap: 10px;
   position: relative;
   border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: space-between;
+  overflow: hidden;
+  width: 100%;
 }
 
-.greetings-card,
-.metrics-card {
+.data-card {
   background: #f8fafc;
   border: 1px solid var(--gray-200);
   border-radius: 1rem;
   padding: 1rem;
-  transition: all 0.2s ease;
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  gap: 10px;
 }
 
-.metrics-card {
+.greetings-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.greetings-card,
+.message-container {
   flex: 1;
 }
 
-.greetings-card:hover,
-.metrics-card:hover {
-  border-color: var(--gray-200);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
-.metrics-title {
+.data-title {
   margin: 0;
   color: var(--main-color-1);
   font-size: 12px;
@@ -461,7 +468,7 @@ input:checked + .slider:before {
   letter-spacing: 0.5px;
 }
 
-.metrics-value {
+.data-value {
   display: block;
   margin-top: 1rem;
   font-size: 2rem;
