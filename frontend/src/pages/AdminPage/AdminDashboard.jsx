@@ -18,6 +18,7 @@ const AdminDashboard = () => {
 
   const [showDailyDropdown, setShowDailyDropdown] = useState(false);
   const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
+  const [showPayrollDropdown, setShowPayrollDropdown] = useState(false);
   const [showPendingDropdown, setShowPendingDropdown] = useState(false);
   const [timedInCount, setTimedInCount] = useState(0);
   const [timedOutCount, setTimedOutCount] = useState(0);
@@ -31,6 +32,8 @@ const AdminDashboard = () => {
   const dailySvgRef = useRef(null);
   const calendarDropdownRef = useRef(null);
   const calendarSvgRef = useRef(null);
+  const payrollDropdownRef = useRef(null);
+  const payrollSvgRef = useRef(null);
   const pendingDropdownRef = useRef(null);
   const pendingSvgRef = useRef(null);
 
@@ -42,6 +45,11 @@ const AdminDashboard = () => {
   const toggleCalendarDropdown = (event) => {
     event.stopPropagation();
     setShowCalendarDropdown((prev) => !prev);
+  };
+
+  const togglePayrollDropdown = (event) => {
+    event.stopPropagation();
+    setShowPayrollDropdown((prev) => !prev);
   };
 
   const togglePendingDropdown = (event) => {
@@ -143,6 +151,16 @@ const AdminDashboard = () => {
       }
 
       if (
+        showPayrollDropdown &&
+        payrollDropdownRef.current &&
+        !payrollDropdownRef.current.contains(event.target) &&
+        payrollSvgRef.current &&
+        !payrollSvgRef.current.contains(event.target)
+      ) {
+        setShowPayrollDropdown(false);
+      }
+
+      if (
         showPendingDropdown &&
         pendingDropdownRef.current &&
         !pendingDropdownRef.current.contains(event.target) &&
@@ -153,7 +171,12 @@ const AdminDashboard = () => {
       }
     };
 
-    if (showDailyDropdown || showCalendarDropdown || showPendingDropdown) {
+    if (
+      showDailyDropdown ||
+      showCalendarDropdown ||
+      showPayrollDropdown ||
+      showPendingDropdown
+    ) {
       document.addEventListener("click", handleClickOutside);
     }
 
@@ -304,7 +327,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="metrics-card">
+      <div className="data-card">
         <div className="user-track-title">
           <p>Calendar</p>
           <div className="dots-button-container">
@@ -329,11 +352,29 @@ const AdminDashboard = () => {
         <Calendar />
       </div>
 
-      <div className="table-container">
-        <div className="table-title">
+      <div className="data-card">
+        <div className="user-track-title">
           <p>Payroll Summary</p>
-          <IconDotsVertical />
+          <div className="dots-button-container">
+            <IconDotsVertical
+              stroke={2}
+              onClick={togglePayrollDropdown}
+              ref={payrollSvgRef}
+              className="dots-button"
+            />
+            {showPayrollDropdown && (
+              <div className="dropdown-details" ref={payrollDropdownRef}>
+                <button
+                  className="dropdown-item-details"
+                  onClick={() => navigate("admin-payroll")}
+                >
+                  View Details
+                </button>
+              </div>
+            )}
+          </div>
         </div>
+
         <div className="table">
           <div className="table-header">
             <article className="table-header-container">
@@ -397,8 +438,8 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="table-container">
-        <div className="table-title">
+      <div className="data-card">
+        <div className="user-track-title">
           <p>Pending Users</p>
           <div className="dots-button-container">
             <IconDotsVertical
@@ -419,6 +460,7 @@ const AdminDashboard = () => {
             )}
           </div>
         </div>
+
         <div className="table">
           <div className="table-header">
             <article className="table-header-container">

@@ -17,7 +17,7 @@ const Pagination = ({
   return (
     <div className={`pagination ${className}`}>
       <button
-        className="pagination-button"
+        className="btn pagination-button"
         onClick={handlePrev}
         disabled={currentPage === 1}
       >
@@ -29,7 +29,7 @@ const Pagination = ({
       </span>
 
       <button
-        className="pagination-button"
+        className="btn pagination-button"
         onClick={handleNext}
         disabled={currentPage === totalPages}
       >

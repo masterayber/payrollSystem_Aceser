@@ -15,6 +15,7 @@ import ApproveEmployeeModal from "../../components/Modals/Approve/ApproveEmploye
 import "../../styles/AdminCSS/Employees.css";
 import ConfirmModal from "../../components/Modals/Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../../components/Modals/Confirmed/ConfirmedMessageModal";
+import Pagination from "../../components/Pagination/Pagination";
 
 const Employees = () => {
   const { employeeData, setEmployeeData } = useContext(EmployeeContext);
@@ -107,25 +108,27 @@ const Employees = () => {
 
   return (
     <div className="main-content">
-      <div className="user-track-container">
-        <div className="metrics-card">
-          <div className="metrics-title">
-            <p>Total Employees</p>
+      <div className="data-card-container">
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total employees</div>
+            <div className="data-value">{employeeData.length}</div>
           </div>
-          <span className="metrics-value">{employeeData.length}</span>
         </div>
-        <div className="metrics-card">
-          <div className="metrics-title">
-            <p>Total Regural Employees</p>
+
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total Regural Employees</div>
+            <div className="data-value">{regularCount}</div>
           </div>
-          <span className="metrics-value">{regularCount}</span>
         </div>
-        <div className="metrics-card">
-          <div className="metrics-title">
-            <p>Total Probationary Employees</p>
+
+        <dic className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total Probationary Employees</div>
+            <div className="data-value">{probationaryCount}</div>
           </div>
-          <span className="metrics-value">{probationaryCount}</span>
-        </div>
+        </dic>
       </div>
 
       <div className="search-container">
@@ -144,21 +147,28 @@ const Employees = () => {
         />
       </div>
 
-      <div className="tooltip-container">
-        <button className="tooltip-button" onClick={() => handleAddClick()}>
+      <div className="buttons-container">
+        <button type="button" className="btn" onClick={() => handleAddClick()}>
           <IconPlus stroke={2} />
           Add Employee
         </button>
+
         <button
-          className="tooltip-button"
+          type="button"
+          className="btn"
           onClick={() => setEditMode(!editMode)}
         >
           {editMode ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
           {editMode ? "Cancel" : "Edit Employee"}
         </button>
-        <button className="tooltip-button" onClick={() => handleApproveClick()}>
+
+        <button
+          type="button"
+          className="btn"
+          onClick={() => handleApproveClick()}
+        >
           <IconProgressCheck stroke={2} />
-          Approve Employee
+          Approve Employees
         </button>
       </div>
 
@@ -261,28 +271,7 @@ const Employees = () => {
         <p className="no-data">No employees found.</p>
       )}
 
-      <div className="pagination">
-        <button
-          className="pagination-button"
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        <span>
-          {" "}
-          Page {currentPage} of {totalPages}{" "}
-        </span>
-        <button
-          className="pagination-button"
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
+      <Pagination currentPage={currentPage} totalPages={totalPages} />
 
       {isAddModalOpen && (
         <AddEmployeeModal

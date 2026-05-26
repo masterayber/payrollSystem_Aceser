@@ -185,10 +185,12 @@ function Header({ role }) {
           {showDropDown && (
             <div className="dropdown-overlay" ref={dropdownRef}>
               <p>{fullName}</p>
-              <button className="dropdown-item">Profile</button>
-              <button className="dropdown-item">Settings</button>
-              <button className="dropdown-item">About</button>
-              <button className="dropdown-item-logout" onClick={handleLogout}>
+              <div className="dropdown-options">
+                <button className="dropdown-item">Profile</button>
+                <button className="dropdown-item">Settings</button>
+                <button className="dropdown-item">About</button>
+              </div>
+              <button className="btn" onClick={handleLogout}>
                 Log Out
               </button>
             </div>

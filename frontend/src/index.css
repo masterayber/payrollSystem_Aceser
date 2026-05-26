@@ -10,9 +10,9 @@
 
 /*Root Variables*/
 :root {
-  --default-button-color: #591fce;
-  --hover-button-color: #9064e8;
-  --pressed-button-color: #30116f;
+  --default-button-color: #1e40af;
+  --hover-button-color: #1e3a8a;
+  --pressed-button-color: #172f67;
 
   --main-color-1: #0c9cee;
   --main-color-2: #591fce;
@@ -85,27 +85,32 @@ a:hover {
   color: var(--main-color-2);
 }
 
-button {
+.btn {
+  background-color: var(--default-button-color);
+  color: #ffffff;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
   display: flex;
   align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: var(--border-radius);
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  background-color: var(--default-button-color);
-  color: #fff;
-  transition: background-color 0.3s ease;
+  gap: 8px;
 }
 
-button:hover {
+.btn:hover:not(:disabled) {
   background-color: var(--hover-button-color);
+  box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
+  transform: translateY(-1px);
 }
 
-button:active {
+.btn:active:not(:disabled) {
   background-color: var(--pressed-button-color);
+  box-shadow: 0 2px 4px rgba(30, 64, 175, 0.1);
+  transform: translateY(1px);
 }
 
 h2 {
@@ -256,12 +261,13 @@ h3 {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   width: fit-content;
+  gap: 15px;
   height: auto;
   flex-direction: column;
   justify-content: center;
   z-index: 1;
   align-items: center;
-  padding: 15px 40px;
+  padding: 20px 40px;
   display: flex;
   margin-top: 8px;
 }
@@ -269,7 +275,6 @@ h3 {
 .dropdown-overlay p {
   font-size: 20px;
   color: var(--neutral-color-100);
-  margin-bottom: 20px;
   white-space: nowrap;
 }
 
@@ -278,15 +283,24 @@ h3 {
   background: none;
   border: none;
   width: 100%;
-  padding: 10px;
-  font-size: 18px;
+  padding: 12px;
+  font-size: 16px;
   color: var(--neutral-color-100);
+  font-weight: 500;
   cursor: pointer;
+  display: block;
+  text-align: center;
+  box-shadow: none;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
 }
 
 .dropdown-item:hover,
 .dropdown-item-details:hover {
   background-color: var(--gray-200);
+  transform: none;
+  box-shadow: none;
 }
 
 /* Log Out Button */

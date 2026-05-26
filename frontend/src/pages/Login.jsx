@@ -8,7 +8,7 @@ import {
   IconEye,
   IconEyeClosed,
 } from "@tabler/icons-react";
-import "../styles/Login.css"; //Importing CSS file
+import "../styles/Login.css";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -61,12 +61,7 @@ const Login = () => {
         <h2>Log In Portal</h2>
         <div className="input-group">
           <span className="icon-container">
-            <IconUserFilled
-              stroke={2}
-              width={24}
-              height={24}
-              className="icon"
-            />
+            <IconUserFilled stroke={2} className="icon" />
           </span>
           <input
             type="text"
@@ -78,12 +73,7 @@ const Login = () => {
         </div>
         <div className="input-group">
           <span className="icon-container">
-            <IconLockFilled
-              stroke={2}
-              width={24}
-              height={24}
-              className="icon"
-            />
+            <IconLockFilled stroke={2} className="icon" />
           </span>
           <input
             type={showPassword ? "text" : "password"}
@@ -108,12 +98,7 @@ const Login = () => {
                 />
               ) : (
                 // Closed Eye Icon
-                <IconEyeClosed
-                  stroke={2}
-                  width={20}
-                  height={20}
-                  className="toggle-password"
-                />
+                <IconEyeClosed stroke={2} className="toggle-password" />
               )}
             </button>
           </span>
@@ -127,7 +112,7 @@ const Login = () => {
           </Link>
         </div>
 
-        <button type="submit" className="login-button">
+        <button type="submit" className="btn login-button">
           Log in
         </button>
       </form>
