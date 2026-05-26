@@ -16,29 +16,31 @@ const AdminPayslips = () => {
 
   const filteredEmployees = employeeData.filter((employee) =>
     Object.values(employee).some((value) =>
-      value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-    )
+      value.toString().toLowerCase().includes(searchQuery.toLowerCase()),
+    ),
   );
 
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentEmployees = filteredEmployees.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   return (
     <div className="main-content">
-      <div className="user-track-container">
-        <div className="user-track">
-          <p>Total Employees</p>
-          <span className="user-number">177</span>
+      <div className="data-card-container">
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total Employees</div>
+            <div className="data-value">{employeeData.length}</div>
+          </div>
         </div>
-        <div className="user-track">
-          <p>Next Pay Date</p>
-          <div className="total-user-track">
-            <span className="user-number">5</span>
-            <span className="user-text">days</span>
+
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Next Payroll Date</div>
+            <div className="data-value">5 days</div>
           </div>
         </div>
       </div>
@@ -115,10 +117,10 @@ const AdminPayslips = () => {
                 <p>{employee.netPay}</p>
               </article>
               <article className="table-content-container">
-                <button className="action-button">
+                <button className="btn action-button">
                   <IconEye stroke={2} />
                 </button>
-                <button className="action-button">
+                <button className="btn action-button">
                   <IconDownload stroke={2} />
                 </button>
               </article>
