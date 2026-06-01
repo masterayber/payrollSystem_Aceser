@@ -267,10 +267,10 @@ const AdminAttendance = () => {
         </div>
       </div>
 
-      <div className="table-container">
-        <div className="table-title">
+      <div className="data-card">
+        <div className="user-track-title">
           <p>
-            Daily Attendance Log (
+            Daily Attendance (
             {selectedDate.toLocaleDateString("en-US", {
               month: "long",
               day: "numeric",
@@ -279,6 +279,7 @@ const AdminAttendance = () => {
             )
           </p>
         </div>
+
         <div className="table">
           <div className="table-header">
             <article className="table-header-container">
