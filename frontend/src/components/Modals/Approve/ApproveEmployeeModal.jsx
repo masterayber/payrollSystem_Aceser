@@ -15,7 +15,7 @@ const ApproveEmployeeModal = ({ onClose, onUpdateEmployee }) => {
     const fetchPendingUsers = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/auth/pending-users"
+          "http://localhost:5000/api/auth/pending-users",
         );
         const data = await response.json();
         setPendingUsers(data);
@@ -37,7 +37,7 @@ const ApproveEmployeeModal = ({ onClose, onUpdateEmployee }) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ status: "Active" }),
-        }
+        },
       );
 
       if (response.ok) {
@@ -103,7 +103,7 @@ const ApproveEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                 </article>
                 <article className="table-content-container">
                   <button
-                    className="approve-button"
+                    className="btn approve-button"
                     onClick={() => handleConfirmApprove(user)}
                   >
                     Approve
@@ -117,7 +117,7 @@ const ApproveEmployeeModal = ({ onClose, onUpdateEmployee }) => {
         </div>
 
         <div className="modal-buttons">
-          <button onClick={onClose} className="modal-button">
+          <button onClick={onClose} className="btn modal-button">
             Close
           </button>
         </div>

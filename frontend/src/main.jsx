@@ -16,6 +16,7 @@ import Deductions from "./pages/AdminPage/Deductions";
 import AdminPayslips from "./pages/AdminPage/AdminPayslips";
 import AdminAttendance from "./pages/AdminPage/AdminAttendance";
 import AdminCalendar from "./pages/AdminPage/AdminCalendar";
+import AdminFiling from "./pages/AdminPage/AdminFiling";
 import Reports from "./pages/AdminPage/Reports";
 import AdminSettings from "./pages/AdminPage/AdminSettings";
 
@@ -116,6 +117,16 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                       <PrivateRoute allowedRoles={["Admin"]}>
                         <MainLayout>
                           <AdminCalendar />
+                        </MainLayout>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="admin-filing"
+                    element={
+                      <PrivateRoute allowedRoles={["Admin"]}>
+                        <MainLayout>
+                          <AdminFiling />
                         </MainLayout>
                       </PrivateRoute>
                     }

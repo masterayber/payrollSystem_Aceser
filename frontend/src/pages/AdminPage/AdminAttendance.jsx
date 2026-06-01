@@ -2,16 +2,12 @@ import { useState, useRef, useContext, useEffect } from "react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import {
-  IconSearch,
-  IconDotsVertical,
-  IconCalendarClock,
-  IconEdit,
-} from "@tabler/icons-react";
+import { IconSearch, IconCalendarClock, IconEdit } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import { AttendanceContext } from "../../context/AttendanceContext";
 import EditEmployeeAttendanceModal from "../../components/Modals/EditEmployee/EditEmployeeAttendanceModal";
 import "../../styles/AdminCSS/AdminAttendance.css";
+import Pagination from "../../components/Pagination/Pagination";
 
 const AdminAttendance = () => {
   const { employeeData } = useContext(EmployeeContext);
@@ -33,40 +29,44 @@ const AdminAttendance = () => {
 
   const formatDate = (date) => date.toISOString().split("T")[0];
 
+  const isToday = (date) => formatDate(date) === formatDate(new Date());
+  const isFuture = (date) => formatDate(date) > formatDate(new Date());
+
   const calculateBehavior = (timeIn, timeOut, isBeforeHired) => {
-    const today = formatDate(selectedDate);
-    const dayOfWeek = new Date(today).getDay();
+    const selected = formatDate(selectedDate);
+    const dayOfWeek = new Date(selected).getDay();
+    const shiftStart = new Date(`${selected}T08:00:00`);
+    const shiftEnd = new Date(`${selected}T17:00:00`);
+    const lateThreshold = new Date(shiftStart.getTime() + 1 * 60 * 1000);
+    const now = new Date();
 
     if (isBeforeHired) return "Not Hired Yet";
-    if (dayOfWeek === 0) return "Weekend";
+    if (dayOfWeek === 0 || dayOfWeek === 6) return "Weekend";
 
-    if (dayOfWeek === 6) {
-      if (!timeIn && !timeOut) return "Weekend";
+    if (!timeIn) {
+      if (isFuture(selectedDate)) return "";
+      if (isToday(selectedDate)) {
+        return now >= shiftEnd ? "Absent" : "";
+      }
+      return "Absent";
     }
 
-    if (!timeIn && !timeOut) return "Absent";
-    if (!timeIn) return "No Time In";
-
-    const timeInDate = new Date(`${today}T${timeIn}`);
-    const shiftStart = new Date(`${today}T08:00:00`);
-    const shiftEnd = new Date(`${today}T17:00:00`);
-    const lateThreshold = new Date(shiftStart.getTime() + 1 * 60 * 1000);
+    const timeInDate = new Date(`${selected}T${timeIn}`);
 
     if (!timeOut) {
       const inDateStr = timeInDate.toISOString().split("T")[0];
-      if (inDateStr === today) return "On-time";
-      else return "No Time Out";
+      if (inDateStr === selected) return "On-time";
+      return "No Time Out";
     }
 
-    const timeOutDate = new Date(`${today}T${timeOut}`);
-
-    const halfDayMorningOut = new Date(`${today}T13:00:00`);
+    const timeOutDate = new Date(`${selected}T${timeOut}`);
+    const halfDayMorningOut = new Date(`${selected}T13:00:00`);
     if (timeInDate <= shiftStart && timeOutDate <= halfDayMorningOut) {
       return "Half-Day";
     }
 
-    const halfDayAfternoonInStart = new Date(`${today}T10:00:00`);
-    const halfDayAfternoonInEnd = new Date(`${today}T13:00:00`);
+    const halfDayAfternoonInStart = new Date(`${selected}T10:00:00`);
+    const halfDayAfternoonInEnd = new Date(`${selected}T13:00:00`);
     if (
       timeInDate >= halfDayAfternoonInStart &&
       timeInDate <= halfDayAfternoonInEnd
@@ -78,21 +78,6 @@ const AdminAttendance = () => {
     if (timeOutDate < shiftEnd) return "Early Out";
 
     return "On-Time";
-  };
-
-  const isRecordOnLeave = (record) => {
-    if (!record) return false;
-    const lowerKeys = (s) => (s || "").toString().toLowerCase();
-    if (record.onLeave === true) return true;
-    if (record.leaveType) return true;
-    if (lowerKeys(record.type).includes("leave")) return true;
-    if (
-      lowerKeys(record.status) === "approved" &&
-      !record.timeIn &&
-      !record.timeOut
-    )
-      return true;
-    return false;
   };
 
   useEffect(() => {
@@ -126,14 +111,29 @@ const AdminAttendance = () => {
       const isBeforeHired = new Date(selected) < new Date(createdDate);
 
       const attendanceRecord = getAttendanceForEmployee(employee._id);
+      const isWeekend = [0, 6].includes(new Date(selected).getDay());
+      const isFutureDate = selected > formatDate(new Date());
+
+      const timeIn = isBeforeHired
+        ? "--:--"
+        : isWeekend
+          ? ""
+          : attendanceRecord?.timeIn || "";
+      const timeOut = isBeforeHired
+        ? "--:--"
+        : isWeekend
+          ? ""
+          : attendanceRecord?.timeIn
+            ? attendanceRecord?.timeOut || (isFutureDate ? "" : "No Record")
+            : "";
 
       return {
         id: employee.employeeId,
         firstName: employee.firstName,
         lastName: employee.lastName,
         date: employee.date,
-        timeIn: isBeforeHired ? "--:--:--" : attendanceRecord?.timeIn || "",
-        timeOut: isBeforeHired ? "--:--:--" : attendanceRecord?.timeOut || "",
+        timeIn,
+        timeOut,
         isBeforeHired,
         attendanceRecord,
       };
@@ -166,12 +166,10 @@ const AdminAttendance = () => {
   };
   return (
     <div className="main-content">
-      <div className="user-track-container">
-        <div className="metrics-card">
-          <div className="metrics-title">
-            <p>On-Time</p>
-          </div>
-          <span className="metrics-value">
+      <div className="data-card-container">
+        <div className="data-card">
+          <div className="data-title">On-Time</div>
+          <div className="data-value">
             {
               filteredEmployees.filter(
                 (emp) =>
@@ -182,127 +180,56 @@ const AdminAttendance = () => {
                   ) === "On-Time",
               ).length
             }
-          </span>
+          </div>
         </div>
 
-        <div className="metrics-card">
-          <div className="metrics-title">
-            <p>Late</p>
-          </div>
-          <span className="metrics-value">
+        <div className="data-card">
+          <div className="data-title">Late</div>
+          <div className="data-value">
             {
               filteredEmployees.filter(
                 (emp) => calculateBehavior(emp.timeIn, emp.timeOut) === "Late",
               ).length
             }
-          </span>
+          </div>
         </div>
 
-        <div className="metrics-card">
-          <div className="metrics-title">
-            <p>Half-Day</p>
-          </div>
-          <span className="metric-value">
+        <div className="data-card">
+          <div className="data-title">Half-Day</div>
+          <div className="data-value">
             {
               filteredEmployees.filter(
                 (emp) =>
                   calculateBehavior(emp.timeIn, emp.timeOut) === "Half-Day",
               ).length
             }
-          </span>
+          </div>
         </div>
 
-        <div className="metrics-card">
-          <div className="metrics-title">
-            <p>Absent</p>
-          </div>
-          <span className="metrics-value">
+        <div className="data-card">
+          <div className="data-title">Absent</div>
+          <div className="data-value">
             {
               filteredEmployees.filter(
                 (emp) =>
                   calculateBehavior(emp.timeIn, emp.timeOut) === "Absent",
               ).length
             }
-          </span>
+          </div>
         </div>
 
-        <div className="metrics-card">
-          <div className="metrics-title">
-            <p>On-Leave</p>
-          </div>
-          <span className="metrics-value">
+        <div className="data-card">
+          <div className="data-title">On-Leave</div>
+          <div className="data-value">
             {
-              filteredEmployees.filter((emp) =>
-                isRecordOnLeave(emp.attendanceRecord),
+              filteredEmployees.filter(
+                (emp) =>
+                  calculateBehavior(emp.timeIn, emp.timeOut) === "On-Leave",
               ).length
             }
-          </span>
-        </div>
-      </div>
-
-      <div className="table-container">
-        <div className="table-title">
-          <p>Leave Monitoring</p>
-          <div className="dots-button-container">
-            <IconDotsVertical stroke={2} className="dots-button" />
           </div>
         </div>
-        <div className="table">
-          <div className="table-header">
-            <article className="table-header-container">
-              <p>Employee Name</p>
-            </article>
-            <hr className="header-hr"></hr>
-            <article className="table-header-container">
-              <p>Date</p>
-            </article>
-            <hr className="header-hr"></hr>
-            <article className="table-header-container">
-              <p>Type</p>
-            </article>
-            <hr className="header-hr"></hr>
-            <article className="table-header-container">
-              <p>Action</p>
-            </article>
-          </div>
-          {/* Leave entries */}
-          {(
-            filteredEmployees.filter((emp) =>
-              isRecordOnLeave(emp.attendanceRecord),
-            ) || []
-          ).map((emp, idx) => {
-            const rec = emp.attendanceRecord || {};
-            const displayDate = rec.date
-              ? formatDate(new Date(rec.date))
-              : formatDate(selectedDate);
-            const leaveType = rec.leaveType || rec.type || "Leave";
-            return (
-              <div className="table-content" key={idx}>
-                <article className="table-content-container">
-                  <p>
-                    {emp.lastName}, {emp.firstName}
-                  </p>
-                </article>
-                <article className="table-content-container">
-                  <p>{displayDate}</p>
-                </article>
-                <article className="table-content-container">
-                  <p>{leaveType}</p>
-                </article>
-                <article className="table-content-container">
-                  <button
-                    className="action-button"
-                    onClick={() => handleEditClick(emp)}
-                  >
-                    <IconEdit stroke={2} />
-                  </button>
-                </article>
-              </div>
-            );
-          })}
-        </div>
       </div>
-
       <div className="table-tooltip">
         <div className="search-container">
           <span className="icon-container">
@@ -394,10 +321,10 @@ const AdminAttendance = () => {
                 <p>{employeeData.firstName}</p>
               </article>
               <article className="table-content-container">
-                <p>{employeeData.timeIn || "No Record"}</p>
+                <p>{employeeData.timeIn}</p>
               </article>
               <article className="table-content-container">
-                <p>{employeeData.timeOut || "No Record"}</p>
+                <p>{employeeData.timeOut}</p>
               </article>
               <article className="table-content-container">
                 <p>
@@ -410,7 +337,7 @@ const AdminAttendance = () => {
               </article>
               <article className="table-content-container">
                 <button
-                  className="action-button"
+                  className="btn action-button"
                   onClick={() => handleEditClick(employeeData)}
                 >
                   <IconEdit stroke={2} />
@@ -421,34 +348,13 @@ const AdminAttendance = () => {
         </div>
 
         {filteredEmployees.length === 0 && (
-          <p className="no-results">
+          <p className="no-data">
             No employees found for {formatDate(selectedDate)}.
           </p>
         )}
       </div>
 
-      <div className="pagination">
-        <button
-          className="pagination-button"
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        <span>
-          {" "}
-          Page {currentPage} of {totalPages}{" "}
-        </span>
-        <button
-          className="pagination-button"
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
+      <Pagination totalPages={totalPages} currentPage={currentPage} />
 
       {isEditModalOpen && selectedEmployee && (
         <EditEmployeeAttendanceModal

@@ -198,28 +198,30 @@ const CalendarComponent = ({
         </tbody>
       </table>
 
-      <div className="calendar-legend">
-        <div className="legend-item">
-          <div className="legend-badge present"></div>
-          <span>Present</span>
+      {!isAdmin && (
+        <div className="calendar-legend">
+          <div className="legend-item">
+            <div className="legend-badge present"></div>
+            <span>Present</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-badge late"></div>
+            <span>Late</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-badge absent"></div>
+            <span>Absent</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-badge leave"></div>
+            <span>Leave</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-badge half-day"></div>
+            <span>Half-Day</span>
+          </div>
         </div>
-        <div className="legend-item">
-          <div className="legend-badge late"></div>
-          <span>Late</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-badge absent"></div>
-          <span>Absent</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-badge leave"></div>
-          <span>Leave</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-badge half-day"></div>
-          <span>Half-Day</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

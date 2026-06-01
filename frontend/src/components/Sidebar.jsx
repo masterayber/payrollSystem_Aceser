@@ -86,6 +86,11 @@ function Sidebar({ role }) {
       icon: <IconCalendarMonth stroke={1.75} />,
     },
     {
+      name: "Filing",
+      path: "/admin-filing",
+      icon: <IconFiles stroke={1.75} />,
+    },
+    {
       name: "Reports",
       path: "/reports",
       icon: <IconGraph stroke={1.75} />,

@@ -27,10 +27,10 @@ const DeleteModal = ({
         </div>
 
         <div className="modal-buttons">
-          <button onClick={onClose} className="modal-button">
+          <button onClick={onClose} className="btn modal-button">
             {cancelText}
           </button>
-          <button onClick={onConfirm} className="modal-button">
+          <button onClick={onConfirm} className="btn modal-button">
             {confirmText}
           </button>
         </div>

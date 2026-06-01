@@ -349,7 +349,7 @@ const AdminDashboard = () => {
             )}
           </div>
         </div>
-        <Calendar />
+        <Calendar isAdmin />
       </div>
 
       <div className="data-card">

@@ -6,6 +6,7 @@ import {
   IconDotsVertical,
 } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
+import Pagination from "../../components/Pagination/Pagination";
 
 const AdminPayslips = () => {
   const { employeeData } = useContext(EmployeeContext);
@@ -133,28 +134,7 @@ const AdminPayslips = () => {
         )}
       </div>
 
-      <div className="pagination">
-        <button
-          className="pagination-button"
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        <span>
-          {" "}
-          Page {currentPage} of {totalPages}{" "}
-        </span>
-        <button
-          className="pagination-button"
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
+      <Pagination totalPages={totalPages} currentPage={currentPage} />
     </div>
   );
 };

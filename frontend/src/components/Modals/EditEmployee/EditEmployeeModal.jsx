@@ -6,11 +6,13 @@ import PropTypes from "prop-types";
 import ConfirmModal from "../Confirm/ConfirmModal";
 import CancelModal from "../Cancel/CancelModal";
 import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
-import { IconCancel, IconCheck } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCancel, IconCheck } from "@tabler/icons-react";
+import DeleteModal from "../Delete/DeleteModal";
 
 const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -127,6 +129,10 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
     }
   };
 
+  const handleDeleteClick = () => {
+    setIsDeleteModalOpen(true);
+  };
+
   const handleConfirmClick = async () => {
     if (
       !editEmployee.firstName.trim() ||
@@ -149,7 +155,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
             employeeId: editEmployee.employeeId,
             excludeId: editEmployee._id,
           }),
-        }
+        },
       );
       const data = await res.json();
       let errorMsg = "";
@@ -170,6 +176,28 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   const handleCancel = () => {
     setIsCancelModalOpen(false);
     onClose();
+  };
+
+  const handleDeleteEmployee = async () => {
+    setIsDeleteModalOpen(false);
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/auth/delete-employee/${editEmployee.employeeId}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+
+      if (!response.ok) throw new Error("Failed to delete employee");
+
+      if (onUpdateEmployee) await onUpdateEmployee();
+
+      setTimeout(() => setIsConfirmedModalOpen(true), 300);
+    } catch (error) {
+      console.error("Error deleting employee", error);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -196,7 +224,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -331,7 +359,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                   <>
                     <button
                       type="button"
-                      className="reset-password"
+                      className="btn reset-password"
                       style={{ padding: "10px" }}
                       onClick={() => {
                         setIsPasswordResetOpen(false);
@@ -342,7 +370,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                     </button>
                     <button
                       type="button"
-                      className="reset-password"
+                      className="btn reset-password"
                       style={{ padding: "10px" }}
                       onClick={() => {
                         setIsPasswordResetOpen(false);
@@ -354,7 +382,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                 ) : (
                   <button
                     type="button"
-                    className="reset-password"
+                    className="btn reset-password"
                     onClick={() => setIsPasswordResetOpen(true)}
                   >
                     Reset Password
@@ -493,14 +521,23 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
             <button
               type="button"
               onClick={handleCancelClick}
-              className="modal-button"
+              className="btn modal-button"
             >
               Cancel
             </button>
+
+            <button
+              type="button"
+              onClick={handleDeleteClick}
+              className="btn modal-button"
+            >
+              Delete Employee
+            </button>
+
             <button
               type="button"
               onClick={handleConfirmClick}
-              className={`modal-button ${!hasChanges ? "disabled" : ""}`}
+              className={`btn modal-button ${!hasChanges ? "disabled" : ""}`}
               disabled={!hasChanges}
             >
               Save Changes
@@ -517,6 +554,34 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
           onConfirm={handleCancel}
           cancelText="No"
           confirmText="Yes, Cancel"
+        />
+      )}
+
+      {isDeleteModalOpen && (
+        <DeleteModal
+          title="Delete Employee"
+          message={
+            <div className="alert-icon">
+              <IconAlertTriangle
+                strokeWidth={2}
+                width={75}
+                height={75}
+                color="Red"
+              />
+              <p>
+                Are you sure you want to delete
+                <b>
+                  {" "}
+                  {editEmployee.firstName} {editEmployee.lastName}
+                </b>{" "}
+                as an employee? This action cannot be undone.
+              </p>
+            </div>
+          }
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDeleteEmployee}
+          cancelText="No"
+          confirmText="Yes, Delete"
         />
       )}
 
@@ -542,7 +607,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
         />
       )}
     </div>,
-    document.body
+    document.body,
   );
 };
 

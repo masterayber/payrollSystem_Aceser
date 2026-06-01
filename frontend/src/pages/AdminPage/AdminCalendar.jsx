@@ -5,7 +5,7 @@ const AdminCalendar = () => {
   return (
     <div className="main-content">
       <div className="table-container">
-        <CalendarComponent />
+        <CalendarComponent isAdmin />
       </div>
       <div className="table-row-container">
         <div className="table-row">
