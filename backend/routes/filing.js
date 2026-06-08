@@ -9,8 +9,40 @@ const auth = require("../middleware/authMiddleware");
 const router = express.Router();
 
 router.get("/", auth, async (req, res) => {
-  if (!req.user.isAdmin) return res.status(400).json({ msg: "Access Denied" });
-  const apps = await LeaveApplication.find().populate("userId", "name email");
+  if (req.user.role !== "Admin")
+    return res.status(400).json({ msg: "Access Denied" });
+
+  const apps = await LeaveApplication.aggregate([
+    {
+      $lookup: {
+        from: "employees",
+        localField: "userId",
+        foreignField: "userId",
+        as: "employee",
+      },
+    },
+    {
+      $unwind: {
+        path: "$employee",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        leaveType: 1,
+        leaveDetails: 1,
+        startDate: 1,
+        endDate: 1,
+        status: 1,
+        appliedAt: 1,
+        employeeFirstName: "$employee.firstName",
+        employeeLastName: "$employee.lastName",
+        employeeEmail: "$employee.email",
+      },
+    },
+    { $sort: { appliedAt: -1 } },
+  ]);
+
   res.json(apps);
 });
 
@@ -94,7 +126,8 @@ router.delete("/leave/:id", auth, async (req, res) => {
 });
 
 router.patch("/:id/status", auth, async (req, res) => {
-  if (!req.user.isAdmin) return res.status(400).json({ msg: "Access Denied" });
+  if (req.user.role !== "Admin")
+    return res.status(400).json({ msg: "Access Denied" });
   const { status } = req.body;
   const app = await LeaveApplication.findByIdAndUpdate(
     req.params.id,
@@ -251,6 +284,56 @@ router.delete("/overtime/:id", auth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+router.get("/overtime", auth, async (req, res) => {
+  if (req.user.role !== "Admin")
+    return res.status(400).json({ msg: "Access Denied" });
+
+  const apps = await OvertimeApplication.aggregate([
+    {
+      $lookup: {
+        from: "employees",
+        localField: "userId",
+        foreignField: "userId",
+        as: "employee",
+      },
+    },
+    {
+      $unwind: {
+        path: "$employee",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        selectedOvertime: 1,
+        overtimeDetails: 1,
+        start: 1,
+        end: 1,
+        status: 1,
+        appliedAt: 1,
+        employeeFirstName: "$employee.firstName",
+        employeeLastName: "$employee.lastName",
+        employeeEmail: "$employee.email",
+      },
+    },
+    { $sort: { appliedAt: -1 } },
+  ]);
+
+  res.json(apps);
+});
+
+router.patch("/overtime/:id/status", auth, async (req, res) => {
+  if (req.user.role !== "Admin")
+    return res.status(400).json({ msg: "Access Denied" });
+  const { status } = req.body;
+  const app = await OvertimeApplication.findByIdAndUpdate(
+    req.params.id,
+    { status },
+    { new: true },
+  );
+  res.json(app);
 });
 
 module.exports = router;

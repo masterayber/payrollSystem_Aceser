@@ -255,14 +255,14 @@ const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
             <button
               type="button"
               onClick={handleCancelClick}
-              className="modal-button"
+              className="btn modal-button"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleConfirmClick}
-              className={`modal-button ${!hasChanges ? "disabled" : ""}`}
+              className={`btn modal-button ${!hasChanges ? "disabled" : ""}`}
               disabled={!hasChanges || !isFormValid()}
             >
               {isEdit ? "Save Changes" : "Apply"}
