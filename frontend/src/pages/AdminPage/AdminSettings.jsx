@@ -33,7 +33,7 @@ const AdminSettings = () => {
   const [selectedOption, setSelectedOption] = useState("general");
   return (
     <div className="main-content">
-      <div className="setting-container">
+      <div className="data-card">
         <div className="setting-options">
           {settingsOptions.map((option) => (
             <button

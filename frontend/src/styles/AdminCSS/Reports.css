@@ -6,7 +6,7 @@
 }
 
 .user-track-description {
-  color: #64748b;
+  color: var(--neutral-color-80);
   font-size: 14px;
   margin: 0 0 1.5rem 0;
 }

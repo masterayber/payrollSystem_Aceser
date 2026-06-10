@@ -106,6 +106,13 @@ const AdminFiling = () => {
     (a, b) => (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99),
   );
 
+  const pendingLeaveCount = leaveRequests.filter(
+    (req) => req.status === "Pending",
+  ).length;
+  const pendingOvertimeCount = overtimeRequests.filter(
+    (req) => req.status === "Pending",
+  ).length;
+
   const closeConfirmed = () => {
     setIsConfirmedModalOpen(false);
   };
@@ -116,14 +123,14 @@ const AdminFiling = () => {
         <div className="data-card">
           <div className="message-container">
             <div className="data-title">Total Leave Requests</div>
-            <div className="data-value">{leaveRequests.length}</div>
+            <div className="data-value">{pendingLeaveCount}</div>
           </div>
         </div>
 
         <div className="data-card">
           <div className="message-container">
             <div className="data-title">Total Overtime Requests</div>
-            <div className="data-value">{overtimeRequests.length}</div>
+            <div className="data-value">{pendingOvertimeCount}</div>
           </div>
         </div>
       </div>
@@ -163,23 +170,11 @@ const AdminFiling = () => {
             </article>
           </div>
           {isLoading ? (
-            <div className="table-content">
-              <article className="table-content-container">
-                <p className="no-data">Loading Leave Requests...</p>
-              </article>
-            </div>
+            <p className="no-data">Loading Leave Requests...</p>
           ) : error ? (
-            <div className="table-content">
-              <article className="table-content-container">
-                <p className="no-data">{error}</p>
-              </article>
-            </div>
+            <p className="no-data">{error}</p>
           ) : leaveRequests.length === 0 ? (
-            <div className="table-content">
-              <article className="table-content-container">
-                <p className="no-data">No leave requests found.</p>
-              </article>
-            </div>
+            <p className="no-data">No leave requests found.</p>
           ) : (
             sortedLeaveRequests.map((request) => (
               <div className="table-content" key={request._id}>
@@ -266,23 +261,11 @@ const AdminFiling = () => {
             </article>
           </div>
           {isLoading ? (
-            <div className="table-content">
-              <article className="table-content-container">
-                <p className="no-data">Loading Overtime Requests...</p>
-              </article>
-            </div>
+            <p className="no-data">Loading Overtime Requests...</p>
           ) : error ? (
-            <div className="table-content">
-              <article className="table-content-container">
-                <p className="no-data">{error}</p>
-              </article>
-            </div>
+            <p className="no-data">{error}</p>
           ) : overtimeRequests.length === 0 ? (
-            <div className="table-content">
-              <article className="table-content-container">
-                <p className="no-data">No Overtime Requests Found.</p>
-              </article>
-            </div>
+            <p className="no-data">No overtime requests found.</p>
           ) : (
             sortedOvertimeRequests.map((request) => (
               <div className="table-content" key={request._id}>

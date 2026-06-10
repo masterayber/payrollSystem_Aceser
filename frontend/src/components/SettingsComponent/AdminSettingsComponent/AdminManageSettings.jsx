@@ -264,14 +264,14 @@ const AdminManageSettings = () => {
                       </article>
                       <article className="table-content-container">
                         <button
-                          className="action-button"
+                          className="btn action-button"
                           onClick={() => handleEditClick(dropdown.key, option)}
                         >
                           <IconEdit stroke={2} />
                           Edit
                         </button>
                         <button
-                          className="action-button"
+                          className="btn action-button"
                           onClick={() =>
                             handleDeleteClick(dropdown.key, option)
                           }
@@ -359,7 +359,7 @@ const AdminManageSettings = () => {
                             </button>
                           </article>
                         </div>
-                      )
+                      ),
                     )
                   )}
                 </div>
@@ -411,16 +411,16 @@ const AdminManageSettings = () => {
               ? confirmAction === "add"
                 ? `Are you sure you want to add ${optionToAdd} to the ${selectedDepartment} department?`
                 : confirmAction === "edit"
-                ? `Are you sure you want to change ${selectedOption} to ${optionToAdd} in the ${selectedDepartment} department?`
-                : `Are you sure you want to delete ${selectedOption} from the ${selectedDepartment} department?`
+                  ? `Are you sure you want to change ${selectedOption} to ${optionToAdd} in the ${selectedDepartment} department?`
+                  : `Are you sure you want to delete ${selectedOption} from the ${selectedDepartment} department?`
               : confirmAction === "add"
-              ? `Are you sure you want to add "${optionToAdd}" as a new ${
-                  DROPDOWN_TYPES.find((d) => d.key === currentDropdownType)
-                    ?.singular
-                }?`
-              : confirmAction === "edit"
-              ? `Are you sure you want to change "${selectedOption}" to "${optionToAdd}"?`
-              : `Are you sure you want to delete "${selectedOption}"?`
+                ? `Are you sure you want to add "${optionToAdd}" as a new ${
+                    DROPDOWN_TYPES.find((d) => d.key === currentDropdownType)
+                      ?.singular
+                  }?`
+                : confirmAction === "edit"
+                  ? `Are you sure you want to change "${selectedOption}" to "${optionToAdd}"?`
+                  : `Are you sure you want to delete "${selectedOption}"?`
           }
           onClose={() => setIsConfirmModalOpen(false)}
           onConfirm={handleConfirmedAction}
@@ -433,21 +433,21 @@ const AdminManageSettings = () => {
             confirmAction === "edit"
               ? "Edited Successfully"
               : confirmAction === "delete"
-              ? "Deleted Successfully"
-              : "Added Successfully"
+                ? "Deleted Successfully"
+                : "Added Successfully"
           }`}
           message={
             currentDropdownType === "positions"
               ? confirmAction === "edit"
                 ? `"${selectedOption}" has been changed to "${optionToAdd}" in the "${selectedDepartment}" department successfully!`
                 : confirmAction === "delete"
-                ? `"${selectedOption}" has been deleted from the "${selectedDepartment}" department successfully!`
-                : `"${optionToAdd}" has been added to the "${selectedDepartment}" department successfully!`
+                  ? `"${selectedOption}" has been deleted from the "${selectedDepartment}" department successfully!`
+                  : `"${optionToAdd}" has been added to the "${selectedDepartment}" department successfully!`
               : confirmAction === "edit"
-              ? `"${selectedOption}" has been changed to "${optionToAdd}" successfully!`
-              : confirmAction === "delete"
-              ? `"${selectedOption}" has been deleted successfully!`
-              : `"${optionToAdd}" has been added successfully!`
+                ? `"${selectedOption}" has been changed to "${optionToAdd}" successfully!`
+                : confirmAction === "delete"
+                  ? `"${selectedOption}" has been deleted successfully!`
+                  : `"${optionToAdd}" has been added successfully!`
           }
           onClose={() => setIsConfirmedMessageModalOpen(false)}
         />

@@ -157,19 +157,26 @@ const Reports = () => {
     }
 
     if (cutoff === "2nd") {
-      const start = `${year}-${String(monthIndex + 1).padStart(2, "0")}-11`;
-      const end = `${year}-${String(monthIndex + 1).padStart(2, "0")}-25`;
+      const nextMonth = monthIndex === 11 ? 0 : monthIndex + 1;
+      const nextYear = monthIndex === 11 ? year + 1 : year;
+      const nextMonthName = months[nextMonth];
+
+      const start = `${year}-${String(monthIndex + 1).padStart(2, "0")}-26`;
+      const end = `${nextYear}-${String(nextMonth + 1).padStart(2, "0")}-10`;
+
       return {
         start,
         end,
         label: `${monthName} ${year} 2nd Cutoff`,
         monthName,
+        nextMonthName,
         cutoff,
       };
     }
 
     const prevMonth = monthIndex === 0 ? 11 : monthIndex - 1;
     const prevYear = monthIndex === 0 ? year - 1 : year;
+    const prevMonthName = months[prevMonth];
     const prevDays = new Date(prevYear, prevMonth + 1, 0).getDate();
     const startDay = Math.min(26, prevDays);
     const start = `${prevYear}-${String(prevMonth + 1).padStart(2, "0")}-${String(startDay).padStart(2, "0")}`;
@@ -177,10 +184,35 @@ const Reports = () => {
     return {
       start,
       end,
-      label: `${monthName} ${year} 1stCutoff`,
+      label: `${monthName} ${year} 1st Cutoff`,
       monthName,
+      prevMonthName,
       cutoff,
     };
+  };
+
+  const getFormattedDateRange = () => {
+    const { start, end, monthName, nextMonthName, prevMonthName } =
+      getDateRange();
+    if (!start || !end) return "";
+
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const startDay = startDate.getDate();
+    const endDay = endDate.getDate();
+    const endYear = endDate.getFullYear();
+
+    if (reportType === "month") {
+      return `${monthName} ${startDay}-${endDay} ${endYear}`;
+    }
+
+    if (startDate.getMonth() !== endDate.getMonth()) {
+      const displayStartMonth = prevMonthName || monthName;
+      const displayEndMonth = nextMonthName || monthName;
+      return `${displayStartMonth} ${startDay} - ${displayEndMonth} ${endDay} ${endYear}`;
+    }
+
+    return `${monthName} ${startDay}-${endDay} ${endYear}`;
   };
 
   const handleDownload = () => {
@@ -460,81 +492,89 @@ const Reports = () => {
     XLSX.writeFile(workbook, `Admin_Attendance_${label}.xlsx`);
   };
 
-  const { label } = getDateRange();
   const reportLabel = reportType === "month" ? "Full Month" : "Cut-off";
 
   return (
     <div className="main-content">
-      <div className="user-track">
+      <div className="data-card">
         <div className="user-track-title">
           <p>Attendance Reports</p>
         </div>
-        <p className="user-track-description">
-          Export attendance for all employees.
-        </p>
-        <div className="reports-actions">
-          <label className="reports-label">
-            Export Mode
-            <select
-              value={reportType}
-              onChange={(e) => setReportType(e.target.value)}
+
+        <div className="user-track-description">
+          <p>Export attendance for all employees.</p>
+          <div className="reports-actions">
+            <label className="reports-label">
+              Export Mode
+              <select
+                value={reportType}
+                onChange={(e) => setReportType(e.target.value)}
+              >
+                <option value="cutoff">Cut-off</option>
+                <option value="month">Full Month</option>
+              </select>
+            </label>
+            {reportType === "cutoff" ? (
+              <label className="reports-label">
+                Cut-off Period
+                <select
+                  value={selectedOption}
+                  onChange={(e) => setSelectedOption(e.target.value)}
+                >
+                  {cutoffOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <label className="reports-label">
+                Select Month
+                <select
+                  value={selectedOption}
+                  onChange={(e) => setSelectedOption(e.target.value)}
+                >
+                  {monthOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <button
+              type="button"
+              className="btn"
+              disabled={loading || employeeData.length === 0 || !selectedOption}
+              onClick={handleDownload}
             >
-              <option value="cutoff">Cut-off</option>
-              <option value="month">Full Month</option>
-            </select>
-          </label>
-          {reportType === "cutoff" ? (
-            <label className="reports-label">
-              Cut-off Period
-              <select
-                value={selectedOption}
-                onChange={(e) => setSelectedOption(e.target.value)}
-              >
-                {cutoffOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <label className="reports-label">
-              Select Month
-              <select
-                value={selectedOption}
-                onChange={(e) => setSelectedOption(e.target.value)}
-              >
-                {monthOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          <button
-            type="button"
-            className="download-button"
-            disabled={loading || employeeData.length === 0 || !selectedOption}
-            onClick={handleDownload}
-          >
-            {loading ? "Preparing..." : `Download ${reportLabel} Attendance`}
-          </button>
+              {loading ? "Preparing..." : `Download ${reportLabel} Attendance`}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="reports-summary-panel">
-        <div className="reports-metric-card">
-          <p className="metric-title">Employees</p>
-          <span className="metric-value">{employeeData.length}</span>
+      <div className="data-card-container">
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Employees</div>
+            <span className="data-value">{employeeData.length}</span>
+          </div>
         </div>
-        <div className="reports-metric-card">
-          <p className="metric-title">Attendance Records</p>
-          <span className="metric-value">{attendanceRecords.length}</span>
+
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Attendance Records</div>
+            <span className="data-value">{attendanceRecords.length}</span>
+          </div>
         </div>
-        <div className="reports-metric-card">
-          <p className="metric-title">Export Range</p>
-          <span className="metric-value">{label}</span>
+
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Export Range</div>
+            <span className="data-value">{getFormattedDateRange()}</span>
+          </div>
         </div>
       </div>
     </div>
