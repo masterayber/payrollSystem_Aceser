@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { IconDotsVertical } from "@tabler/icons-react";
+import { IconDotsVertical, IconEye, IconEyeClosed } from "@tabler/icons-react";
 import "../../styles/UserCSS/Payroll.css";
 import { useNavigate } from "react-router-dom";
 
@@ -123,122 +123,65 @@ const Payroll = () => {
 
   return (
     <div className="main-content">
-      <div className="user-track-container">
-        <div className="user-track">
-          <p>Next Pay Date</p>
-          <div className="total-user-track">
-            <span className="user-number">5</span>
-            <span className="user-text">days</span>
+      <div className="data-card-container">
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Next Pay Date</div>
+            <div className="data-value">5 days</div>
           </div>
         </div>
 
-        <div className="user-track">
-          <p>Last Payment Amount</p>
-          <div className="total-user-track">
-            <span className="user-text">Php</span>
-            <span className="user-number-toggle">
-              {showLastPayment ? "10,000.00" : "****"}
-            </span>
-            <span className="icon-container">
-              <button
-                type="button"
-                className="toggle-salary"
-                onClick={() => setShowLastPayment(!showLastPayment)}
-              >
-                {showLastPayment ? (
-                  // Open Eye Icon
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="toggle-data"
-                  >
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
-                  </svg>
-                ) : (
-                  // Closed Eye Icon
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="toggle-data"
-                  >
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" />
-                    <path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" />
-                    <path d="M3 3l18 18" />
-                  </svg>
-                )}
-              </button>
-            </span>
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Last Payment Amount</div>
+            <div className="data-value">
+              Php
+              <span className="user-number-toggle">
+                {showLastPayment ? "10,000.00" : "*****"}
+              </span>
+              <span className="icon-container">
+                <button
+                  className="toggle-salary"
+                  onClick={() => setShowLastPayment(!showLastPayment)}
+                >
+                  {showLastPayment ? (
+                    <IconEye stroke={2} className="toggle-data" />
+                  ) : (
+                    <IconEyeClosed stroke={2} className="toggle-data" />
+                  )}
+                </button>
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="user-track">
-          <p>Year-to-Date Earnings</p>
-          <div className="total-user-track">
-            <span className="user-text">Php</span>
-            <span className="user-number-toggle">
-              {showYearToDate ? "100,000.00" : "****"}
-            </span>
-            <span className="icon-container">
-              <button
-                type="button"
-                className="toggle-salary"
-                onClick={() => setShowYearToDate(!showYearToDate)}
-              >
-                {showYearToDate ? (
-                  // Open Eye Icon
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="toggle-data"
-                  >
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
-                  </svg>
-                ) : (
-                  // Closed Eye Icon
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="toggle-data"
-                  >
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" />
-                    <path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" />
-                    <path d="M3 3l18 18" />
-                  </svg>
-                )}
-              </button>
-            </span>
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Year-to-Date Earnings</div>
+            <div className="data-value">
+              Php
+              <span className="user-number-toggle">
+                {showYearToDate ? "100,000.00" : "****"}
+              </span>
+              <span className="icon-contaner">
+                <button
+                  className="toggle-salary"
+                  onClick={() => setShowYearToDate(!showYearToDate)}
+                >
+                  {showYearToDate ? (
+                    <IconEye stroke={2} className="toggle-data" />
+                  ) : (
+                    <IconEyeClosed stroke={2} className="toggle-data" />
+                  )}
+                </button>
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="table-container">
-        <div className="table-title">
+      <div className="data-card">
+        <div className="user-track-title">
           <p>Pay Period Summary</p>
           <div className="dots-button-container">
             <IconDotsVertical
@@ -253,7 +196,7 @@ const Payroll = () => {
                   className="dropdown-item-details"
                   onClick={() => navigate("/")}
                 >
-                  View details
+                  View Details
                 </button>
               </div>
             )}
@@ -283,7 +226,7 @@ const Payroll = () => {
         </div>
       </div>
 
-      <div className="user-track-container">
+      {/* <div className="user-track-container">
         <div className="user-track">
           <div className="table-title">
             <p>Year-to-Date Earnings</p>
@@ -374,12 +317,12 @@ const Payroll = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
-      <div className="table-container">
-        <div className="table-title">
+      <div className="data-card">
+        <div className="user-track-title">
           <p>Pay History</p>
-          <div className="dots-button-container ">
+          <div className="dots-button-container">
             <IconDotsVertical
               stroke={2}
               onClick={togglePayHistoryDropdown}
@@ -392,96 +335,44 @@ const Payroll = () => {
                   className="dropdown-item-details"
                   onClick={() => navigate("/")}
                 >
-                  View details
+                  View Details
                 </button>
               </div>
             )}
           </div>
         </div>
+
         <div className="table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Date</p>
             </article>
+            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Pay Period</p>
             </article>
+            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Gross Pay</p>
             </article>
+            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Deductions</p>
             </article>
+            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Net Pay</p>
             </article>
+            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Action</p>
             </article>
           </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>01/13/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>Dec 26 - Jan 10</p>
-            </article>
-            <article className="table-content-container">
-              <p>10000</p>
-            </article>
-            <article className="table-content-container">
-              <p>1000</p>
-            </article>
-            <article className="table-content-container">
-              <p>9000</p>
-            </article>
-            <article className="table-content-container">
-              <button className="action-button">View</button>
-              <button className="action-button">Download</button>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>01/30/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>Jan 11 - Jan 25</p>
-            </article>
-            <article className="table-content-container">
-              <p>10000</p>
-            </article>
-            <article className="table-content-container">
-              <p>1000</p>
-            </article>
-            <article className="table-content-container">
-              <p>9000</p>
-            </article>
-            <article className="table-content-container">
-              <button className="action-button">View</button>
-              <button className="action-button">Download</button>
-            </article>
-          </div>
-          <div className="table-content">
-            <article className="table-content-container">
-              <p>02/13/25</p>
-            </article>
-            <article className="table-content-container">
-              <p>Jan 26 - Feb 10</p>
-            </article>
-            <article className="table-content-container">
-              <p>10000</p>
-            </article>
-            <article className="table-content-container">
-              <p>1000</p>
-            </article>
-            <article className="table-content-container">
-              <p>9000</p>
-            </article>
-            <article className="table-content-container">
-              <button className="action-button">View</button>
-              <button className="action-button">Download</button>
-            </article>
-          </div>
+          {/* {payHistory.length === 0 ? (
+            <p className="no-data"> No Pay History Available.</p>
+          ) : (
+            payHistory.map((att))
+          )} */}
         </div>
       </div>
     </div>

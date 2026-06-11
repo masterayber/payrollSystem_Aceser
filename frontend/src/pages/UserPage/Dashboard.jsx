@@ -123,9 +123,9 @@ const Dashboard = () => {
 
   return (
     <div className="main-content">
-      <div className="user-greetings-container">
+      <div className="data-card greetings-card">
         <div className="message-container">
-          <div className="user-message">
+          <div className="greetings-message">
             <span>Good Day, </span>
             <span className="user-highlight">
               {userData?.employee?.firstName}
@@ -165,7 +165,35 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="user-track-container">
+      <div className="data-card-container">
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Attendance This Month</div>
+            <div className="data-value">
+              {attendanceSummary.daysWorked} days
+            </div>
+          </div>
+        </div>
+
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Leaves Taken</div>
+            <div className="data-value">{leaveSummary.total} days</div>
+          </div>
+        </div>
+
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Attendance This Week</div>
+            <div className="data-value">
+              {weeklySummary.onTime + weeklySummary.late + weeklySummary.absent}{" "}
+              days
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* <div className="user-track-container">
         <div className="user-track">
           <p>Attendance This Month</p>
           <div className="total-user-track">
@@ -243,10 +271,10 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
-      <div className="table-container">
-        <div className="table-title">
+      <div className="data-card">
+        <div className="user-track-title">
           <p>Leave Requests</p>
           <div className="dots-button-container">
             <IconDotsVertical
@@ -261,7 +289,7 @@ const Dashboard = () => {
                   className="dropdown-item-details"
                   onClick={() => navigate("/filing")}
                 >
-                  View details
+                  View Details
                 </button>
               </div>
             )}
@@ -272,32 +300,32 @@ const Dashboard = () => {
             <article className="table-header-container">
               <p>Date Filed</p>
             </article>
+            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Date Requested</p>
             </article>
+            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Leave Duration</p>
             </article>
+            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Leave Type</p>
             </article>
+            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Status</p>
             </article>
           </div>
           {leaveRequestsData.length === 0 ? (
-            <div className="table-content">
-              <article className="table-content-container">
-                <h6 className="no-data">No pending requests available</h6>
-              </article>
-            </div>
+            <p className="no-data">No pending requests available</p>
           ) : (
-            leaveRequestsData.slice(0, 3).map((leave) => (
+            leaveRequestsData.slic(0, 3).map((leave) => (
               <div key={leave._id} className="table-content">
                 <article className="table-content-container">
                   <p>{formatDate(leave.appliedAt)}</p>
                 </article>
-                <article className="table-content-container">
+                <article className="table-content-contaner">
                   <p>{formatDate(leave.startDate, leave.endDate)}</p>
                 </article>
                 <article className="table-content-container">
@@ -315,8 +343,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="table-container">
-        <div className="table-title">
+      <div className="data-card">
+        <div className="user-track-title">
           <p>Daily Attendance Log</p>
           <div className="dots-button-container">
             <IconDotsVertical
@@ -331,7 +359,7 @@ const Dashboard = () => {
                   className="dropdown-item-details"
                   onClick={() => navigate("/attendance")}
                 >
-                  View details
+                  View Details
                 </button>
               </div>
             )}
@@ -342,22 +370,21 @@ const Dashboard = () => {
             <article className="table-header-container">
               <p>Date</p>
             </article>
+            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Time IN</p>
             </article>
+            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Time OUT</p>
             </article>
+            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Behavior</p>
             </article>
           </div>
           {attendanceData.length === 0 ? (
-            <div className="table-content">
-              <article className="table-content-container">
-                <h6 className="no-data">No Attendance Available</h6>
-              </article>
-            </div>
+            <p className="no-data"> No attendance data available</p>
           ) : (
             attendanceData.slice(0, 3).map((att) => (
               <div key={att._id} className="table-content">
