@@ -36,7 +36,6 @@ const Calendar = () => {
     while (date.getMonth() === month) {
       const day = date.getDay();
       const dateISO = formatDateISO(date);
-      // ✅ only past weekdays (exclude future and today if no record)
       if (day !== 0 && day !== 6 && new Date(date) < today) {
         days.push(dateISO);
       }
@@ -55,7 +54,6 @@ const Calendar = () => {
     currentMonthAttendance.map((rec) => rec.date.split("T")[0]),
   );
 
-  // ✅ only past workdays with no attendance record
   const absentDays = workDaysList.filter(
     (date) => !attendanceMap.has(date),
   ).length;
@@ -83,42 +81,38 @@ const Calendar = () => {
     if (behavior === "Late") lateDays++;
   });
 
-  // ✅ only count days up to and including today
   const workDays = [
     ...new Set(currentMonthAttendance.map((rec) => rec.date.split("T")[0])),
   ].filter((date) => new Date(date + "T00:00:00") <= today).length;
 
   return (
     <div className="main-content">
-      <div className="user-track-container">
-        <div className="user-track">
-          <p>Total days worked this month</p>
-          <div className="total-user-track">
-            <span className="user-number">{workDays}</span>
-            <span className="user-text">days</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="user-track-container">
-        <div className="user-track">
-          <p>Total On-Time</p>
-          <div className="total-user-track">
-            <span className="user-number">{onTimeDays}</span>
+      <div className="data-card-container">
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total days worked this month</div>
+            <div className="data-value">{workDays}</div>
           </div>
         </div>
 
-        <div className="user-track">
-          <p>Total Late</p>
-          <div className="total-user-track">
-            <span className="user-number">{lateDays}</span>
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total On-Time</div>
+            <div className="data-value">{onTimeDays}</div>
           </div>
         </div>
 
-        <div className="user-track">
-          <p>Total Absent</p>
-          <div className="total-user-track">
-            <span className="user-number">{absentDays}</span>
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total Late</div>
+            <div className="data-value">{lateDays}</div>
+          </div>
+        </div>
+
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total Absent</div>
+            <div className="data-value">{absentDays}</div>
           </div>
         </div>
       </div>

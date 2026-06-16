@@ -85,20 +85,15 @@ const Login = () => {
           <span className="icon-container">
             <button
               type="button"
-              className="toggle-password"
+              className="toggle"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
                 // Open Eye Icon
-                <IconEye
-                  stroke={2}
-                  width={20}
-                  height={20}
-                  className="toggle-password"
-                />
+                <IconEye stroke={2} width={20} height={20} className="toggle" />
               ) : (
                 // Closed Eye Icon
-                <IconEyeClosed stroke={2} className="toggle-password" />
+                <IconEyeClosed stroke={2} className="toggle" />
               )}
             </button>
           </span>

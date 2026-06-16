@@ -35,21 +35,21 @@ const Payroll = () => {
     setShowPayHistoryDropdown(false);
   };
 
-  const toggleYearToDateDropdown = (event) => {
-    event.stopPropagation();
-    setShowYearToDateDropdown((prev) => !prev);
-    setShowPayPeriodDropdown(false);
-    setShowTaxInformationDropdown(false);
-    setShowPayHistoryDropdown(false);
-  };
+  // const toggleYearToDateDropdown = (event) => {
+  //   event.stopPropagation();
+  //   setShowYearToDateDropdown((prev) => !prev);
+  //   setShowPayPeriodDropdown(false);
+  //   setShowTaxInformationDropdown(false);
+  //   setShowPayHistoryDropdown(false);
+  // };
 
-  const toggleTaxInformationDropdown = (event) => {
-    event.stopPropagation();
-    setShowTaxInformationDropdown((prev) => !prev);
-    setShowPayPeriodDropdown(false);
-    setShowYearToDateDropdown(false);
-    setShowPayHistoryDropdown(false);
-  };
+  // const toggleTaxInformationDropdown = (event) => {
+  //   event.stopPropagation();
+  //   setShowTaxInformationDropdown((prev) => !prev);
+  //   setShowPayPeriodDropdown(false);
+  //   setShowYearToDateDropdown(false);
+  //   setShowPayHistoryDropdown(false);
+  // };
 
   const togglePayHistoryDropdown = (event) => {
     event.stopPropagation();
@@ -141,7 +141,7 @@ const Payroll = () => {
               </span>
               <span className="icon-container">
                 <button
-                  className="toggle-salary"
+                  className="toggle"
                   onClick={() => setShowLastPayment(!showLastPayment)}
                 >
                   {showLastPayment ? (
@@ -165,13 +165,13 @@ const Payroll = () => {
               </span>
               <span className="icon-contaner">
                 <button
-                  className="toggle-salary"
+                  className="toggle"
                   onClick={() => setShowYearToDate(!showYearToDate)}
                 >
                   {showYearToDate ? (
-                    <IconEye stroke={2} className="toggle-data" />
+                    <IconEye stroke={2} className="toggle" />
                   ) : (
-                    <IconEyeClosed stroke={2} className="toggle-data" />
+                    <IconEyeClosed stroke={2} className="toggle" />
                   )}
                 </button>
               </span>

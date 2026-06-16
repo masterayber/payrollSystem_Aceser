@@ -27,11 +27,30 @@ const Attendance = () => {
   ];
 
   const generateCutoffOptions = () => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
     const options = [];
-    months.forEach((month) => {
-      options.push(`${month} 1st Cut-off`);
-      options.push(`${month} 2nd Cut-off`);
-    });
+
+    let monthsEmployed = 12;
+    if (userData?.createdAt) {
+      const hireDate = new Date(userData.createdAt);
+      const hireMonth = hireDate.getMonth();
+      const hireYear = hireDate.getFullYear();
+      monthsEmployed =
+        (currentYear - hireYear) * 12 + (currentMonth - hireMonth) + 1;
+    }
+
+    const monthsToShow = Math.min(monthsEmployed, 12);
+
+    for (let offset = 0; offset >= -(monthsToShow - 1); offset--) {
+      const monthIndex = (((currentMonth + offset) % 12) + 12) % 12;
+      const year = currentYear + Math.floor((currentMonth + offset) / 12);
+      const monthName = months[monthIndex];
+
+      options.push(`${monthName} 2nd Cut-off ${year}`);
+      options.push(`${monthName} 1st Cut-off ${year}`);
+    }
     return options;
   };
 
@@ -41,8 +60,9 @@ const Attendance = () => {
     const today = new Date();
     const day = today.getDate();
     const monthName = months[today.getMonth()];
+    const year = today.getFullYear();
     const cutoff = day <= 10 || day >= 26 ? "1st" : "2nd";
-    return `${monthName} ${cutoff} Cut-off`;
+    return `${monthName} ${cutoff} Cut-off ${year}`;
   };
 
   const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
@@ -57,12 +77,13 @@ const Attendance = () => {
 
   const parseCutoff = (cutoffStr) => {
     const isFirst = cutoffStr.includes("1st");
-    const monthName = cutoffStr
-      .replace(" 1st Cut-off", "")
-      .replace(" 2nd Cut-off", "");
+    const parts = cutoffStr.split(" ");
+    const monthName = parts[0];
+    const year = parseInt(parts[parts.length - 1]);
     return {
       monthIndex: months.indexOf(monthName),
       monthName,
+      year,
       cutoff: isFirst ? "1st" : "2nd",
     };
   };
@@ -157,13 +178,12 @@ const Attendance = () => {
     return fullData.reverse();
   };
 
-  const currentYear = new Date().getFullYear();
-  const { monthIndex, monthName, cutoff } = parseCutoff(selectedCutoff);
+  const { monthIndex, monthName, year, cutoff } = parseCutoff(selectedCutoff);
 
   const filteredAttendance = generateCutoffAttendance(
     userAttendance,
     monthIndex,
-    currentYear,
+    year,
     cutoff,
   );
 
@@ -204,7 +224,7 @@ const Attendance = () => {
   const metrics = calculateMetrics();
 
   const handleDownload = () => {
-    const { start, end } = getCutoffRange(monthIndex, currentYear, cutoff);
+    const { start, end } = getCutoffRange(monthIndex, year, cutoff);
 
     const cutoffDates = [];
     const startDate = new Date(start);
@@ -513,7 +533,7 @@ const Attendance = () => {
 
     XLSX.writeFile(
       workbook,
-      `Attendance_${employeeName}_${monthName}_${cutoff}Cutoff_${currentYear}.xlsx`,
+      `Attendance_${employeeName}_${monthName}_${cutoff}Cutoff_${year}.xlsx`,
     );
 
     setShowDownloadDropdown(false);
@@ -548,31 +568,32 @@ const Attendance = () => {
 
   return (
     <div className="main-content">
-      <div className="user-track-container">
-        <div className="user-track">
-          <p>Total Hours worked</p>
-          <div className="total-user-track">
-            <span className="user-number">{metrics.totalHours}</span>
-            <span className="user-text">hours</span>
+      <div className="data-card-container">
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total Hours Worked</div>
+            <div className="data-value">{metrics.totalHours}</div>
           </div>
         </div>
-        <div className="user-track">
-          <p>Total Overtime Hours</p>
-          <div className="total-user-track">
-            <span className="user-number">{metrics.totalOvertimeHours}</span>
-            <span className="user-text">hours</span>
+
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total Overtime Hours</div>
+            <div className="data-value">{metrics.totalOvertimeHours}</div>
           </div>
         </div>
-        <div className="user-track">
-          <p>Total On-Time</p>
-          <div className="total-user-track">
-            <span className="user-number">{metrics.totalOnTime}</span>
+
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total On-Time</div>
+            <div className="data-value">{metrics.totalOnTime}</div>
           </div>
         </div>
-        <div className="user-track">
-          <p>Total Absences</p>
-          <div className="total-user-track">
-            <span className="user-number">{metrics.totalAbsences}</span>
+
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total Absences</div>
+            <div className="data-value">{metrics.totalAbsences}</div>
           </div>
         </div>
       </div>

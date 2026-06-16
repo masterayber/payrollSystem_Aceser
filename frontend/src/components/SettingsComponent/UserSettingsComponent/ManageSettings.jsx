@@ -91,8 +91,8 @@ const ManageSettings = () => {
           </div>
         </div>
         <div className="settings-button-option-container">
-          <button className="settings-button-option">Save</button>
-          <button className="settings-button-option">Cancel</button>
+          <button className="btn settings-button-option">Save</button>
+          <button className="btn settings-button-option">Cancel</button>
         </div>
       </div>
     </div>

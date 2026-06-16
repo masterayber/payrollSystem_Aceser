@@ -8,6 +8,29 @@ const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+const getDateRange = (startDate, endDate) => {
+  const dates = [];
+  const current = new Date(startDate);
+  const end = new Date(endDate);
+
+  current.setUTCHours(0, 0, 0, 0);
+  end.setUTCHours(0, 0, 0, 0);
+
+  while (current <= end) {
+    const day = current.getUTCDay();
+
+    if (day !== 0 && day !== 6) {
+      const yyyy = current.getUTCFullYear();
+      const mm = String(current.getUTCMonth() + 1).padStart(2, "0");
+      const dd = String(current.getUTCDate()).padStart(2, "0");
+      dates.push(`${yyyy}-${mm}-${dd}`);
+    }
+    current.setUTCDate(current.getUTCDate() + 1);
+  }
+
+  return dates;
+};
+
 router.get("/", auth, async (req, res) => {
   if (req.user.role !== "Admin")
     return res.status(400).json({ msg: "Access Denied" });
@@ -128,13 +151,68 @@ router.delete("/leave/:id", auth, async (req, res) => {
 router.patch("/:id/status", auth, async (req, res) => {
   if (req.user.role !== "Admin")
     return res.status(400).json({ msg: "Access Denied" });
+
   const { status } = req.body;
-  const app = await LeaveApplication.findByIdAndUpdate(
-    req.params.id,
-    { status },
-    { new: true },
-  );
-  res.json(app);
+
+  try {
+    const app = await LeaveApplication.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true },
+    );
+
+    if (!app) {
+      return res.status(404).json({ error: "Leave application not found." });
+    }
+
+    if (status === "Approved") {
+      const leaveDates = getDateRange(app.startDate, app.endDate);
+
+      const attendanceOps = leaveDates.map((date) => ({
+        updateOne: {
+          filter: {
+            userId: app.userId,
+            date: date,
+          },
+          update: {
+            $setOnInsert: {
+              userId: app.userId,
+              date: date,
+            },
+            $set: {
+              leaveType: app.leaveType,
+              leaveApplicationId: app._id,
+              timeIn: "--:--",
+              timeOut: "--:--",
+              overtime: {
+                isEligible: false,
+                isFiled: false,
+              },
+              behavior: "On Leave",
+            },
+          },
+          upsert: true,
+        },
+      }));
+
+      if (attendanceOps.length > 0) {
+        await Attendance.bulkWrite(attendanceOps);
+      }
+    }
+
+    if (status === "Rejected" || status === "Pending") {
+      await Attendance.deleteMany({
+        userId: app.userId,
+        leaveApplicationId: app._id,
+        behavior: "On Leave",
+      });
+    }
+
+    res.json(app);
+  } catch (err) {
+    console.error("Error updating leave requests:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Route for getting the eligible overtime of the user

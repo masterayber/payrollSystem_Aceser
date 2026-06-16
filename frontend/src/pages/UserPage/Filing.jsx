@@ -124,18 +124,18 @@ const Filing = () => {
 
   return (
     <div className="main-content">
-      <div className="user-track-container">
-        <div className="user-track">
-          <p>Total Leave Requests</p>
-          <div className="total-user-track">
-            <span className="user-number">{leavePendingCount}</span>
+      <div className="data-card-container">
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total Leave Requests</div>
+            <div className="data-value">{leavePendingCount}</div>
           </div>
         </div>
 
-        <div className="user-track">
-          <p>Total Overtime Request</p>
-          <div className="total-user-track">
-            <span className="user-number">{overtimePendingCount}</span>
+        <div className="data-card">
+          <div className="message-container">
+            <div className="data-title">Total Overtime Requests</div>
+            <div className="data-value">{overtimePendingCount}</div>
           </div>
         </div>
       </div>
@@ -143,7 +143,10 @@ const Filing = () => {
       <div className="application-container">
         <div className="leave-application">
           <p>Application for Leave</p>
-          <button className="apply-button" onClick={() => handleApplyLeave()}>
+          <button
+            className="btn apply-button"
+            onClick={() => handleApplyLeave()}
+          >
             <IconPlus stroke={2} />
             Apply
           </button>
@@ -152,7 +155,7 @@ const Filing = () => {
         <div className="overtime-application">
           <p>Application for Overtime</p>
           <button
-            className="apply-button"
+            className="btn apply-button"
             onClick={() => handleApplyOvertime()}
           >
             <IconPlus stroke={2} />
@@ -212,13 +215,13 @@ const Filing = () => {
                 </article>
                 <article className="table-content-container">
                   <button
-                    className="action-button"
+                    className="btn action-button"
                     onClick={() => handleEditLeave(user)}
                   >
                     Edit
                   </button>
                   <button
-                    className="action-button"
+                    className="btn action-button"
                     onClick={() => handleDeleteTarget(user, "leave")}
                   >
                     Delete
@@ -282,13 +285,13 @@ const Filing = () => {
                 </article>
                 <article className="table-content-container">
                   <button
-                    className="action-button"
+                    className="btn action-button"
                     onClick={() => handleEditOvertime(overtime)}
                   >
                     Edit
                   </button>
                   <button
-                    className="action-button"
+                    className="btn action-button"
                     onClick={() => handleDeleteTarget(overtime, "overtime")}
                   >
                     Delete

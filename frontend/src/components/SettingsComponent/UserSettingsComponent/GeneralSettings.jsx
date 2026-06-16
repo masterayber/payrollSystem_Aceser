@@ -129,7 +129,7 @@ const GeneralSettings = () => {
         `http://localhost:5000/api/auth/remove-profile-photo/${userData._id}`,
         {
           method: "DELETE",
-        }
+        },
       );
 
       if (response.ok) {
@@ -243,7 +243,7 @@ const GeneralSettings = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -311,7 +311,7 @@ const GeneralSettings = () => {
           </div>
         </div>
 
-        <button className="setting-edit-button" onClick={toggleEdit}>
+        <button className="btn setting-edit-button" onClick={toggleEdit}>
           {isEditing ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
           {isEditing ? "Cancel" : "Edit Profile"}
         </button>
@@ -871,14 +871,14 @@ const GeneralSettings = () => {
 
       <div className="settings-button-option-container">
         <button
-          className={`settings-button-option ${!isChanged ? "disabled" : ""}`}
+          className={`btn settings-button-option ${!isChanged ? "disabled" : ""}`}
           onClick={handleSaveClick}
           disabled={!isChanged}
         >
           Save
         </button>
         <button
-          className={`settings-button-option ${!isChanged ? "disabled" : ""}`}
+          className={`btn settings-button-option ${!isChanged ? "disabled" : ""}`}
           onClick={handleCancel}
           disabled={!isChanged}
         >

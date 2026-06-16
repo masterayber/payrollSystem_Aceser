@@ -25,7 +25,7 @@ const attendanceSchema = new mongoose.Schema({
       "Absent",
       "Early-Out",
       "Half-Day",
-      "On-Leave",
+      "On Leave",
       "No Time-In",
       "No Time-Out",
       "Pending",

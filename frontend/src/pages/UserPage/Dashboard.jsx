@@ -320,12 +320,12 @@ const Dashboard = () => {
           {leaveRequestsData.length === 0 ? (
             <p className="no-data">No pending requests available</p>
           ) : (
-            leaveRequestsData.slic(0, 3).map((leave) => (
+            leaveRequestsData.slice(0, 3).map((leave) => (
               <div key={leave._id} className="table-content">
                 <article className="table-content-container">
                   <p>{formatDate(leave.appliedAt)}</p>
                 </article>
-                <article className="table-content-contaner">
+                <article className="table-content-container">
                   <p>{formatDate(leave.startDate, leave.endDate)}</p>
                 </article>
                 <article className="table-content-container">
