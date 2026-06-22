@@ -2,6 +2,8 @@ const cron = require("node-cron");
 const Employee = require("../models/employees");
 const User = require("../models/authUsers");
 const Attendance = require("../models/attendance");
+const Settings = require("../models/settings");
+const { calculateBehavior } = require("../utils/attendance/behavior");
 
 const getRandomTime = (start, end) => {
   const startDate = new Date(`1970-01-01T${start}:00`);
@@ -20,15 +22,14 @@ const getRandomTime = (start, end) => {
 // - for (let dayOffset = ... ) { ... }
 // And restore the original loop for daily attendance.
 cron.schedule("30 7 * * 1-5", async () => {
-  // TEMPORARY: Runs once on April 29, 2026 at 8:00 AM
   console.log("Running temporary attendance scheduler for sample data...");
   try {
     const employees = await Employee.find();
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const absentChance = 0.25; // 25% chance of being absent on a workday
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const absentChance = 0.25;
 
     for (const emp of employees) {
       if (emp.role === "Admin") {
@@ -38,13 +39,17 @@ cron.schedule("30 7 * * 1-5", async () => {
       const user = await User.findOne({ email: emp.email });
       if (!user || user.status === "Pending") continue;
 
+      const settings = await Settings.findOne({
+        userId: user._id,
+      });
+
       const employmentDate = new Date(emp.createdAt);
       const startDate =
         employmentDate > startOfMonth ? employmentDate : startOfMonth;
 
       for (
         let d = new Date(startDate);
-        d <= endOfMonth;
+        d <= today;
         d.setDate(d.getDate() + 1)
       ) {
         const dateStr = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
@@ -77,11 +82,27 @@ cron.schedule("30 7 * * 1-5", async () => {
         const timeIn = getRandomTime("07:30", "08:30");
         const timeOut = getRandomTime("17:00", "20:00");
 
+        const userTimeInSched =
+          settings?.general?.jobDescription?.schedule?.timeIn || "08:00";
+        const userTimeOutSched =
+          settings?.general?.jobDescription?.schedule?.timeOut || "17:00";
+
+        const behavior = calculateBehavior({
+          date: dateStr,
+          timeIn: `${timeIn}:00`,
+          timeOut: `${timeOut}:00`,
+          schedule: {
+            timeIn: `${userTimeInSched}:00`,
+            timeOut: `${userTimeOutSched}:00`,
+          },
+        });
+
         await Attendance.create({
           userId: user._id,
           date: dateStr,
           timeIn,
           timeOut,
+          behavior,
         });
 
         console.log(

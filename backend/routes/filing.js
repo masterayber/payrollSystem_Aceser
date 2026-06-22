@@ -148,7 +148,8 @@ router.delete("/leave/:id", auth, async (req, res) => {
   }
 });
 
-router.patch("/:id/status", auth, async (req, res) => {
+// Route for approving leave requests of user by admin
+router.patch("/leave/:id/status", auth, async (req, res) => {
   if (req.user.role !== "Admin")
     return res.status(400).json({ msg: "Access Denied" });
 
@@ -166,46 +167,42 @@ router.patch("/:id/status", auth, async (req, res) => {
     }
 
     if (status === "Approved") {
-      const leaveDates = getDateRange(app.startDate, app.endDate);
+      const startDate = new Date(app.startDate);
+      const endDate = new Date(app.endDate);
 
-      const attendanceOps = leaveDates.map((date) => ({
-        updateOne: {
-          filter: {
+      const attendanceRecords = [];
+
+      for (
+        let currentDate = new Date(startDate);
+        currentDate <= endDate;
+        currentDate.setDate(currentDate.getDate() + 1)
+      ) {
+        const formattedDate = currentDate.toISOString().split("T")[0];
+
+        const existingAttendance = await Attendance.findOne({
+          userId: app.userId,
+          date: formattedDate,
+        });
+
+        if (!existingAttendance) {
+          attendanceRecords.push({
             userId: app.userId,
-            date: date,
-          },
-          update: {
-            $setOnInsert: {
-              userId: app.userId,
-              date: date,
+            date: formattedDate,
+            timeIn: "--:--",
+            timeOut: "--:--",
+            behavior: "On-Leave",
+            overtime: {
+              isEligible: false,
+              hours: 0,
+              isFiled: false,
             },
-            $set: {
-              leaveType: app.leaveType,
-              leaveApplicationId: app._id,
-              timeIn: "--:--",
-              timeOut: "--:--",
-              overtime: {
-                isEligible: false,
-                isFiled: false,
-              },
-              behavior: "On Leave",
-            },
-          },
-          upsert: true,
-        },
-      }));
-
-      if (attendanceOps.length > 0) {
-        await Attendance.bulkWrite(attendanceOps);
+          });
+        }
       }
-    }
 
-    if (status === "Rejected" || status === "Pending") {
-      await Attendance.deleteMany({
-        userId: app.userId,
-        leaveApplicationId: app._id,
-        behavior: "On Leave",
-      });
+      if (attendanceRecords.length > 0) {
+        await Attendance.insertMany(attendanceRecords);
+      }
     }
 
     res.json(app);
@@ -338,6 +335,7 @@ router.patch("/edit-overtime/:id", auth, async (req, res) => {
   }
 });
 
+// Route for deleting pending overtime by user
 router.delete("/overtime/:id", auth, async (req, res) => {
   try {
     const overtime = await OvertimeApplication.findOneAndDelete({
@@ -364,6 +362,7 @@ router.delete("/overtime/:id", auth, async (req, res) => {
   }
 });
 
+// Route for getting the overtime of all users
 router.get("/overtime", auth, async (req, res) => {
   if (req.user.role !== "Admin")
     return res.status(400).json({ msg: "Access Denied" });

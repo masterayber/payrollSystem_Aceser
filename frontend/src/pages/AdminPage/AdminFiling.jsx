@@ -73,7 +73,7 @@ const AdminFiling = () => {
       const endpoint =
         selectedRequestType === "overtime"
           ? `/api/filing/overtime/${selectedRequest._id}/status`
-          : `/api/filing/${selectedRequest._id}/status`;
+          : `/api/filing/leave/${selectedRequest._id}/status`;
 
       await API.patch(endpoint, {
         status: selectedAction,

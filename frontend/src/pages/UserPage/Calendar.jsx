@@ -6,7 +6,6 @@ import { UserContext } from "../../context/UserContext";
 const Calendar = () => {
   const { userData } = useContext(UserContext);
   const attendanceData = userData?.attendance || [];
-  const leaveRequestsData = userData?.leaveRequests || [];
 
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -75,10 +74,12 @@ const Calendar = () => {
 
   let onTimeDays = 0;
   let lateDays = 0;
+  let onLeaveDays = 0;
 
   attendanceByDate.forEach((behavior) => {
     if (behavior === "On-Time") onTimeDays++;
     if (behavior === "Late") lateDays++;
+    if (behavior === "On-Leave") onLeaveDays++;
   });
 
   const workDays = [
@@ -90,7 +91,7 @@ const Calendar = () => {
       <div className="data-card-container">
         <div className="data-card">
           <div className="message-container">
-            <div className="data-title">Total days worked this month</div>
+            <div className="data-title">Total days worked</div>
             <div className="data-value">{workDays}</div>
           </div>
         </div>
@@ -111,6 +112,13 @@ const Calendar = () => {
 
         <div className="data-card">
           <div className="message-container">
+            <div className="data-title">Total On-Leave</div>
+            <div className="data-value">{onLeaveDays}</div>
+          </div>
+        </div>
+
+        <div className="data-card">
+          <div className="message-container">
             <div className="data-title">Total Absent</div>
             <div className="data-value">{absentDays}</div>
           </div>
@@ -120,7 +128,6 @@ const Calendar = () => {
       <div className="table-container">
         <CalendarComponent
           attendanceData={attendanceData}
-          leaveRequests={leaveRequestsData}
           currentDate={currentDate}
           setCurrentDate={setCurrentDate}
           userId={userData._id}

@@ -1,11 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import "./CalendarComponent.css";
 
 const CalendarComponent = ({
   attendanceData = [],
-  leaveRequests = [],
   currentDate: currentDateProp,
   setCurrentDate: setCurrentDateProp,
   userId,
@@ -62,8 +61,6 @@ const CalendarComponent = ({
     const todayObj = new Date();
     todayObj.setHours(0, 0, 0, 0);
 
-    if (dateObj >= todayObj) return null;
-
     const attendance = attendanceData.find((record) => {
       const recordDate = record.date.split("T")[0];
       const [y, m] = recordDate.split("-").map(Number);
@@ -78,40 +75,18 @@ const CalendarComponent = ({
 
     if (attendance) return attendance.behavior;
 
-    if (dateObj.getDay() !== 0 && dateObj.getDay() !== 6) return "Absent";
+    if (
+      dateObj < todayObj &&
+      dateObj.getDay() !== 0 &&
+      dateObj.getDay() !== 6
+    ) {
+      return "Absent";
+    }
 
     return null;
   };
 
-  const getLeaveStatus = useMemo(() => {
-    return (day) => {
-      const currentDateObj = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        day,
-      );
-
-      const leave = leaveRequests.find((req) => {
-        const startDate = new Date(req.startDate);
-        const endDate = new Date(req.endDate);
-
-        return (
-          currentDateObj >= startDate &&
-          currentDateObj <= endDate &&
-          req.status === "Approved"
-        );
-      });
-
-      return leave ? leave.status : null;
-    };
-  }, [leaveRequests, currentDate]);
-
   const getDayBadge = (day) => {
-    const leaveStatus = getLeaveStatus(day);
-    if (leaveStatus === "Approved") {
-      return "leave";
-    }
-
     const attendanceStatus = getAttendanceStatus(day);
     if (attendanceStatus === "On-Time") return "present";
     if (attendanceStatus === "Late") return "late";
@@ -230,7 +205,6 @@ export default CalendarComponent;
 
 CalendarComponent.propTypes = {
   attendanceData: PropTypes.array,
-  leaveRequests: PropTypes.array,
   currentDate: PropTypes.instanceOf(Date),
   setCurrentDate: PropTypes.func,
   userId: PropTypes.string,
