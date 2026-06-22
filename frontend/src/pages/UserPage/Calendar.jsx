@@ -72,12 +72,20 @@ const Calendar = () => {
   let lateDays = 0;
   let onLeaveDays = 0;
   let explicitAbsentDays = 0;
+  let workDays = 0;
 
-  attendanceByDate.forEach((behavior) => {
+  attendanceByDate.forEach((behavior, dateKey) => {
     if (behavior === "On-Time") onTimeDays++;
     if (behavior === "Late") lateDays++;
     if (behavior === "On-Leave") onLeaveDays++;
     if (behavior === "Absent") explicitAbsentDays++;
+
+    const isPastOrToday = new Date(dateKey + "T00:00:00") <= today;
+    const countsAsWorked = behavior !== "On-Leave" && behavior !== "Absent";
+
+    if (isPastOrToday && countsAsWorked) {
+      workDays++;
+    }
   });
 
   const missingRecordDays = workDaysList.filter(
@@ -85,10 +93,6 @@ const Calendar = () => {
   ).length;
 
   const absentDays = explicitAbsentDays + missingRecordDays;
-
-  const workDays = [
-    ...new Set(currentMonthAttendance.map((rec) => rec.date.split("T")[0])),
-  ].filter((date) => new Date(date + "T00:00:00") <= today).length;
 
   return (
     <div className="main-content">

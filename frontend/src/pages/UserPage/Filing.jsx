@@ -214,18 +214,23 @@ const Filing = () => {
                   <p>{user.status}</p>
                 </article>
                 <article className="table-content-container">
-                  <button
-                    className="btn action-button"
-                    onClick={() => handleEditLeave(user)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn action-button"
-                    onClick={() => handleDeleteTarget(user, "leave")}
-                  >
-                    Delete
-                  </button>
+                  {user.status !== "Disapproved" &&
+                    user.status !== "Approved" && (
+                      <>
+                        <button
+                          className="btn action-button"
+                          onClick={() => handleEditLeave(user)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn action-button"
+                          onClick={() => handleDeleteTarget(user, "leave")}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
                 </article>
               </div>
             ))
