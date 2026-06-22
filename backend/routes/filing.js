@@ -170,7 +170,8 @@ router.patch("/leave/:id/status", auth, async (req, res) => {
       const startDate = new Date(app.startDate);
       const endDate = new Date(app.endDate);
 
-      const attendanceRecords = [];
+      const newAttendanceRecords = [];
+      const updatePromises = [];
 
       for (
         let currentDate = new Date(startDate);
@@ -185,7 +186,7 @@ router.patch("/leave/:id/status", auth, async (req, res) => {
         });
 
         if (!existingAttendance) {
-          attendanceRecords.push({
+          newAttendanceRecords.push({
             userId: app.userId,
             date: formattedDate,
             timeIn: "--:--",
@@ -197,11 +198,31 @@ router.patch("/leave/:id/status", auth, async (req, res) => {
               isFiled: false,
             },
           });
+        } else if (existingAttendance.behavior !== "On-Leave") {
+          updatePromises.push(
+            Attendance.findOneAndUpdate(
+              { _id: existingAttendance._id },
+              {
+                timeIn: "--:--",
+                timeOut: "--:--",
+                behavior: "On-Leave",
+                overtime: {
+                  isEligible: false,
+                  hours: 0,
+                  isFiled: false,
+                },
+              },
+            ),
+          );
         }
       }
 
-      if (attendanceRecords.length > 0) {
-        await Attendance.insertMany(attendanceRecords);
+      if (newAttendanceRecords.length > 0) {
+        await Attendance.insertMany(newAttendanceRecords);
+      }
+
+      if (updatePromises.length > 0) {
+        await Promise.all(updatePromises);
       }
     }
 

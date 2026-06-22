@@ -53,10 +53,6 @@ const Calendar = () => {
     currentMonthAttendance.map((rec) => rec.date.split("T")[0]),
   );
 
-  const absentDays = workDaysList.filter(
-    (date) => !attendanceMap.has(date),
-  ).length;
-
   const attendanceByDate = new Map();
 
   currentMonthAttendance.forEach((rec) => {
@@ -75,12 +71,20 @@ const Calendar = () => {
   let onTimeDays = 0;
   let lateDays = 0;
   let onLeaveDays = 0;
+  let explicitAbsentDays = 0;
 
   attendanceByDate.forEach((behavior) => {
     if (behavior === "On-Time") onTimeDays++;
     if (behavior === "Late") lateDays++;
     if (behavior === "On-Leave") onLeaveDays++;
+    if (behavior === "Absent") explicitAbsentDays++;
   });
+
+  const missingRecordDays = workDaysList.filter(
+    (date) => !attendanceMap.has(date),
+  ).length;
+
+  const absentDays = explicitAbsentDays + missingRecordDays;
 
   const workDays = [
     ...new Set(currentMonthAttendance.map((rec) => rec.date.split("T")[0])),

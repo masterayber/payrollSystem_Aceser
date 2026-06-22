@@ -102,13 +102,11 @@ async function getSchedule(userId) {
 attendanceSchema.pre("save", async function (next) {
   try {
     const schedule = await getSchedule(this.userId);
-
     const overtimeResult = this.timeOut
       ? calculateOvertime({ timeOut: this.timeOut, schedule })
       : { isEligible: false, hours: 0 };
 
-    const leaveBehaviors = ["On Leave"];
-
+    const leaveBehaviors = ["On-Leave"];
     if (!leaveBehaviors.includes(this.behavior)) {
       this.behavior = calculateBehavior({
         date: this.date,
@@ -137,26 +135,25 @@ attendanceSchema.pre("findOneAndUpdate", async function (next) {
   try {
     const update = this.getUpdate();
 
+    if (update.behavior === "On-Leave") {
+      return next();
+    }
+
     if (update.timeIn || update.timeOut) {
       const doc = await this.model.findOne(this.getQuery());
       if (!doc) return next();
-
-      schedule = await getSchedule(doc.userId);
-
-      effectiveTimeIn = update.timeIn || doc.timeIn;
-      effectiveTimeOut = update.timeOut || doc.timeOut;
-
+      const schedule = await getSchedule(doc.userId);
+      const effectiveTimeIn = update.timeIn || doc.timeIn;
+      const effectiveTimeOut = update.timeOut || doc.timeOut;
       const overtimeResult = effectiveTimeOut
         ? calculateOvertime({ timeOut: effectiveTimeOut, schedule })
         : { isEligible: false, hours: 0 };
-
       update.behavior = calculateBehavior({
         date: doc.date,
         timeIn: effectiveTimeIn,
         timeOut: effectiveTimeOut,
         schedule,
       });
-
       update.overtime = {
         ...doc.overtime,
         isEligible: overtimeResult.isEligible,
