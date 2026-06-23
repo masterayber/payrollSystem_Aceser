@@ -233,6 +233,30 @@ router.patch("/leave/:id/status", auth, async (req, res) => {
   }
 });
 
+// Route for approving overtime requests of user by admin
+// router.patch("/overtime/:id/status", auth, async (req, res) => {
+//   if (req.user.role !== "Admin")
+//     return res.status(400).json({ msg: "Access Denied" });
+
+//   const { status } = req.body;
+
+//   try {
+//     const app = await OvertimeApplication.findByIdAndUpdate(
+//       req.params.id,
+//       { status },
+//       { new: true },
+//     );
+
+//     if (!app) {
+//       return res.status(404).json({ error: "Leave application not found." });
+//     }
+
+//     if (status === "Approved") {
+
+//     }
+//   }
+// });
+
 // Route for getting the eligible overtime of the user
 router.get("/user-overtime-candidates", auth, async (req, res) => {
   try {
@@ -420,18 +444,6 @@ router.get("/overtime", auth, async (req, res) => {
   ]);
 
   res.json(apps);
-});
-
-router.patch("/overtime/:id/status", auth, async (req, res) => {
-  if (req.user.role !== "Admin")
-    return res.status(400).json({ msg: "Access Denied" });
-  const { status } = req.body;
-  const app = await OvertimeApplication.findByIdAndUpdate(
-    req.params.id,
-    { status },
-    { new: true },
-  );
-  res.json(app);
 });
 
 module.exports = router;

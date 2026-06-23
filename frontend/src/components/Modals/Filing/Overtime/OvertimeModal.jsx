@@ -282,7 +282,7 @@ const OvertimeModal = ({
                           <article className="table-content-container">
                             <button
                               type="button"
-                              className="action-button"
+                              className="btn action-button"
                               onClick={() => handleSelectedOvertime(att)}
                             >
                               Select
@@ -312,7 +312,7 @@ const OvertimeModal = ({
               </p>
               <button
                 type="button"
-                className="modal-button"
+                className="btn modal-button"
                 onClick={() => setIsTableMinimized(false)}
               >
                 Change
@@ -339,14 +339,14 @@ const OvertimeModal = ({
             <button
               type="button"
               onClick={handleCancelClick}
-              className="modal-button"
+              className="btn modal-button"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleConfirmClick}
-              className={`modal-button ${!hasChanges ? "disabled" : ""}`}
+              className={`btn modal-button ${!hasChanges ? "disabled" : ""}`}
               disabled={!hasChanges || !isFormValid()}
             >
               {isEdit ? "Save Changes" : "Apply"}

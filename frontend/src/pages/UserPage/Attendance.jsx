@@ -416,12 +416,14 @@ const Attendance = () => {
       });
     });
 
+    const fullName = `${userData?.employee?.lastName}, ${userData?.employee?.firstName}`;
+
     setCell(ws1, 4, 0, "", "s", {});
     [
-      userData?.employeeId || "",
-      userData?.name || "",
-      userData?.category || "",
-      userData?.siteOffice || "",
+      userData?.employee?.employeeId || "",
+      fullName || "",
+      userData?.settings?.general?.jobDescription?.category || "",
+      userData?.settings?.general?.jobDescription?.designation || "",
     ].forEach((val, i) => {
       setCell(ws1, 4, 1 + i, val, "s", {
         font: { sz: 12, color: { rgb: "000000" } },

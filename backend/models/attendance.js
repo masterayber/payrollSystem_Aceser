@@ -50,7 +50,7 @@ const attendanceSchema = new mongoose.Schema({
 });
 
 // Function to determine if an employee is eligible for overtime
-function calculateOvertime({ timeOut, schedule }) {
+function calculateOvertime({ timeIn, timeOut, schedule }) {
   const FALLBACK_TIMEOUT = "17:00";
   const scheduleTimeOut = schedule?.timeOut || FALLBACK_TIMEOUT;
 
@@ -68,8 +68,12 @@ function calculateOvertime({ timeOut, schedule }) {
     .padStart(2, "0")}`;
   const overtimeStartMinutes = overtimeStartHour * 60 + timeOutMinute;
 
-  if (timeOutInMinutes < overtimeStartMinutes) {
-    timeOutInMinutes += 24 * 60;
+  if (timeIn) {
+    const [inHour, inMinute] = timeIn.split(":").map(Number);
+    const timeInMinutes = inHour * 60 + inMinutes;
+    if (timeOutInMinutes < timeInMinutes) {
+      timeOutInMinutes += 24 * 60;
+    }
   }
 
   const minimumOvertimeMinutes = 60;

@@ -14,6 +14,9 @@ const settingsSchema = new mongoose.Schema({
       designation: {
         type: String,
       },
+      category: {
+        type: String,
+      },
       department: {
         type: String,
       },

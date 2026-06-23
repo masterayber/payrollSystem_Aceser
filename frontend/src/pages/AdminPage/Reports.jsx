@@ -243,6 +243,7 @@ const Reports = () => {
     const redFill = { patternType: "solid", fgColor: { rgb: "FF0000" } };
     const grayFill = { patternType: "solid", fgColor: { rgb: "808080" } };
 
+    const leftAlign = { horizontal: "left", vertical: "center" };
     const centerAlign = { horizontal: "center", vertical: "center" };
 
     const setCell = (ws, r, c, value, type, style) => {
@@ -409,14 +410,14 @@ const Reports = () => {
       setCell(ws1, rowIndex, 0, "", "s", {});
       [
         employee.employeeId || "",
-        employee.firstName + " " + employee.lastName,
-        employee.category || "",
-        employee.siteOffice || "",
+        `${employee.lastName || ""}, ${employee.firstName || ""}`.toUpperCase(),
+        (employee.jobDescription.category || "").toUpperCase(),
+        (employee.jobDescription.designation || "").toUpperCase(),
       ].forEach((val, i) => {
         setCell(ws1, rowIndex, 1 + i, val, "s", {
           font: { sz: 12, color: { rgb: "000000" } },
           border: allBorders,
-          alignment: centerAlign,
+          alignment: i === 1 ? leftAlign : centerAlign,
         });
       });
 
