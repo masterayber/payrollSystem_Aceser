@@ -5,11 +5,17 @@ import {
   topBottomBorder,
   leftAlign,
   centerAlign,
+  blackFill,
   blueFill,
+  redFill,
   greenFill,
   darkGrayFill,
+  labelFill,
+  dayFill,
   setCell,
   getDayFill,
+  vleaveFill,
+  sleaveFill,
   dayNames,
 } from "./excelStyles";
 import { formatKey } from "./reportHelpers";
@@ -35,14 +41,25 @@ const getCellValue = (
 
   const record = employeeAttendance[dateKey];
   if (record) {
-    if (record.behavior === "On-Time") return "P";
-    if (record.behavior === "Late") return "L";
-    if (record.behavior === "Absent") return "A";
-    return record.behavior || "";
+    if (record.behavior === "On-Time") return "";
+    if (record.behavior === "Late") return "LATE";
+    if (record.leaveType === "Vacation Leave") return "VL";
+    if (record.leaveType === "Sick Leave") return "SL";
+    if (record.behavior === "Absent") return "LWOP";
+    if (record.behavior === "Half-Day") return "/";
+    return "";
   }
 
-  if (isWeekendDay) return "R";
+  if (isWeekendDay) return "";
   return "";
+};
+
+const getBehaviorFill = (record) => {
+  if (record?.behavior === "Late") return redFill;
+  if (record?.leaveType === "Vacation Leave") return vleaveFill;
+  if (record?.leaveType === "Sick Leave") return sleaveFill;
+
+  return null;
 };
 
 export const AttendanceSheet = ({
@@ -53,7 +70,6 @@ export const AttendanceSheet = ({
   employeeData,
   attendanceRecords,
 }) => {
-  // setCell (worksheet, row (starts at 1), column (starts at 0), text, s, style)
   const cutoffDates = [];
 
   for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -72,7 +88,7 @@ export const AttendanceSheet = ({
   // REG/HOL Row
   cutoffDates.forEach((d, i) => {
     setCell(ws1, 1, 5 + i, "REG", "s", {
-      font: { bold: true, sz: 11, color: { rgb: "000000" } },
+      font: { bold: true, sz: 11, color: blackFill },
       fill: blueFill,
       border: topBottomBorder,
       alignment: centerAlign,
@@ -81,18 +97,17 @@ export const AttendanceSheet = ({
 
   // Third Row
   setCell(ws1, 2, 1, `ACESER Corporation - ${label}`, "s", {
-    font: { bold: true, sz: 11, color: { rgb: "000000" } },
+    font: { bold: true, sz: 12, color: blackFill },
     alignment: centerAlign,
   });
 
   cutoffDates.forEach((d, i) => {
     const dayFill = getDayFill(d);
-    const isColored = d.getDay() === 0 || d.getDay() === 6;
     setCell(ws1, 2, 5 + i, dayNames[d.getDay()], "s", {
       font: {
         bold: true,
         sz: 11,
-        color: { rgb: isColored ? "FFFFFF" : "000000" },
+        color: blackFill,
       },
       ...(dayFill ? { fill: dayFill } : {}),
       alignment: centerAlign,
@@ -102,7 +117,7 @@ export const AttendanceSheet = ({
   // Fourth Row
   setCell(ws1, 3, 0, "", "s", {});
   setCell(ws1, 3, 1, "ATTENDANCE", "s", {
-    font: { bold: true, sz: 12, color: { rgb: "000000" } },
+    font: { bold: true, sz: 12, color: blackFill },
     fill: greenFill,
     border: thickAllBorders,
     alignment: centerAlign,
@@ -111,26 +126,32 @@ export const AttendanceSheet = ({
     setCell(ws1, 3, c, "", "s", { fill: greenFill, border: thickAllBorders });
   }
 
+  cutoffDates.forEach((d, i) => {
+    setCell(ws1, 3, 5 + i, "", "s", {
+      fill: blueFill,
+      border: topBottomBorder,
+      alignment: centerAlign,
+    });
+  });
+
   // Fifth Row
   setCell(ws1, 4, 0, "", "s", {});
   ["EMP NO.", "PERSONNEL", "CATEGORY", "SITE/OFFICE"].forEach((colLabel, i) => {
     setCell(ws1, 4, 1 + i, colLabel, "s", {
       font: { sz: 12, color: { rgb: "FFFFFF" } },
-      fill: darkGrayFill,
+      fill: colLabel === "SITE/OFFICE" ? labelFill : darkGrayFill,
       border: allBorders,
       alignment: centerAlign,
     });
   });
 
   cutoffDates.forEach((d, i) => {
-    const dayFill = getDayFill(d);
-    const isColored = d.getDay() === 0 || d.getDay() === 6;
     setCell(ws1, 4, 5 + i, d.getDate(), "n", {
       font: {
         sz: 12,
-        color: { rgb: isColored ? "FFFFFF" : "000000" },
+        color: blackFill,
       },
-      ...(dayFill ? { fill: dayFill } : {}),
+      fill: dayFill,
       border: allBorders,
       alignment: centerAlign,
     });
@@ -154,7 +175,7 @@ export const AttendanceSheet = ({
       (employee.jobDescription.designation || "").toUpperCase(),
     ].forEach((val, i) => {
       setCell(ws1, rowIndex, 1 + i, val, "s", {
-        font: { sz: 11, color: { rgb: "000000" } },
+        font: { sz: 11, color: blackFill },
         border: allBorders,
         alignment: i === 1 ? leftAlign : centerAlign,
       });
@@ -165,6 +186,7 @@ export const AttendanceSheet = ({
       const dayIndex = d.getDay();
       const isWeekendDay = dayIndex === 0 || dayIndex === 6;
       const dayFill = getDayFill(d);
+      const behaviorFill = getBehaviorFill(employeeAttendance[dateKey]);
       const isBeforeHire = hireKey && dateKey < hireKey;
 
       const cellValue = getCellValue(
@@ -176,6 +198,7 @@ export const AttendanceSheet = ({
 
       setCell(ws1, rowIndex, 5 + i, cellValue, "s", {
         ...(dayFill ? { fill: dayFill } : {}),
+        ...(behaviorFill || dayFill ? { fill: behaviorFill || dayFill } : {}),
         border: allBorders,
         alignment: centerAlign,
       });

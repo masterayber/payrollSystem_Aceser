@@ -42,9 +42,19 @@ export const centerAlign = {
 };
 
 // --- Color Fills ---
+export const blackFill = {
+  patternType: "solid",
+  fgColor: { rgb: "000000" },
+};
+
 export const blueFill = {
   patternType: "solid",
   fgColor: { rgb: "BDD7EE" },
+};
+
+export const redFill = {
+  patternType: "solid",
+  fgColor: { rgb: "FF0000" },
 };
 
 export const yellowFill = {
@@ -57,9 +67,14 @@ export const greenFill = {
   fgColor: { rgb: "92D050" },
 };
 
-export const redFill = {
+export const violetFill = {
   patternType: "solid",
-  fgColor: { rgb: "FF0000" },
+  fgColor: { rgb: "B200ED" },
+};
+
+export const brownFill = {
+  patternType: "solid",
+  fgColor: { rgb: "C65911" },
 };
 
 export const grayFill = {
@@ -72,6 +87,16 @@ export const darkGrayFill = {
   fgColor: { rgb: "595959" },
 };
 
+export const labelFill = {
+  patternType: "solid",
+  fgColor: { rgb: "F4B084" },
+};
+
+export const dayFill = {
+  patternType: "solid",
+  fgColor: { rgb: "D6DCE4" },
+};
+
 export const setCell = (ws, r, c, value, type, style) => {
   const addr = XLSX.utils.encode_cell({ r, c });
   ws[addr] = { v: value, t: type, s: style };
@@ -82,6 +107,16 @@ export const getDayFill = (d) => {
   if (day === 0) return redFill;
   if (day === 6) return grayFill;
   return null;
+};
+
+export const vleaveFill = {
+  patternType: "solid",
+  fgColor: { rgb: "00B050" },
+};
+
+export const sleaveFill = {
+  patternType: "solid",
+  fgColor: { rgb: "9BC2E6" },
 };
 
 export const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];

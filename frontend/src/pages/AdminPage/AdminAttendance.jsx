@@ -80,6 +80,18 @@ const AdminAttendance = () => {
     return "On-Time";
   };
 
+  const getDisplayedBehavior = (employee) => {
+    if (employee.attendanceRecord?.behavior === "On-Leave") {
+      return "On-Leave";
+    }
+
+    return calculateBehavior(
+      employee.timeIn,
+      employee.timeOut,
+      employee.isBeforeHired,
+    );
+  };
+
   useEffect(() => {
     const fetchAttendanceByDate = async () => {
       try {
@@ -177,7 +189,8 @@ const AdminAttendance = () => {
                     emp.timeIn,
                     emp.timeOut,
                     emp.isBeforeHired,
-                  ) === "On-Time",
+                  ) === "On-Time" &&
+                  emp.attendanceRecord?.behavior !== "On-Leave",
               ).length
             }
           </div>
@@ -188,7 +201,7 @@ const AdminAttendance = () => {
           <div className="data-value">
             {
               filteredEmployees.filter(
-                (emp) => calculateBehavior(emp.timeIn, emp.timeOut) === "Late",
+                (emp) => getDisplayedBehavior(emp) === "Late",
               ).length
             }
           </div>
@@ -199,8 +212,7 @@ const AdminAttendance = () => {
           <div className="data-value">
             {
               filteredEmployees.filter(
-                (emp) =>
-                  calculateBehavior(emp.timeIn, emp.timeOut) === "Half-Day",
+                (emp) => getDisplayedBehavior(emp) === "Half-Day",
               ).length
             }
           </div>
@@ -211,8 +223,7 @@ const AdminAttendance = () => {
           <div className="data-value">
             {
               filteredEmployees.filter(
-                (emp) =>
-                  calculateBehavior(emp.timeIn, emp.timeOut) === "Absent",
+                (emp) => getDisplayedBehavior(emp) === "Absent",
               ).length
             }
           </div>
@@ -223,8 +234,7 @@ const AdminAttendance = () => {
           <div className="data-value">
             {
               filteredEmployees.filter(
-                (emp) =>
-                  calculateBehavior(emp.timeIn, emp.timeOut) === "On-Leave",
+                (emp) => getDisplayedBehavior(emp) === "On-Leave",
               ).length
             }
           </div>
@@ -328,13 +338,7 @@ const AdminAttendance = () => {
                 <p>{employeeData.timeOut}</p>
               </article>
               <article className="table-content-container">
-                <p>
-                  {calculateBehavior(
-                    employeeData.timeIn,
-                    employeeData.timeOut,
-                    employeeData.isBeforeHired,
-                  )}
-                </p>
+                <p>{getDisplayedBehavior(employeeData)}</p>
               </article>
               <article className="table-content-container">
                 <button

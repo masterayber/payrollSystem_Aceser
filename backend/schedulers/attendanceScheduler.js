@@ -10,8 +10,10 @@ const getRandomTime = (start, end) => {
   const endDate = new Date(`1970-01-01T${end}:00`);
   const diff = endDate - startDate;
   const newTime = new Date(startDate.getTime() + Math.random() * diff);
-  return newTime.toTimeString().substring(0, 5);
+  return newTime.toTimeString().substring(0, 8);
 };
+
+const createDateTime = (date, time) => new Date(`${date}T${time}Z`);
 
 // TEMPORARY: This scheduler is modified to populate sample attendance data for the entire year 2026
 // After setting sample data, revert the crom schedule back to "30 7 * * 1-5" and remove the historical data population logic.
@@ -100,8 +102,8 @@ cron.schedule("30 7 * * 1-5", async () => {
         await Attendance.create({
           userId: user._id,
           date: dateStr,
-          timeIn,
-          timeOut,
+          timeIn: createDateTime(dateStr, timeIn),
+          timeOut: createDateTime(dateStr, timeOut),
           behavior,
         });
 

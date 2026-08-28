@@ -10,8 +10,8 @@ import {
 } from "./excelStyles";
 
 export const RemarksSheet = () => {
-  const ws2 = {};
-  for (let c = 0; c < 4; c++) setCell(ws2, 0, c, "", "s", {});
+  const ws3 = {};
+  for (let c = 0; c < 4; c++) setCell(ws3, 0, c, "", "s", {});
 
   const refHeaderStyle = {
     font: { bold: true, sz: 12, color: { rgb: "000000" } },
@@ -19,8 +19,8 @@ export const RemarksSheet = () => {
     border: allBorders,
     alignment: centerAlign,
   };
-  setCell(ws2, 1, 0, "REMARKS", "s", refHeaderStyle);
-  setCell(ws2, 1, 1, "DAY", "s", refHeaderStyle);
+  setCell(ws3, 1, 0, "REMARKS", "s", refHeaderStyle);
+  setCell(ws3, 1, 1, "DAY", "s", refHeaderStyle);
 
   const remarksList = ["REG", "HOL"];
   const remarkStyle = [
@@ -38,14 +38,14 @@ export const RemarksSheet = () => {
     },
   ];
   remarksList.forEach((val, i) => {
-    setCell(ws2, 2 + i, 0, val, "s", remarkStyle[i]);
+    setCell(ws3, 2 + i, 0, val, "s", remarkStyle[i]);
   });
 
   const daySources = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   const dayFillMap = [redFill, null, null, null, null, null, grayFill];
   daySources.forEach((day, i) => {
     const fill = dayFillMap[i];
-    setCell(ws2, 2 + i, 1, day, "s", {
+    setCell(ws3, 2 + i, 1, day, "s", {
       font: { sz: 12, color: { rgb: "000000" } },
       ...(fill ? { fill } : {}),
       border: allBorders,
@@ -53,12 +53,12 @@ export const RemarksSheet = () => {
     });
   });
 
-  ws2["!ref"] = XLSX.utils.encode_range({
+  ws3["!ref"] = XLSX.utils.encode_range({
     s: { r: 0, c: 0 },
     e: { r: 8, c: 2 },
   });
-  ws2["!cols"] = [{ wch: 12 }, { wch: 12 }];
-  ws2["!rows"] = [{ hpt: 10 }, { wch: 22 }, ...Array(7).fill({ hpt: 20 })];
+  ws3["!cols"] = [{ wch: 12 }, { wch: 12 }];
+  ws3["!rows"] = [{ hpt: 10 }, { wch: 22 }, ...Array(7).fill({ hpt: 20 })];
 
-  return ws2;
+  return ws3;
 };

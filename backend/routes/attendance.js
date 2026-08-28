@@ -112,8 +112,8 @@ router.post("/create-blank.today", async (req, res) => {
       if (!existingAttendance) {
         const newAttendance = await Attendance.create({
           userId: user._id,
-          timeIn: "--:--",
-          timeOut: "--:--",
+          timeIn: null,
+          timeOut: null,
           date: today,
         });
 

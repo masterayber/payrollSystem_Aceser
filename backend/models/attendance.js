@@ -8,14 +8,14 @@ const attendanceSchema = new mongoose.Schema({
     default: null,
   },
   date: {
-    type: String,
+    type: Date,
     required: true,
   },
   timeIn: {
-    type: String,
+    type: Date,
   },
   timeOut: {
-    type: String,
+    type: Date,
   },
   behavior: {
     type: String,
@@ -30,6 +30,11 @@ const attendanceSchema = new mongoose.Schema({
       "No Time-Out",
       "Pending",
     ],
+  },
+  leaveType: {
+    type: String,
+    enum: ["Vacation Leave", "Sick Leave"],
+    default: "",
   },
   overtime: {
     isEligible: {
@@ -48,6 +53,25 @@ const attendanceSchema = new mongoose.Schema({
     },
   },
 });
+
+attendanceSchema.set("toJSON", {
+  transform: (doc, ret) => {
+    if (ret.timeIn) ret.timeIn = toTimeString(ret.timeIn);
+    if (ret.timeOut) ret.timeOut = toTimeString(ret.timeOut);
+    return ret;
+  },
+});
+
+function toTimeString(value) {
+  if (!value) return value;
+  if (value instanceof Date) {
+    return `${value.getUTCHours().toString().padStart(2, "0")}:${value
+      .getUTCMinutes()
+      .toString()
+      .padStart(2, "0")}:${value.getSeconds().toString().padStart(2, "0")}`;
+  }
+  return value;
+}
 
 // Function to determine if an employee is eligible for overtime
 function calculateOvertime({ timeIn, timeOut, schedule }) {
@@ -70,7 +94,7 @@ function calculateOvertime({ timeIn, timeOut, schedule }) {
 
   if (timeIn) {
     const [inHour, inMinute] = timeIn.split(":").map(Number);
-    const timeInMinutes = inHour * 60 + inMinutes;
+    const timeInMinutes = inHour * 60 + inMinute;
     if (timeOutInMinutes < timeInMinutes) {
       timeOutInMinutes += 24 * 60;
     }
@@ -106,16 +130,19 @@ async function getSchedule(userId) {
 attendanceSchema.pre("save", async function (next) {
   try {
     const schedule = await getSchedule(this.userId);
+    const timeIn = toTimeString(this.timeIn);
+    const timeOut = toTimeString(this.timeOut);
     const overtimeResult = this.timeOut
-      ? calculateOvertime({ timeOut: this.timeOut, schedule })
+      ? calculateOvertime({ timeOut, schedule })
       : { isEligible: false, hours: 0 };
 
     const leaveBehaviors = ["On-Leave"];
     if (!leaveBehaviors.includes(this.behavior)) {
+      const behaviorDate = new Date(this.date).toISOString().split("T")[0];
       this.behavior = calculateBehavior({
-        date: this.date,
-        timeIn: this.timeIn,
-        timeOut: this.timeOut,
+        date: behaviorDate,
+        timeIn,
+        timeOut,
         schedule,
       });
     }
@@ -149,13 +176,16 @@ attendanceSchema.pre("findOneAndUpdate", async function (next) {
       const schedule = await getSchedule(doc.userId);
       const effectiveTimeIn = update.timeIn || doc.timeIn;
       const effectiveTimeOut = update.timeOut || doc.timeOut;
+      const timeIn = toTimeString(effectiveTimeIn);
+      const timeOut = toTimeString(effectiveTimeOut);
       const overtimeResult = effectiveTimeOut
-        ? calculateOvertime({ timeOut: effectiveTimeOut, schedule })
+        ? calculateOvertime({ timeOut, schedule })
         : { isEligible: false, hours: 0 };
+      const behaviorDate = new Date(doc.date).toISOString().split("T")[0];
       update.behavior = calculateBehavior({
-        date: doc.date,
-        timeIn: effectiveTimeIn,
-        timeOut: effectiveTimeOut,
+        date: behaviorDate,
+        timeIn,
+        timeOut,
         schedule,
       });
       update.overtime = {

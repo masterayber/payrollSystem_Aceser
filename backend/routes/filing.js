@@ -189,9 +189,10 @@ router.patch("/leave/:id/status", auth, async (req, res) => {
           newAttendanceRecords.push({
             userId: app.userId,
             date: formattedDate,
-            timeIn: "--:--",
-            timeOut: "--:--",
+            timeIn: null,
+            timeOut: null,
             behavior: "On-Leave",
+            leaveType: app.leaveType,
             overtime: {
               isEligible: false,
               hours: 0,
@@ -203,9 +204,10 @@ router.patch("/leave/:id/status", auth, async (req, res) => {
             Attendance.findOneAndUpdate(
               { _id: existingAttendance._id },
               {
-                timeIn: "--:--",
-                timeOut: "--:--",
+                timeIn: null,
+                timeOut: null,
                 behavior: "On-Leave",
+                leaveType: app.leaveType,
                 overtime: {
                   isEligible: false,
                   hours: 0,

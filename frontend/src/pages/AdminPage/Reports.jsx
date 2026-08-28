@@ -11,6 +11,8 @@ import {
   getFormattedDateRange,
 } from "../../utils/reports/reportHelpers";
 import { AttendanceSheet } from "../../utils/reports/attendanceSheet";
+import { LeaveSheet } from "../../utils/reports/leave";
+import { LateSheet } from "../../utils/reports/late";
 import { RemarksSheet } from "../../utils/reports/remarks";
 
 const Reports = () => {
@@ -74,15 +76,37 @@ const Reports = () => {
       attendanceRecords,
     });
 
-    const ws2 = RemarksSheet();
+    const { ws2 } = LeaveSheet({
+      label,
+      monthName,
+      cutoff,
+      startDate: new Date(start),
+      endDate: new Date(end),
+      employeeData,
+      attendanceRecords,
+    });
+
+    const { ws3 } = LateSheet({
+      label,
+      monthName,
+      cutoff,
+      startDate: new Date(start),
+      endDate: new Date(end),
+      employeeData,
+      attendanceRecords,
+    });
+
+    const ws4 = RemarksSheet();
+    const worksheetName =
+      reportType === "month"
+        ? `${monthName} Report Summary`
+        : `${monthName} ${cutoff}-Cutoff Summary`;
 
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(
-      workbook,
-      ws1,
-      `${monthName} ${cutoff || "Report"} Cut-off`,
-    );
-    XLSX.utils.book_append_sheet(workbook, ws2, "Remarks");
+    XLSX.utils.book_append_sheet(workbook, ws1, worksheetName);
+    XLSX.utils.book_append_sheet(workbook, ws2, "LEAVE");
+    XLSX.utils.book_append_sheet(workbook, ws3, "TARDINESS");
+    XLSX.utils.book_append_sheet(workbook, ws4, "REMARKS");
 
     XLSX.writeFile(workbook, `Admin_Attendance_${label}.xlsx`);
   };
