@@ -5,6 +5,7 @@ import {
   topBottomBorder,
   leftAlign,
   centerAlign,
+  blackFont,
   blackFill,
   blueFill,
   violetFill,
@@ -153,12 +154,17 @@ export const LeaveSheet = ({
   const employees = employeeData.filter((e) => e.role !== "Admin");
 
   let rowIndex = 5;
+  let number = 1;
 
   employees.forEach((employee) => {
     const employeeAttendance = attendanceMap[employee._id] || {};
     const hireKey = employee.createdAt ? formatKey(employee.createdAt) : null;
 
-    setCell(ws2, rowIndex, 0, "", "s", {});
+    setCell(ws2, rowIndex, 0, number, "n", {
+      font: { sz: 11, ...blackFont },
+      border: null,
+      alignment: centerAlign,
+    });
     [
       employee.employeeId || "",
       `${employee.lastName || ""}, ${employee.firstName || ""}`.toUpperCase(),
@@ -166,7 +172,7 @@ export const LeaveSheet = ({
       (employee.jobDescription.designation || "").toUpperCase(),
     ].forEach((val, i) => {
       setCell(ws2, rowIndex, 1 + i, val, "s", {
-        font: { sz: 11, color: blackFill },
+        font: { sz: 11, ...blackFont },
         border: allBorders,
         alignment: i === 1 ? leftAlign : centerAlign,
       });
@@ -195,6 +201,7 @@ export const LeaveSheet = ({
       });
     });
 
+    number++;
     rowIndex++;
   });
 

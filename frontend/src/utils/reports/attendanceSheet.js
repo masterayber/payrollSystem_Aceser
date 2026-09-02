@@ -5,6 +5,7 @@ import {
   topBottomBorder,
   leftAlign,
   centerAlign,
+  blackFont,
   blackFill,
   blueFill,
   redFill,
@@ -162,12 +163,17 @@ export const AttendanceSheet = ({
   const employees = employeeData.filter((e) => e.role !== "Admin");
 
   let rowIndex = 5;
+  let number = 1;
 
   employees.forEach((employee) => {
     const employeeAttendance = attendanceMap[employee._id] || {};
     const hireKey = employee.createdAt ? formatKey(employee.createdAt) : null;
 
-    setCell(ws1, rowIndex, 0, "", "s", {});
+    setCell(ws1, rowIndex, 0, number, "n", {
+      font: { sz: 11, ...blackFont },
+      border: null,
+      alignment: centerAlign,
+    });
     [
       employee.employeeId || "",
       `${employee.lastName || ""}, ${employee.firstName || ""}`.toUpperCase(),
@@ -204,6 +210,7 @@ export const AttendanceSheet = ({
       });
     });
 
+    number++;
     rowIndex++;
   });
 

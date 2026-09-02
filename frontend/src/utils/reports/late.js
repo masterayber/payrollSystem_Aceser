@@ -5,14 +5,18 @@ import {
   topBottomBorder,
   leftAlign,
   centerAlign,
+  blackFont,
+  redFont,
   blackFill,
   blueFill,
   brownFill,
+  lightGrayFill,
   darkGrayFill,
   labelFill,
   dayFill,
   setCell,
   getDayFill,
+  lateFill,
   dayNames,
 } from "./excelStyles";
 import { formatKey } from "./reportHelpers";
@@ -46,8 +50,52 @@ const getLateDuration = (timeIn) => {
   ).padStart(2, "0")}`;
 };
 
+const getLateSeconds = (timeIn) => {
+  if (!timeIn) return 0;
+
+  const [hours, minutes, seconds = 0] = String(timeIn).split(":").map(Number);
+  if ([hours, minutes, seconds].some((value) => Number.isNaN(value))) {
+    return 0;
+  }
+
+  return Math.max(hours * 3600 + minutes * 60 + seconds - 8 * 3600, 0);
+};
+
+const formatTotalLateTime = (totalSeconds) => {
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  if (totalMinutes < 60) {
+    const minuteLabel = totalMinutes === 1 ? "min" : "mins";
+    return `${totalMinutes} ${minuteLabel}`;
+  }
+
+  const totalHours = Math.floor(totalMinutes / 60);
+  const remainingMinutes = totalMinutes % 60;
+  const hourLabel = totalHours === 1 ? "hr" : "hrs";
+  const minuteLabel = remainingMinutes === 1 ? "min" : "mins";
+
+  return `${totalHours} ${hourLabel} ${String(remainingMinutes).padStart(
+    2,
+    "0",
+  )} ${minuteLabel}`;
+};
+
+const getConversionFromMinutes = (minutes) => {
+  if (minutes < 1 || minutes > 60) return 0;
+
+  return Number((minutes / 60).toFixed(2));
+};
+
+const formatLateConversion = (totalSeconds) => {
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const totalHours = Math.floor(totalMinutes / 60);
+  const remainingMinutes = totalMinutes % 60;
+  const conversion = totalHours + getConversionFromMinutes(remainingMinutes);
+
+  return `${conversion.toFixed(2)} hrs`;
+};
+
 const getCellValue = (employeeAttendance, dateKey, isBeforeHire) => {
-  if (isBeforeHire) return "-";
+  if (isBeforeHire) return "";
 
   const record = employeeAttendance[dateKey];
   return record?.behavior === "Late" ? getLateDuration(record.timeIn) : "";
@@ -68,7 +116,7 @@ export const LateSheet = ({
   }
 
   const ws3 = {};
-  const totalCols = 5 + cutoffDates.length;
+  const totalCols = 7 + cutoffDates.length;
 
   // First Row
   for (let c = 0; c < totalCols; c++) setCell(ws3, 0, c, "", "s", {});
@@ -117,15 +165,21 @@ export const LateSheet = ({
     setCell(ws3, 3, c, "", "s", { fill: brownFill, border: thickAllBorders });
   }
 
-  cutoffDates.forEach((d, i) => {
-    setCell(ws3, 3, 5 + i, "", "s", {
-      fill: blueFill,
-      border: topBottomBorder,
-      alignment: centerAlign,
-    });
+  setCell(ws3, 3, 5 + cutoffDates.length, "TOTAL MIN./HOURS", "s", {
+    font: { sz: 11, color: blackFont },
+    fill: lateFill,
+    border: thickAllBorders,
+    alignment: centerAlign,
   });
 
-  // Fifth Row
+  setCell(ws3, 3, 6 + cutoffDates.length, "CONVERSION", "s", {
+    font: { sz: 11, color: blackFont },
+    fill: lightGrayFill,
+    border: thickAllBorders,
+    alignment: centerAlign,
+  });
+
+  // --- FIFTH ROW ---
   setCell(ws3, 4, 0, "", "s", {});
   ["EMP NO.", "PERSONNEL", "CATEGORY", "SITE/OFFICE"].forEach((colLabel, i) => {
     setCell(ws3, 4, 1 + i, colLabel, "s", {
@@ -148,17 +202,37 @@ export const LateSheet = ({
     });
   });
 
+  setCell(ws3, 4, 5 + cutoffDates.length, "", "s", {
+    fill: lateFill,
+    border: thickAllBorders,
+    alignment: centerAlign,
+  });
+
+  setCell(ws3, 4, 6 + cutoffDates.length, "", "s", {
+    fill: lightGrayFill,
+    border: thickAllBorders,
+    alignment: centerAlign,
+  });
+  // --- END OF FIFTH ROW ---
+
   // Employee List
   const attendanceMap = buildAttendanceMap(attendanceRecords);
   const employees = employeeData.filter((e) => e.role !== "Admin");
+  const dailyLateCounts = cutoffDates.map(() => 0);
 
   let rowIndex = 5;
+  let number = 1;
 
   employees.forEach((employee) => {
     const employeeAttendance = attendanceMap[employee._id] || {};
     const hireKey = employee.createdAt ? formatKey(employee.createdAt) : null;
+    let totalLateSeconds = 0;
 
-    setCell(ws3, rowIndex, 0, "", "s", {});
+    setCell(ws3, rowIndex, 0, number, "n", {
+      font: { sz: 11, ...blackFont },
+      border: null,
+      alignment: centerAlign,
+    });
     [
       employee.employeeId || "",
       `${employee.lastName || ""}, ${employee.firstName || ""}`.toUpperCase(),
@@ -177,7 +251,13 @@ export const LateSheet = ({
       const dayIndex = d.getDay();
       const isWeekendDay = dayIndex === 0 || dayIndex === 6;
       const dayFill = getDayFill(d);
+      const record = employeeAttendance[dateKey];
       const isBeforeHire = hireKey && dateKey < hireKey;
+
+      if (!isBeforeHire && record?.behavior === "Late") {
+        totalLateSeconds += getLateSeconds(record.timeIn);
+        dailyLateCounts[i] += 1;
+      }
 
       const cellValue = getCellValue(
         employeeAttendance,
@@ -193,12 +273,59 @@ export const LateSheet = ({
       });
     });
 
+    // Total Late Time
+    setCell(
+      ws3,
+      rowIndex,
+      5 + cutoffDates.length,
+      formatTotalLateTime(totalLateSeconds),
+      "s",
+      {
+        font: { sz: 11, ...redFont },
+        border: allBorders,
+        alignment: centerAlign,
+      },
+    );
+
+    // Total Late Conversion
+    setCell(
+      ws3,
+      rowIndex,
+      6 + cutoffDates.length,
+      formatLateConversion(totalLateSeconds),
+      "s",
+      {
+        font: { sz: 11, ...blackFont },
+        border: allBorders,
+        alignment: centerAlign,
+      },
+    );
+
+    number++;
     rowIndex++;
+
+    // --- DAILY LATE COUNT ROW ---
+    cutoffDates.forEach((d, i) => {
+      setCell(ws3, 3, 5 + i, dailyLateCounts[i], "n", {
+        font: { sz: 11, bold: true, ...redFont },
+        fill: blueFill,
+        border: topBottomBorder,
+        alignment: centerAlign,
+      });
+    });
   });
 
   ws3["!merges"] = [
     { s: { r: 2, c: 1 }, e: { r: 2, c: 4 } },
     { s: { r: 3, c: 1 }, e: { r: 3, c: 4 } },
+    {
+      s: { r: 3, c: 5 + cutoffDates.length },
+      e: { r: 4, c: 5 + cutoffDates.length },
+    },
+    {
+      s: { r: 3, c: 6 + cutoffDates.length },
+      e: { r: 4, c: 6 + cutoffDates.length },
+    },
   ];
 
   ws3["!ref"] = XLSX.utils.encode_range({
@@ -213,6 +340,8 @@ export const LateSheet = ({
     { wch: 16 },
     { wch: 16 },
     ...cutoffDates.map(() => ({ wch: 9 })),
+    { wch: 17 },
+    { wch: 12 },
   ];
 
   ws3["!rows"] = [

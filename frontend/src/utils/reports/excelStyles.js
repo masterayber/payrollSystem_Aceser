@@ -41,6 +41,15 @@ export const centerAlign = {
   vertical: "center",
 };
 
+// --- Font Colors ---
+export const blackFont = {
+  color: { rgb: "000000" },
+};
+
+export const redFont = {
+  color: { rgb: "FF0000" },
+};
+
 // --- Color Fills ---
 export const blackFill = {
   patternType: "solid",
@@ -77,6 +86,11 @@ export const brownFill = {
   fgColor: { rgb: "C65911" },
 };
 
+export const lightGrayFill = {
+  patternType: "solid",
+  fgColor: { rgb: "AEAAAA" },
+};
+
 export const grayFill = {
   patternType: "solid",
   fgColor: { rgb: "808080" },
@@ -95,6 +109,11 @@ export const labelFill = {
 export const dayFill = {
   patternType: "solid",
   fgColor: { rgb: "D6DCE4" },
+};
+
+export const lateFill = {
+  patternType: "solid",
+  fgColor: { rgb: "F8CBAD" },
 };
 
 export const setCell = (ws, r, c, value, type, style) => {
