@@ -35,7 +35,8 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "xlsx": "^0.18.5",
-    "xlsx-js-style": "^1.2.0"
+    "xlsx-js-style": "^1.2.0",
+    "zkteco-js": "^1.7.2"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",

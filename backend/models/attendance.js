@@ -34,7 +34,7 @@ const attendanceSchema = new mongoose.Schema({
   leaveType: {
     type: String,
     enum: ["Vacation Leave", "Sick Leave"],
-    default: "",
+    default: null,
   },
   overtime: {
     isEligible: {
