@@ -52,6 +52,8 @@ export const calculateBehavior = ({
     const todayStr = new Date().toISOString().split("T")[0];
     const recordDateStr = new Date(date).toISOString().split("T")[0];
 
+    if (timeInDate >= lateThreshold) return "Late";
+
     return todayStr === recordDateStr ? "On-Time" : "No Time Out";
   }
 
