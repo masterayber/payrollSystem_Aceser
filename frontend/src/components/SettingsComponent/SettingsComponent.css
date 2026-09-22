@@ -141,30 +141,11 @@
   width: 100%;
 }
 
-.settings-title-tab {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.settings-title p {
-  font-size: 40px;
-  font-weight: bold;
-  color: var(--main-color-1);
-}
-
-.settings-description {
-  margin-top: 10px;
-}
-
-.settings-description p {
-  font-size: 20px;
-  color: var(--neutral-color-100);
-}
-
+.about-title,
 .tech-stack-title,
-.contact-support-title {
+.contact-support-title,
+.company-info-title,
+.company-tagline {
   font-size: 25px;
   font-weight: 600;
   color: var(--main-color-1);
@@ -198,13 +179,46 @@
   object-fit: contain;
 }
 
-.email-support {
+.company-tagline {
+  margin: 0;
+}
+
+.about-description,
+.email-support,
+.company-description,
+.credit-tab {
   display: flex;
   margin-top: 20px;
 }
 
-.email-support p {
+.company-description,
+.credit-tab {
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.credit-tab {
+  margin-top: 50px;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.about-description p,
+.email-support p,
+.company-description p {
   font-size: 20px;
+}
+
+.company-description p {
+  margin: 20px 30px 0;
+  text-align: justify;
+  line-height: 1.25;
+}
+
+.about-company-logo {
+  width: 200px;
+  height: 200px;
 }
 
 .manage-position {

@@ -90,12 +90,12 @@ const Employees = () => {
           </div>
         </div>
 
-        <dic className="data-card">
+        <div className="data-card">
           <div className="message-container">
             <div className="data-title">Total Probationary Employees</div>
             <div className="data-value">{probationaryCount}</div>
           </div>
-        </dic>
+        </div>
       </div>
 
       <div className="search-container">

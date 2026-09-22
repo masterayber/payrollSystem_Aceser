@@ -7,10 +7,10 @@ const AboutSettings = () => {
       <div className="settings-title-tab">
         <div className="settings-title-section">
           <div className="settings-title">
-            <p>ACESER Payroll System</p>
+            <p>ACESER Employee & Administrative Management System</p>
           </div>
           <div className="settings-description">
-            <p>Version 1.0.0</p>
+            <p>Ver 1.0.0</p>
           </div>
         </div>
         <div className="company-logo">

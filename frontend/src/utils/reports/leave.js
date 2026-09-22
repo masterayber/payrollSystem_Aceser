@@ -6,6 +6,7 @@ import {
   leftAlign,
   centerAlign,
   blackFont,
+  redFont,
   blackFill,
   blueFill,
   violetFill,
@@ -152,6 +153,7 @@ export const LeaveSheet = ({
   // Employee List
   const attendanceMap = buildAttendanceMap(attendanceRecords);
   const employees = employeeData.filter((e) => e.role !== "Admin");
+  const dailyLeaveCounts = cutoffDates.map(() => 0);
 
   let rowIndex = 5;
   let number = 1;
@@ -183,8 +185,13 @@ export const LeaveSheet = ({
       const dayIndex = d.getDay();
       const isWeekendDay = dayIndex === 0 || dayIndex === 6;
       const dayFill = getDayFill(d);
+      const record = employeeAttendance[dateKey];
       const behaviorFill = getBehaviorFill(employeeAttendance[dateKey]);
       const isBeforeHire = hireKey && dateKey < hireKey;
+
+      if (!isBeforeHire && record?.behavior === "On-Leave") {
+        dailyLeaveCounts[i] += 1;
+      }
 
       const cellValue = getCellValue(
         employeeAttendance,
@@ -203,6 +210,15 @@ export const LeaveSheet = ({
 
     number++;
     rowIndex++;
+
+    cutoffDates.forEach((d, i) => {
+      setCell(ws2, 3, 5 + i, dailyLeaveCounts[i], "n", {
+        font: { sz: 11, bold: true, ...redFont },
+        fill: blueFill,
+        border: topBottomBorder,
+        alignment: centerAlign,
+      });
+    });
   });
 
   ws2["!merges"] = [

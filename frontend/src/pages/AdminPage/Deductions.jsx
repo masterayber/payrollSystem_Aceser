@@ -44,31 +44,31 @@ const Deductions = () => {
     };
   });
 
-  useEffect(() => {
-    async function fetchDeductions() {
-      try {
-        const res = await fetch("http://localhost:5000/api/deductions");
-        const data = await res.json();
-        setDeductionsData(data.governmentDeductions || {});
-      } catch (error) {
-        console.error("Error:", error);
-        setDeductionsData({});
-      }
-    }
-    fetchDeductions();
-  }, []);
+  // useEffect(() => {
+  //   async function fetchDeductions() {
+  //     try {
+  //       const res = await fetch("http://localhost:5000/api/deductions");
+  //       const data = await res.json();
+  //       setDeductionsData(data.governmentDeductions || {});
+  //     } catch (error) {
+  //       console.error("Error:", error);
+  //       setDeductionsData({});
+  //     }
+  //   }
+  //   fetchDeductions();
+  // }, []);
 
   const filteredEmployees = employeeData.filter((employee) =>
     Object.values(employee).some((value) =>
-      value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-    )
+      value.toString().toLowerCase().includes(searchQuery.toLowerCase()),
+    ),
   );
 
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentEmployees = filteredEmployees.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   return (
@@ -87,7 +87,7 @@ const Deductions = () => {
               <div className="dropdown-details" ref={deductionDropdownRef}>
                 <button
                   className="dropdown-item-details"
-                  onClick={() => handleAddClick()}
+                  // onClick={() => handleAddClick()}
                 >
                   Add Option
                 </button>
@@ -233,7 +233,7 @@ const Deductions = () => {
           title={`Add Deduction`}
           message={`Add a new Deduction`}
           onClose={() => setIsAddModalOpen(false)}
-          onAddOption={handleConfirmAdd}
+          // onAddOption={handleConfirmAdd}
           confirmText="Next"
         />
       )}

@@ -4,6 +4,7 @@ import AdminGeneralSettings from "../../components/SettingsComponent/AdminSettin
 import AdminManageSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminManageSettings";
 import AdminAccessibilitySettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminAccessibilitySettings";
 import AdminSecuritySettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminSecuritySettings";
+import AdminAboutSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminAboutSettings";
 
 const settingsOptions = [
   { name: "General", key: "general" },
@@ -26,7 +27,7 @@ const settingsContent = {
   // payroll: <PayrollSettings />,
   // attendance: <AttendanceSettings />,
   // systemLog: <SystemLogSettings />,
-  // about: <AboutSettings />,
+  about: <AdminAboutSettings />,
 };
 
 const AdminSettings = () => {

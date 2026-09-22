@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+// Verify Pages
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/Forgot";
@@ -10,6 +11,7 @@ import ResetPassword from "./pages/ResetPassword";
 import AdditionalInfo from "./pages/AdditionalInfo";
 import CreatedAccount from "./pages/CreatedAccount";
 
+// Admin Pages
 import AdminDashboard from "./pages/AdminPage/AdminDashboard";
 import Employees from "./pages/AdminPage/Employees";
 import Deductions from "./pages/AdminPage/Deductions";

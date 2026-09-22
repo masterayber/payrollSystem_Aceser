@@ -44,8 +44,6 @@ const AdminGeneralSettings = () => {
     ...userData,
   });
 
-  console.log("User Data:", userData);
-
   const handleInputChange = (event) => {
     const { name, value } = event.target;
 

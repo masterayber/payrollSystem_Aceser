@@ -7,6 +7,7 @@ import {
   centerAlign,
   blackFont,
   blackFill,
+  redFont,
   blueFill,
   redFill,
   greenFill,
@@ -117,7 +118,7 @@ export const AttendanceSheet = ({
 
   // Fourth Row
   setCell(ws1, 3, 0, "", "s", {});
-  setCell(ws1, 3, 1, "ATTENDANCE", "s", {
+  setCell(ws1, 3, 1, "ATTENDANCE SUMMARY", "s", {
     font: { bold: true, sz: 12, color: blackFill },
     fill: greenFill,
     border: thickAllBorders,
@@ -161,6 +162,7 @@ export const AttendanceSheet = ({
   // Employee List
   const attendanceMap = buildAttendanceMap(attendanceRecords);
   const employees = employeeData.filter((e) => e.role !== "Admin");
+  const dailyCounts = cutoffDates.map(() => 0);
 
   let rowIndex = 5;
   let number = 1;
@@ -192,8 +194,18 @@ export const AttendanceSheet = ({
       const dayIndex = d.getDay();
       const isWeekendDay = dayIndex === 0 || dayIndex === 6;
       const dayFill = getDayFill(d);
+      const record = employeeAttendance[dateKey];
       const behaviorFill = getBehaviorFill(employeeAttendance[dateKey]);
       const isBeforeHire = hireKey && dateKey < hireKey;
+
+      if (
+        !isBeforeHire &&
+        !isWeekendDay &&
+        record &&
+        record?.behavior !== "On-Time"
+      ) {
+        dailyCounts[i] += 1;
+      }
 
       const cellValue = getCellValue(
         employeeAttendance,
@@ -212,6 +224,15 @@ export const AttendanceSheet = ({
 
     number++;
     rowIndex++;
+
+    cutoffDates.forEach((d, i) => {
+      setCell(ws1, 3, 5 + i, dailyCounts[i], "n", {
+        font: { sz: 11, bold: true, ...redFont },
+        fill: blueFill,
+        border: topBottomBorder,
+        alignment: centerAlign,
+      });
+    });
   });
 
   ws1["!merges"] = [
