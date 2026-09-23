@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconDotsVertical, IconLogin2, IconLogout2 } from "@tabler/icons-react";
 import { UserContext } from "../../context/UserContext";
-import { formatDate } from "../../utils/dateFormatter";
+import { formatDate, formatTime } from "../../utils/dateFormatter";
 import { calculateMonthlySummary } from "../../../../backend/utils/attendance/summary";
 import { calculateLeaveSummary } from "../../utils/leave/summary";
 import { calculateWeeklySummary } from "../../../../backend/utils/attendance/weeklySummary";
@@ -68,14 +68,14 @@ const Dashboard = () => {
 
   const timingMessage = getTimingMessage();
 
-  const formatTime = (time) => {
-    if (!time) return "--:--";
-    const [hour, minute] = time.split(":");
-    const h = parseInt(hour);
-    const ampm = h >= 12 ? "PM" : "AM";
-    const formattedHour = h % 12 || 12;
-    return `${formattedHour}:${minute} ${ampm}`;
-  };
+  // const formatTime = (time) => {
+  //   if (!time) return "--:--";
+  //   const [hour, minute] = time.split(":");
+  //   const h = parseInt(hour);
+  //   const ampm = h >= 12 ? "PM" : "AM";
+  //   const formattedHour = h % 12 || 12;
+  //   return `${formattedHour}:${minute} ${ampm}`;
+  // };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -192,86 +192,6 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-
-      {/* <div className="user-track-container">
-        <div className="user-track">
-          <p>Attendance This Month</p>
-          <div className="total-user-track">
-            <span className="user-number">{attendanceSummary.daysWorked}</span>
-            <span className="user-text">days</span>
-          </div>
-          <div className="data-user-track">
-            <div className="user-data-container">
-              <div className="user-data">
-                <p>Total Hours</p>
-              </div>
-              <div className="user-data-number">
-                {attendanceSummary.hoursWorked} hrs
-              </div>
-            </div>
-            <div className="user-data-container">
-              <div className="user-data">
-                <p>Overtime</p>
-              </div>
-              <div className="user-data-number">
-                {attendanceSummary.overtimeHours} hrs
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="user-track">
-          <p>Leaves Taken</p>
-          <div className="total-user-track">
-            <span className="user-number">{leaveSummary.total}</span>
-            <span className="user-text">days</span>
-          </div>
-          <div className="data-user-track">
-            <div className="user-data-container">
-              <div className="user-data">
-                <p>Approved</p>
-              </div>
-              <div className="user-data-number">{leaveSummary.approved}</div>
-            </div>
-            <div className="user-data-container">
-              <div className="user-data">
-                <p>Pending</p>
-              </div>
-              <div className="user-data-number">{leaveSummary.pending}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="user-track">
-          <p>This Week</p>
-          <div className="total-user-track">
-            <span className="user-number">
-              {weeklySummary.onTime + weeklySummary.late + weeklySummary.absent}
-            </span>
-            <span className="user-text">days tracked</span>
-          </div>
-          <div className="data-user-track">
-            <div className="user-data-container">
-              <div className="user-data">
-                <p>On-Time</p>
-              </div>
-              <div className="user-data-number">{weeklySummary.onTime}</div>
-            </div>
-            <div className="user-data-container">
-              <div className="user-data">
-                <p>Late</p>
-              </div>
-              <div className="user-data-number">{weeklySummary.late}</div>
-            </div>
-            <div className="user-data-container">
-              <div className="user-data">
-                <p>Absent</p>
-              </div>
-              <div className="user-data-number">{weeklySummary.absent}</div>
-            </div>
-          </div>
-        </div>
-      </div> */}
 
       <div className="data-card">
         <div className="user-track-title">
@@ -392,10 +312,10 @@ const Dashboard = () => {
                   <p>{formatDate(att.date)}</p>
                 </article>
                 <article className="table-content-container">
-                  <p>{att.timeIn}</p>
+                  <p>{formatTime(att.timeIn)}</p>
                 </article>
                 <article className="table-content-container">
-                  <p>{att.timeOut}</p>
+                  <p>{formatTime(att.timeOut)}</p>
                 </article>
                 <article className="table-content-container">
                   <p>{att.behavior}</p>

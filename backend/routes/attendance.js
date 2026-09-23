@@ -8,22 +8,6 @@ const User = require("../models/authUsers");
 
 const ZKTecoService = require("../utils/zktecoService");
 
-// const createLocalDateTime = (dateValue) => {
-//   const localDate = new Date(
-//     dateValue.getTime() - dateValue.geTimezoneOffset() * 60000,
-//   );
-//   const dateStr = localDate.toISOString().split("T")[0];
-//   const localTime = `${String(dateValue.getHours()).padStart(2, "0")}:${String(
-//     dateValue.getMinutes(),
-//   ).padStart(2, "0")}:${(dateValue.getSeconds()).padStart(2, "0")}`;
-
-//   return {
-//     dateStr,
-//     timeStr: localTime,
-//     dateTime: new Date(`${dateStr}T${localTime}Z`)
-//   };
-// };
-
 const toLocalDateString = (dateValue) => {
   const offsetAdjustedDate = new Date(
     dateValue.getTime() - dateValue.getTimezoneOffset() * 60000,
