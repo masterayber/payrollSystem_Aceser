@@ -34,14 +34,17 @@ const Dashboard = () => {
     setShowLeaveDropdown(false);
   };
 
-  const attendanceData = userData?.attendance || [];
+  const todayDate = new Date().toISOString().slice(0, 10);
+
+  const attendanceData = [...(userData?.attendance || [])]
+    .filter((att) => att.date <= todayDate)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
   const leaveRequestsData = userData?.leaveRequests || [];
 
   const attendanceSummary = calculateMonthlySummary(attendanceData);
   const weeklySummary = calculateWeeklySummary(attendanceData);
   const leaveSummary = calculateLeaveSummary(leaveRequestsData);
-
-  const todayDate = new Date().toISOString().slice(0, 10);
 
   const todayAttendance = attendanceData.find(
     (record) => record.date === todayDate,
@@ -49,7 +52,7 @@ const Dashboard = () => {
 
   const getTimingMessage = () => {
     if (!todayAttendance || !todayAttendance.timeIn) {
-      return `You have no time in yet today! You forget, don't you?`;
+      return `You have no time in yet today.`;
     }
     const scheduledTimeIn = new Date(`${todayDate}T08:00:00`);
     const actualTimeIn = new Date(`${todayDate}T${todayAttendance.timeIn}`);
@@ -58,24 +61,15 @@ const Dashboard = () => {
     );
 
     if (diffInMinutes < 0) {
-      return `You timed in ${Math.abs(diffInMinutes)} minutes early today. Keep it up!`;
+      return `You timed in ${Math.abs(diffInMinutes)} minutes early today.`;
     } else if (diffInMinutes === 0) {
       return `You timed in exactly on time today.`;
     } else {
-      return `You timed in ${diffInMinutes} minutes late today`;
+      return `You timed in ${diffInMinutes} minutes late today.`;
     }
   };
 
   const timingMessage = getTimingMessage();
-
-  // const formatTime = (time) => {
-  //   if (!time) return "--:--";
-  //   const [hour, minute] = time.split(":");
-  //   const h = parseInt(hour);
-  //   const ampm = h >= 12 ? "PM" : "AM";
-  //   const formattedHour = h % 12 || 12;
-  //   return `${formattedHour}:${minute} ${ampm}`;
-  // };
 
   useEffect(() => {
     const handleClickOutside = (event) => {

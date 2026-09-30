@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 
 const router = express.Router();
 
@@ -7,6 +8,8 @@ const Employee = require("../models/employees");
 const User = require("../models/authUsers");
 
 const ZKTecoService = require("../utils/zktecoService");
+
+const HHMMSS_REGEX = /^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
 
 const toLocalDateString = (dateValue) => {
   const offsetAdjustedDate = new Date(
@@ -427,6 +430,62 @@ router.get("/:userId", async (req, res) => {
   } catch (error) {
     console.error("Error fetching attendance records:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.put("/edit-attendance/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { date, timeIn = "", timeOut = "" } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) {
+      return res
+        .status(400)
+        .json({ message: "A valid date (YYYY-MM-DD) is required" });
+    }
+    if (!HHMMSS_REGEX.test(timeIn)) {
+      return res
+        .status(400)
+        .json({ message: "Time in must be in HH:MM:SS format" });
+    }
+    if (timeOut && !HHMMSS_REGEX.test(timeOut)) {
+      return res
+        .status(400)
+        .json({ message: "Time out must be in HH:MM:SS format" });
+    }
+    if (timeOut && timeOut <= timeIn) {
+      return res
+        .status(400)
+        .json({ message: "Time out must be later than Time in" });
+    }
+
+    const dayStart = new Date(`${date}T00:00:00.000Z`);
+    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+
+    let attendance = await Attendance.findOne({
+      userId,
+      date: { $gte: dayStart, $lt: dayEnd },
+    });
+
+    const isNew = !attendance;
+    if (isNew) {
+      attendance = new Attendance({ userId, date: dayStart });
+    }
+
+    attendance.timeIn = createDateTime(date, timeIn);
+    attendance.timeOut = timeOut ? createDateTime(date, timeOut) : null;
+
+    await attendance.save();
+
+    res
+      .status(isNew ? 201 : 200)
+      .json({ success: true, created: isNew, record: attendance });
+  } catch (error) {
+    console.error("Error updating attendance record:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 

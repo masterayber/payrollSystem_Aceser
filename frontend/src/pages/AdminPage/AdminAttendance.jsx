@@ -1,4 +1,4 @@
-import { useState, useRef, useContext, useEffect } from "react";
+import { useState, useRef, useContext, useEffect, useCallback } from "react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -92,21 +92,21 @@ const AdminAttendance = () => {
     );
   };
 
-  useEffect(() => {
-    const fetchAttendanceByDate = async () => {
-      try {
-        const formattedDate = selectedDate.toISOString().split("T")[0];
-        const res = await axios.get(
-          `http://localhost:5000/api/attendance/attendance?date=${formattedDate}`,
-        );
-        setAttendanceData(res.data);
-      } catch (error) {
-        console.error("Error fetching attendance data:", error);
-      }
-    };
-
-    fetchAttendanceByDate();
+  const fetchAttendanceByDate = useCallback(async () => {
+    try {
+      const formattedDate = formatDate(selectedDate);
+      const res = await axios.get(
+        `http://localhost:5000/api/attendance/attendance?date=${formattedDate}`,
+      );
+      setAttendanceData(res.data);
+    } catch (error) {
+      console.error("Error fetching attendance data:", error);
+    }
   }, [selectedDate, setAttendanceData]);
+
+  useEffect(() => {
+    fetchAttendanceByDate();
+  }, [fetchAttendanceByDate]);
 
   const getAttendanceForEmployee = (employeeId) => {
     const selected = formatDate(selectedDate);
@@ -140,10 +140,11 @@ const AdminAttendance = () => {
             : "";
 
       return {
+        _id: employee._id,
         id: employee.employeeId,
         firstName: employee.firstName,
         lastName: employee.lastName,
-        date: employee.date,
+        date: selected,
         timeIn,
         timeOut,
         isBeforeHired,
@@ -174,8 +175,9 @@ const AdminAttendance = () => {
   };
 
   const handleUpdateAttendance = async () => {
-    setIsEditModalOpen(false);
+    await fetchAttendanceByDate();
   };
+
   return (
     <div className="main-content">
       <div className="data-card-container">
@@ -365,7 +367,7 @@ const AdminAttendance = () => {
         <EditEmployeeAttendanceModal
           employee={selectedEmployee}
           onClose={() => setIsEditModalOpen(false)}
-          onUpdate={handleUpdateAttendance}
+          onUpdateAttendance={handleUpdateAttendance}
         />
       )}
     </div>

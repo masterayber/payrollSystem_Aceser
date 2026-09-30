@@ -469,7 +469,6 @@ input:checked + .slider:before {
   gap: 1.5rem;
 }
 
-.greetings-card,
 .message-container {
   flex: 1;
 }
