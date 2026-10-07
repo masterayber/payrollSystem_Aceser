@@ -21,6 +21,7 @@ const attendanceRoutes = require("./routes/attendance");
 const dropdownRoutes = require("./routes/dropdownOption");
 const employeeRoutes = require("./routes/employee");
 const filingRoutes = require("./routes/filing");
+const accessRoutes = require("./routes/access");
 
 const dotenv = require("dotenv");
 
@@ -37,6 +38,7 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/dropdownOption", dropdownRoutes);
 app.use("/api/employee", employeeRoutes);
 app.use("/api/filing", filingRoutes);
+app.use("/api/access", accessRoutes);
 
 io.on("connection", (socket) => {
   socket.on("approveUser", (data) => {

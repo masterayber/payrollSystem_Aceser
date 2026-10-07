@@ -66,7 +66,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="admin-dashboard"
                     element={
-                      <PrivateRoute allowedRoles={["Admin"]}>
+                      <PrivateRoute
+                        allowedRoles={["Admin"]}
+                        pageKey="admin-dashboard"
+                      >
                         <MainLayout>
                           <AdminDashboard />
                         </MainLayout>
@@ -76,7 +79,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="employees"
                     element={
-                      <PrivateRoute allowedRoles={["Admin"]}>
+                      <PrivateRoute
+                        allowedRoles={["Admin"]}
+                        pageKey="employees"
+                      >
                         <MainLayout>
                           <Employees />
                         </MainLayout>
@@ -86,7 +92,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="deductions"
                     element={
-                      <PrivateRoute allowedRoles={["Admin"]}>
+                      <PrivateRoute
+                        allowedRoles={["Admin"]}
+                        pageKey="deductions"
+                      >
                         <MainLayout>
                           <Deductions />
                         </MainLayout>
@@ -96,7 +105,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="admin-payslips"
                     element={
-                      <PrivateRoute allowedRoles={["Admin"]}>
+                      <PrivateRoute
+                        allowedRoles={["Admin"]}
+                        pageKey="admin-payslips"
+                      >
                         <MainLayout>
                           <AdminPayslips />
                         </MainLayout>
@@ -106,7 +118,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="admin-attendance"
                     element={
-                      <PrivateRoute allowedRoles={["Admin"]}>
+                      <PrivateRoute
+                        allowedRoles={["Admin"]}
+                        pageKey="admin-attendance"
+                      >
                         <MainLayout>
                           <AdminAttendance />
                         </MainLayout>
@@ -116,7 +131,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="admin-calendar"
                     element={
-                      <PrivateRoute allowedRoles={["Admin"]}>
+                      <PrivateRoute
+                        allowedRoles={["Admin"]}
+                        pageKey="admin-calendar"
+                      >
                         <MainLayout>
                           <AdminCalendar />
                         </MainLayout>
@@ -126,7 +144,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="admin-filing"
                     element={
-                      <PrivateRoute allowedRoles={["Admin"]}>
+                      <PrivateRoute
+                        allowedRoles={["Admin"]}
+                        pageKey="admin-filing"
+                      >
                         <MainLayout>
                           <AdminFiling />
                         </MainLayout>
@@ -136,7 +157,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="reports"
                     element={
-                      <PrivateRoute allowedRoles={["Admin"]}>
+                      <PrivateRoute allowedRoles={["Admin"]} pageKey="reports">
                         <MainLayout>
                           <Reports />
                         </MainLayout>
@@ -146,7 +167,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="admin-settings"
                     element={
-                      <PrivateRoute allowedRoles={["Admin"]}>
+                      <PrivateRoute
+                        allowedRoles={["Admin"]}
+                        pageKey="admin-settings"
+                      >
                         <MainLayout>
                           <AdminSettings />
                         </MainLayout>
@@ -158,7 +182,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="dashboard"
                     element={
-                      <PrivateRoute allowedRoles={["Employee"]}>
+                      <PrivateRoute
+                        allowedRoles={["Employee"]}
+                        pageKey="dashboard"
+                      >
                         <MainLayout>
                           <Dashboard />
                         </MainLayout>
@@ -168,7 +195,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="payroll"
                     element={
-                      <PrivateRoute allowedRoles={["Employee"]}>
+                      <PrivateRoute
+                        allowedRoles={["Employee"]}
+                        pageKey="payroll"
+                      >
                         <MainLayout>
                           <Payroll />
                         </MainLayout>
@@ -178,7 +208,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="payslips"
                     element={
-                      <PrivateRoute allowedRoles={["Employee"]}>
+                      <PrivateRoute
+                        allowedRoles={["Employee"]}
+                        pageKey="payslips"
+                      >
                         <MainLayout>
                           <Payslips />
                         </MainLayout>
@@ -188,7 +221,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="attendance"
                     element={
-                      <PrivateRoute allowedRoles={["Employee"]}>
+                      <PrivateRoute
+                        allowedRoles={["Employee"]}
+                        pageKey="attendance"
+                      >
                         <MainLayout>
                           <Attendance />
                         </MainLayout>
@@ -198,7 +234,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="calendar"
                     element={
-                      <PrivateRoute allowedRoles={["Employee"]}>
+                      <PrivateRoute
+                        allowedRoles={["Employee"]}
+                        pageKey="calendar"
+                      >
                         <MainLayout>
                           <Calendar />
                         </MainLayout>
@@ -208,7 +247,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="filing"
                     element={
-                      <PrivateRoute allowedRoles={["Employee"]}>
+                      <PrivateRoute
+                        allowedRoles={["Employee"]}
+                        pageKey="filing"
+                      >
                         <MainLayout>
                           <Filing />
                         </MainLayout>
@@ -218,7 +260,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <Route
                     path="settings"
                     element={
-                      <PrivateRoute allowedRoles={["Employee"]}>
+                      <PrivateRoute
+                        allowedRoles={["Employee"]}
+                        pageKey="settings"
+                      >
                         <MainLayout>
                           <Settings />
                         </MainLayout>

@@ -157,3 +157,28 @@
   justify-content: space-between;
   margin: 0 0 5px 0;
 }
+
+.access-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.access-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  cursor: pointer;
+}
+
+.access-option:has(input:disabled) {
+  cursor: default;
+}
+
+.access-note {
+  margin-left: auto;
+  font-size: 14px;
+  opacity: 0.6;
+}

@@ -15,6 +15,7 @@ const LeaveApplication = require("../models/leaveApplication");
 const OvertimeApplication = require("../models/overtimeApplication");
 
 const sendEmail = require("../utils/nodemailer");
+const { getAllowedPages } = require("../utils/pageAccess");
 
 const router = express.Router();
 const JWT_SECRET = "your_jwt_secret_key_here";
@@ -76,6 +77,7 @@ router.post("/login", async (req, res) => {
 
     const combinedData = {
       ...userObj,
+      allowedPages: getAllowedPages(userObj),
       employee: employee || null,
       settings: settings || null,
       attendance: attendance || [],
@@ -381,6 +383,7 @@ router.get("/me", authMiddleware, async (req, res) => {
     res.status(200).json({
       user: {
         ...user,
+        allowedPages: getAllowedPages(user),
         employee: employee || null,
         settings: settings || null,
         attendance: attendance || [],
@@ -466,6 +469,10 @@ router.put("/updateGeneralSettings/:id", async (req, res) => {
   try {
     const userId = req.params.id;
     const { employee, settings, ...userData } = req.body;
+
+    // Page access is only editable through /api/access (admin only)
+    delete userData.pageAccess;
+    delete userData.allowedPages;
 
     const existingUser = await User.findById(userId);
     if (!existingUser) {
