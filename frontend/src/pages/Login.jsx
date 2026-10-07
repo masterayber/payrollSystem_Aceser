@@ -49,7 +49,7 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
+    <div className="auth-page login-container">
       <div className="logo-container">
         <img
           src="/assets/aceser-logo.png"

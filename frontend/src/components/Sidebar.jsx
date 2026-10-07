@@ -141,16 +141,18 @@ function Sidebar({ role, allowedPages }) {
 
       <nav className="sidebar-menu">
         {menuItems.map((item) => (
-          <div
+          <button
+            type="button"
             key={item.key}
             className={`sidebar-item ${
               location.pathname === item.path ? "active" : ""
             }`}
+            aria-current={location.pathname === item.path ? "page" : undefined}
             onClick={() => navigate(item.path)}
           >
             {item.icon}
-            <p>{item.name}</p>
-          </div>
+            <span>{item.name}</span>
+          </button>
         ))}
       </nav>
     </div>

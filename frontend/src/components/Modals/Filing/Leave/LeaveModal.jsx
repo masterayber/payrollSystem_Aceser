@@ -174,25 +174,37 @@ const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
   };
 
   return ReactDOM.createPortal(
-    <div className="modal">
-      <div className="modal-content">
-        <h3>{isEdit ? "Edit Leave Request" : "Apply for Leave"}</h3>
-        <form onSubmit={handleSubmit} className="form-container">
-          <Dropdown
-            options={leaveTypeOptions}
-            value={formData.leaveType}
-            onSelect={handleLeaveTypeChange}
-            placeholder="Select Leave Type"
-          />
+    <div className="modal filing-modal filing-leave-modal">
+      <div className="modal-content filing-modal-content">
+        <h3 className="filing-modal-title">
+          {isEdit ? "Edit Leave Request" : "Apply for Leave"}
+        </h3>
+        <form
+          onSubmit={handleSubmit}
+          className="form-container filing-modal-form"
+        >
+          <div className="input-container">
+            <div className="label-container">
+              <span className="field-label">Leave Type</span>{" "}
+              <span className="required">*</span>
+            </div>
+            <Dropdown
+              options={leaveTypeOptions}
+              value={formData.leaveType}
+              onSelect={handleLeaveTypeChange}
+              placeholder="Select Leave Type"
+            />
+          </div>
 
           <div className="input-container">
             <div className="label-container">
-              <label>Details of Leave</label>{" "}
+              <label htmlFor="filing-leave-details">Details of Leave</label>{" "}
               <span className="required">*</span>
             </div>
             <div className="input-group-signup">
               <input
                 type="text"
+                id="filing-leave-details"
                 name="leaveDetails"
                 value={formData.leaveDetails}
                 onChange={handleInputChange}
@@ -201,30 +213,27 @@ const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
             </div>
           </div>
 
-          <div className="input-row">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Single Day Leave</label>
-              </div>
-            </div>
-            <div className="input-container">
-              <input
-                type="checkbox"
-                className="modal-checkbox"
-                checked={isSingleDayLeave}
-                onChange={handleSingleDayToggle}
-              />
-            </div>
+          <div className="input-row filing-single-day-row">
+            <label htmlFor="filing-single-day">Single Day Leave</label>
+            <input
+              type="checkbox"
+              id="filing-single-day"
+              className="modal-checkbox"
+              checked={isSingleDayLeave}
+              onChange={handleSingleDayToggle}
+            />
           </div>
 
-          <div className="input-row">
+          <div className="input-row filing-date-row">
             <div className="input-container">
               <div className="label-container">
-                <label>Start Date</label> <span className="required">*</span>
+                <label htmlFor="filing-leave-start">Start Date</label>{" "}
+                <span className="required">*</span>
               </div>
               <div className="input-group-signup">
                 <input
                   type="date"
+                  id="filing-leave-start"
                   name="startDate"
                   value={formData.startDate}
                   onChange={handleStartDateChange}
@@ -235,11 +244,13 @@ const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
 
             <div className="input-container">
               <div className="label-container">
-                <label>End Date</label> <span className="required">*</span>
+                <label htmlFor="filing-leave-end">End Date</label>{" "}
+                <span className="required">*</span>
               </div>
               <div className="input-group-signup">
                 <input
                   type="date"
+                  id="filing-leave-end"
                   name="endDate"
                   value={formData.endDate}
                   onChange={handleEndDateChange}

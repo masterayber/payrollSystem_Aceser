@@ -193,8 +193,8 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="main-content">
-      <div className="data-card greetings-card">
+    <div className="main-content admin-dashboard">
+      <div className="data-card greetings-card dashboard-greeting-card">
         <div className="message-container">
           <div className="greetings-message">
             <span>Good Day, </span>
@@ -209,22 +209,22 @@ const AdminDashboard = () => {
         <TimeDate />
       </div>
 
-      <div className="data-card-container">
-        <div className="data-card">
+      <div className="data-card-container dashboard-summary-grid">
+        <div className="data-card dashboard-stat-card">
           <div className="message-container">
             <div className="data-title">Total employees</div>
             <div className="data-value">{employeeData.length}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card dashboard-stat-card">
           <div className="message-container">
             <div className="data-title">Total employees timed in</div>
             <div className="data-value">{timedInCount}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card dashboard-stat-card">
           <div className="message-container">
             <div className="data-title">Total employees timed out</div>
             <div className="data-value">{timedOutCount}</div>
@@ -232,17 +232,21 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="data-card-container">
-        <div className="data-card">
+      <div className="data-card-container dashboard-attendance-grid">
+        <div className="data-card dashboard-panel dashboard-transactions-panel">
           <div className="user-track-title">
-            <p>Recent Transaction</p>
+            <p>Recent Attendance</p>
             <div className="dots-button-container">
-              <IconDotsVertical
-                stroke={2}
+              <button
+                type="button"
+                aria-label="Recent attendance options"
+                aria-expanded={showDailyDropdown}
                 onClick={toggleDailyDropdown}
                 ref={dailySvgRef}
-                className="dots-button"
-              />
+                className="dots-button dashboard-menu-button"
+              >
+                <IconDotsVertical stroke={2} />
+              </button>
               {showDailyDropdown && (
                 <div className="dropdown-details" ref={dailyDropdownRef}>
                   <button
@@ -255,16 +259,14 @@ const AdminDashboard = () => {
               )}
             </div>
           </div>
-          <div className="table">
+          <div className="table dashboard-table dashboard-transaction-table">
             <div className="table-header">
               <article className="table-header-container">
                 <p>Name</p>
               </article>
-              <hr className="header-hr" />
               <article className="table-header-container">
                 <p>Time</p>
               </article>
-              <hr className="header-hr" />
               <article className="table-header-container">
                 <p>Type</p>
               </article>
@@ -319,7 +321,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card dashboard-panel dashboard-attendance-panel">
           <div className="user-track-title">
             <p>Today&apos;s Attendance</p>
           </div>
@@ -327,16 +329,20 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="data-card">
+      <div className="data-card dashboard-panel dashboard-calendar-panel">
         <div className="user-track-title">
           <p>Calendar</p>
           <div className="dots-button-container">
-            <IconDotsVertical
-              stroke={2}
+            <button
+              type="button"
+              aria-label="Calendar options"
+              aria-expanded={showCalendarDropdown}
               onClick={toggleCalendarDropdown}
               ref={calendarSvgRef}
-              className="dots-button"
-            />
+              className="dots-button dashboard-menu-button"
+            >
+              <IconDotsVertical stroke={2} />
+            </button>
             {showCalendarDropdown && (
               <div className="dropdown-details" ref={calendarDropdownRef}>
                 <button
@@ -352,16 +358,20 @@ const AdminDashboard = () => {
         <Calendar isAdmin />
       </div>
 
-      <div className="data-card">
+      <div className="data-card dashboard-panel dashboard-payroll-panel">
         <div className="user-track-title">
           <p>Payroll Summary</p>
           <div className="dots-button-container">
-            <IconDotsVertical
-              stroke={2}
+            <button
+              type="button"
+              aria-label="Payroll summary options"
+              aria-expanded={showPayrollDropdown}
               onClick={togglePayrollDropdown}
               ref={payrollSvgRef}
-              className="dots-button"
-            />
+              className="dots-button dashboard-menu-button"
+            >
+              <IconDotsVertical stroke={2} />
+            </button>
             {showPayrollDropdown && (
               <div className="dropdown-details" ref={payrollDropdownRef}>
                 <button
@@ -375,20 +385,17 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="table">
+        <div className="table dashboard-table dashboard-payroll-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Pay Period</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Gross Pay</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Deduction</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Net Pay</p>
             </article>
@@ -438,16 +445,20 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="data-card">
+      <div className="data-card dashboard-panel dashboard-pending-panel">
         <div className="user-track-title">
           <p>Pending Users</p>
           <div className="dots-button-container">
-            <IconDotsVertical
-              stroke={2}
+            <button
+              type="button"
+              aria-label="Pending users options"
+              aria-expanded={showPendingDropdown}
               onClick={togglePendingDropdown}
               ref={pendingSvgRef}
-              className="dots-button"
-            />
+              className="dots-button dashboard-menu-button"
+            >
+              <IconDotsVertical stroke={2} />
+            </button>
             {showPendingDropdown && (
               <div className="dropdown-details" ref={pendingDropdownRef}>
                 <button
@@ -461,20 +472,17 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="table">
+        <div className="table dashboard-table dashboard-pending-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>First Name</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Last Name</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Email</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Date Created</p>
             </article>

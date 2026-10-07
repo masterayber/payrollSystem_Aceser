@@ -94,7 +94,7 @@ const OTP = () => {
   };
 
   return (
-    <div className="otp-container">
+    <div className="auth-page otp-container">
       <form className="otp-form" onSubmit={handleOtp}>
         <h2>OTP</h2>
         <p>Please enter your OTP sent to your email</p>

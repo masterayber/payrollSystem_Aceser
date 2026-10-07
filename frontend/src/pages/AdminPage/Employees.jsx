@@ -82,23 +82,23 @@ const Employees = () => {
   };
 
   return (
-    <div className="main-content">
-      <div className="data-card-container">
-        <div className="data-card">
+    <div className="main-content employees-page">
+      <div className="data-card-container employee-summary-grid">
+        <div className="data-card employee-stat-card">
           <div className="message-container">
             <div className="data-title">Total employees</div>
             <div className="data-value">{employeeData.length}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card employee-stat-card">
           <div className="message-container">
-            <div className="data-title">Total Regural Employees</div>
+            <div className="data-title">Total Regular Employees</div>
             <div className="data-value">{regularCount}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card employee-stat-card">
           <div className="message-container">
             <div className="data-title">Total Probationary Employees</div>
             <div className="data-value">{probationaryCount}</div>
@@ -106,87 +106,84 @@ const Employees = () => {
         </div>
       </div>
 
-      <div className="search-container">
-        <span className="icon-container">
-          <IconSearch stroke={2} className="icon" />
-        </span>
+      <div className="employee-toolbar">
+        <div className="search-container employee-search-container">
+          <span className="icon-container">
+            <IconSearch stroke={2} className="icon" />
+          </span>
 
-        <input
-          type="text"
-          placeholder="Search"
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
+          <input
+            type="text"
+            aria-label="Search employees"
+            placeholder="Search employees"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+
+        <div className="buttons-container employee-actions">
+          <button
+            type="button"
+            className="btn employee-action-button"
+            onClick={() => handleAddClick()}
+          >
+            <IconPlus stroke={2} />
+            Add Employee
+          </button>
+
+          <button
+            type="button"
+            className="btn employee-action-button"
+            onClick={() => setEditMode(!editMode)}
+          >
+            {editMode ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
+            {editMode ? "Cancel" : "Edit Employee"}
+          </button>
+
+          <button
+            type="button"
+            className="btn employee-action-button"
+            onClick={() => handleApproveClick()}
+          >
+            <IconProgressCheck stroke={2} />
+            Approve Employees
+          </button>
+        </div>
       </div>
 
-      <div className="buttons-container">
-        <button type="button" className="btn" onClick={() => handleAddClick()}>
-          <IconPlus stroke={2} />
-          Add Employee
-        </button>
-
-        <button
-          type="button"
-          className="btn"
-          onClick={() => setEditMode(!editMode)}
-        >
-          {editMode ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
-          {editMode ? "Cancel" : "Edit Employee"}
-        </button>
-
-        <button
-          type="button"
-          className="btn"
-          onClick={() => handleApproveClick()}
-        >
-          <IconProgressCheck stroke={2} />
-          Approve Employees
-        </button>
-      </div>
-
-      <div className="table">
+      <div className={`table employee-table ${editMode ? "edit-mode" : ""}`}>
         <div className="table-header">
           <article className="table-header-container">
             <p>Employee ID</p>
           </article>
-          <hr className="header-hr"></hr>
           <article className="table-header-container">
             <p>Last Name</p>
           </article>
-          <hr className="header-hr"></hr>
           <article className="table-header-container">
             <p>First Name</p>
           </article>
-          <hr className="header-hr"></hr>
           <article className="table-header-container">
             <p>Designation</p>
           </article>
-          <hr className="header-hr"></hr>
           <article className="table-header-container">
             <p>Department</p>
           </article>
-          <hr className="header-hr"></hr>
           <article className="table-header-container">
             <p>Position</p>
           </article>
-          <hr className="header-hr"></hr>
           <article className="table-header-container">
             <p>Employment Type</p>
           </article>
-          <hr className="header-hr"></hr>
           <article className="table-header-container">
             <p>Start Date</p>
           </article>
           {editMode && (
-            <>
-              <hr className="header-hr"></hr>
-              <article className="table-header-container">
-                <p>Action</p>
-              </article>
-            </>
+            <article className="table-header-container">
+              <p>Action</p>
+            </article>
           )}
         </div>
 
@@ -211,7 +208,11 @@ const Employees = () => {
               <p>{employee.jobDescription?.position || ""}</p>
             </article>
             <article className="table-content-container">
-              <p>{employee.jobDescription?.employmentType || ""}</p>
+              <p>
+                <span className="employee-type-badge">
+                  {employee.jobDescription?.employmentType || ""}
+                </span>
+              </p>
             </article>
             <article className="table-content-container">
               <p>

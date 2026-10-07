@@ -1,0 +1,174 @@
+.admin-payslips-page {
+  align-items: stretch;
+}
+
+.admin-payslips-page .admin-payslips-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 16px;
+  overflow: visible;
+}
+
+.admin-payslips-page .finance-metric-card {
+  min-width: 0;
+  min-height: 110px;
+  padding: 20px 24px;
+}
+
+.admin-payslips-page .finance-metric-card .data-title {
+  color: var(--neutral-color-80);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-payslips-page .finance-metric-card .data-value {
+  margin-top: 8px;
+  color: var(--default-button-color);
+  font-size: 28px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-payslips-page .admin-payslips-search {
+  flex: 1 1 280px;
+  width: min(100%, 440px);
+  min-height: 44px;
+  margin: 0;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+}
+
+.admin-payslips-page .admin-payslips-search input {
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-payslips-page .admin-pay-history-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--gray-200);
+  border-radius: 1rem;
+  background: var(--gray-50);
+}
+
+.admin-payslips-page .table-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-payslips-page .table-title > p {
+  color: var(--neutral-color-100);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.admin-payslips-page .admin-pay-history-table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+}
+
+.admin-payslips-page .admin-pay-history-table .table-header,
+.admin-payslips-page .admin-pay-history-table .table-content {
+  display: grid;
+  grid-template-columns:
+    minmax(105px, 0.85fr)
+    repeat(2, minmax(130px, 1fr))
+    repeat(3, minmax(120px, 1fr))
+    minmax(100px, 0.7fr);
+  min-width: 930px;
+}
+
+.admin-payslips-page .admin-pay-history-table .table-header-container,
+.admin-payslips-page .admin-pay-history-table .table-content-container {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+}
+
+.admin-payslips-page .admin-pay-history-table .table-header-container {
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-90);
+}
+
+.admin-payslips-page .admin-pay-history-table .table-header-container p {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-payslips-page .admin-pay-history-table .table-content {
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.admin-payslips-page .admin-pay-history-table .table-content:last-child {
+  border-bottom: 0;
+}
+
+.admin-payslips-page .admin-pay-history-table .table-content-container {
+  min-height: 52px;
+  background: var(--gray-50);
+  color: var(--neutral-color-90);
+}
+
+.admin-payslips-page .admin-pay-history-table .table-content-container p {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-payslips-page .action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-height: 36px;
+  padding: 7px;
+}
+
+.admin-payslips-page .no-results {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  padding: 28px 12px;
+  color: var(--neutral-color-80);
+  font-size: 14px;
+  text-align: center;
+}
+
+.admin-payslips-page .pagination {
+  align-self: flex-end;
+  color: var(--neutral-color-80);
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .admin-payslips-page .admin-payslips-search {
+    flex-basis: 100%;
+    width: 100%;
+  }
+
+  .admin-payslips-page .admin-pay-history-card {
+    padding: 16px;
+  }
+
+  .admin-payslips-page .pagination {
+    align-self: stretch;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}

@@ -104,6 +104,7 @@
 
 .setting-tab-container {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
   width: 100%;
 }
@@ -137,6 +138,7 @@
 
 .setting-tab-flex {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
   width: 100%;
 }
@@ -238,6 +240,119 @@
 
 .department-dropdown-container {
   margin: 0;
+}
+
+@media (max-width: 768px) {
+  .settings-profile,
+  .profile-section {
+    height: auto;
+    min-height: 84px;
+  }
+
+  .setting-tab-container,
+  .setting-tab-flex {
+    gap: 14px;
+  }
+
+  .manage-position {
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 0 12px;
+  }
+
+  .tech-stack-items {
+    gap: 24px;
+  }
+
+  .tech-stack-items img {
+    width: 76px;
+    height: 76px;
+  }
+
+  .company-description p {
+    margin-right: 0;
+    margin-left: 0;
+    font-size: 16px;
+    text-align: left;
+  }
+}
+
+@media (max-width: 640px) {
+  .settings-profile,
+  .profile-section {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .settings-profile {
+    align-items: flex-start;
+  }
+
+  .profile-name {
+    font-size: 18px;
+    white-space: normal;
+  }
+
+  .profile-role {
+    font-size: 14px;
+  }
+
+  .setting-tab-container,
+  .setting-tab-flex {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .setting-tab-container > .input-container {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .settings-content .setting-section {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .settings-content .setting-section-text-title {
+    font-size: 16px;
+  }
+
+  .settings-content .setting-section-text-description {
+    margin-left: 0;
+    font-size: 12px;
+  }
+
+  .settings-button-option-container {
+    flex-direction: column-reverse;
+  }
+
+  .settings-button-option {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .about-title,
+  .tech-stack-title,
+  .contact-support-title,
+  .company-info-title,
+  .company-tagline {
+    font-size: 20px;
+  }
+
+  .about-description p,
+  .email-support p {
+    font-size: 16px;
+  }
+
+  .about-company-logo {
+    width: 140px;
+    height: 140px;
+  }
+
+  .credit-tab {
+    margin-top: 30px;
+    font-size: 14px;
+  }
 }
 
 .add-position-btn-container {

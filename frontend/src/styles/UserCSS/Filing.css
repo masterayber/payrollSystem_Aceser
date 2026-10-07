@@ -1,19 +1,511 @@
-.apply-button {
-  padding: 10px 30px;
-  border-radius: 20px;
-  gap: 5px;
+.employee-filing-page {
+  align-items: stretch;
 }
 
-.leave-application,
-.overtime-application {
+.employee-filing-page .filing-summary-grid,
+.admin-filing-page .filing-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 16px;
+  overflow: visible;
+}
+
+.employee-filing-page .filing-metric-card,
+.admin-filing-page .filing-metric-card {
+  min-width: 0;
+  min-height: 104px;
+  padding: 20px 24px;
+}
+
+.employee-filing-page .filing-metric-card .data-title,
+.admin-filing-page .filing-metric-card .data-title {
+  color: var(--neutral-color-80);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.employee-filing-page .filing-metric-card .data-value,
+.admin-filing-page .filing-metric-card .data-value {
+  margin-top: 8px;
+  color: var(--default-button-color);
+  font-size: 28px;
+  font-variant-numeric: tabular-nums;
+}
+
+.employee-filing-page .application-container {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.employee-filing-page .leave-application,
+.employee-filing-page .overtime-application {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex: 1;
-  flex-grow: 1;
+  min-width: 0;
+  min-height: 84px;
+  gap: 16px;
+  padding: 18px 20px;
   border: 1px solid var(--gray-200);
-  border-radius: 10px;
-  gap: 20px;
+  border-radius: 1rem;
+  background: var(--gray-50);
+}
+
+.employee-filing-page .leave-application > p,
+.employee-filing-page .overtime-application > p {
+  color: var(--neutral-color-100);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.employee-filing-page .apply-button {
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 18px;
+  border-radius: var(--border-radius);
+}
+
+.employee-filing-page .filing-table-card,
+.admin-filing-page .filing-review-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--gray-200);
+  border-radius: 1rem;
+  background: var(--gray-50);
+}
+
+.employee-filing-page .table-title,
+.admin-filing-page .user-track-title {
+  margin: 0;
+}
+
+.employee-filing-page .table-title > p,
+.admin-filing-page .user-track-title > p {
+  color: var(--neutral-color-100);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.employee-filing-page .filing-table,
+.admin-filing-page .filing-review-table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+}
+
+.employee-filing-page .filing-table .table-header,
+.employee-filing-page .filing-table .table-content {
+  display: grid;
+  min-width: 820px;
+}
+
+.employee-filing-page .filing-leave-table .table-header,
+.employee-filing-page .filing-leave-table .table-content {
+  grid-template-columns:
+    minmax(115px, 0.85fr)
+    minmax(155px, 1.15fr)
+    minmax(125px, 0.9fr)
+    minmax(180px, 1.3fr)
+    minmax(120px, 0.8fr)
+    minmax(150px, 1fr);
+}
+
+.employee-filing-page .filing-overtime-table .table-header,
+.employee-filing-page .filing-overtime-table .table-content {
+  grid-template-columns:
+    minmax(125px, 0.9fr)
+    minmax(100px, 0.7fr)
+    minmax(100px, 0.7fr)
+    minmax(180px, 1.3fr)
+    minmax(120px, 0.8fr)
+    minmax(150px, 1fr);
+}
+
+.employee-filing-page .filing-table .table-header-container,
+.employee-filing-page .filing-table .table-content-container,
+.admin-filing-page .filing-review-table .table-header-container,
+.admin-filing-page .filing-review-table .table-content-container {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 12px;
   overflow: hidden;
-  padding: 15px;
+}
+
+.employee-filing-page .filing-table .table-header-container,
+.admin-filing-page .filing-review-table .table-header-container {
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-90);
+}
+
+.employee-filing-page .filing-table .table-header-container p,
+.admin-filing-page .filing-review-table .table-header-container p {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.employee-filing-page .filing-table .table-content,
+.admin-filing-page .filing-review-table .table-content {
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.employee-filing-page .filing-table .table-content:last-child,
+.admin-filing-page .filing-review-table .table-content:last-child {
+  border-bottom: 0;
+}
+
+.employee-filing-page .filing-table .table-content-container,
+.admin-filing-page .filing-review-table .table-content-container {
+  min-height: 54px;
+  background: var(--gray-50);
+  color: var(--neutral-color-90);
+}
+
+.employee-filing-page .filing-table .table-content-container > p,
+.admin-filing-page .filing-review-table .table-content-container > p {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.employee-filing-page .filing-table .table-content-container:last-child {
+  gap: 8px;
+}
+
+.employee-filing-page .filing-table .action-button,
+.admin-filing-page .filing-review-table .action-button {
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 11px;
+  font-size: 12px;
+}
+
+.employee-filing-page .filing-empty-row .table-content-container {
+  grid-column: 1 / -1;
+}
+
+.employee-filing-page .filing-empty-state,
+.admin-filing-page .filing-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 88px;
+  padding: 24px;
+  color: var(--neutral-color-80);
+  font-size: 14px;
+  text-align: center;
+}
+
+.employee-filing-page .filing-status,
+.admin-filing-page .filing-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.employee-filing-page .filing-status[data-status="Pending"],
+.admin-filing-page .filing-status[data-status="Pending"] {
+  border-color: var(--main-color-1);
+  background: var(--neutral-color-20);
+  color: var(--default-button-color);
+}
+
+.employee-filing-page .filing-status[data-status="Approved"],
+.admin-filing-page .filing-status[data-status="Approved"] {
+  border-color: var(--main-color-4);
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-90);
+}
+
+.employee-filing-page .filing-status[data-status="Disapproved"],
+.admin-filing-page .filing-status[data-status="Disapproved"] {
+  border-color: var(--red-status);
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-90);
+}
+
+@media (max-width: 640px) {
+  .employee-filing-page .filing-summary-grid,
+  .admin-filing-page .filing-summary-grid,
+  .employee-filing-page .application-container {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .employee-filing-page .filing-metric-card,
+  .admin-filing-page .filing-metric-card {
+    min-height: 90px;
+    padding: 16px 18px;
+  }
+
+  .employee-filing-page .leave-application,
+  .employee-filing-page .overtime-application {
+    min-height: 76px;
+    padding: 14px 16px;
+  }
+
+  .employee-filing-page .filing-table-card,
+  .admin-filing-page .filing-review-card {
+    padding: 16px;
+  }
+}
+
+.filing-modal {
+  padding: 16px;
+}
+
+.filing-modal .filing-modal-content {
+  width: min(calc(100% - 32px), 640px);
+  max-height: calc(100vh - 32px);
+  margin: 0;
+  padding: 24px;
+  border: 1px solid var(--gray-200);
+  border-radius: 1rem;
+}
+
+.filing-overtime-modal .filing-modal-content {
+  width: min(calc(100% - 32px), 900px);
+}
+
+.filing-modal .filing-modal-title {
+  color: var(--neutral-color-100);
+  font-size: 24px;
+  line-height: 1.3;
+}
+
+.filing-modal .filing-modal-form {
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.filing-modal .input-container {
+  min-width: 0;
+  gap: 8px;
+}
+
+.filing-modal .label-container label,
+.filing-modal .label-container .field-label,
+.filing-modal .filing-single-day-row label {
+  color: var(--neutral-color-90);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.filing-leave-modal .dropdown-container {
+  display: block;
+  width: 100%;
+}
+
+.filing-leave-modal .dropdown-button {
+  min-height: 44px;
+  border-color: var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--gray-50);
+}
+
+.filing-modal .input-group-signup input {
+  width: 100%;
+  min-height: 44px;
+  border-color: var(--gray-200);
+  border-radius: var(--border-radius);
+}
+
+.filing-modal .input-group-signup input:focus-visible,
+.filing-leave-modal .dropdown-button:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: 2px;
+}
+
+.filing-modal .filing-single-day-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--neutral-color-20);
+}
+
+.filing-modal .filing-single-day-row .modal-checkbox {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--default-button-color);
+}
+
+.filing-modal .filing-date-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.filing-modal .modal-buttons {
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.filing-modal .modal-button {
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 18px;
+  border-radius: var(--border-radius);
+}
+
+.filing-modal .filing-overtime-records {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.filing-modal .table-toggler {
+  align-items: center;
+  min-height: 40px;
+}
+
+.filing-modal .table-toggler > p {
+  color: var(--neutral-color-100);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.filing-modal .table-toggler .toggle-btn {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--gray-50);
+  font-size: 13px;
+}
+
+.filing-modal .filing-overtime-record-list {
+  overflow-x: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+}
+
+.filing-modal .filing-overtime-record-list .table-header,
+.filing-modal .filing-overtime-record-list .table-content {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(125px, 1fr)) minmax(110px, 0.8fr);
+  min-width: 580px;
+}
+
+.filing-modal .filing-overtime-record-list .table-header-container,
+.filing-modal .filing-overtime-record-list .table-content-container {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 12px;
+}
+
+.filing-modal .filing-overtime-record-list .table-header-container {
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-90);
+}
+
+.filing-modal .filing-overtime-record-list .table-header-container p {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.filing-modal
+  .filing-overtime-record-list
+  .table-content:not(.filing-empty-row)
+  .table-content-container:last-child {
+  justify-content: flex-end;
+}
+
+.filing-modal .filing-overtime-record-list .filing-empty-row .table-content-container {
+  grid-column: 1 / -1;
+}
+
+.filing-modal .filing-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 16px;
+  color: var(--neutral-color-80);
+  font-size: 13px;
+  text-align: center;
+}
+
+.filing-modal .filing-overtime-record-list .action-button {
+  min-height: 34px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.filing-modal .filing-overtime-record-list .pagination {
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px;
+}
+
+.filing-modal .selected-summary {
+  gap: 12px;
+  padding: 12px;
+  border-color: var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--neutral-color-20);
+}
+
+.filing-modal .selected-summary p {
+  color: var(--neutral-color-90);
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .filing-modal {
+    padding: 12px;
+  }
+
+  .filing-modal .filing-modal-content {
+    width: 100%;
+    max-height: calc(100vh - 24px);
+    padding: 18px;
+  }
+
+  .filing-modal .filing-modal-title {
+    font-size: 21px;
+  }
+
+  .filing-modal .filing-date-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .filing-modal .modal-buttons {
+    flex-direction: column-reverse;
+  }
+
+  .filing-modal .modal-button {
+    width: 100%;
+  }
+
+  .filing-modal .selected-summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }

@@ -123,18 +123,18 @@ const Filing = () => {
   ).length;
 
   return (
-    <div className="main-content">
-      <div className="data-card-container">
-        <div className="data-card">
+    <div className="main-content employee-filing-page">
+      <div className="data-card-container filing-summary-grid">
+        <div className="data-card filing-metric-card">
           <div className="message-container">
-            <div className="data-title">Total Leave Requests</div>
+            <div className="data-title">Pending Leave Requests</div>
             <div className="data-value">{leavePendingCount}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card filing-metric-card">
           <div className="message-container">
-            <div className="data-title">Total Overtime Requests</div>
+            <div className="data-title">Pending Overtime Requests</div>
             <div className="data-value">{overtimePendingCount}</div>
           </div>
         </div>
@@ -144,6 +144,7 @@ const Filing = () => {
         <div className="leave-application">
           <p>Application for Leave</p>
           <button
+            type="button"
             className="btn apply-button"
             onClick={() => handleApplyLeave()}
           >
@@ -155,6 +156,7 @@ const Filing = () => {
         <div className="overtime-application">
           <p>Application for Overtime</p>
           <button
+            type="button"
             className="btn apply-button"
             onClick={() => handleApplyOvertime()}
           >
@@ -164,11 +166,11 @@ const Filing = () => {
         </div>
       </div>
 
-      <div className="table-container">
+      <div className="table-container filing-table-card">
         <div className="table-title">
           <p>Leave Requests</p>
         </div>
-        <div className="table">
+        <div className="table filing-table filing-leave-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Date Filed</p>
@@ -190,9 +192,11 @@ const Filing = () => {
             </article>
           </div>
           {userLeaveRequests.length === 0 ? (
-            <div className="table-content">
+            <div className="table-content filing-empty-row">
               <article className="table-content-container">
-                <h6 className="no-data">No leave requests found.</h6>
+                <h6 className="no-data filing-empty-state">
+                  No leave requests found.
+                </h6>
               </article>
             </div>
           ) : (
@@ -211,7 +215,9 @@ const Filing = () => {
                   <p>{user.leaveDetails}</p>
                 </article>
                 <article className="table-content-container">
-                  <p>{user.status}</p>
+                  <span className="filing-status" data-status={user.status}>
+                    {user.status}
+                  </span>
                 </article>
                 <article className="table-content-container">
                   {user.status !== "Disapproved" &&
@@ -219,12 +225,18 @@ const Filing = () => {
                       <>
                         <button
                           className="btn action-button"
+                          type="button"
+                          aria-label={`Edit ${user.leaveType} leave request`}
+                          title="Edit leave request"
                           onClick={() => handleEditLeave(user)}
                         >
                           Edit
                         </button>
                         <button
                           className="btn action-button"
+                          type="button"
+                          aria-label={`Delete ${user.leaveType} leave request`}
+                          title="Delete leave request"
                           onClick={() => handleDeleteTarget(user, "leave")}
                         >
                           Delete
@@ -238,11 +250,11 @@ const Filing = () => {
         </div>
       </div>
 
-      <div className="table-container">
+      <div className="table-container filing-table-card">
         <div className="table-title">
           <p>Overtime Application</p>
         </div>
-        <div className="table">
+        <div className="table filing-table filing-overtime-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Date</p>
@@ -265,9 +277,11 @@ const Filing = () => {
           </div>
 
           {userOvertimeRequests.length === 0 ? (
-            <div className="table-content">
+            <div className="table-content filing-empty-row">
               <article className="table-content-container">
-                <h6 className="no-data">No Overtime Requests</h6>
+                <h6 className="no-data filing-empty-state">
+                  No overtime requests found.
+                </h6>
               </article>
             </div>
           ) : (
@@ -286,17 +300,25 @@ const Filing = () => {
                   <p>{overtime.overtimeDetails}</p>
                 </article>
                 <article className="table-content-container">
-                  <p>{overtime.status}</p>
+                  <span className="filing-status" data-status={overtime.status}>
+                    {overtime.status}
+                  </span>
                 </article>
                 <article className="table-content-container">
                   <button
                     className="btn action-button"
+                    type="button"
+                    aria-label="Edit overtime request"
+                    title="Edit overtime request"
                     onClick={() => handleEditOvertime(overtime)}
                   >
                     Edit
                   </button>
                   <button
                     className="btn action-button"
+                    type="button"
+                    aria-label="Delete overtime request"
+                    title="Delete overtime request"
                     onClick={() => handleDeleteTarget(overtime, "overtime")}
                   >
                     Delete

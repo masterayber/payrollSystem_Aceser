@@ -1,30 +1,29 @@
 import CalendarComponent from "../../components/CalendarComponent/CalendarComponent";
 import { IconDotsVertical } from "@tabler/icons-react";
+import "../../styles/AdminCSS/AdminCalendar.css";
 
 const AdminCalendar = () => {
   return (
-    <div className="main-content">
-      <div className="data-card">
+    <div className="main-content admin-calendar-page">
+      <div className="data-card admin-month-card">
         <CalendarComponent isAdmin />
       </div>
 
-      <div className="data-card-container">
-        <div className="data-card">
+      <div className="data-card-container admin-calendar-lists">
+        <div className="data-card admin-calendar-list-card">
           <div className="user-track-title">
             <p>Events</p>
             <IconDotsVertical stroke={2} />
           </div>
 
-          <div className="table">
+          <div className="table calendar-events-table">
             <div className="table-header">
               <article className="table-header-container">
                 <p>Date</p>
               </article>
-              <hr className="header-hr"></hr>
               <article className="table-header-container">
                 <p>Day</p>
               </article>
-              <hr className="header-hr"></hr>
               <article className="table-header-container">
                 <p>Event</p>
               </article>
@@ -65,26 +64,23 @@ const AdminCalendar = () => {
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card admin-calendar-list-card">
           <div className="user-track-title">
             <p>List of Holidays</p>
             <IconDotsVertical stroke={2} />
           </div>
 
-          <div className="table">
+          <div className="table calendar-holidays-table">
             <div className="table-header">
               <article className="table-header-container">
                 <p>Date</p>
               </article>
-              <hr className="header-hr"></hr>
               <article className="table-header-container">
                 <p>Day</p>
               </article>
-              <hr className="header-hr"></hr>
               <article className="table-header-container">
                 <p>Name of Holiday</p>
               </article>
-              <hr className="header-hr"></hr>
               <article className="table-header-container">
                 <p>Type</p>
               </article>

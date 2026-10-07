@@ -33,12 +33,18 @@ const settingsContent = {
 const AdminSettings = () => {
   const [selectedOption, setSelectedOption] = useState("general");
   return (
-    <div className="main-content">
-      <div className="data-card">
-        <div className="setting-options">
+    <div className="main-content admin-settings-page">
+      <div className="data-card settings-shell">
+        <div
+          className="setting-options"
+          role="group"
+          aria-label="Settings sections"
+        >
           {settingsOptions.map((option) => (
             <button
               key={option.key}
+              type="button"
+              aria-pressed={selectedOption === option.key}
               className={`setting-button ${
                 selectedOption === option.key ? "active" : ""
               }`}
@@ -49,7 +55,9 @@ const AdminSettings = () => {
           ))}
         </div>
 
-        {settingsContent[selectedOption]}
+        <div className="settings-panel">
+          {settingsContent[selectedOption]}
+        </div>
       </div>
     </div>
   );

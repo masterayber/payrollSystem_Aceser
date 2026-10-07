@@ -82,7 +82,7 @@ const ManageAccessModal = ({ employee, onClose }) => {
   return ReactDOM.createPortal(
     <div className="modal">
       <div
-        className="modal-content"
+        className="modal-content employee-modal-content"
         role="dialog"
         aria-modal="true"
         aria-labelledby="manage-access-title"

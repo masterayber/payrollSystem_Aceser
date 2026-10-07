@@ -114,18 +114,19 @@ const Reports = () => {
   const reportLabel = reportType === "month" ? "Full Month" : "Cut-off";
 
   return (
-    <div className="main-content">
-      <div className="data-card">
+    <div className="main-content reports-page">
+      <div className="data-card reports-export-card" aria-busy={loading}>
         <div className="user-track-title">
           <p>Attendance Reports</p>
         </div>
 
-        <div className="user-track-description">
+        <div className="user-track-description reports-description">
           <p>Export attendance for all employees.</p>
           <div className="reports-actions">
             <label className="reports-label">
               Export Mode
               <select
+                className="reports-select"
                 value={reportType}
                 onChange={(e) => setReportType(e.target.value)}
               >
@@ -137,6 +138,7 @@ const Reports = () => {
               <label className="reports-label">
                 Cut-off Period
                 <select
+                  className="reports-select"
                   value={selectedOption}
                   onChange={(e) => setSelectedOption(e.target.value)}
                 >
@@ -151,6 +153,7 @@ const Reports = () => {
               <label className="reports-label">
                 Select Month
                 <select
+                  className="reports-select"
                   value={selectedOption}
                   onChange={(e) => setSelectedOption(e.target.value)}
                 >
@@ -164,7 +167,7 @@ const Reports = () => {
             )}
             <button
               type="button"
-              className="btn"
+              className="btn reports-download-button"
               disabled={loading || employeeData.length === 0 || !selectedOption}
               onClick={handleDownload}
             >
@@ -174,22 +177,22 @@ const Reports = () => {
         </div>
       </div>
 
-      <div className="data-card-container">
-        <div className="data-card">
+      <div className="data-card-container reports-summary-grid">
+        <div className="data-card reports-metric-card">
           <div className="message-container">
             <div className="data-title">Employees</div>
             <span className="data-value">{employeeData.length}</span>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card reports-metric-card">
           <div className="message-container">
             <div className="data-title">Attendance Records</div>
             <span className="data-value">{attendanceRecords.length}</span>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card reports-metric-card reports-range-card">
           <div className="message-container">
             <div className="data-title">Export Range</div>
             <span className="data-value">

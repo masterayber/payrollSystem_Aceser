@@ -38,3 +38,74 @@
 .settings-content {
   width: 100%;
 }
+
+.admin-settings-page {
+  align-items: stretch;
+}
+
+.admin-settings-page .settings-shell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+.admin-settings-page .setting-options {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  gap: 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--gray-200);
+  scrollbar-width: thin;
+}
+
+.admin-settings-page .setting-button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--border-radius);
+  color: var(--neutral-color-80);
+  cursor: pointer;
+}
+
+.admin-settings-page .setting-button p {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-settings-page .setting-button:hover {
+  background: var(--neutral-color-20);
+}
+
+.admin-settings-page .setting-button.active {
+  color: var(--default-button-color);
+}
+
+.admin-settings-page .setting-button.active::after {
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+}
+
+.admin-settings-page .setting-button:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: 2px;
+}
+
+.admin-settings-page .settings-panel {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .admin-settings-page .settings-shell {
+    gap: 16px;
+    padding: 16px;
+  }
+}

@@ -95,37 +95,37 @@ const Calendar = () => {
   const absentDays = explicitAbsentDays + missingRecordDays;
 
   return (
-    <div className="main-content">
-      <div className="data-card-container">
-        <div className="data-card">
+    <div className="main-content employee-calendar-page">
+      <div className="data-card-container employee-calendar-summary">
+        <div className="data-card attendance-metric-card">
           <div className="message-container">
             <div className="data-title">Total days worked</div>
             <div className="data-value">{workDays}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card attendance-metric-card">
           <div className="message-container">
             <div className="data-title">Total On-Time</div>
             <div className="data-value">{onTimeDays}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card attendance-metric-card">
           <div className="message-container">
             <div className="data-title">Total Late</div>
             <div className="data-value">{lateDays}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card attendance-metric-card">
           <div className="message-container">
             <div className="data-title">Total On-Leave</div>
             <div className="data-value">{onLeaveDays}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card attendance-metric-card">
           <div className="message-container">
             <div className="data-title">Total Absent</div>
             <div className="data-value">{absentDays}</div>
@@ -133,7 +133,7 @@ const Calendar = () => {
         </div>
       </div>
 
-      <div className="table-container">
+      <div className="table-container employee-calendar-view">
         <CalendarComponent
           attendanceData={attendanceData}
           currentDate={currentDate}

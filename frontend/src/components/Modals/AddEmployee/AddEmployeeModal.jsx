@@ -164,7 +164,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
 
   return ReactDOM.createPortal(
     <div className="modal">
-      <div className="modal-content">
+      <div className="modal-content employee-modal-content">
         <h3>Add Employee</h3>
         <form onSubmit={handleSubmit} className="form-container">
           <div className="input-row">

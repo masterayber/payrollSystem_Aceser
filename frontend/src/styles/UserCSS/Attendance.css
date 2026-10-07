@@ -1,0 +1,193 @@
+.employee-attendance-page {
+  align-items: stretch;
+}
+
+.employee-attendance-page .employee-attendance-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+  overflow: visible;
+}
+
+.employee-attendance-page .attendance-metric-card {
+  min-width: 0;
+  min-height: 104px;
+  padding: 18px 20px;
+}
+
+.employee-attendance-page .attendance-metric-card .data-title {
+  color: var(--neutral-color-80);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.employee-attendance-page .attendance-metric-card .data-value {
+  margin-top: 8px;
+  color: var(--default-button-color);
+  font-size: 28px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.employee-attendance-page .attendance-period-control {
+  width: min(100%, 360px);
+}
+
+.employee-attendance-page .attendance-period-control .dropdown-container {
+  width: 100%;
+}
+
+.employee-attendance-page .attendance-period-control .dropdown-button {
+  min-height: 44px;
+  border-color: var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--gray-50);
+  color: var(--neutral-color-90);
+}
+
+.employee-attendance-page .employee-attendance-log {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--gray-200);
+  border-radius: 1rem;
+  background: var(--gray-50);
+}
+
+.employee-attendance-page .table-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.employee-attendance-page .table-title > p {
+  color: var(--neutral-color-100);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.employee-attendance-page .attendance-download-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--neutral-color-80);
+  cursor: pointer;
+}
+
+.employee-attendance-page .attendance-download-button:hover {
+  background: var(--neutral-color-20);
+}
+
+.employee-attendance-page .attendance-download-button:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: 2px;
+}
+
+.employee-attendance-page .attendance-record-table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+}
+
+.employee-attendance-page .attendance-record-table .table-header,
+.employee-attendance-page .attendance-record-table .table-content {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.3fr) repeat(2, minmax(90px, 0.8fr)) minmax(100px, 0.9fr) minmax(120px, 1fr);
+  min-width: 660px;
+}
+
+.employee-attendance-page .attendance-record-table .table-header-container,
+.employee-attendance-page .attendance-record-table .table-content-container {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+}
+
+.employee-attendance-page .attendance-record-table .table-header-container {
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-90);
+}
+
+.employee-attendance-page .attendance-record-table .table-header-container p {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.employee-attendance-page .attendance-record-table .table-content {
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.employee-attendance-page .attendance-record-table .table-content:last-child {
+  border-bottom: 0;
+}
+
+.employee-attendance-page .attendance-record-table .table-content-container {
+  min-height: 50px;
+  background: var(--gray-50);
+  color: var(--neutral-color-90);
+}
+
+.employee-attendance-page .attendance-record-table .table-content-container p {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.employee-attendance-page .attendance-record-table .no-data {
+  min-height: 90px;
+  padding: 24px 12px;
+  color: var(--neutral-color-80);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.employee-attendance-page .employee-attendance-log .pagination {
+  align-self: flex-end;
+  color: var(--neutral-color-80);
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .employee-attendance-page .employee-attendance-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .employee-attendance-page .attendance-period-control {
+    width: 100%;
+  }
+
+  .employee-attendance-page .employee-attendance-log {
+    padding: 16px;
+  }
+
+  .employee-attendance-page .employee-attendance-log .pagination {
+    align-self: stretch;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 420px) {
+  .employee-attendance-page .employee-attendance-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

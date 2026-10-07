@@ -61,9 +61,9 @@ const ApproveEmployeeModal = ({ onClose, onUpdateEmployee }) => {
 
   return (
     <div className="modal">
-      <div className="modal-content">
+      <div className="modal-content employee-modal-content">
         <h3>Approve User</h3>
-        <div className="table-modal">
+        <div className="table-modal employee-modal-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>First Name</p>

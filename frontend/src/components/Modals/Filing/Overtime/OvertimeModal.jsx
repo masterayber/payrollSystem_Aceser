@@ -203,101 +203,112 @@ const OvertimeModal = ({
   };
 
   return ReactDOM.createPortal(
-    <div className="modal">
-      <div className="modal-content">
-        <h3>{isEdit ? "Edit Overtime Request:" : "Apply for Overtime"}</h3>
-        <form onSubmit={handleSubmit} className="form-container">
-          <div className="table">
+    <div className="modal filing-modal filing-overtime-modal">
+      <div className="modal-content filing-modal-content">
+        <h3 className="filing-modal-title">
+          {isEdit ? "Edit Overtime Request" : "Apply for Overtime"}
+        </h3>
+        <form
+          onSubmit={handleSubmit}
+          className="form-container filing-modal-form"
+        >
+          <div className="table filing-overtime-records">
             <div className="table-toggler">
               <p>Overtime Records</p>
               <button
                 type="button"
                 onClick={() => setIsTableMinimized(!isTableMinimized)}
                 className="toggle-btn"
+                aria-expanded={!isTableMinimized}
               >
-                {isTableMinimized ? "[Show]" : "[Hide]"}
+                {isTableMinimized ? "Show records" : "Hide records"}
               </button>
             </div>
             {!isTableMinimized && (
               <>
-                <div className="table-header">
-                  <article className="table-header-container">
-                    <p>Date</p>
-                  </article>
-                  <article className="table-header-container">
-                    <p>Time In</p>
-                  </article>
-                  <article className="table-header-container">
-                    <p>Time Out</p>
-                  </article>
-                  <article className="table-header-container">
-                    <p>Action</p>
-                  </article>
-                </div>
-
-                {overtimeList.length === 0 ? (
-                  <div className="table-content">
-                    <article className="table-content-container">
-                      <h6 className="no-data">No leave requests found</h6>
+                <div className="filing-overtime-record-list">
+                  <div className="table-header">
+                    <article className="table-header-container">
+                      <p>Date</p>
+                    </article>
+                    <article className="table-header-container">
+                      <p>Time In</p>
+                    </article>
+                    <article className="table-header-container">
+                      <p>Time Out</p>
+                    </article>
+                    <article className="table-header-container">
+                      <p>Action</p>
                     </article>
                   </div>
-                ) : (
-                  (() => {
-                    const sortedList = [...overtimeList].sort(
-                      (a, b) => new Date(b.date) - new Date(a.date),
-                    );
 
-                    const selectedIndex = sortedList.findIndex(
-                      (att) => att._id === selectedOvertime?._id,
-                    );
+                  {overtimeList.length === 0 ? (
+                    <div className="table-content filing-empty-row">
+                      <article className="table-content-container">
+                        <h6 className="no-data filing-empty-state">
+                          No overtime records available.
+                        </h6>
+                      </article>
+                    </div>
+                  ) : (
+                    (() => {
+                      const sortedList = [...overtimeList].sort(
+                        (a, b) => new Date(b.date) - new Date(a.date),
+                      );
 
-                    if (selectedIndex > 0) {
-                      const [selected] = sortedList.splice(selectedIndex, 1);
-                      sortedList.unshift(selected);
-                    }
+                      const selectedIndex = sortedList.findIndex(
+                        (att) => att._id === selectedOvertime?._id,
+                      );
 
-                    return sortedList
-                      ?.slice(
-                        (currentPage - 1) * itemsPerPage,
-                        currentPage * itemsPerPage,
-                      )
-                      .map((att) => (
-                        <div
-                          key={att._id}
-                          className={`table-content ${
-                            selectedOvertime?._id === att._id
-                              ? "selected-row"
-                              : ""
-                          }`}
-                        >
-                          <article className="table-content-container">
-                            <p>{formatDate(att.date)}</p>
-                          </article>
-                          <article className="table-content-container">
-                            <p>{att.overtime?.start}</p>
-                          </article>
-                          <article className="table-content-container">
-                            <p>{att.overtime?.end}</p>
-                          </article>
-                          <article className="table-content-container">
-                            <button
-                              type="button"
-                              className="btn action-button"
-                              onClick={() => handleSelectedOvertime(att)}
-                            >
-                              Select
-                            </button>
-                          </article>
-                        </div>
-                      ));
-                  })()
-                )}
+                      if (selectedIndex > 0) {
+                        const [selected] = sortedList.splice(selectedIndex, 1);
+                        sortedList.unshift(selected);
+                      }
 
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
+                      return sortedList
+                        ?.slice(
+                          (currentPage - 1) * itemsPerPage,
+                          currentPage * itemsPerPage,
+                        )
+                        .map((att) => (
+                          <div
+                            key={att._id}
+                            className={`table-content ${
+                              selectedOvertime?._id === att._id
+                                ? "selected-row"
+                                : ""
+                            }`}
+                          >
+                            <article className="table-content-container">
+                              <p>{formatDate(att.date)}</p>
+                            </article>
+                            <article className="table-content-container">
+                              <p>{att.overtime?.start}</p>
+                            </article>
+                            <article className="table-content-container">
+                              <p>{att.overtime?.end}</p>
+                            </article>
+                            <article className="table-content-container">
+                              <button
+                                type="button"
+                                className="btn action-button"
+                                aria-label={`Select overtime record for ${formatFullMonthDate(att.date)}`}
+                                onClick={() => handleSelectedOvertime(att)}
+                              >
+                                Select
+                              </button>
+                            </article>
+                          </div>
+                        ));
+                    })()
+                  )}
+
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
               </>
             )}
           </div>
@@ -322,11 +333,13 @@ const OvertimeModal = ({
 
           <div className="input-container">
             <div className="label-container">
-              <label>Details</label> <span className="required">*</span>
+              <label htmlFor="filing-overtime-details">Details</label>{" "}
+              <span className="required">*</span>
             </div>
             <div className="input-group-signup">
               <input
                 type="text"
+                id="filing-overtime-details"
                 value={overtimeDetails}
                 placeholder="Details of Overtime"
                 onChange={handleDetailsChange}

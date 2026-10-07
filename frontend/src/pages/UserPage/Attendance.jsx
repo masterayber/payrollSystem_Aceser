@@ -569,30 +569,30 @@ const Attendance = () => {
   }, [showDownloadDropdown]);
 
   return (
-    <div className="main-content">
-      <div className="data-card-container">
-        <div className="data-card">
+    <div className="main-content employee-attendance-page">
+      <div className="data-card-container employee-attendance-summary">
+        <div className="data-card attendance-metric-card">
           <div className="message-container">
             <div className="data-title">Total Hours Worked</div>
             <div className="data-value">{metrics.totalHours}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card attendance-metric-card">
           <div className="message-container">
             <div className="data-title">Total Overtime Hours</div>
             <div className="data-value">{metrics.totalOvertimeHours}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card attendance-metric-card">
           <div className="message-container">
             <div className="data-title">Total On-Time</div>
             <div className="data-value">{metrics.totalOnTime}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card attendance-metric-card">
           <div className="message-container">
             <div className="data-title">Total Absences</div>
             <div className="data-value">{metrics.totalAbsences}</div>
@@ -600,24 +600,30 @@ const Attendance = () => {
         </div>
       </div>
 
-      <Dropdown
-        options={cutoffOptions}
-        value={selectedCutoff}
-        placeholder="Select Cut-off period"
-        onSelect={handleMonthChange}
-      />
+      <div className="attendance-period-control">
+        <Dropdown
+          options={cutoffOptions}
+          value={selectedCutoff}
+          placeholder="Select Cut-off period"
+          onSelect={handleMonthChange}
+        />
+      </div>
 
-      <div className="table-container">
+      <div className="table-container employee-attendance-log">
         <div className="table-title">
           <p>Daily Attendance Log</p>
 
           <div className="dots-button-container">
-            <IconDotsVertical
-              stroke={2}
+            <button
+              type="button"
+              aria-label="Attendance log options"
+              aria-expanded={showDownloadDropdown}
               onClick={toggleDownloadDropdown}
               ref={downloadSvgRef}
-              className="dots-button"
-            />
+              className="dots-button attendance-download-button"
+            >
+              <IconDotsVertical stroke={2} />
+            </button>
             {showDownloadDropdown && (
               <div className="dropdown-details" ref={downloadDropdownRef}>
                 <button
@@ -630,7 +636,7 @@ const Attendance = () => {
             )}
           </div>
         </div>
-        <div className="table">
+        <div className="table attendance-record-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Date</p>
@@ -651,7 +657,7 @@ const Attendance = () => {
           {filteredAttendance.length === 0 ? (
             <div className="table-content">
               <article className="table-content-container">
-                <h6 className="no-data">No Attendance Available</h6>
+                <h6 className="no-data">No attendance available</h6>
               </article>
             </div>
           ) : (
@@ -679,7 +685,14 @@ const Attendance = () => {
                     </p>
                   </article>
                   <article className="table-content-container">
-                    <p>{att.behavior}</p>
+                    <p>
+                      <span
+                        className="attendance-behavior"
+                        data-behavior={att.behavior}
+                      >
+                        {att.behavior}
+                      </span>
+                    </p>
                   </article>
                 </div>
               ))

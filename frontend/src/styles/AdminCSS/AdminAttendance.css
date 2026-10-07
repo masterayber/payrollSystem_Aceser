@@ -14,10 +14,10 @@
 .date-picker {
   font-size: 16px;
   font-weight: 500;
-  padding: 10px;
+  padding: 10px 38px 10px 12px;
   background: var(--gray-50);
   border: 1px solid var(--gray-200);
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   outline: none;
   cursor: pointer;
 }
@@ -35,4 +35,255 @@
   right: 10px;
   color: var(--neutral-color-100);
   cursor: pointer;
+}
+
+.admin-attendance-page {
+  align-items: stretch;
+}
+
+.admin-attendance-page .admin-attendance-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 12px;
+  overflow: visible;
+}
+
+.admin-attendance-page .attendance-metric-card {
+  min-width: 0;
+  min-height: 96px;
+  padding: 18px;
+}
+
+.admin-attendance-page .attendance-metric-card .data-title {
+  color: var(--neutral-color-80);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-attendance-page .attendance-metric-card .data-value {
+  margin-top: 10px;
+  color: var(--default-button-color);
+  font-size: 28px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-attendance-page .attendance-toolbar {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.admin-attendance-page .attendance-search {
+  flex: 1 1 280px;
+  width: min(100%, 440px);
+  min-height: 44px;
+  margin: 0;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+}
+
+.admin-attendance-page .attendance-search input {
+  min-width: 0;
+  width: 100%;
+}
+
+.admin-attendance-page .attendance-date-picker {
+  min-height: 44px;
+  flex: 0 0 auto;
+}
+
+.admin-attendance-page .attendance-date-picker .react-datepicker-wrapper,
+.admin-attendance-page .attendance-date-picker .react-datepicker__input-container {
+  height: 44px;
+}
+
+.admin-attendance-page .date-picker {
+  width: 190px;
+  height: 44px;
+}
+
+.admin-attendance-page .attendance-table-card {
+  min-width: 0;
+  overflow: visible;
+}
+
+.admin-attendance-page .attendance-table-card .user-track-title {
+  margin-bottom: 16px;
+}
+
+.admin-attendance-page .user-track-title p {
+  color: var(--neutral-color-100);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.admin-attendance-page .admin-attendance-table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+}
+
+.admin-attendance-page .admin-attendance-table .table-header,
+.admin-attendance-page .admin-attendance-table .table-content {
+  display: grid;
+  grid-template-columns:
+    minmax(100px, 0.8fr)
+    repeat(2, minmax(120px, 1fr))
+    repeat(2, minmax(88px, 0.7fr))
+    minmax(120px, 0.9fr)
+    minmax(76px, 0.55fr);
+  align-items: stretch;
+  width: 100%;
+  min-width: 900px;
+}
+
+.admin-attendance-page .admin-attendance-table .table-header-container,
+.admin-attendance-page .admin-attendance-table .table-content-container {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+}
+
+.admin-attendance-page .admin-attendance-table .table-header-container {
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-90);
+}
+
+.admin-attendance-page .admin-attendance-table .table-header-container p {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-attendance-page .admin-attendance-table .table-content {
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.admin-attendance-page .admin-attendance-table .table-content:last-child {
+  border-bottom: 0;
+}
+
+.admin-attendance-page .admin-attendance-table .table-content-container {
+  min-height: 52px;
+  background: var(--gray-50);
+  color: var(--neutral-color-90);
+}
+
+.admin-attendance-page .admin-attendance-table .table-content-container p {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-attendance-page .attendance-behavior,
+.employee-attendance-page .attendance-behavior {
+  display: inline-block;
+  padding: 5px 8px;
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-90);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.attendance-behavior[data-behavior="On-Time"],
+.attendance-behavior[data-behavior="On-time"] {
+  border-color: var(--green-status);
+}
+
+.attendance-behavior[data-behavior="Late"] {
+  border-color: var(--yellow-status);
+}
+
+.attendance-behavior[data-behavior="Absent"] {
+  border-color: var(--red-status);
+}
+
+.attendance-behavior[data-behavior="On-Leave"] {
+  border-color: var(--gray-status);
+}
+
+.attendance-behavior[data-behavior="Half-Day"] {
+  border-color: var(--purple-status);
+}
+
+.attendance-behavior[data-behavior="Early Out"] {
+  border-color: var(--blue-status);
+}
+
+.admin-attendance-page .action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-height: 36px;
+  padding: 7px;
+}
+
+.admin-attendance-page .no-data {
+  min-height: 120px;
+  padding: 28px 12px;
+  color: var(--neutral-color-80);
+  font-size: 14px;
+}
+
+.admin-attendance-page .pagination {
+  align-self: flex-end;
+  color: var(--neutral-color-80);
+  font-size: 14px;
+}
+
+@media (max-width: 1024px) {
+  .admin-attendance-page .admin-attendance-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-attendance-page .admin-attendance-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-attendance-page .attendance-toolbar {
+    align-items: stretch;
+  }
+
+  .admin-attendance-page .attendance-search {
+    flex-basis: 100%;
+    width: 100%;
+  }
+
+  .admin-attendance-page .attendance-date-picker {
+    width: 100%;
+  }
+
+  .admin-attendance-page .date-picker {
+    width: 100%;
+  }
+
+  .admin-attendance-page .pagination {
+    align-self: stretch;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 420px) {
+  .admin-attendance-page .admin-attendance-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

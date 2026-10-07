@@ -39,7 +39,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="forgotPassword-container">
+    <div className="auth-page forgotPassword-container">
       <form className="forgotPassword-form" onSubmit={handleForgot}>
         <h2>Find your account</h2>
         <p>

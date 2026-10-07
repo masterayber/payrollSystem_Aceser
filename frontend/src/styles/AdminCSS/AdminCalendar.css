@@ -1,0 +1,123 @@
+.admin-calendar-page {
+  align-items: stretch;
+}
+
+.admin-calendar-page .admin-month-card {
+  padding: 24px;
+}
+
+.admin-calendar-page .admin-calendar-lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 16px;
+  overflow: visible;
+}
+
+.admin-calendar-page .admin-calendar-list-card {
+  min-width: 0;
+  padding: 20px;
+}
+
+.admin-calendar-page .user-track-title {
+  margin-bottom: 16px;
+}
+
+.admin-calendar-page .user-track-title p {
+  color: var(--neutral-color-100);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.admin-calendar-page .user-track-title > svg {
+  width: 20px;
+  height: 20px;
+  color: var(--neutral-color-80);
+}
+
+.admin-calendar-page .calendar-events-table,
+.admin-calendar-page .calendar-holidays-table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+}
+
+.admin-calendar-page .calendar-events-table .table-header,
+.admin-calendar-page .calendar-events-table .table-content {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.8fr) minmax(110px, 0.9fr) minmax(100px, 1.2fr);
+  min-width: 400px;
+}
+
+.admin-calendar-page .calendar-holidays-table .table-header,
+.admin-calendar-page .calendar-holidays-table .table-content {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.8fr) minmax(100px, 0.8fr) minmax(150px, 1.3fr) minmax(180px, 1.4fr);
+  min-width: 560px;
+}
+
+.admin-calendar-page .calendar-events-table .table-header-container,
+.admin-calendar-page .calendar-events-table .table-content-container,
+.admin-calendar-page .calendar-holidays-table .table-header-container,
+.admin-calendar-page .calendar-holidays-table .table-content-container {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+}
+
+.admin-calendar-page .calendar-events-table .table-header-container,
+.admin-calendar-page .calendar-holidays-table .table-header-container {
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-90);
+}
+
+.admin-calendar-page .calendar-events-table .table-header-container p,
+.admin-calendar-page .calendar-holidays-table .table-header-container p {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-calendar-page .calendar-events-table .table-content,
+.admin-calendar-page .calendar-holidays-table .table-content {
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.admin-calendar-page .calendar-events-table .table-content:last-child,
+.admin-calendar-page .calendar-holidays-table .table-content:last-child {
+  border-bottom: 0;
+}
+
+.admin-calendar-page .calendar-events-table .table-content-container,
+.admin-calendar-page .calendar-holidays-table .table-content-container {
+  min-height: 50px;
+  background: var(--gray-50);
+  color: var(--neutral-color-90);
+  font-size: 13px;
+}
+
+.admin-calendar-page .calendar-events-table .table-content-container p,
+.admin-calendar-page .calendar-holidays-table .table-content-container p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .admin-calendar-page .admin-calendar-lists {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-calendar-page .admin-month-card,
+  .admin-calendar-page .admin-calendar-list-card {
+    padding: 16px;
+  }
+}

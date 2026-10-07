@@ -1,0 +1,53 @@
+.admin-filing-page {
+  align-items: stretch;
+}
+
+.admin-filing-page .filing-review-card .user-track-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-filing-page .filing-review-table .table-header,
+.admin-filing-page .filing-review-table .table-content {
+  display: grid;
+  min-width: 1080px;
+}
+
+.admin-filing-page .filing-review-leave-table .table-header,
+.admin-filing-page .filing-review-leave-table .table-content {
+  grid-template-columns:
+    minmax(155px, 1.2fr)
+    minmax(130px, 0.9fr)
+    minmax(150px, 1.1fr)
+    minmax(130px, 0.9fr)
+    minmax(190px, 1.3fr)
+    minmax(120px, 0.8fr)
+    minmax(115px, 0.8fr);
+}
+
+.admin-filing-page .filing-review-overtime-table .table-header,
+.admin-filing-page .filing-review-overtime-table .table-content {
+  grid-template-columns:
+    minmax(160px, 1.2fr)
+    minmax(145px, 1fr)
+    minmax(95px, 0.7fr)
+    minmax(95px, 0.7fr)
+    minmax(190px, 1.3fr)
+    minmax(120px, 0.8fr)
+    minmax(115px, 0.8fr);
+}
+
+.admin-filing-page .filing-review-table .table-content-container:last-child {
+  gap: 8px;
+}
+
+.admin-filing-page .filing-review-table .action-button {
+  width: 36px;
+  padding: 8px;
+}
+
+.admin-filing-page .filing-review-table .action-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

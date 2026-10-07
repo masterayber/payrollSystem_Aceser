@@ -179,9 +179,9 @@ const AdminAttendance = () => {
   };
 
   return (
-    <div className="main-content">
-      <div className="data-card-container">
-        <div className="data-card">
+    <div className="main-content admin-attendance-page">
+      <div className="data-card-container admin-attendance-summary">
+        <div className="data-card attendance-metric-card">
           <div className="data-title">On-Time</div>
           <div className="data-value">
             {
@@ -198,7 +198,7 @@ const AdminAttendance = () => {
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card attendance-metric-card">
           <div className="data-title">Late</div>
           <div className="data-value">
             {
@@ -209,7 +209,7 @@ const AdminAttendance = () => {
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card attendance-metric-card">
           <div className="data-title">Half-Day</div>
           <div className="data-value">
             {
@@ -220,7 +220,7 @@ const AdminAttendance = () => {
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card attendance-metric-card">
           <div className="data-title">Absent</div>
           <div className="data-value">
             {
@@ -231,7 +231,7 @@ const AdminAttendance = () => {
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card attendance-metric-card">
           <div className="data-title">On-Leave</div>
           <div className="data-value">
             {
@@ -242,15 +242,16 @@ const AdminAttendance = () => {
           </div>
         </div>
       </div>
-      <div className="table-tooltip">
-        <div className="search-container">
+      <div className="table-tooltip attendance-toolbar">
+        <div className="search-container attendance-search">
           <span className="icon-container">
             <IconSearch stroke={2} className="icon" />
           </span>
 
           <input
             type="text"
-            placeholder="Search"
+            aria-label="Search employees"
+            placeholder="Search employees"
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -259,7 +260,7 @@ const AdminAttendance = () => {
           />
         </div>
 
-        <div className="date-picker-container">
+        <div className="date-picker-container attendance-date-picker">
           <DatePicker
             selected={selectedDate}
             onChange={(date) => {
@@ -267,6 +268,7 @@ const AdminAttendance = () => {
               setIsDatePickerOpen(false);
             }}
             dateFormat="MM-dd-yyyy"
+            aria-label="Attendance date"
             className="date-picker"
             ref={datePickerRef}
             onClickOutside={() => setIsDatePickerOpen(false)}
@@ -275,11 +277,12 @@ const AdminAttendance = () => {
             stroke={2}
             className="calendar-icon"
             onClick={toggleDatePicker}
+            aria-hidden="true"
           />
         </div>
       </div>
 
-      <div className="data-card">
+      <div className="data-card attendance-table-card">
         <div className="user-track-title">
           <p>
             Daily Attendance (
@@ -292,66 +295,74 @@ const AdminAttendance = () => {
           </p>
         </div>
 
-        <div className="table">
+        <div className="table admin-attendance-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Employee ID</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Employee Last Name</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Employee First Name</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Time IN</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Time OUT</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Behavior</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Action</p>
             </article>
           </div>
-          {currentEmployees.map((employeeData, index) => (
-            <div className="table-content" key={index}>
-              <article className="table-content-container">
-                <p>{employeeData.id}</p>
-              </article>
-              <article className="table-content-container">
-                <p>{employeeData?.lastName}</p>
-              </article>
-              <article className="table-content-container">
-                <p>{employeeData.firstName}</p>
-              </article>
-              <article className="table-content-container">
-                <p>{employeeData.timeIn}</p>
-              </article>
-              <article className="table-content-container">
-                <p>{employeeData.timeOut}</p>
-              </article>
-              <article className="table-content-container">
-                <p>{getDisplayedBehavior(employeeData)}</p>
-              </article>
-              <article className="table-content-container">
-                <button
-                  className="btn action-button"
-                  onClick={() => handleEditClick(employeeData)}
-                >
-                  <IconEdit stroke={2} />
-                </button>
-              </article>
-            </div>
-          ))}
+          {currentEmployees.map((employeeData, index) => {
+            const behavior = getDisplayedBehavior(employeeData);
+
+            return (
+              <div className="table-content" key={index}>
+                <article className="table-content-container">
+                  <p>{employeeData.id}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{employeeData?.lastName}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{employeeData.firstName}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{employeeData.timeIn}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>{employeeData.timeOut}</p>
+                </article>
+                <article className="table-content-container">
+                  <p>
+                    <span
+                      className="attendance-behavior"
+                      data-behavior={behavior}
+                    >
+                      {behavior}
+                    </span>
+                  </p>
+                </article>
+                <article className="table-content-container">
+                  <button
+                    type="button"
+                    className="btn action-button"
+                    aria-label={`Edit attendance for ${employeeData.firstName} ${employeeData.lastName}`}
+                    title="Edit attendance"
+                    onClick={() => handleEditClick(employeeData)}
+                  >
+                    <IconEdit stroke={2} />
+                  </button>
+                </article>
+              </div>
+            );
+          })}
         </div>
 
         {filteredEmployees.length === 0 && (

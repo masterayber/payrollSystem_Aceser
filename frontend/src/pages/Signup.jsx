@@ -57,11 +57,16 @@ const Signup = () => {
   };
 
   return (
-    <div className="signup-container">
+    <div className="auth-page signup-container">
       <form className="signup-form" onSubmit={handleSignup}>
-        <div className="back-button" onClick={() => navigate("/")}>
+        <button
+          type="button"
+          className="back-button"
+          aria-label="Back to login"
+          onClick={() => navigate("/")}
+        >
           <IconArrowLeft stroke={2} />
-        </div>
+        </button>
         <h2>Sign up</h2>
         <p>Sign up to Continue</p>
 

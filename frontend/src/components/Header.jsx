@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import ProfilePhoto from "./ProfilePhoto/ProfilePhoto";
 import { IconCircleArrowUp, IconCircleArrowDown } from "@tabler/icons-react";
+import PropTypes from "prop-types";
 
 function Header({ role }) {
   const navigate = useNavigate();
@@ -131,25 +132,34 @@ function Header({ role }) {
         ))}
       <div className="user-header">
         <p>{userData?.employee?.firstName}</p>
-        <div className="icon-count" onClick={toggleDropDown}>
-          <ProfilePhoto size="50px" />
-          <div className="dropdown-arrow">
-            {showDropDown ? (
-              <IconCircleArrowUp
-                stroke={2}
-                fill="#ffffff"
-                width={20}
-                height={20}
-              />
-            ) : (
-              <IconCircleArrowDown
-                stroke={2}
-                fill="#ffffff"
-                width={20}
-                height={20}
-              />
-            )}
-          </div>
+        <div className="icon-count">
+          <button
+            type="button"
+            className="profile-menu-toggle"
+            onClick={toggleDropDown}
+            aria-expanded={showDropDown}
+            aria-haspopup="true"
+            aria-label="Open profile menu"
+          >
+            <ProfilePhoto size="50px" />
+            <div className="dropdown-arrow">
+              {showDropDown ? (
+                <IconCircleArrowUp
+                  stroke={2}
+                  fill="#ffffff"
+                  width={20}
+                  height={20}
+                />
+              ) : (
+                <IconCircleArrowDown
+                  stroke={2}
+                  fill="#ffffff"
+                  width={20}
+                  height={20}
+                />
+              )}
+            </div>
+          </button>
           {showDropDown && (
             <div className="dropdown-overlay" ref={dropdownRef}>
               <p>{fullName}</p>
@@ -168,5 +178,9 @@ function Header({ role }) {
     </header>
   );
 }
+
+Header.propTypes = {
+  role: PropTypes.string,
+};
 
 export default Header;

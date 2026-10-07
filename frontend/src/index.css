@@ -133,8 +133,10 @@ h3 {
 .page-container {
   display: flex;
   flex-direction: row;
-  width: 100vw;
+  width: 100%;
+  min-height: 100vh;
   overflow-x: hidden;
+  background-color: var(--gray-50);
 }
 
 .sidebar {
@@ -146,61 +148,90 @@ h3 {
   width: 250px;
   height: 100vh;
   border-right: 1px solid var(--gray-200);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 110;
+}
+
+.company-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 88px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.aceser-logo-container,
+.logo {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+}
+
+.company-container p {
+  color: var(--neutral-color-100);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 12px;
 }
 
 .sidebar-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
   cursor: pointer;
-  background: linear-gradient(
-      to left,
-      var(--neutral-color-20) 50%,
-      var(--neutral-color-30) 50%
-    )
-    right;
-  transition: ease-out 0.4s;
-  background-size: 200% 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
   color: var(--neutral-color-100);
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
 }
 
-.sidebar-item:hover,
-.sidebar-item.active:hover {
-  background-position: left;
+.sidebar-item:hover {
+  background-color: var(--neutral-color-20);
+  color: var(--default-button-color);
 }
 
 .sidebar-item svg {
-  width: 30px;
-  height: 30px;
-  color: var(--neutral-color-100);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  color: currentColor;
 }
 
 .sidebar-item.active {
-  color: var(--main-color-1);
-  background: linear-gradient(
-      to left,
-      var(--gray-50) 50%,
-      var(--neutral-color-30) 50%
-    )
-    right;
-  background-size: 200% 100%;
-  gap: 20px;
-  font-size: 18px;
+  color: var(--default-button-color);
+  background-color: var(--neutral-color-20);
+  border-color: var(--gray-200);
+  font-weight: 600;
 }
 
-.sidebar-item.active svg {
-  color: var(--main-color-1);
-  width: 35px;
-  height: 35px;
+.sidebar-item:focus-visible,
+.profile-menu-toggle:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: 2px;
 }
 
-.sidebar-item.active {
-  border: 1px solid var(--gray-200);
-  border-right: none;
+.sidebar-item span {
+  margin: 0;
 }
 
 .header-content-container {
@@ -225,11 +256,17 @@ h3 {
   z-index: 100;
 }
 
+.header-title h3 {
+  color: var(--neutral-color-100);
+  font-size: 22px;
+  font-weight: 600;
+}
+
 .user-header {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   height: 50px;
 }
 
@@ -243,14 +280,32 @@ h3 {
 }
 
 .user-header p {
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--neutral-color-100);
 }
 
-.user-header svg {
-  cursor: pointer;
+.profile-menu-toggle {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.profile-menu-toggle:hover {
+  background-color: var(--neutral-color-20);
+}
+
+.profile-menu-toggle .dropdown-arrow {
+  bottom: -2px;
+  right: -2px;
 }
 
 .dropdown-overlay {
@@ -313,14 +368,120 @@ h3 {
 
 .main-content {
   display: flex;
-  gap: 10px;
+  gap: 16px;
   margin-left: 250px;
   min-height: 100vh;
-  width: 100%;
+  width: calc(100% - 250px);
   margin-top: 80px;
   flex-direction: column;
   background-color: var(--gray-50);
-  padding: 10px 30px;
+  padding: 24px 32px 32px;
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .sidebar {
+    width: 220px;
+  }
+
+  .header {
+    left: 220px;
+    padding: 0 24px;
+  }
+
+  .main-content {
+    width: calc(100% - 220px);
+    margin-left: 220px;
+    padding: 22px 24px 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    top: 68px;
+    right: 0;
+    bottom: auto;
+    width: 100%;
+    height: 64px;
+    border-right: 0;
+    border-bottom: 1px solid var(--gray-200);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .company-container {
+    display: none;
+  }
+
+  .sidebar-menu {
+    flex-direction: row;
+    gap: 4px;
+    width: max-content;
+    min-width: 100%;
+    padding: 8px 12px;
+  }
+
+  .sidebar-item {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 78px;
+    min-height: 46px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .sidebar-item svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .header {
+    left: 0;
+    height: 68px;
+    padding: 0 20px;
+  }
+
+  .header-title h3 {
+    font-size: 19px;
+  }
+
+  .user-header p {
+    font-size: 14px;
+  }
+
+  .main-content {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 132px;
+    padding: 20px 20px 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 0 14px;
+  }
+
+  .header-title h3 {
+    font-size: 17px;
+  }
+
+  .user-header {
+    gap: 8px;
+  }
+
+  .user-header p {
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .main-content {
+    padding: 16px 14px 24px;
+  }
 }
 
 .icon {
@@ -427,8 +588,8 @@ input:focus + .slider {
 
 input:checked + .slider:before {
   -webkit-transform: translateX(24px);
-  -ms-transform: translateY(24px);
-  transform: transformX(24px);
+  -ms-transform: translateX(24px);
+  transform: translateX(24px);
 }
 
 .slider.round {

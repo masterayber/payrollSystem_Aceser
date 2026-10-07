@@ -17,10 +17,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const leaveDropdownRef = useRef(null);
-  const leaveSvgRef = useRef(null);
+  const leaveMenuButtonRef = useRef(null);
 
   const dailyDropdownRef = useRef(null);
-  const dailySvgRef = useRef(null);
+  const dailyMenuButtonRef = useRef(null);
 
   const toggleLeaveDropdown = (event) => {
     event.stopPropagation();
@@ -77,8 +77,8 @@ const Dashboard = () => {
         showLeaveDropdown &&
         leaveDropdownRef.current &&
         !leaveDropdownRef.current.contains(event.target) &&
-        leaveSvgRef.current &&
-        !leaveSvgRef.current.contains(event.target)
+        leaveMenuButtonRef.current &&
+        !leaveMenuButtonRef.current.contains(event.target)
       ) {
         setShowLeaveDropdown(false);
       }
@@ -87,8 +87,8 @@ const Dashboard = () => {
         showDailyDropdown &&
         dailyDropdownRef.current &&
         !dailyDropdownRef.current.contains(event.target) &&
-        dailySvgRef.current &&
-        !dailySvgRef.current.contains(event.target)
+        dailyMenuButtonRef.current &&
+        !dailyMenuButtonRef.current.contains(event.target)
       ) {
         setShowDailyDropdown(false);
       }
@@ -112,12 +112,19 @@ const Dashboard = () => {
   };
 
   if (loading || !userData) {
-    return <div className="main-content">Loading...</div>;
+    return (
+      <div
+        className="main-content employee-dashboard-page dashboard-loading-state"
+        role="status"
+      >
+        Loading...
+      </div>
+    );
   }
 
   return (
-    <div className="main-content">
-      <div className="data-card greetings-card">
+    <div className="main-content employee-dashboard-page">
+      <div className="data-card greetings-card dashboard-greeting-card">
         <div className="message-container">
           <div className="greetings-message">
             <span>Good Day, </span>
@@ -159,8 +166,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="data-card-container">
-        <div className="data-card">
+      <div className="data-card-container dashboard-summary-grid">
+        <div className="data-card dashboard-summary-card">
           <div className="message-container">
             <div className="data-title">Attendance This Month</div>
             <div className="data-value">
@@ -169,14 +176,14 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card dashboard-summary-card">
           <div className="message-container">
             <div className="data-title">Leaves Taken</div>
             <div className="data-value">{leaveSummary.total} days</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card dashboard-summary-card">
           <div className="message-container">
             <div className="data-title">Attendance This Week</div>
             <div className="data-value">
@@ -187,20 +194,25 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="data-card">
+      <div className="data-card dashboard-table-card">
         <div className="user-track-title">
           <p>Leave Requests</p>
           <div className="dots-button-container">
-            <IconDotsVertical
-              stroke={2}
+            <button
+              type="button"
+              className="dots-button dashboard-menu-button"
+              aria-label="Leave request options"
+              aria-expanded={showLeaveDropdown}
               onClick={toggleLeaveDropdown}
-              ref={leaveSvgRef}
-              className="dots-button"
-            />
+              ref={leaveMenuButtonRef}
+            >
+              <IconDotsVertical stroke={2} />
+            </button>
             {showLeaveDropdown && (
               <div className="dropdown-details" ref={leaveDropdownRef}>
                 <button
                   className="dropdown-item-details"
+                  type="button"
                   onClick={() => navigate("/filing")}
                 >
                   View Details
@@ -209,30 +221,28 @@ const Dashboard = () => {
             )}
           </div>
         </div>
-        <div className="table">
+        <div className="table dashboard-table dashboard-leave-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Date Filed</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Date Requested</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Leave Duration</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Leave Type</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Status</p>
             </article>
           </div>
           {leaveRequestsData.length === 0 ? (
-            <p className="no-data">No pending requests available</p>
+            <p className="no-data dashboard-empty-state">
+              No pending requests available.
+            </p>
           ) : (
             leaveRequestsData.slice(0, 3).map((leave) => (
               <div key={leave._id} className="table-content">
@@ -257,20 +267,25 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="data-card">
+      <div className="data-card dashboard-table-card">
         <div className="user-track-title">
           <p>Daily Attendance Log</p>
           <div className="dots-button-container">
-            <IconDotsVertical
-              stroke={2}
+            <button
+              type="button"
+              className="dots-button dashboard-menu-button"
+              aria-label="Daily attendance options"
+              aria-expanded={showDailyDropdown}
               onClick={toggleDailyDropdown}
-              ref={dailySvgRef}
-              className="dots-button"
-            />
+              ref={dailyMenuButtonRef}
+            >
+              <IconDotsVertical stroke={2} />
+            </button>
             {showDailyDropdown && (
               <div className="dropdown-details" ref={dailyDropdownRef}>
                 <button
                   className="dropdown-item-details"
+                  type="button"
                   onClick={() => navigate("/attendance")}
                 >
                   View Details
@@ -279,26 +294,25 @@ const Dashboard = () => {
             )}
           </div>
         </div>
-        <div className="table">
+        <div className="table dashboard-table dashboard-attendance-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Date</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Time IN</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Time OUT</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Behavior</p>
             </article>
           </div>
           {attendanceData.length === 0 ? (
-            <p className="no-data"> No attendance data available</p>
+            <p className="no-data dashboard-empty-state">
+              No attendance data available.
+            </p>
           ) : (
             attendanceData.slice(0, 3).map((att) => (
               <div key={att._id} className="table-content">

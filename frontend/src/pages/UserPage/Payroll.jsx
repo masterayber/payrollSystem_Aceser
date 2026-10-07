@@ -122,16 +122,16 @@ const Payroll = () => {
   ]);
 
   return (
-    <div className="main-content">
-      <div className="data-card-container">
-        <div className="data-card">
+    <div className="main-content employee-payroll-page">
+      <div className="data-card-container payroll-summary-grid">
+        <div className="data-card finance-metric-card">
           <div className="message-container">
             <div className="data-title">Next Pay Date</div>
             <div className="data-value">5 days</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card finance-metric-card">
           <div className="message-container">
             <div className="data-title">Last Payment Amount</div>
             <div className="data-value">
@@ -141,8 +141,15 @@ const Payroll = () => {
               </span>
               <span className="icon-container">
                 <button
+                  type="button"
                   className="toggle"
                   onClick={() => setShowLastPayment(!showLastPayment)}
+                  aria-label={
+                    showLastPayment
+                      ? "Hide last payment amount"
+                      : "Show last payment amount"
+                  }
+                  aria-pressed={showLastPayment}
                 >
                   {showLastPayment ? (
                     <IconEye stroke={2} className="toggle-data" />
@@ -155,7 +162,7 @@ const Payroll = () => {
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card finance-metric-card">
           <div className="message-container">
             <div className="data-title">Year-to-Date Earnings</div>
             <div className="data-value">
@@ -163,10 +170,17 @@ const Payroll = () => {
               <span className="user-number-toggle">
                 {showYearToDate ? "100,000.00" : "****"}
               </span>
-              <span className="icon-contaner">
+              <span className="icon-container">
                 <button
+                  type="button"
                   className="toggle"
                   onClick={() => setShowYearToDate(!showYearToDate)}
+                  aria-label={
+                    showYearToDate
+                      ? "Hide year-to-date earnings"
+                      : "Show year-to-date earnings"
+                  }
+                  aria-pressed={showYearToDate}
                 >
                   {showYearToDate ? (
                     <IconEye stroke={2} className="toggle" />
@@ -180,16 +194,20 @@ const Payroll = () => {
         </div>
       </div>
 
-      <div className="data-card">
+      <div className="data-card employee-pay-period-card">
         <div className="user-track-title">
           <p>Pay Period Summary</p>
           <div className="dots-button-container">
-            <IconDotsVertical
-              stroke={2}
+            <button
+              type="button"
+              aria-label="Pay period summary options"
+              aria-expanded={showPayPeriodDropdown}
               onClick={togglePayPeriodDropdown}
               ref={payPeriodSvgRef}
-              className="dots-button"
-            />
+              className="dots-button finance-menu-button"
+            >
+              <IconDotsVertical stroke={2} />
+            </button>
             {showPayPeriodDropdown && (
               <div className="dropdown-details" ref={payPeriodDropdownRef}>
                 <button
@@ -202,7 +220,7 @@ const Payroll = () => {
             )}
           </div>
         </div>
-        <div className="table">
+        <div className="table payroll-period-summary">
           <div className="table-header">
             {[
               { label: "Gross Pay", amount: "00000" },
@@ -219,7 +237,6 @@ const Payroll = () => {
                     </div>
                   </div>
                 </article>
-                {index < 3 && <hr></hr>}
               </React.Fragment>
             ))}
           </div>
@@ -319,16 +336,20 @@ const Payroll = () => {
         </div>
       </div> */}
 
-      <div className="data-card">
+      <div className="data-card employee-pay-history-card">
         <div className="user-track-title">
           <p>Pay History</p>
           <div className="dots-button-container">
-            <IconDotsVertical
-              stroke={2}
+            <button
+              type="button"
+              aria-label="Pay history options"
+              aria-expanded={showPayHistoryDropdown}
               onClick={togglePayHistoryDropdown}
               ref={payHistorySvgRef}
-              className="dots-button"
-            />
+              className="dots-button finance-menu-button"
+            >
+              <IconDotsVertical stroke={2} />
+            </button>
             {showPayHistoryDropdown && (
               <div className="dropdown-details" ref={payHistoryDropdownRef}>
                 <button
@@ -342,37 +363,28 @@ const Payroll = () => {
           </div>
         </div>
 
-        <div className="table">
+        <div className="table payroll-history-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Date</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Pay Period</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Gross Pay</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Deductions</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Net Pay</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Action</p>
             </article>
           </div>
-          {/* {payHistory.length === 0 ? (
-            <p className="no-data"> No Pay History Available.</p>
-          ) : (
-            payHistory.map((att))
-          )} */}
+          <p className="finance-empty-state">No pay history available yet.</p>
         </div>
       </div>
     </div>

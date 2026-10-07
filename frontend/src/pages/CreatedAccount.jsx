@@ -48,7 +48,7 @@ const CreatedAccount = () => {
   const title = gender?.toLowerCase() === "female" ? "Ms." : "Mr.";
 
   return (
-    <div className="created-container">
+    <div className="auth-page created-container">
       <form className="created-form" onSubmit={(e) => e.preventDefault()}>
         <h2>Account Created Successfully!</h2>
 

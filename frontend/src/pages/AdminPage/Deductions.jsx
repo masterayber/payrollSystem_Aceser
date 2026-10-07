@@ -2,6 +2,7 @@ import { useState, useContext, useEffect, useRef } from "react";
 import { IconSearch, IconDotsVertical } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import AddModal from "../../components/Modals/DropdownOption/AddOption/AddOption";
+import "../../styles/AdminCSS/Deductions.css";
 // import ConfirmModal from "../../components/Modals/Confirm/ConfirmModal";
 // import ConfirmedMessageModal from "../../Modals/Confirmed/ConfirmedMessageModal";
 
@@ -72,17 +73,21 @@ const Deductions = () => {
   );
 
   return (
-    <div className="main-content">
-      <div className="table-container">
+    <div className="main-content admin-deductions-page">
+      <div className="table-container deduction-config-card">
         <div className="table-title">
           <p>Government-Mandated Deductions</p>
           <div className="dots-button-container">
-            <IconDotsVertical
-              stroke={2}
+            <button
+              type="button"
+              aria-label="Deduction options"
+              aria-expanded={showDeductionDropdown}
               onClick={toggleDeductionDropdown}
               ref={deductionSvgRef}
-              className="dots-button"
-            />
+              className="dots-button deduction-menu-button"
+            >
+              <IconDotsVertical stroke={2} />
+            </button>
             {showDeductionDropdown && (
               <div className="dropdown-details" ref={deductionDropdownRef}>
                 <button
@@ -95,16 +100,14 @@ const Deductions = () => {
             )}
           </div>
         </div>
-        <div className="table">
+        <div className="table deduction-options-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Type</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Amount</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Manage</p>
             </article>
@@ -118,8 +121,12 @@ const Deductions = () => {
                 <p>{amount}</p>
               </article>
               <article className="table-content-container">
-                <button className="action-button">Edit</button>
-                <button className="action-button">Delete</button>
+                <button type="button" className="action-button">
+                  Edit
+                </button>
+                <button type="button" className="action-button">
+                  Delete
+                </button>
               </article>
             </div>
           ))}
@@ -129,49 +136,47 @@ const Deductions = () => {
         </div>
       </div>
 
-      <div className="search-container">
-        <span className="icon-container">
-          <IconSearch stroke={2} className="icon" />
-        </span>
+      <div className="deduction-toolbar">
+        <div className="search-container deduction-search">
+          <span className="icon-container">
+            <IconSearch stroke={2} className="icon" />
+          </span>
 
-        <input
-          type="text"
-          placeholder="Search"
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
+          <input
+            type="text"
+            aria-label="Search employees"
+            placeholder="Search employees"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
       </div>
 
-      <div className="table-container">
+      <div className="table-container employee-deduction-log">
         <div className="table-title">
           <p>Employee Deduction Log</p>
           <IconDotsVertical stroke={2} />
         </div>
-        <div className="table">
+        <div className="table employee-deduction-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Employee ID</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Employee Last Name</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Employee First Name</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Withholding Tax</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Deductions</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Loans</p>
             </article>

@@ -12,8 +12,8 @@ const Payslips = () => {
   const fullName = `${userData?.employee?.firstName} ${userData?.employee?.lastName}`;
 
   return (
-    <div className="main-content">
-      <div className="data-card user-profile-container">
+    <div className="main-content employee-payslips-page">
+      <div className="data-card user-profile-container employee-profile-card">
         <ProfilePhoto size="50px" />
         <div className="user-profile">
           <span>{fullName}</span>
@@ -21,15 +21,15 @@ const Payslips = () => {
         </div>
       </div>
 
-      <div className="data-card-container">
-        <div className="data-card">
+      <div className="data-card-container payslips-summary-grid">
+        <div className="data-card finance-metric-card">
           <div className="message-container">
             <div className="data-title">Next Pay Date</div>
             <div className="data-value">5 days</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card finance-metric-card">
           <div className="message-container">
             <div className="data-title">Last Payment Amount</div>
             <div className="data-value">
@@ -39,8 +39,15 @@ const Payslips = () => {
               </span>
               <span className="icon-container">
                 <button
+                  type="button"
                   className="toggle"
                   onClick={() => setShowLastPayment(!showLastPayment)}
+                  aria-label={
+                    showLastPayment
+                      ? "Hide last payment amount"
+                      : "Show last payment amount"
+                  }
+                  aria-pressed={showLastPayment}
                 >
                   {showLastPayment ? (
                     <IconEye stroke={2} className="toggle-data" />
@@ -53,7 +60,7 @@ const Payslips = () => {
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card finance-metric-card">
           <div className="message-container">
             <div className="data-title">Payment Method</div>
             <div className="data-value">Unionbank</div>
@@ -61,11 +68,11 @@ const Payslips = () => {
         </div>
       </div>
 
-      <div className="data-card">
+      <div className="data-card contribution-summary-card">
         <div className="user-track-title">
           <p>Government-Mandated Contribution</p>
         </div>
-        <div className="table">
+        <div className="table contribution-summary-grid">
           <div className="table-header">
             {[
               { label: "Philhealth", amount: "00000" },
@@ -81,14 +88,13 @@ const Payslips = () => {
                     </div>
                   </div>
                 </article>
-                {index < 2 && <hr></hr>}
               </React.Fragment>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="data-card">
+      <div className="data-card payslip-history-card">
         <div className="user-track-title">
           <p>Pay History</p>
           <div className="dots-button-container">
@@ -96,32 +102,28 @@ const Payslips = () => {
           </div>
         </div>
 
-        <div className="table">
+        <div className="table payslip-history-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Date</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Pay Period</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Gross Pay</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Deductions</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Net Pay</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Action</p>
             </article>
           </div>
+          <p className="finance-empty-state">No payslips available yet.</p>
         </div>
       </div>
     </div>

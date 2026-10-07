@@ -1,36 +1,342 @@
-.date-details {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  white-space: nowrap;
+.admin-dashboard {
+  align-items: stretch;
 }
 
-.admin-date {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.admin-time {
-  font-size: 20px;
-  font-weight: 500;
-}
-
-.user-track-title {
+.admin-dashboard .dashboard-greeting-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  gap: 24px;
+  min-height: 132px;
+  padding: 24px 28px;
+  border-left: 4px solid var(--main-color-1);
 }
 
-.no-data {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+.admin-dashboard .greetings-message {
+  color: var(--neutral-color-100);
+  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
 
-  font-size: 32px;
+.admin-dashboard .user-highlight {
+  color: var(--default-button-color);
+}
+
+.admin-dashboard .message-container p {
+  margin-top: 8px;
+  color: var(--neutral-color-80);
+  font-size: 14px;
+}
+
+.admin-dashboard .date-details {
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 4px;
+  white-space: normal;
+  text-align: right;
+}
+
+.admin-dashboard .admin-date {
+  color: var(--neutral-color-80);
+  font-size: 14px;
   font-weight: 500;
+}
 
-  padding: 50px 0;
+.admin-dashboard .admin-time {
+  color: var(--neutral-color-100);
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-dashboard .dashboard-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 16px;
+  overflow: visible;
+}
+
+.admin-dashboard .dashboard-stat-card {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 118px;
+  padding: 22px 24px;
+}
+
+.admin-dashboard .dashboard-stat-card .data-title {
+  color: var(--neutral-color-80);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.admin-dashboard .dashboard-stat-card .data-value {
+  margin-top: 8px;
+  color: var(--default-button-color);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-dashboard .dashboard-attendance-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: stretch;
+  gap: 16px;
+  overflow: visible;
+}
+
+.admin-dashboard .dashboard-panel {
+  min-width: 0;
+  padding: 20px;
+  overflow: visible;
+}
+
+.admin-dashboard .user-track-title {
+  min-height: 36px;
+  margin-bottom: 16px;
+  align-items: center;
+  justify-content: space-between;
+  display: flex;
+}
+
+.admin-dashboard .user-track-title p {
+  color: var(--neutral-color-100);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.admin-dashboard .dots-button-container {
+  flex: 0 0 36px;
+}
+
+.admin-dashboard .dashboard-menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--neutral-color-80);
+  cursor: pointer;
+}
+
+.admin-dashboard .dashboard-menu-button:hover {
+  background: var(--neutral-color-20);
+}
+
+.admin-dashboard .dashboard-menu-button:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: 2px;
+}
+
+.admin-dashboard .dashboard-menu-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.admin-dashboard .dropdown-details {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 10;
+  width: 160px;
+  padding: 4px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--gray-50);
+  box-shadow: 0 4px 12px rgba(10, 10, 10, 0.1);
+}
+
+.admin-dashboard .dropdown-item-details {
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  text-align: left;
+}
+
+.admin-dashboard .dashboard-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-dashboard .dashboard-table .table-header,
+.admin-dashboard .dashboard-table .table-content {
+  display: grid;
+  align-items: stretch;
+  width: 100%;
+}
+
+.admin-dashboard .dashboard-transaction-table .table-header,
+.admin-dashboard .dashboard-transaction-table .table-content {
+  grid-template-columns: minmax(0, 1.5fr) minmax(70px, 0.7fr) minmax(
+      54px,
+      0.45fr
+    );
+  min-width: 340px;
+}
+
+.admin-dashboard .dashboard-payroll-table .table-header,
+.admin-dashboard .dashboard-payroll-table .table-content {
+  grid-template-columns: minmax(150px, 1.4fr) repeat(3, minmax(90px, 1fr));
+  min-width: 480px;
+}
+
+.admin-dashboard .dashboard-pending-table .table-header,
+.admin-dashboard .dashboard-pending-table .table-content {
+  grid-template-columns:
+    minmax(100px, 0.8fr) minmax(100px, 0.8fr) minmax(180px, 1.4fr)
+    minmax(190px, 1.2fr);
+  min-width: 650px;
+}
+
+.admin-dashboard .dashboard-table .table-header-container,
+.admin-dashboard .dashboard-table .table-content-container {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 14px;
+  overflow: hidden;
+}
+
+.admin-dashboard .dashboard-table .table-header-container {
+  background: var(--neutral-color-20);
+  border-bottom: 1px solid var(--gray-200);
+  color: var(--neutral-color-90);
+}
+
+.admin-dashboard .dashboard-table .table-header-container p {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-dashboard .dashboard-table .table-content {
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.admin-dashboard .dashboard-table .table-content:last-child {
+  border-bottom: 0;
+}
+
+.admin-dashboard .dashboard-table .table-content-container {
+  min-height: 48px;
+  background: transparent;
+  color: var(--neutral-color-90);
+}
+
+.admin-dashboard .dashboard-table .table-content-container p {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-dashboard .dashboard-table .no-data {
+  min-height: 120px;
+  padding: 24px 12px;
+  color: var(--neutral-color-80);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.admin-dashboard .dashboard-calendar-panel .calendar-container {
+  gap: 12px;
+}
+
+.admin-dashboard .dashboard-calendar-panel .calendar-header span {
+  color: var(--neutral-color-100);
+  font-size: 18px;
+}
+
+.admin-dashboard .dashboard-calendar-panel .calendar-table th {
+  height: 40px;
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-80);
+  font-weight: 600;
+}
+
+.admin-dashboard .dashboard-calendar-panel .calendar-table td {
+  height: 58px;
+  padding: 6px;
+}
+
+.admin-dashboard .dashboard-calendar-panel .calendar-navigate {
+  gap: 4px;
+}
+
+.admin-dashboard .dashboard-calendar-panel .calendar-button {
+  width: 32px;
+  height: 32px;
+}
+
+@media (max-width: 900px) {
+  .admin-dashboard .dashboard-attendance-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard .dashboard-calendar-panel .calendar-table td {
+    height: 52px;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard .dashboard-greeting-card {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .admin-dashboard .date-details {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .admin-dashboard .dashboard-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .admin-dashboard .dashboard-stat-card {
+    min-height: 104px;
+    padding: 16px;
+  }
+
+  .admin-dashboard .dashboard-stat-card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .admin-dashboard .dashboard-panel {
+    padding: 16px;
+  }
+
+  .admin-dashboard .dashboard-calendar-panel .calendar-table th {
+    height: 34px;
+    padding: 4px 2px;
+    font-size: 12px;
+  }
+
+  .admin-dashboard .dashboard-calendar-panel .calendar-table td {
+    height: 44px;
+    padding: 4px 2px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .admin-dashboard .dashboard-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard .dashboard-stat-card:last-child {
+    grid-column: auto;
+  }
+
+  .admin-dashboard .dashboard-calendar-panel .calendar-table td {
+    height: 38px;
+  }
 }

@@ -7,6 +7,7 @@ import {
 } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import Pagination from "../../components/Pagination/Pagination";
+import "../../styles/AdminCSS/AdminPayslips.css";
 
 const AdminPayslips = () => {
   const { employeeData } = useContext(EmployeeContext);
@@ -29,16 +30,16 @@ const AdminPayslips = () => {
   );
 
   return (
-    <div className="main-content">
-      <div className="data-card-container">
-        <div className="data-card">
+    <div className="main-content admin-payslips-page">
+      <div className="data-card-container admin-payslips-summary">
+        <div className="data-card finance-metric-card">
           <div className="message-container">
             <div className="data-title">Total Employees</div>
             <div className="data-value">{employeeData.length}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card finance-metric-card">
           <div className="message-container">
             <div className="data-title">Next Payroll Date</div>
             <div className="data-value">5 days</div>
@@ -46,14 +47,15 @@ const AdminPayslips = () => {
         </div>
       </div>
 
-      <div className="search-container">
+      <div className="search-container admin-payslips-search">
         <span className="icon-container">
           <IconSearch stroke={2} className="icon" />
         </span>
 
         <input
           type="text"
-          placeholder="Search"
+          aria-label="Search employees"
+          placeholder="Search employees"
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value);
@@ -62,37 +64,31 @@ const AdminPayslips = () => {
         />
       </div>
 
-      <div className="table-container">
+      <div className="table-container admin-pay-history-card">
         <div className="table-title">
           <p>Pay History</p>
           <IconDotsVertical stroke={2} />
         </div>
-        <div className="table">
+        <div className="table admin-pay-history-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Employee ID</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Employee Last Name</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Employee First Name</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Gross Pay</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Deductions</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Net Pay</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Action</p>
             </article>
@@ -118,10 +114,18 @@ const AdminPayslips = () => {
                 <p>{employee.netPay}</p>
               </article>
               <article className="table-content-container">
-                <button className="btn action-button">
+                <button
+                  type="button"
+                  className="btn action-button"
+                  aria-label={`View payslip for ${employee.firstName} ${employee.lastName}`}
+                >
                   <IconEye stroke={2} />
                 </button>
-                <button className="btn action-button">
+                <button
+                  type="button"
+                  className="btn action-button"
+                  aria-label={`Download payslip for ${employee.firstName} ${employee.lastName}`}
+                >
                   <IconDownload stroke={2} />
                 </button>
               </article>

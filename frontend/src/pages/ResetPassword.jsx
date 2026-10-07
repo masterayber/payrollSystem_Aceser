@@ -48,7 +48,7 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="reset-password-container">
+    <div className="auth-page reset-password-container">
       <form className="reset-form" onSubmit={handleResetPassword}>
         <h2>Reset Password</h2>
         <p>Please enter new password</p>

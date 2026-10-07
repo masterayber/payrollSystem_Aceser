@@ -5,6 +5,7 @@ import { IconCircleX, IconCircleCheck } from "@tabler/icons-react";
 import ConfirmModal from "../../components/Modals/Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../../components/Modals/Confirmed/ConfirmedMessageModal";
 import "../../styles/UserCSS/Filing.css";
+import "../../styles/AdminCSS/AdminFiling.css";
 
 const AdminFiling = () => {
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -118,63 +119,59 @@ const AdminFiling = () => {
   };
 
   return (
-    <div className="main-content">
-      <div className="data-card-container">
-        <div className="data-card">
+    <div className="main-content admin-filing-page">
+      <div className="data-card-container filing-summary-grid">
+        <div className="data-card filing-metric-card">
           <div className="message-container">
-            <div className="data-title">Total Leave Requests</div>
+            <div className="data-title">Pending Leave Requests</div>
             <div className="data-value">{pendingLeaveCount}</div>
           </div>
         </div>
 
-        <div className="data-card">
+        <div className="data-card filing-metric-card">
           <div className="message-container">
-            <div className="data-title">Total Overtime Requests</div>
+            <div className="data-title">Pending Overtime Requests</div>
             <div className="data-value">{pendingOvertimeCount}</div>
           </div>
         </div>
       </div>
 
-      <div className="data-card">
+      <div className="data-card filing-review-card">
         <div className="user-track-title">
           <p>Leave Requests</p>
         </div>
-        <div className="table">
+        <div className="table filing-review-table filing-review-leave-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Employee Name</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Date Filed</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Date Requested</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Leave Type</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Details</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Status</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Action</p>
             </article>
           </div>
           {isLoading ? (
-            <p className="no-data">Loading Leave Requests...</p>
+            <p className="no-data filing-empty-state">Loading leave requests...</p>
           ) : error ? (
-            <p className="no-data">{error}</p>
+            <p className="no-data filing-empty-state">{error}</p>
           ) : leaveRequests.length === 0 ? (
-            <p className="no-data">No leave requests found.</p>
+            <p className="no-data filing-empty-state">
+              No leave requests found.
+            </p>
           ) : (
             sortedLeaveRequests.map((request) => (
               <div className="table-content" key={request._id}>
@@ -194,7 +191,9 @@ const AdminFiling = () => {
                   <p>{request.leaveDetails}</p>
                 </article>
                 <article className="table-content-container">
-                  <p>{request.status}</p>
+                  <span className="filing-status" data-status={request.status}>
+                    {request.status}
+                  </span>
                 </article>
                 <article className="table-content-container">
                   {request.status !== "Disapproved" &&
@@ -202,6 +201,9 @@ const AdminFiling = () => {
                       <>
                         <button
                           className="btn action-button"
+                          type="button"
+                          aria-label={`Disapprove leave request for ${getEmployeeName(request)}`}
+                          title="Disapprove leave request"
                           onClick={() =>
                             handleActionClick(request, "Disapproved")
                           }
@@ -212,6 +214,9 @@ const AdminFiling = () => {
 
                         <button
                           className="btn action-button"
+                          type="button"
+                          aria-label={`Approve leave request for ${getEmployeeName(request)}`}
+                          title="Approve leave request"
                           onClick={() => handleActionClick(request, "Approved")}
                           disabled={request.status !== "Pending"}
                         >
@@ -226,46 +231,44 @@ const AdminFiling = () => {
         </div>
       </div>
 
-      <div className="data-card">
+      <div className="data-card filing-review-card">
         <div className="user-track-title">
           <p>Overtime Requests</p>
         </div>
-        <div className="table">
+        <div className="table filing-review-table filing-review-overtime-table">
           <div className="table-header">
             <article className="table-header-container">
               <p>Employee Name</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Date</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Time In</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Time Out</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Details</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Status</p>
             </article>
-            <hr className="header-hr"></hr>
             <article className="table-header-container">
               <p>Action</p>
             </article>
           </div>
           {isLoading ? (
-            <p className="no-data">Loading Overtime Requests...</p>
+            <p className="no-data filing-empty-state">
+              Loading overtime requests...
+            </p>
           ) : error ? (
-            <p className="no-data">{error}</p>
+            <p className="no-data filing-empty-state">{error}</p>
           ) : overtimeRequests.length === 0 ? (
-            <p className="no-data">No overtime requests found.</p>
+            <p className="no-data filing-empty-state">
+              No overtime requests found.
+            </p>
           ) : (
             sortedOvertimeRequests.map((request) => (
               <div className="table-content" key={request._id}>
@@ -285,7 +288,9 @@ const AdminFiling = () => {
                   <p>{request.overtimeDetails}</p>
                 </article>
                 <article className="table-content-container">
-                  <p>{request.status}</p>
+                  <span className="filing-status" data-status={request.status}>
+                    {request.status}
+                  </span>
                 </article>
                 <article className="table-content-container">
                   {request.status !== "Disapproved" &&
@@ -293,6 +298,9 @@ const AdminFiling = () => {
                       <>
                         <button
                           className="btn action-button"
+                          type="button"
+                          aria-label={`Disapprove overtime request for ${getEmployeeName(request)}`}
+                          title="Disapprove overtime request"
                           onClick={() =>
                             handleActionClick(
                               request,
@@ -307,6 +315,9 @@ const AdminFiling = () => {
 
                         <button
                           className="btn action-button"
+                          type="button"
+                          aria-label={`Approve overtime request for ${getEmployeeName(request)}`}
+                          title="Approve overtime request"
                           onClick={() =>
                             handleActionClick(request, "Approved", "overtime")
                           }

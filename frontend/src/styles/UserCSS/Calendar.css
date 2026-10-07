@@ -4,3 +4,67 @@
   align-items: center;
   gap: 10px;
 }
+
+.employee-calendar-page {
+  align-items: stretch;
+}
+
+.employee-calendar-page .employee-calendar-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 12px;
+  overflow: visible;
+}
+
+.employee-calendar-page .attendance-metric-card {
+  min-width: 0;
+  min-height: 96px;
+  padding: 16px;
+}
+
+.employee-calendar-page .attendance-metric-card .data-title {
+  color: var(--neutral-color-80);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.employee-calendar-page .attendance-metric-card .data-value {
+  margin-top: 8px;
+  color: var(--default-button-color);
+  font-size: 26px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.employee-calendar-page .employee-calendar-view {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--gray-200);
+  border-radius: 1rem;
+  background: var(--gray-50);
+}
+
+@media (max-width: 1024px) {
+  .employee-calendar-page .employee-calendar-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .employee-calendar-page .employee-calendar-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .employee-calendar-page .employee-calendar-view {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .employee-calendar-page .employee-calendar-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -52,7 +52,7 @@ const AdditionalInfo = () => {
   };
 
   return (
-    <div className="additional-container">
+    <div className="auth-page additional-container">
       <form className="additional-form" onSubmit={handleSubmit}>
         <h2>Additional Information</h2>
         <p>Please enter your additional information to continue.</p>

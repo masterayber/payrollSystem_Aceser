@@ -117,27 +117,39 @@ const CalendarComponent = ({
           })}
         </span>
         <div className="calendar-navigate">
-          <IconChevronLeft
-            stroke={3}
+          <button
+            type="button"
             onClick={() => changeMonth(-1)}
             className="calendar-button"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <IconChevronRight
-            stroke={3}
+            aria-label="Previous month"
+          >
+            <IconChevronLeft
+              stroke={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </button>
+          <button
+            type="button"
             onClick={() => changeMonth(1)}
             className="calendar-button"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+            aria-label="Next month"
+          >
+            <IconChevronRight
+              stroke={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </button>
         </div>
       </div>
-      <table className="calendar-table">
+      <table className="calendar-table" aria-label="Attendance calendar">
         <thead>
           <tr>
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <th key={day}>{day}</th>
+              <th key={day} scope="col">
+                {day}
+              </th>
             ))}
           </tr>
         </thead>
@@ -150,7 +162,6 @@ const CalendarComponent = ({
                 return (
                   <td
                     key={idx}
-                    onClick={() => day && setSelectedDay(day)}
                     className={[
                       day && isCurrentMonth && day === today ? "today" : "",
                       day && day === selectedDay ? "selected" : "",
@@ -159,12 +170,37 @@ const CalendarComponent = ({
                       .filter(Boolean)
                       .join(" ")}
                   >
-                    <div className="day-content">
-                      {day || ""}
-                      {day && dayBadge && (
-                        <div className={`day-badge badge-${dayBadge}`}></div>
-                      )}
-                    </div>
+                    <button
+                      type="button"
+                      className="calendar-day-button"
+                      onClick={() => day && setSelectedDay(day)}
+                      disabled={!day}
+                      aria-pressed={day ? day === selectedDay : undefined}
+                      aria-label={
+                        day
+                          ? new Date(
+                              currentDate.getFullYear(),
+                              currentDate.getMonth(),
+                              day,
+                            ).toLocaleDateString("en-US", {
+                              weekday: "long",
+                              month: "long",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : undefined
+                      }
+                    >
+                      <span className="day-content">
+                        {day || ""}
+                        {day && dayBadge && (
+                          <span
+                            className={`day-badge badge-${dayBadge}`}
+                            aria-hidden="true"
+                          ></span>
+                        )}
+                      </span>
+                    </button>
                   </td>
                 );
               })}
