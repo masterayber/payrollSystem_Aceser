@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const path = require("path");
 const fs = require("fs");
-const authMiddleware = require("../middleware/authMiddleware");
+const auth = require("../middleware/authMiddleware");
 
 const Dropdown = require("../models/dropdownOption");
 const User = require("../models/authUsers");
@@ -17,7 +17,6 @@ const OvertimeApplication = require("../models/overtimeApplication");
 const sendEmail = require("../utils/nodemailer");
 
 const router = express.Router();
-const JWT_SECRET = "your_jwt_secret_key_here";
 
 let otpStorage = {}; // Temporarily stores OTPs for demonstration
 
@@ -58,9 +57,13 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid username or password" });
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, {
-      expiresIn: "24h",
-    });
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "24h",
+      },
+    );
 
     const [employee, settings, attendance, leaveRequests, overtimeRequests] =
       await Promise.all([
