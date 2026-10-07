@@ -2,14 +2,16 @@ const { pagesForRole } = require("../config/pages");
 
 // Which page keys a user may open.
 //
-// - No `pageAccess` stored on the user: every page for their role. This keeps all
-//   existing accounts working exactly as before.
-// - `pageAccess` stored: only those pages, plus the locked ones. Keys that do not
-//   belong to the user's role are ignored.
+// - Admin: always every admin page. Page access is an Employee-only setting, so an
+//   admin can never be restricted, whatever is stored on the account.
+// - Employee with no `pageAccess` stored: every employee page. This keeps all existing
+//   accounts working exactly as before.
+// - Employee with `pageAccess` stored: only those pages, plus the locked ones. Keys
+//   that do not belong to the Employee role are ignored.
 const getAllowedPages = (user) => {
   const rolePages = pagesForRole(user.role);
 
-  if (!Array.isArray(user.pageAccess)) {
+  if (user.role === "Admin" || !Array.isArray(user.pageAccess)) {
     return rolePages.map((page) => page.key);
   }
 

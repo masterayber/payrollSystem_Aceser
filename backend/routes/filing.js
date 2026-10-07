@@ -5,6 +5,7 @@ const LeaveApplication = require("../models/leaveApplication");
 const OvertimeApplication = require("../models/overtimeApplication");
 const Attendance = require("../models/attendance");
 const auth = require("../middleware/authMiddleware");
+const { requirePage } = require("../middleware/accessMiddleware");
 
 const router = express.Router();
 
@@ -70,7 +71,7 @@ router.get("/", auth, async (req, res) => {
 });
 
 // Route for getting all the leave requests of the user
-router.get("/user-leave-requests", auth, async (req, res) => {
+router.get("/user-leave-requests", requirePage("filing"), async (req, res) => {
   try {
     const leaveRequests = await LeaveApplication.find({
       userId: req.user.userId,
@@ -85,7 +86,7 @@ router.get("/user-leave-requests", auth, async (req, res) => {
 });
 
 // Route for applying for leave
-router.post("/apply-leave", auth, async (req, res) => {
+router.post("/apply-leave", requirePage("filing"), async (req, res) => {
   const { leaveType, leaveDetails, startDate, endDate } = req.body;
 
   try {
@@ -104,7 +105,7 @@ router.post("/apply-leave", auth, async (req, res) => {
 });
 
 // Route for editing leave request
-router.patch("/edit-leave/:id", auth, async (req, res) => {
+router.patch("/edit-leave/:id", requirePage("filing"), async (req, res) => {
   const { leaveType, leaveDetails, startDate, endDate } = req.body;
 
   try {
@@ -131,7 +132,7 @@ router.patch("/edit-leave/:id", auth, async (req, res) => {
 });
 
 // Route for deleting leave request of the user
-router.delete("/leave/:id", auth, async (req, res) => {
+router.delete("/leave/:id", requirePage("filing"), async (req, res) => {
   try {
     const leave = await LeaveApplication.findOneAndDelete({
       _id: req.params.id,
@@ -236,46 +237,54 @@ router.patch("/leave/:id/status", auth, async (req, res) => {
 });
 
 // Route for getting the eligible overtime of the user
-router.get("/user-overtime-candidates", auth, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { mode } = req.query;
+router.get(
+  "/user-overtime-candidates",
+  requirePage("filing"),
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const { mode } = req.query;
 
-    const query = {
-      userId,
-      "overtime.isEligible": true,
-    };
+      const query = {
+        userId,
+        "overtime.isEligible": true,
+      };
 
-    if (mode !== "edit") {
-      query["overtime.isFiled"] = false;
+      if (mode !== "edit") {
+        query["overtime.isFiled"] = false;
+      }
+
+      const attendance = await Attendance.find(query);
+
+      res.json(attendance);
+    } catch (error) {
+      console.error("Error fetching overtime:", error);
+      res.status(500).json({ message: "Server Error" });
     }
-
-    const attendance = await Attendance.find(query);
-
-    res.json(attendance);
-  } catch (error) {
-    console.error("Error fetching overtime:", error);
-    res.status(500).json({ message: "Server Error" });
-  }
-});
+  },
+);
 
 // Route for getting overtime requests of the user
-router.get("/user-overtime-requests", auth, async (req, res) => {
-  try {
-    const overtimeRequests = await OvertimeApplication.find({
-      userId: req.user.userId,
-    }).sort({
-      appliedAt: -1,
-    });
+router.get(
+  "/user-overtime-requests",
+  requirePage("filing"),
+  async (req, res) => {
+    try {
+      const overtimeRequests = await OvertimeApplication.find({
+        userId: req.user.userId,
+      }).sort({
+        appliedAt: -1,
+      });
 
-    res.json(overtimeRequests);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+      res.json(overtimeRequests);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
 
 // Route for applying overtime of the user
-router.post("/apply-overtime", auth, async (req, res) => {
+router.post("/apply-overtime", requirePage("filing"), async (req, res) => {
   const { attendanceId, selectedOvertime, start, end, overtimeDetails } =
     req.body;
 
@@ -305,7 +314,7 @@ router.post("/apply-overtime", auth, async (req, res) => {
 });
 
 // Route for editing overtime of the user
-router.patch("/edit-overtime/:id", auth, async (req, res) => {
+router.patch("/edit-overtime/:id", requirePage("filing"), async (req, res) => {
   const { attendanceId, selectedOvertime, start, end, overtimeDetails } =
     req.body;
 
@@ -359,7 +368,7 @@ router.patch("/edit-overtime/:id", auth, async (req, res) => {
 });
 
 // Route for deleting pending overtime by user
-router.delete("/overtime/:id", auth, async (req, res) => {
+router.delete("/overtime/:id", requirePage("filing"), async (req, res) => {
   try {
     const overtime = await OvertimeApplication.findOneAndDelete({
       _id: req.params.id,

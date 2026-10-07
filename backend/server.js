@@ -29,6 +29,21 @@ const authMiddleware = require("./middleware/authMiddleware");
 
 dotenv.config();
 
+// Tokens are signed with this secret, so a missing or well-known value would let anyone
+// forge an Admin login. Refuse to start rather than run insecurely.
+const PLACEHOLDER_SECRETS = ["your_jwt_secret_key", "your_jwt_secret_key_here"];
+if (
+  !process.env.JWT_SECRET ||
+  process.env.JWT_SECRET.length < 32 ||
+  PLACEHOLDER_SECRETS.includes(process.env.JWT_SECRET)
+) {
+  console.error(
+    "JWT_SECRET is missing, too short (min 32 chars) or still a placeholder. " +
+      "Generate one with: node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\"",
+  );
+  process.exit(1);
+}
+
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());

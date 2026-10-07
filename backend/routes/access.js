@@ -59,6 +59,12 @@ router.put("/users/:userId", requireAdmin, validUserId, async (req, res) => {
     const target = await User.findById(userId).select("role").lean();
     if (!target) return res.status(404).json({ message: "User not found" });
 
+    if (target.role === "Admin") {
+      return res
+        .status(400)
+        .json({ message: "Page access cannot be restricted for admins" });
+    }
+
     let update;
     if (reset === true) {
       update = { $unset: { pageAccess: 1 }, $set: { updatedAt: new Date() } };
