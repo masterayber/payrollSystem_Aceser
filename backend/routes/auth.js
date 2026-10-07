@@ -246,7 +246,7 @@ router.post("/otp", async (req, res) => {
     return res.status(400).json({ message: "Incorrect OTP" });
   }
 
-  const resetToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: "5m" });
+  const resetToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "5m" });
   delete otpStorage[email]; // Delete OTP from local storage
 
   res.status(200).json({ message: "OTP verified.", resetToken });
@@ -262,7 +262,7 @@ router.post("/reset-password", async (req, res) => {
 
   try {
     // Verify JWT token
-    const decoded = jwt.verify(resetToken, JWT_SECRET);
+    const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
     const email = decoded.email;
 
     // Find user by email
@@ -361,11 +361,11 @@ router.get("/created-account/:id", async (req, res) => {
   }
 });
 
-router.get("/dashboard-data", authMiddleware, async (req, res) => {
+router.get("/dashboard-data", auth, async (req, res) => {
   res.status(200).json({ message: "Protected Data" });
 });
 
-router.get("/me", authMiddleware, async (req, res) => {
+router.get("/me", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).lean();
     if (!user) {

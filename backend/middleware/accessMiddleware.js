@@ -33,11 +33,14 @@ const requireAdmin = [
   },
 ];
 
-// Guards an API route so it follows the same page permissions as the UI.
+// Guards an Employee API route so it follows the same page permissions as the UI.
+// Admins are never restricted by page access, so they always pass.
 const requirePage = (pageKey) => [
   authMiddleware,
   loadCurrentUser,
   (req, res, next) => {
+    if (req.currentUser.role === "Admin") return next();
+
     if (!getAllowedPages(req.currentUser).includes(pageKey)) {
       return res.status(403).json({
         message: "You do not have access to this page",
