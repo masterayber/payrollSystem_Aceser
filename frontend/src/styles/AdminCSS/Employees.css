@@ -30,3 +30,8 @@
 .search-container input {
   background-color: var(--gray-50);
 }
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}

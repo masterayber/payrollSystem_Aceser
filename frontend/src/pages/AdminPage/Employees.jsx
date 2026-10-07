@@ -5,11 +5,13 @@ import {
   IconSearch,
   IconCancel,
   IconProgressCheck,
+  IconShieldLock,
 } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import AddEmployeeModal from "../../components/Modals/AddEmployee/AddEmployeeModal";
 import EditEmployeeModal from "../../components/Modals/EditEmployee/EditEmployeeModal";
 import ApproveEmployeeModal from "../../components/Modals/Approve/ApproveEmployeeModal";
+import ManageAccessModal from "../../components/Modals/ManageAccess/ManageAccessModal";
 import "../../styles/AdminCSS/Employees.css";
 import Pagination from "../../components/Pagination/Pagination";
 
@@ -22,6 +24,7 @@ const Employees = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
 
   const itemsPerPage = 7;
 
@@ -52,6 +55,11 @@ const Employees = () => {
   const handleEditClick = (employee) => {
     setSelectedEmployee(employee);
     setIsEditModalOpen(true);
+  };
+
+  const handleAccessClick = (employee) => {
+    setSelectedEmployee(employee);
+    setIsAccessModalOpen(true);
   };
 
   const handleApproveClick = () => {
@@ -216,12 +224,24 @@ const Employees = () => {
             </article>
             {editMode && (
               <article className="table-content-container">
-                <button
-                  className="btn action-button"
-                  onClick={() => handleEditClick(employee)}
-                >
-                  <IconEdit stroke={2} />
-                </button>
+                <div className="action-buttons">
+                  <button
+                    className="btn action-button"
+                    title="Edit employee"
+                    aria-label="Edit employee"
+                    onClick={() => handleEditClick(employee)}
+                  >
+                    <IconEdit stroke={2} />
+                  </button>
+                  <button
+                    className="btn action-button"
+                    title="Manage page access"
+                    aria-label="Manage page access"
+                    onClick={() => handleAccessClick(employee)}
+                  >
+                    <IconShieldLock stroke={2} />
+                  </button>
+                </div>
               </article>
             )}
           </div>
@@ -246,6 +266,13 @@ const Employees = () => {
           employee={selectedEmployee}
           onClose={() => setIsEditModalOpen(false)}
           onUpdateEmployee={handleUpdateEmployee}
+        />
+      )}
+
+      {isAccessModalOpen && selectedEmployee && (
+        <ManageAccessModal
+          employee={selectedEmployee}
+          onClose={() => setIsAccessModalOpen(false)}
         />
       )}
 
