@@ -30,6 +30,7 @@
 }
 
 .admin-dashboard .date-details {
+  display: flex;
   align-items: flex-end;
   flex-direction: column;
   gap: 4px;
@@ -39,7 +40,7 @@
 
 .admin-dashboard .admin-date {
   color: var(--neutral-color-80);
-  font-size: 14px;
+  font-size: 22px;
   font-weight: 500;
 }
 
@@ -240,6 +241,9 @@
   padding: 24px 12px;
   color: var(--neutral-color-80);
   font-size: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-weight: 400;
 }
 

@@ -71,7 +71,7 @@ const OTP = () => {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/auth/forgot-password",
-        { email }
+        { email },
       );
       setMessage(response.data.message);
 
@@ -96,14 +96,15 @@ const OTP = () => {
   return (
     <div className="auth-page otp-container">
       <form className="otp-form" onSubmit={handleOtp}>
-        <h2>OTP</h2>
-        <p>Please enter your OTP sent to your email</p>
+        <h2 className="otp-title">OTP</h2>
+        <p className="otp-sub">Please enter your OTP sent to your email</p>
         <div className="email-container">
           <p>
             Your email is: <b>{email}</b>
           </p>
         </div>
-        <div className="input-container-otp">
+
+        <div className="otp-input-row">
           <div className="input-group-otp">
             <input
               type="text"
@@ -113,19 +114,18 @@ const OTP = () => {
               onChange={(e) => setOtp(e.target.value)}
               required
             />
-            <div className="timer-container">
-              <button
-                className={`timer-button ${
-                  timeLeft > 0 || loading ? "disabled" : ""
-                }`}
-                disabled={timeLeft > 0 || loading}
-                onClick={handleResend}
-              >
-                {timeLeft > 0 ? formatTime(timeLeft) : "Resend OTP"}
-              </button>
-            </div>
           </div>
+
+          <button
+            type="button"
+            className="timer-button"
+            disabled={timeLeft > 0 || loading}
+            onClick={handleResend}
+          >
+            {timeLeft > 0 ? formatTime(timeLeft) : "Resend OTP"}
+          </button>
         </div>
+
         {message && <p className="feedback-message">{message}</p>}
         <div className="button-container">
           <button type="submit" className="verify-button" disabled={loading}>

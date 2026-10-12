@@ -119,6 +119,31 @@
   margin-top: 20px;
 }
 
+.modal .input-group-signup {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--gray-50);
+}
+
+.modal .input-group-signup:focus-within {
+  border-color: var(--main-color-1);
+  border-width: 2px;
+  box-shadow: 0 0 0 2px var(--neutral-color-30);
+}
+
+.modal .input-group-signup input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: inherit;
+  outline: none;
+  background: transparent;
+  color: var(--neutral-color-100);
+  font: inherit;
+}
+
 .table-content {
   transition: all 0.2s ease;
 }

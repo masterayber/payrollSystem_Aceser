@@ -36,7 +36,7 @@ const AdditionalInfo = () => {
         {
           email,
           ...formData,
-        }
+        },
       );
 
       if (response.data.userId) {
@@ -57,97 +57,137 @@ const AdditionalInfo = () => {
         <h2>Additional Information</h2>
         <p>Please enter your additional information to continue.</p>
 
-        <div className="input-row">
-          <div className="input-container-additional">
-            <div className="label-container">
-              <label>
-                Birthday <span className="required">*</span>
-              </label>
-            </div>
-            <div className="input-group-additional">
-              <input
-                type="date"
-                name="birthday"
-                placeholder="Enter your Birthday"
-                value={formData.birthday}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="input-container-additional">
-            <div className="label-container">
-              <label>
-                Contact Number <span className="required">*</span>
-              </label>
-            </div>
-            <div className="input-group-additional">
-              <input
-                type="text"
-                name="contactNumber"
-                placeholder="Enter your Contact Number"
-                value={formData.contactNumber}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="input-container-additional">
-          <label>
-            Gender <span className="required">*</span>
-          </label>
-          <div className="gender-options">
-            {["Male", "Female"].map((option) => (
-              <label key={option}>
+        <div className="input-section">
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
+                <label>
+                  Birthday <span className="required">*</span>
+                </label>
+              </div>
+              <div className="input-group-signup">
                 <input
-                  type="radio"
-                  name="gender"
-                  value={option}
-                  checked={formData.gender === option}
+                  type="date"
+                  name="birthday"
+                  placeholder="Enter your Birthday"
+                  value={formData.birthday}
                   onChange={handleChange}
+                  required
                 />
-                {option}
-              </label>
-            ))}
+              </div>
+            </div>
+
+            <div className="input-container">
+              <div className="label-container">
+                <label>
+                  Contact Number <span className="required">*</span>
+                </label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="contactNumber"
+                  placeholder="Enter your Contact Number"
+                  value={formData.contactNumber}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
           </div>
-        </div>
 
-        <h2 className="contact-emergency">Emergency Contact Information</h2>
-
-        <div className="input-row">
-          <div className="input-container-additional">
+          <div className="input-container">
             <div className="label-container">
               <label>
-                First Name <span className="required">*</span>
+                Gender <span className="required">*</span>
               </label>
             </div>
-            <div className="input-group-additional">
+            <div className="gender-options">
+              {["Male", "Female"].map((option) => (
+                <label key={option}>
+                  <input
+                    type="radio"
+                    name="gender"
+                    value={option}
+                    checked={formData.gender === option}
+                    onChange={handleChange}
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <h2 className="contact-emergency">Emergency Contact Information</h2>
+
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
+                <label>
+                  First Name <span className="required">*</span>
+                </label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="contactFirstName"
+                  placeholder="Enter your First Name"
+                  value={formData.contactFirstName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="input-container">
+              <div className="label-container">
+                <label>
+                  Last Name <span className="required">*</span>
+                </label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="text"
+                  name="contactLastName"
+                  placeholder="Enter your Last Name"
+                  value={formData.contactLastName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="input-container">
+            <div className="label-container">
+              <label>
+                Contact Emergency Number <span className="required">*</span>
+              </label>
+            </div>
+            <div className="input-group-signup">
               <input
                 type="text"
-                name="contactFirstName"
-                placeholder="First Name"
-                value={formData.contactFirstName}
+                name="contactEmergency"
+                placeholder="Contact Number"
+                value={formData.contactEmergency}
                 onChange={handleChange}
                 required
               />
             </div>
           </div>
 
-          <div className="input-container-additional">
+          <div className="input-container">
             <div className="label-container">
               <label>
-                Last Name <span className="required">*</span>
+                Contact Emergency Address <span className="required">*</span>
               </label>
             </div>
-            <div className="input-group-additional">
+            <div className="input-group-signup">
               <input
                 type="text"
-                name="contactLastName"
-                placeholder="Last Name"
-                value={formData.contactLastName}
+                name="contactAddress"
+                placeholder="Address"
+                value={formData.contactAddress}
                 onChange={handleChange}
                 required
               />
@@ -155,43 +195,11 @@ const AdditionalInfo = () => {
           </div>
         </div>
 
-        <div className="input-container-additional">
-          <div className="label-container">
-            <label>
-              Contact Emergency Number <span className="required">*</span>
-            </label>
-          </div>
-          <div className="input-group-additional">
-            <input
-              type="text"
-              name="contactEmergency"
-              placeholder="Contact Number"
-              value={formData.contactEmergency}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="input-container-additional">
-          <div className="label-container">
-            <label>
-              Contact Emergency Address <span className="required">*</span>
-            </label>
-          </div>
-          <div className="input-group-additional">
-            <input
-              type="text"
-              name="contactAddress"
-              placeholder="Address"
-              value={formData.contactAddress}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
-
-        <button type="submit" className="register-button" disabled={loading}>
+        <button
+          type="submit"
+          className="btn register-button"
+          disabled={loading}
+        >
           {loading ? "Processing..." : "Register"}
         </button>
       </form>

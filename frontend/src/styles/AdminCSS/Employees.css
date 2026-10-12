@@ -193,6 +193,7 @@
 }
 
 .employees-page .pagination {
+  display: flex;
   align-self: flex-end;
   align-items: center;
   gap: 12px;
@@ -278,7 +279,10 @@
 .employee-modal-table .table-header,
 .employee-modal-table .table-content {
   display: grid;
-  grid-template-columns: minmax(95px, 0.8fr) minmax(95px, 0.8fr) minmax(170px, 1.4fr) minmax(180px, 1.2fr) minmax(90px, 0.7fr);
+  grid-template-columns: minmax(95px, 0.8fr) minmax(95px, 0.8fr) minmax(
+      170px,
+      1.4fr
+    ) minmax(180px, 1.2fr) minmax(90px, 0.7fr);
   min-width: 700px;
 }
 

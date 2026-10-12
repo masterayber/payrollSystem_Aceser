@@ -24,30 +24,6 @@
   color: var(--red-status);
 }
 
-.input-group-signup {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-  flex: 1;
-  overflow: hidden;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--border-radius);
-  background: var(--gray-50);
-}
-
-.input-group-signup input {
-  width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: var(--border-radius);
-  background: transparent;
-  color: var(--neutral-color-100);
-  font: inherit;
-}
-
 input[type="date"] {
   width: 100%;
   min-width: 0;
@@ -60,8 +36,7 @@ input[type="date"] {
   font: inherit;
 }
 
-.input-group-signup input[type="date"],
-.input-group-additional input[type="date"] {
+.input-group-signup input[type="date"] {
   border: 0;
   background: transparent;
 }
@@ -94,10 +69,9 @@ input[type="date"] {
 }
 
 .icon-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 50px;
+  display: flex;
+  justify-content: center;
 }
 
 .icon {
@@ -120,7 +94,7 @@ input[type="date"] {
 .auth-page {
   width: min(calc(100% - 32px), 520px);
   margin: clamp(16px, 6vh, 56px) auto;
-  padding: clamp(20px, 4vw, 32px);
+  padding: clamp(16px, 4vw, 35px);
   overflow: hidden;
   border: 1px solid var(--gray-200);
   border-radius: 1rem;
@@ -135,9 +109,9 @@ input[type="date"] {
 
 .auth-page h2 {
   margin: 0;
-  color: var(--neutral-color-100);
-  font-size: 24px;
-  line-height: 1.3;
+  color: var(--neutral-color-90);
+  font-size: 22px;
+  line-height: 1.2;
 }
 
 .auth-page p {
@@ -148,6 +122,12 @@ input[type="date"] {
 
 .auth-page .required {
   color: var(--red-status);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .login-container .company-logo,
@@ -168,7 +148,6 @@ input[type="date"] {
 .auth-page .input-group-forgot,
 .auth-page .input-group-reset,
 .auth-page .input-group-otp,
-.auth-page .input-group-additional,
 .auth-page .login-form .input-group {
   border: 1px solid var(--gray-200);
   border-radius: var(--border-radius);
@@ -179,9 +158,9 @@ input[type="date"] {
 .auth-page .input-group-forgot:focus-within,
 .auth-page .input-group-reset:focus-within,
 .auth-page .input-group-otp:focus-within,
-.auth-page .input-group-additional:focus-within,
 .auth-page .login-form .input-group:focus-within {
   border-color: var(--main-color-1);
+  border-width: 2px;
   box-shadow: 0 0 0 2px var(--neutral-color-30);
 }
 
@@ -189,9 +168,11 @@ input[type="date"] {
 .auth-page .input-group-forgot input,
 .auth-page .input-group-reset input,
 .auth-page .input-group-otp input,
-.auth-page .input-group-additional input,
 .auth-page .login-form .input-group input {
   min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  border-radius: var(--border-radius);
   min-height: 46px;
   padding: 10px 12px;
   border: 0;
@@ -207,7 +188,7 @@ input[type="date"] {
 
 .auth-page input:focus-visible,
 .auth-page button:focus-visible {
-  outline: 2px solid var(--main-color-1);
+  outline: none;
   outline-offset: 2px;
 }
 
@@ -217,7 +198,7 @@ input[type="date"] {
 }
 
 .auth-page .feedback-message {
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   padding: 10px 12px;
   border: 1px solid var(--gray-200);
   border-radius: var(--border-radius);
@@ -234,7 +215,6 @@ input[type="date"] {
   margin-top: 20px;
 }
 
-.auth-page .cancel-button,
 .auth-page .send-button,
 .auth-page .reset-button,
 .auth-page .verify-button,
@@ -244,7 +224,7 @@ input[type="date"] {
   align-items: center;
   justify-content: center;
   min-height: 44px;
-  width: auto;
+  width: 100%;
   min-width: 112px;
   margin: 0;
   padding: 10px 16px;
@@ -256,6 +236,12 @@ input[type="date"] {
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s ease;
+}
+
+.auth-page .register-button,
+.auth-page .send-button,
+.auth-page .reset-button {
+  margin-top: 18px;
 }
 
 .auth-page .cancel-button:hover:not(:disabled),
@@ -278,18 +264,9 @@ input[type="date"] {
   cursor: not-allowed;
 }
 
-.login-container .logo-container {
-  margin-bottom: 18px;
-}
-
-.login-container .company-logo {
-  width: 88px;
-  height: 88px;
-  object-fit: contain;
-}
-
 .login-container .login-form h2 {
-  margin-bottom: 24px;
+  margin-bottom: 22px;
+  text-transform: uppercase;
   text-align: center;
 }
 
@@ -301,6 +278,11 @@ input[type="date"] {
   min-height: 48px;
   margin-top: 14px;
   overflow: hidden;
+}
+
+.login-container .login-form .input-group input {
+  flex: 1 1 0;
+  width: 100%;
 }
 
 .login-container .login-form .icon-container {
@@ -321,8 +303,8 @@ input[type="date"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 25px;
+  height: 25px;
   border: 0;
   background: transparent;
   color: var(--neutral-color-80);
@@ -339,7 +321,8 @@ input[type="date"] {
 .login-container .forgot-password,
 .login-container .sign-up {
   color: var(--main-color-1);
-  font-size: 13px;
+  text-transform: uppercase;
+  font-size: 12px;
 }
 
 .login-container .forgot-password:hover,
@@ -351,7 +334,6 @@ input[type="date"] {
 .login-container .login-button {
   justify-content: center;
   width: 100%;
-  min-height: 46px;
   margin: 28px 0 0;
 }
 
@@ -361,31 +343,47 @@ input[type="date"] {
 }
 
 .signup-container .signup-form > h2,
+.forgotPassword-container .forgotPassword-form > h2,
+.otp-container .otp-form > h2,
+.reset-password-container .reset-form > h2,
 .additional-container .additional-form > h2:first-child {
   margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
 }
 
 .signup-container .signup-form > p,
-.additional-container .additional-form > p {
+.forgotPassword-container .forgotPassword-form > p:not(.feedback-message),
+.otp-container .otp-form > p,
+.reset-password-container
+  .reset-form
+  > p
+  .additional-container
+  .additional-form
+  > p {
   margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
 }
 
-.signup-container .back-button {
+.signup-container .back-button,
+.forgotPassword-container .back-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   margin: 0 0 14px;
   padding: 8px;
   border: 1px solid var(--gray-200);
-  border-radius: var(--border-radius);
-  background: var(--gray-50);
-  color: var(--neutral-color-90);
-  cursor: pointer;
 }
 
-.signup-container .input-section {
+.signup-container .input-section,
+.additional-container .input-section {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -400,7 +398,7 @@ input[type="date"] {
 }
 
 .signup-container .input-container,
-.additional-container .input-container-additional {
+.additional-container .input-container {
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -439,29 +437,8 @@ input[type="date"] {
 
 .signup-container .signup-button {
   display: flex;
-  align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 46px;
-  margin: 0;
-  padding: 10px 16px;
-  border: 0;
-  border-radius: var(--border-radius);
-  background: var(--default-button-color);
-  color: var(--gray-50);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.signup-container .signup-button:hover:not(:disabled) {
-  background: var(--hover-button-color);
-}
-
-.signup-container .signup-button:disabled {
-  background: var(--gray-200);
-  color: var(--neutral-color-80);
-  cursor: not-allowed;
 }
 
 .signup-container .signin-links {
@@ -478,15 +455,9 @@ input[type="date"] {
   color: var(--main-color-1);
 }
 
-.forgotPassword-container .forgotPassword-form h2,
-.otp-container .otp-form h2,
-.reset-password-container .reset-form h2 {
-  margin-bottom: 8px;
-}
-
-.forgotPassword-container .forgotPassword-form > p,
-.otp-container .otp-form > p,
-.reset-password-container .reset-form > p {
+.forgotPassword-container .forgotPassword-form > p:not(.feedback-message),
+.otp-container .otp-form > p:not(.feedback-message),
+.reset-password-container .reset-form > p:not(.feedback-message) {
   margin: 0 0 20px;
 }
 
@@ -495,10 +466,28 @@ input[type="date"] {
 }
 
 .forgotPassword-container .input-group-forgot,
-.reset-password-container .input-group-reset,
-.otp-container .input-group-otp {
+.reset-password-container .input-group-reset {
   width: 100%;
   overflow: hidden;
+}
+
+.otp-input-row {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  width: 100%;
+}
+
+.otp-input-row .input-group-otp {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.otp-input-row .input-group-otp input {
+  flex: 1;
+  width: 100%;
 }
 
 .otp-container .email-container {
@@ -518,28 +507,11 @@ input[type="date"] {
   color: var(--neutral-color-90);
 }
 
-.otp-container .input-container-otp {
-  display: flex;
-  width: 100%;
-  margin: 0;
-}
-
-.otp-container .input-group-otp {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-
-.otp-container .timer-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 142px;
-  padding: 4px;
-}
-
 .otp-container .timer-button {
-  min-height: 38px;
+  flex: 0 0 auto;
+  min-height: 48px;
+  min-width: 100px;
+  justify-content: center;
   padding: 8px 10px;
   border: 0;
   border-radius: var(--border-radius);
@@ -554,8 +526,7 @@ input[type="date"] {
   background: var(--hover-button-color);
 }
 
-.otp-container .timer-button:disabled,
-.otp-container .timer-button.disabled {
+.otp-container .timer-button:disabled {
   background: var(--gray-200);
   color: var(--neutral-color-80);
   cursor: not-allowed;
@@ -577,7 +548,6 @@ input[type="date"] {
   display: flex;
   flex-wrap: wrap;
   gap: 18px;
-  margin-top: 4px;
 }
 
 .additional-container .gender-options label {
@@ -596,6 +566,8 @@ input[type="date"] {
 
 .additional-container .contact-emergency {
   margin-top: 22px;
+  display: flex;
+  justify-content: center;
 }
 
 .created-container {
@@ -658,20 +630,6 @@ input[type="date"] {
   .auth-page .verify-button,
   .auth-page .register-button,
   .auth-page .dashboard-button {
-    width: 100%;
-  }
-
-  .otp-container .input-group-otp {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .otp-container .timer-container {
-    flex-basis: auto;
-    width: 100%;
-  }
-
-  .otp-container .timer-button {
     width: 100%;
   }
 }

@@ -6,8 +6,8 @@ import "../styles/Reset.css";
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const setMessage = useState("");
-  const [loading, setLoading] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,7 +34,7 @@ const ResetPassword = () => {
         {
           resetToken,
           password,
-        }
+        },
       );
 
       setMessage(response.data.message);
@@ -50,8 +50,8 @@ const ResetPassword = () => {
   return (
     <div className="auth-page reset-password-container">
       <form className="reset-form" onSubmit={handleResetPassword}>
-        <h2>Reset Password</h2>
-        <p>Please enter new password</p>
+        <h2 className="reset-title">Reset Password</h2>
+        <p className="reset-sub">Please enter new password</p>
         <div className="input-container-reset">
           <div className="input-group-reset">
             <input
@@ -74,14 +74,12 @@ const ResetPassword = () => {
             />
           </div>
         </div>
-        <div className="button-container">
-          <button className="cancel-button" onClick={() => navigate("/")}>
-            Cancel
-          </button>
-          <button type="submit" className="reset-button" disabled={loading}>
-            {loading ? "Resetting..." : "Reset Password"}
-          </button>
-        </div>
+
+        {message && <p className="feedback-message">{message}</p>}
+
+        <button type="submit" className="reset-button" disabled={loading}>
+          {loading ? "Resetting..." : "Reset Password"}
+        </button>
       </form>
     </div>
   );

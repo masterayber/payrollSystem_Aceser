@@ -93,6 +93,8 @@ a:hover {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
+  min-height: 45px;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);

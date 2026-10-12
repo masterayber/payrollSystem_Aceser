@@ -41,7 +41,7 @@ const Signup = () => {
       setLoading(true);
       const response = await axios.post(
         "http://localhost:5000/api/auth/signup",
-        dataToSend
+        dataToSend,
       );
 
       localStorage.setItem("token", response.data.token);
@@ -61,14 +61,14 @@ const Signup = () => {
       <form className="signup-form" onSubmit={handleSignup}>
         <button
           type="button"
-          className="back-button"
+          className="btn back-button"
           aria-label="Back to login"
           onClick={() => navigate("/")}
         >
           <IconArrowLeft stroke={2} />
         </button>
-        <h2>Sign up</h2>
-        <p>Sign up to Continue</p>
+        <h2 className="signup-title">Sign up</h2>
+        <p className="signup-sub">Sign up to Continue</p>
 
         <div className="input-section">
           <div className="input-row">
@@ -188,7 +188,7 @@ const Signup = () => {
           <div>I agree to the Terms and Conditions</div>
         </div>
 
-        <button type="submit" className="signup-button" disabled={loading}>
+        <button type="submit" className="btn signup-button" disabled={loading}>
           {loading ? "Signing Up..." : "Sign up"}
         </button>
 

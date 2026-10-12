@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { IconArrowLeft } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Forgot.css";
 
@@ -25,7 +26,7 @@ const ForgotPassword = () => {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/auth/forgot-password",
-        { email }
+        { email },
       );
       setMessage(response.data.message);
       navigate("/otp", {
@@ -41,8 +42,17 @@ const ForgotPassword = () => {
   return (
     <div className="auth-page forgotPassword-container">
       <form className="forgotPassword-form" onSubmit={handleForgot}>
-        <h2>Find your account</h2>
-        <p>
+        <button
+          type="button"
+          className="btn back-button"
+          aria-label="Back to login"
+          onClick={() => navigate("/")}
+        >
+          <IconArrowLeft stroke={2} />
+        </button>
+
+        <h2 className="forgot-title">Find your account</h2>
+        <p className="forgot-sub">
           Please enter your email to search for your account and reset your
           password
         </p>
@@ -59,14 +69,10 @@ const ForgotPassword = () => {
           </div>
         </div>
         {message && <p className="feedback-message">{message}</p>}
-        <div className="button-container">
-          <button className="cancel-button" onClick={() => navigate("/")}>
-            Cancel
-          </button>
-          <button type="submit" className="send-button" disabled={loading}>
-            {loading ? "Sending..." : "Send"}
-          </button>
-        </div>
+
+        <button type="submit" className="btn send-button" disabled={loading}>
+          {loading ? "Sending..." : "Send"}
+        </button>
       </form>
     </div>
   );

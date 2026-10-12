@@ -3,6 +3,7 @@
   display: flex;
   gap: clamp(16px, 4vw, 48px);
   width: 100%;
+  height: 100%;
   align-items: center;
   text-align: center;
   justify-content: space-evenly;
@@ -13,10 +14,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: clamp(150px, 24vw, 220px);
+  width: clamp(180px, 28vw, 260px);
   height: auto;
   aspect-ratio: 1;
-  flex: 0 1 220px;
+  flex: 0 1 260px;
 }
 
 .chart-container canvas {
@@ -80,7 +81,7 @@
   }
 
   .chart-container {
-    width: min(190px, 62vw);
+    width: min(220px, 70vw);
     flex: 0 1 auto;
   }
 
