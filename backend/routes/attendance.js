@@ -1,13 +1,53 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 
 const router = express.Router();
 
 const Attendance = require("../models/attendance");
 const Employee = require("../models/employees");
 const User = require("../models/authUsers");
+const { requireAdmin, requirePage } = require("../middleware/authMiddleware");
 
 const ZKTecoService = require("../utils/zktecoService");
+
+const requireZktecoCallbackAuth = (req, res, next) => {
+  const expected = process.env.ZKTECO_CALLBACK_SECRET;
+  const provided = req.get("x-zkteco-token");
+
+  if (!expected) {
+    return res.status(503).json({
+      message: "Biometric callback identification is not configured",
+    });
+  }
+
+  if (!provided) {
+    return res.status(401).json({ message: "Device authentication required" });
+  }
+
+  const expectedBytes = Buffer.from(expected);
+  const providedBytes = Buffer.from(provided);
+
+  if (
+    expectedBytes.length !== providedBytes.length ||
+    !crypto.timingSafeEqual(expectedBytes, providedBytes)
+  ) {
+    return res.status(401).json({ message: "Invalid device authentication" });
+  }
+
+  next();
+};
+
+const requireSelfOrAdmin = (req, res, next) => {
+  const isAdmin = req.currentUser.role === "Admin";
+  const isOwner = String(req.user.userId) === String(req.params.userId);
+
+  if (!isAdmin && !isOwner) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+
+  next();
+};
 
 const HHMMSS_REGEX = /^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
 
@@ -216,7 +256,7 @@ const upsertBiometricAttendance = async ({
   return attendanceRecord;
 };
 
-router.post("/iclock/cdata", async (req, res) => {
+router.post("/iclock/cdata", requireZktecoCallbackAuth, async (req, res) => {
   try {
     const incoming =
       typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
@@ -267,7 +307,7 @@ router.post("/iclock/cdata", async (req, res) => {
 });
 
 // Post route to import biometric data from ZKTeco device
-router.post("/import-biometric", async (req, res) => {
+router.post("/import-biometric", requireAdmin, async (req, res) => {
   try {
     const { deviceIp, devicePort } = req.body;
 
@@ -362,7 +402,7 @@ router.post("/import-biometric", async (req, res) => {
 });
 
 // Route Record for Admin
-router.get("/attendance", async (req, res) => {
+router.get("/attendance", requireAdmin, async (req, res) => {
   try {
     const { date } = req.query;
 
@@ -381,59 +421,74 @@ router.get("/attendance", async (req, res) => {
 });
 
 // Route for user's attendance today
-router.get("/:userId/today", async (req, res) => {
-  try {
-    const { userId } = req.params;
+router.get(
+  "/:userId/today",
+  requirePage("attendance"),
+  requireSelfOrAdmin,
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
 
-    const today = new Date().toISOString().slice(0, 10);
+      const today = new Date().toISOString().slice(0, 10);
 
-    const attendance = await Attendance.findOne({
-      userId,
-      date: today,
-    });
+      const attendance = await Attendance.findOne({
+        userId,
+        date: today,
+      });
 
-    if (!attendance) {
-      return res
-        .status(404)
-        .json({ message: "Attendance not found for today" });
+      if (!attendance) {
+        return res
+          .status(404)
+          .json({ message: "Attendance not found for today" });
+      }
+
+      res.json(attendance);
+    } catch (error) {
+      console.error("Error fetching today's attendance:", error);
+      res.status(500).json({ message: "Server error" });
     }
+  },
+);
 
-    res.json(attendance);
-  } catch (error) {
-    console.error("Error fetching today's attendance:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+router.get(
+  "/:userId/records",
+  requirePage("attendance"),
+  requireSelfOrAdmin,
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const attendance = await Attendance.find({ userId });
+      res.json(attendance);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
 
-router.get("/:userId/records", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const attendance = await Attendance.find({ userId });
-    res.json(attendance);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+router.get(
+  "/:userId",
+  requirePage("attendance"),
+  requireSelfOrAdmin,
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
 
-router.get("/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
+      const attendanceRecords = await Attendance.find({ userId }).sort({
+        date: -1,
+      });
 
-    const attendanceRecords = await Attendance.find({ userId }).sort({
-      date: -1,
-    });
+      res.json({
+        total: attendanceRecords.length,
+        data: attendanceRecords,
+      });
+    } catch (error) {
+      console.error("Error fetching attendance records:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  },
+);
 
-    res.json({
-      total: attendanceRecords.length,
-      data: attendanceRecords,
-    });
-  } catch (error) {
-    console.error("Error fetching attendance records:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-router.put("/edit-attendance/:id", async (req, res) => {
+router.put("/edit-attendance/:id", requireAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
     const { date, timeIn = "", timeOut = "" } = req.body;
@@ -489,7 +544,7 @@ router.put("/edit-attendance/:id", async (req, res) => {
   }
 });
 
-router.post("/create-blank.today", async (req, res) => {
+router.post("/create-blank.today", requireAdmin, async (req, res) => {
   try {
     const employees = await Employee.find();
     const today = new Date().toISOString().split("T")[0];
