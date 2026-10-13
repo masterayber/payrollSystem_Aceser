@@ -1,11 +1,29 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const multer = require("multer");
 
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
 
 const router = express.Router();
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      const uploadDir = path.join(__dirname, "../uploads");
+
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+      cb(null, Date.now() + path.extname(file.originalname));
+    },
+  }),
+});
 
 // Route for updating general settings
 router.put("/updateGeneralSettings/:id", async (req, res) => {

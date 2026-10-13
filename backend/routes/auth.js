@@ -1,5 +1,4 @@
 const express = require("express");
-const multer = require("multer");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const path = require("path");
@@ -23,23 +22,6 @@ const { getAllowedPages } = require("../utils/pageAccess");
 const router = express.Router();
 
 let otpStorage = {}; // Temporarily stores OTPs for demonstration
-
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: function (req, file, cb) {
-      const uploadDir = path.join(__dirname, "../uploads");
-
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-      cb(null, Date.now() + path.extname(file.originalname));
-    },
-  }),
-});
 
 // Login route
 router.post("/login", async (req, res) => {
