@@ -9,7 +9,7 @@ import AttendanceChart from "../../components/AttendanceChart/AttendanceChart";
 import { IconDotsVertical } from "@tabler/icons-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import API from "../../api";
 
 const AdminDashboard = () => {
   const { userData } = useContext(UserContext);
@@ -66,9 +66,9 @@ const AdminDashboard = () => {
         const employees = employeeData;
 
         // Fetch today's attendance
-        const attRes = await axios.get(
-          `http://localhost:5000/api/attendance/attendance?date=${formattedToday}`,
-        );
+        const attRes = await API.get("/api/attendance/attendance", {
+          params: { date: formattedToday },
+        });
         const attendance = attRes.data;
 
         setTodayAttendance(attendance);
@@ -118,9 +118,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchPendingUsers = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/auth/pending-users",
-        );
+        const response = await API.get("/api/auth/pending-users");
         setPendingUsers(response.data);
       } catch (error) {
         console.error("Error fetching pending users:", error);

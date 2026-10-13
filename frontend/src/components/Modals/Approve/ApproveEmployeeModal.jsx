@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import "../Modal.css";
 import ConfirmModal from "../Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
 import { format } from "date-fns";
+import API from "../../../api";
 
 const ApproveEmployeeModal = ({ onClose, onUpdateEmployee }) => {
   const [pendingUsers, setPendingUsers] = useState([]);
@@ -14,11 +16,8 @@ const ApproveEmployeeModal = ({ onClose, onUpdateEmployee }) => {
   useEffect(() => {
     const fetchPendingUsers = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/auth/pending-users",
-        );
-        const data = await response.json();
-        setPendingUsers(data);
+        const response = await API.get("/api/auth/pending-users");
+        setPendingUsers(response.data);
       } catch (error) {
         console.error("Error fetching pending employees:", error);
       }
@@ -29,26 +28,12 @@ const ApproveEmployeeModal = ({ onClose, onUpdateEmployee }) => {
 
   const handleApprove = async (userId) => {
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/auth/auths/${userId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status: "Active" }),
-        },
-      );
+      await API.put(`/api/auth/users/${userId}/status`, { status: "Active" });
+      setPendingUsers((prev) => prev.filter((user) => user._id !== userId));
+      await onUpdateEmployee();
+      setIsConfirmModalOpen(false);
 
-      if (response.ok) {
-        setPendingUsers((prev) => prev.filter((user) => user._id !== userId));
-        onUpdateEmployee();
-        setIsConfirmModalOpen(false);
-
-        setTimeout(() => setIsConfirmedMessageModalOpen(true), 300);
-      } else {
-        console.error("Failed to approve employee.");
-      }
+      setTimeout(() => setIsConfirmedMessageModalOpen(true), 300);
     } catch (error) {
       console.error("Error approving employee:", error);
     }
@@ -140,6 +125,11 @@ const ApproveEmployeeModal = ({ onClose, onUpdateEmployee }) => {
       )}
     </div>
   );
+};
+
+ApproveEmployeeModal.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  onUpdateEmployee: PropTypes.func.isRequired,
 };
 
 export default ApproveEmployeeModal;

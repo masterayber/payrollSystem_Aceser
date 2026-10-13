@@ -7,7 +7,7 @@ const router = express.Router();
 const Attendance = require("../models/attendance");
 const Employee = require("../models/employees");
 const User = require("../models/authUsers");
-const { requireAdmin, requirePage } = require("../middleware/authMiddleware");
+const { requireAdmin, requirePage } = require("../middleware/accessMiddleware");
 
 const ZKTecoService = require("../utils/zktecoService");
 

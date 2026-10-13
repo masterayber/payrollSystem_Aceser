@@ -1,10 +1,10 @@
 import { useState, useRef, useContext, useEffect, useCallback } from "react";
-import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { IconSearch, IconCalendarClock, IconEdit } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import { AttendanceContext } from "../../context/AttendanceContext";
+import API from "../../api";
 import EditEmployeeAttendanceModal from "../../components/Modals/EditEmployee/EditEmployeeAttendanceModal";
 import "../../styles/AdminCSS/AdminAttendance.css";
 import Pagination from "../../components/Pagination/Pagination";
@@ -95,9 +95,9 @@ const AdminAttendance = () => {
   const fetchAttendanceByDate = useCallback(async () => {
     try {
       const formattedDate = formatDate(selectedDate);
-      const res = await axios.get(
-        `http://localhost:5000/api/attendance/attendance?date=${formattedDate}`,
-      );
+      const res = await API.get("/api/attendance/attendance", {
+        params: { date: formattedDate },
+      });
       setAttendanceData(res.data);
     } catch (error) {
       console.error("Error fetching attendance data:", error);

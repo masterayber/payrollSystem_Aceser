@@ -116,16 +116,25 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("userData");
+    const token = localStorage.getItem("token");
     const lastActivity = Number(localStorage.getItem("lastActivity"));
 
-    if (storedUser) {
-      setUserData(JSON.parse(storedUser));
-    }
-
-    if (!localStorage.getItem("token")) {
+    if (!token) {
+      localStorage.removeItem("userData");
+      localStorage.removeItem("lastActivity");
+      setUserData(null);
       setLoading(false);
       return;
+    }
+
+    const storedUser = localStorage.getItem("userData");
+    if (storedUser) {
+      try {
+        setUserData(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Invalid cached user data:", error);
+        localStorage.removeItem("userData");
+      }
     }
 
     if (!lastActivity || Date.now() - lastActivity > INACTIVITY_LIMIT) {

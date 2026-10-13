@@ -51,4 +51,6 @@ const requirePage = (pageKey) => [
   },
 ];
 
-module.exports = { requireAdmin, requirePage };
+const requireAuthenticated = [authMiddleware, loadCurrentUser];
+
+module.exports = { requireAdmin, requirePage, requireAuthenticated };

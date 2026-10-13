@@ -22,6 +22,7 @@ const dropdownRoutes = require("./routes/dropdownOption");
 const employeeRoutes = require("./routes/employee");
 const filingRoutes = require("./routes/filing");
 const accessRoutes = require("./routes/access");
+const settingsRoutes = require("./routes/settings");
 
 const dotenv = require("dotenv");
 

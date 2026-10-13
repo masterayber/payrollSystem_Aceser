@@ -8,6 +8,7 @@ import CancelModal from "../Cancel/CancelModal";
 import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
 import { IconAlertTriangle, IconCancel, IconCheck } from "@tabler/icons-react";
 import DeleteModal from "../Delete/DeleteModal";
+import API from "../../../api";
 
 const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
@@ -52,9 +53,8 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/dropdownOption")
-      .then((res) => res.json())
-      .then((data) => setDropdownOptions(data))
+    API.get("/api/dropdownOption")
+      .then((response) => setDropdownOptions(response.data))
       .catch((err) => console.error("Failed to fetch dropdowns", err));
   }, []);
 
@@ -144,20 +144,13 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
     }
 
     try {
-      const res = await fetch(
-        "http://localhost:5000/api/auth/check-user-exists",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: editEmployee.email,
-            username: editEmployee.username,
-            employeeId: editEmployee.employeeId,
-            excludeId: editEmployee._id,
-          }),
-        },
-      );
-      const data = await res.json();
+      const response = await API.post("/api/employee/check-user-exists", {
+        email: editEmployee.email,
+        username: editEmployee.username,
+        employeeId: editEmployee.employeeId,
+        excludeId: editEmployee._id,
+      });
+      const data = response.data;
       let errorMsg = "";
       if (data.email) errorMsg += "Email already exists. \n";
       if (data.username) errorMsg += "Username already exists. \n";
@@ -182,15 +175,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
     setIsDeleteModalOpen(false);
 
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/auth/delete-employee/${editEmployee.employeeId}`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-
-      if (!response.ok) throw new Error("Failed to delete employee");
+      await API.delete(`/api/auth/delete-employee/${editEmployee.employeeId}`);
 
       if (onUpdateEmployee) await onUpdateEmployee();
 
@@ -216,20 +201,10 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
     delete payload.jobDescription;
 
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/employee/edit-employee-via-admin/${employee._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        },
+      await API.put(
+        `/api/employee/edit-employee-via-admin/${employee._id}`,
+        payload,
       );
-
-      if (!response.ok) {
-        throw new Error("Failed to update employee data");
-      }
 
       setIsConfirmModalOpen(false);
       setTimeout(() => setIsConfirmedModalOpen(true), 300);

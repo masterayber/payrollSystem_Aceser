@@ -4,6 +4,7 @@ import PropTypes from "prop-types";
 import CancelModal from "../Cancel/CancelModal";
 import ConfirmModal from "../Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
+import API from "../../../api";
 
 const EditEmployeeAttendanceModal = ({
   employee,
@@ -98,31 +99,16 @@ const EditEmployeeAttendanceModal = ({
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/attendance/edit-attendance/${employee._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            employeeId: employee._id,
-            date: employee.date,
-            timeIn: editedAttendance.timeIn,
-            timeOut: editedAttendance.timeOut,
-          }),
-        },
-      );
+      await API.put(`/api/attendance/edit-attendance/${employee._id}`, {
+        employeeId: employee._id,
+        date: employee.date,
+        timeIn: editedAttendance.timeIn,
+        timeOut: editedAttendance.timeOut,
+      });
 
-      if (response.ok) {
-        setIsConfirmModalOpen(false);
-        if (onUpdateAttendance) await onUpdateAttendance();
-        setTimeout(() => setIsConfirmedModalOpen(true), 300);
-      } else {
-        console.error("Failed to update attendance. Please try again later");
-        setErrorMessage("Failed to updated attendance. Please try again.");
-        setIsConfirmModalOpen(false);
-      }
+      setIsConfirmModalOpen(false);
+      if (onUpdateAttendance) await onUpdateAttendance();
+      setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (error) {
       console.error("Error updating attendance:", error);
       setErrorMessage("Something went wrong. Please try again.");

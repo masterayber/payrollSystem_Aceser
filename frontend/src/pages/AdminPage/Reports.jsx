@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import XLSX from "xlsx-js-style";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import "../../styles/AdminCSS/Reports.css";
+import API from "../../api";
 
 import {
   formatMonthValue,
@@ -45,11 +46,8 @@ const Reports = () => {
     const fetchAttendance = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          "http://localhost:5000/api/attendance/attendance",
-        );
-        const data = await response.json();
-        setAttendanceRecords(data || []);
+        const response = await API.get("/api/attendance/attendance");
+        setAttendanceRecords(response.data);
       } catch (error) {
         console.error("Error fetching attendance records:", error);
       } finally {

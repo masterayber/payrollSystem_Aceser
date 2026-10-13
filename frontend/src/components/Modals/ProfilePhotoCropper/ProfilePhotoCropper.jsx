@@ -48,11 +48,11 @@ const ProfilePhotoCropper = ({ imageSrc, userId, onClose, onCropComplete }) => {
       formData.append("profilePhoto", file);
 
       const response = await fetch(
-        `http://localhost:5000/api/auth/auths/${userId}/profile-photo`,
+        `http://localhost:5000/api/auth/users/${userId}/profile-photo`,
         {
           method: "PUT",
           body: formData,
-        }
+        },
       );
 
       if (response.ok) {

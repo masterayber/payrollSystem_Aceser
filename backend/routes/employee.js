@@ -1,13 +1,214 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
+const { requireAdmin } = require("../middleware/accessMiddleware");
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
 
 const router = express.Router();
 
-router.get("/latest-employeeId", async (req, res) => {
+// Router for getting all the employees data
+router.get("/employees", requireAdmin, async (req, res) => {
+  try {
+    const employees = await Employee.aggregate([
+      {
+        $lookup: {
+          from: "settings",
+          localField: "userId",
+          foreignField: "userId",
+          as: "settings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$settings",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "auths",
+          localField: "email",
+          foreignField: "email",
+          as: "userDetails",
+        },
+      },
+      { $unwind: "$userDetails" },
+      {
+        $match: {
+          "userDetails.status": "Active",
+          "userDetails.role": "Employee",
+        },
+      },
+      {
+        $project: {
+          _id: "$userDetails._id",
+          employeeId: 1,
+          firstName: 1,
+          lastName: 1,
+          email: 1,
+          gender: 1,
+          username: "$userDetails.username",
+          createdAt: "$userDetails.createdAt",
+          jobDescription: {
+            $ifNull: [
+              "$settings.general.jobDescription",
+              {
+                designation: "",
+                department: "",
+                position: "",
+                employmentType: "",
+                startDate: "",
+                schedule: { timeIn: "", timeOut: "" },
+              },
+            ],
+          },
+        },
+      },
+    ]);
+
+    res.status(200).json(employees);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error fetching employees", error: err.message });
+  }
+});
+
+// Additional Information Route
+router.post("/update-info", async (req, res) => {
+  const {
+    email,
+    birthday,
+    contactNumber,
+    gender,
+    contactFirstName,
+    contactLastName,
+    contactEmergency,
+    contactAddress,
+  } = req.body;
+
+  try {
+    const employee = await Employee.findOne({ email });
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    employee.birthday = birthday;
+    employee.contactNumber = contactNumber;
+    employee.gender = gender;
+    employee.emergencyDetails.contactFirstName = contactFirstName;
+    employee.emergencyDetails.contactLastName = contactLastName;
+    employee.emergencyDetails.contactEmergency = contactEmergency;
+    employee.emergencyDetails.contactAddress = contactAddress;
+
+    await employee.save();
+
+    const user = await User.findOne({ email });
+    if (user) {
+      if (gender === "Male") {
+        user.profilePhoto = "/assets/genderIcons/male.svg";
+      } else if (gender === "Female") {
+        user.profilePhoto = "/assets/genderIcons/female.svg";
+      } else {
+        user.profilePhoto = "/assets/user-circle.svg";
+      }
+      await user.save();
+    }
+
+    res.status(200).json({
+      message: "Additional info updated successfully",
+      userId: employee._id,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Server error. Please try again later",
+      error: err.message,
+    });
+  }
+});
+
+// Account Created Route
+router.get("/created-account/:id", async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+
+    if (!employee) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      gender: employee.gender,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error. Please try again later.",
+      error: err.message,
+    });
+  }
+});
+
+// Route for duplicate user identifiers
+router.post("/check-user-exists", requireAdmin, async (req, res) => {
+  const { email, username, employeeId, excludeId } = req.body;
+  const result = {};
+
+  if (email) {
+    const emailExists = await User.findOne({ email, _id: { $ne: excludeId } });
+    if (emailExists) result.email = true;
+  }
+
+  if (username) {
+    const usernameExists = await User.findOne({
+      username,
+      _id: { $ne: excludeId },
+    });
+    if (usernameExists) result.username = true;
+  }
+
+  if (employeeId) {
+    const employeeIdExists = await Employee.findOne({
+      employeeId,
+      userId: { $ne: excludeId },
+    });
+    if (employeeIdExists) result.employeeId = true;
+  }
+
+  res.json(result);
+});
+
+// Route for deleting employee
+router.delete(
+  "/delete-employee/:employeeId",
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const { employeeId } = req.params;
+
+      const employee = await Employee.findOne({ employeeId });
+      if (!employee) {
+        return res.status(404).json({ message: "Employee not found" });
+      }
+
+      await User.deleteOne({ _id: employee.userId });
+
+      await Settings.deleteOne({ userId: employee.userId });
+
+      await Employee.deleteOne({ employeeId });
+
+      res.status(200).json({ message: "Employee deleted successfully" });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Internal server error", error: error.message });
+    }
+  },
+);
+
+router.get("/latest-employeeId", requireAdmin, async (req, res) => {
   try {
     const lastEmployee = await Employee.findOne({
       employeeId: { $regex: /^AC-\d+$/ },
@@ -24,11 +225,14 @@ router.get("/latest-employeeId", async (req, res) => {
     res.json({ newEmployeeId });
   } catch (error) {
     console.error("Error fetching latest Employee ID", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch latest employee ID" });
   }
 });
 
 // Route for adding employee via admin manually
-router.post("/add-employee-via-admin", async (req, res) => {
+router.post("/add-employee-via-admin", requireAdmin, async (req, res) => {
   try {
     const {
       firstName,
@@ -110,7 +314,7 @@ router.post("/add-employee-via-admin", async (req, res) => {
   }
 });
 
-router.put("/edit-employee-via-admin/:id", async (req, res) => {
+router.put("/edit-employee-via-admin/:id", requireAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
     console.log("User ID:", userId);
@@ -132,13 +336,11 @@ router.put("/edit-employee-via-admin/:id", async (req, res) => {
       password,
     } = req.body;
 
-    // Check if user exists
     const existingUser = await User.findById(userId);
     if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Update User
     const updateUser = await User.findByIdAndUpdate(
       userId,
       {
@@ -151,7 +353,6 @@ router.put("/edit-employee-via-admin/:id", async (req, res) => {
     );
     console.log("Updated User:", updateUser);
 
-    // Update Employee
     const updateEmployee = await Employee.findOneAndUpdate(
       { userId },
       {
@@ -165,7 +366,6 @@ router.put("/edit-employee-via-admin/:id", async (req, res) => {
     );
     console.log("Updated Employee:", updateEmployee);
 
-    // Update Settings
     await Settings.findOneAndUpdate(
       { userId },
       {
@@ -182,9 +382,7 @@ router.put("/edit-employee-via-admin/:id", async (req, res) => {
       { new: true },
     );
 
-    res.status(200).json({
-      message: "Employee updated successfully",
-    });
+    res.status(200).json({ message: "Employee updated successfully" });
   } catch (error) {
     res
       .status(500)

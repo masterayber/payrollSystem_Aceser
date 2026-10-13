@@ -14,6 +14,7 @@ import ApproveEmployeeModal from "../../components/Modals/Approve/ApproveEmploye
 import ManageAccessModal from "../../components/Modals/ManageAccess/ManageAccessModal";
 import "../../styles/AdminCSS/Employees.css";
 import Pagination from "../../components/Pagination/Pagination";
+import API from "../../api";
 
 const Employees = () => {
   const { employeeData, setEmployeeData } = useContext(EmployeeContext);
@@ -68,14 +69,8 @@ const Employees = () => {
 
   const handleUpdateEmployee = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/employees");
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error("Failed to delete employee");
-      }
-
-      setEmployeeData(data);
+      const response = await API.get("/api/employee/employees");
+      setEmployeeData(response.data);
     } catch (error) {
       console.error("Error refreshing employees after update:", error);
     }

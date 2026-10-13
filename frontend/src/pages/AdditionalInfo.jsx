@@ -32,7 +32,7 @@ const AdditionalInfo = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/update-info",
+        "http://localhost:5000/api/employee/update-info",
         {
           email,
           ...formData,

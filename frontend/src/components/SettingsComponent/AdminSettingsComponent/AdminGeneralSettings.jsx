@@ -128,7 +128,7 @@ const AdminGeneralSettings = () => {
   const handleRemovePhoto = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/auth/remove-profile-photo/${userData._id}`,
+        `http://localhost:5000/api/settings/remove-profile-photo/${userData._id}`,
         {
           method: "DELETE",
         },
@@ -236,7 +236,7 @@ const AdminGeneralSettings = () => {
       };
 
       const response = await fetch(
-        `http://localhost:5000/api/auth/updateGeneralSettings/${userData._id}`,
+        `http://localhost:5000/api/settings/updateGeneralSettings/${userData._id}`,
         {
           method: "PUT",
           headers: {

@@ -6,6 +6,7 @@ import PropTypes from "prop-types";
 import ConfirmModal from "../Confirm/ConfirmModal";
 import CancelModal from "../Cancel/CancelModal";
 import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
+import API from "../../../api";
 
 const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -45,23 +46,21 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/dropdownOption")
-      .then((res) => res.json())
-      .then((data) => setDropdownOptions(data))
+    API.get("/api/dropdownOption")
+      .then((response) => setDropdownOptions(response.data))
       .catch((err) => console.error("Failed to fetch dropdowns", err));
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/employee/latest-employeeId")
-      .then((res) => res.json())
-      .then((data) => {
+    API.get("/api/employee/latest-employeeId")
+      .then((response) => {
         setAddEmployee((prev) => ({
           ...prev,
-          employeeId: data.newEmployeeId || "",
+          employeeId: response.data.newEmployeeId || "",
         }));
       })
       .catch((err) => console.error("Failed to fetch Employee ID", err));
-  });
+  }, []);
 
   const handleChange = (e) => {
     setAddEmployee({
@@ -99,19 +98,12 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
     }
 
     try {
-      const res = await fetch(
-        "http://localhost:5000/api/auth/check-user-exists",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: addEmployee.email,
-            username: addEmployee.username,
-            employeeId: addEmployee.employeeId,
-          }),
-        },
-      );
-      const data = await res.json();
+      const response = await API.post("/api/employee/check-user-exists", {
+        email: addEmployee.email,
+        username: addEmployee.username,
+        employeeId: addEmployee.employeeId,
+      });
+      const data = response.data;
       let errorMsg = "";
       if (data.email) errorMsg += "Email already exists.\n";
       if (data.username) errorMsg += "Username already exists.\n";
@@ -137,24 +129,11 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
     e.preventDefault();
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/employee/add-employee-via-admin",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(addEmployee),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to add employee");
-      }
+      await API.post("/api/employee/add-employee-via-admin", addEmployee);
 
       setIsConfirmModalOpen(false);
 
-      if (onUpdateEmployee) onUpdateEmployee();
+      if (onUpdateEmployee) await onUpdateEmployee();
 
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (error) {
