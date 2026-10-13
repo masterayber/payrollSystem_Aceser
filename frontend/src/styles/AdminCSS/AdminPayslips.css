@@ -31,12 +31,12 @@
 }
 
 .admin-payslips-page .admin-payslips-search {
-  flex: 1 1 280px;
-  width: min(100%, 440px);
+  width: min(100%, 500px);
   min-height: 44px;
   margin: 0;
   border: 1px solid var(--gray-200);
   border-radius: var(--border-radius);
+  background: var(--gray-50);
 }
 
 .admin-payslips-page .admin-payslips-search input {
@@ -151,9 +151,22 @@
 }
 
 .admin-payslips-page .pagination {
+  display: flex;
   align-self: flex-end;
+  align-items: center;
+  gap: 12px;
   color: var(--neutral-color-80);
   font-size: 14px;
+}
+
+.admin-payslips-page .pagination-button {
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+.admin-payslips-page .pagination-button:disabled {
+  background-color: var(--gray-400);
+  cursor: not-allowed;
 }
 
 @media (max-width: 640px) {

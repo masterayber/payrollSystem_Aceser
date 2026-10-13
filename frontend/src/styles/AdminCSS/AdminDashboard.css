@@ -86,13 +86,16 @@
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   align-items: stretch;
   gap: 16px;
-  overflow: visible;
 }
 
 .admin-dashboard .dashboard-panel {
   min-width: 0;
   padding: 20px;
   overflow: visible;
+}
+
+.admin-dashboard .dashboard-attendance-panel {
+  overflow: hidden;
 }
 
 .admin-dashboard .user-track-title {

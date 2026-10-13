@@ -47,8 +47,13 @@
 }
 
 .employee-settings-page .setting-button.active::after {
+  content: "";
+  position: absolute;
   bottom: -1px;
+  left: 0;
+  width: 100%;
   height: 3px;
+  background-color: var(--main-color-1);
   border-radius: 3px 3px 0 0;
 }
 

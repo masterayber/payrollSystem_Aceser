@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import XLSX from "xlsx-js-style";
 import { EmployeeContext } from "../../context/EmployeeContext";
+import Dropdown from "../../components/Dropdown/Dropdown";
 import "../../styles/AdminCSS/Reports.css";
 import API from "../../api";
 
@@ -123,44 +124,35 @@ const Reports = () => {
           <div className="reports-actions">
             <label className="reports-label">
               Export Mode
-              <select
-                className="reports-select"
+              <Dropdown
+                options={[
+                  { label: "Cut-off", value: "cutoff" },
+                  { label: "Full Month", value: "month" },
+                ]}
+                placeholder="Select Export Mode"
                 value={reportType}
-                onChange={(e) => setReportType(e.target.value)}
-              >
-                <option value="cutoff">Cut-off</option>
-                <option value="month">Full Month</option>
-              </select>
+                onSelect={setReportType}
+              />
             </label>
             {reportType === "cutoff" ? (
               <label className="reports-label">
                 Cut-off Period
-                <select
-                  className="reports-select"
+                <Dropdown
+                  options={cutoffOptions}
+                  placeholder="Select Cut-off Period"
                   value={selectedOption}
-                  onChange={(e) => setSelectedOption(e.target.value)}
-                >
-                  {cutoffOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  onSelect={setSelectedOption}
+                />
               </label>
             ) : (
               <label className="reports-label">
                 Select Month
-                <select
-                  className="reports-select"
+                <Dropdown
+                  options={monthOptions}
+                  placeholder="Select Month"
                   value={selectedOption}
-                  onChange={(e) => setSelectedOption(e.target.value)}
-                >
-                  {monthOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  onSelect={setSelectedOption}
+                />
               </label>
             )}
             <button

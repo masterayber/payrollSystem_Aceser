@@ -16,8 +16,13 @@
   cursor: pointer;
 }
 
+.dropdown-button:hover {
+  border-color: var(--gray-400);
+}
+
 .dropdown-button.open {
   border-color: var(--main-color-1);
+  border-width: 2px;
 }
 
 /* SVG Icon */

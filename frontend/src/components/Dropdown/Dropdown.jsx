@@ -6,6 +6,13 @@ import PropTypes from "prop-types";
 const Dropdown = ({ options = [], placeholder, value = "", onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const getOptionValue = (option) =>
+    typeof option === "string" ? option : option.value;
+  const getOptionLabel = (option) =>
+    typeof option === "string" ? option : option.label;
+  const selectedOption = options.find(
+    (option) => getOptionValue(option) === value,
+  );
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -21,7 +28,7 @@ const Dropdown = ({ options = [], placeholder, value = "", onSelect }) => {
 
   const handleSelect = (option) => {
     setIsOpen(false);
-    if (onSelect) onSelect(option);
+    if (onSelect) onSelect(getOptionValue(option));
   };
 
   return (
@@ -31,7 +38,11 @@ const Dropdown = ({ options = [], placeholder, value = "", onSelect }) => {
         onClick={() => setIsOpen(!isOpen)}
       >
         <span>
-          {value === "" || value.startsWith("--Select") ? placeholder : value}
+          {selectedOption
+            ? getOptionLabel(selectedOption)
+            : value === "" || value.startsWith("--Select")
+              ? placeholder
+              : value}
         </span>
         <IconCaretDownFilled
           key={isOpen}
@@ -43,27 +54,30 @@ const Dropdown = ({ options = [], placeholder, value = "", onSelect }) => {
 
       {isOpen && (
         <ul className="dropdown-list">
-          {options.map((option, index) => (
+          {options.map((option) => (
             <li
-              key={index}
+              key={getOptionValue(option)}
               className={`dropdown-option${
-                option === "" || option.startsWith("--Select")
+                typeof option === "string" &&
+                (option === "" || option.startsWith("--Select"))
                   ? " dropdown-placeholder"
                   : ""
               }`}
               onClick={() => handleSelect(option)}
               style={{
                 color:
-                  option === "" || option.startsWith("--Select")
+                  typeof option === "string" &&
+                  (option === "" || option.startsWith("--Select"))
                     ? "#aaa"
                     : undefined,
                 fontStyle:
-                  option === "" || option.startsWith("--Select")
+                  typeof option === "string" &&
+                  (option === "" || option.startsWith("--Select"))
                     ? "italic"
                     : undefined,
               }}
             >
-              {option}
+              {getOptionLabel(option)}
             </li>
           ))}
         </ul>
@@ -75,7 +89,15 @@ const Dropdown = ({ options = [], placeholder, value = "", onSelect }) => {
 export default Dropdown;
 
 Dropdown.propTypes = {
-  options: PropTypes.array,
+  options: PropTypes.arrayOf(
+    PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.shape({
+        label: PropTypes.string.isRequired,
+        value: PropTypes.string.isRequired,
+      }),
+    ]),
+  ),
   placeholder: PropTypes.string,
   onSelect: PropTypes.func,
   value: PropTypes.string,

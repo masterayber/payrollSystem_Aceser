@@ -2,9 +2,8 @@ import { useState, useContext, useEffect, useRef } from "react";
 import { IconSearch, IconDotsVertical } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import AddModal from "../../components/Modals/DropdownOption/AddOption/AddOption";
+import Pagination from "../../components/Pagination/Pagination";
 import "../../styles/AdminCSS/Deductions.css";
-// import ConfirmModal from "../../components/Modals/Confirm/ConfirmModal";
-// import ConfirmedMessageModal from "../../Modals/Confirmed/ConfirmedMessageModal";
 
 const Deductions = () => {
   const { employeeData } = useContext(EmployeeContext);
@@ -210,28 +209,7 @@ const Deductions = () => {
         )}
       </div>
 
-      <div className="pagination">
-        <button
-          className="pagination-button"
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        <span>
-          {" "}
-          Page {currentPage} of {totalPages}{" "}
-        </span>
-        <button
-          className="pagination-button"
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
+      <Pagination currentPage={currentPage} totalPages={totalPages} />
 
       {isAddModalOpen && (
         <AddModal

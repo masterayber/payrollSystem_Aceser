@@ -38,8 +38,7 @@
 }
 
 .employees-page .employee-search-container {
-  flex: 1 1 260px;
-  width: min(100%, 420px);
+  width: min(100%, 500px);
   min-height: 44px;
   margin: 0;
   border: 1px solid var(--gray-200);
@@ -206,6 +205,11 @@
   padding: 8px 12px;
 }
 
+.employees-page .pagination-button:disabled {
+  background-color: var(--gray-400);
+  cursor: not-allowed;
+}
+
 .modal-content.employee-modal-content {
   width: min(900px, calc(100vw - 48px));
   max-height: calc(100vh - 48px);
@@ -279,10 +283,9 @@
 .employee-modal-table .table-header,
 .employee-modal-table .table-content {
   display: grid;
-  grid-template-columns: minmax(95px, 0.8fr) minmax(95px, 0.8fr) minmax(
-      170px,
-      1.4fr
-    ) minmax(180px, 1.2fr) minmax(90px, 0.7fr);
+  grid-template-columns:
+    minmax(95px, 0.8fr) minmax(95px, 0.8fr) minmax(170px, 1.4fr)
+    minmax(180px, 1.2fr) minmax(90px, 0.7fr);
   min-width: 700px;
 }
 

@@ -137,10 +137,39 @@
 }
 
 .setting-tab-flex {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.admin-settings-page .input-group-signup {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--gray-50);
+}
+
+.admin-settings-page .input-group-signup:not(:has(input:disabled)):hover {
+  border-color: var(--gray-400);
+  border-width: 1px;
+}
+
+.admin-settings-page .input-group-signup:focus-within {
+  border-color: var(--main-color-1);
+  border-width: 2px;
+  box-shadow: 0 0 0 1px var(--neutral-color-30);
+}
+
+.admin-settings-page .input-group-signup input {
   width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: inherit;
+  outline: none;
+  background: transparent;
+  color: var(--neutral-color-100);
+  font: inherit;
 }
 
 .about-title,

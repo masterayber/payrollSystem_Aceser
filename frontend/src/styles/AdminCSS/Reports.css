@@ -7,6 +7,7 @@
   flex-direction: column;
   gap: 18px;
   min-width: 0;
+  overflow: visible;
   padding: 24px;
   border: 1px solid var(--gray-200);
   border-radius: 1rem;
@@ -48,26 +49,20 @@
   font-weight: 600;
 }
 
-.reports-page .reports-select {
+.reports-page .reports-actions .dropdown-container {
+  display: block;
   width: 100%;
-  min-width: 0;
+}
+
+.reports-page .reports-actions .dropdown-button {
   min-height: 44px;
-  padding: 10px 12px;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--border-radius);
-  background: var(--gray-50);
   color: var(--neutral-color-90);
-  font: inherit;
-  cursor: pointer;
+  font-size: 14px;
+  text-align: left;
 }
 
-.reports-page .reports-select:hover {
+.reports-page .reports-actions .dropdown-button:hover {
   border-color: var(--gray-400);
-}
-
-.reports-page .reports-select:focus-visible {
-  outline: 2px solid var(--main-color-1);
-  outline-offset: 2px;
 }
 
 .reports-page .reports-download-button {

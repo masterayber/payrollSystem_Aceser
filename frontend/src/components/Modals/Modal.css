@@ -125,10 +125,15 @@
   background: var(--gray-50);
 }
 
+.modal .input-group-signup:hover {
+  border-color: var(--gray-400);
+  border-width: 1px;
+}
+
 .modal .input-group-signup:focus-within {
   border-color: var(--main-color-1);
   border-width: 2px;
-  box-shadow: 0 0 0 2px var(--neutral-color-30);
+  box-shadow: 0 0 0 1px var(--neutral-color-30);
 }
 
 .modal .input-group-signup input {

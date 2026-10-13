@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import "../../styles/AdminCSS/AdminSettings.css";
 import AdminGeneralSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminGeneralSettings";
 import AdminManageSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminManageSettings";
@@ -32,6 +32,37 @@ const settingsContent = {
 
 const AdminSettings = () => {
   const [selectedOption, setSelectedOption] = useState("general");
+  const settingsOptionsRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const optionsElement = settingsOptionsRef.current;
+    if (!optionsElement) return undefined;
+
+    const updateIndicator = () => {
+      const activeButton = optionsElement.querySelector(
+        ".setting-button.active",
+      );
+      if (!activeButton) return;
+
+      const optionsRect = optionsElement.getBoundingClientRect();
+      const buttonRect = activeButton.getBoundingClientRect();
+      optionsElement.style.setProperty(
+        "--setting-indicator-left",
+        `${buttonRect.left - optionsRect.left}px`,
+      );
+      optionsElement.style.setProperty(
+        "--setting-indicator-width",
+        `${buttonRect.width}px`,
+      );
+    };
+
+    updateIndicator();
+    const resizeObserver = new ResizeObserver(updateIndicator);
+    resizeObserver.observe(optionsElement);
+
+    return () => resizeObserver.disconnect();
+  }, [selectedOption]);
+
   return (
     <div className="main-content admin-settings-page">
       <div className="data-card settings-shell">
@@ -39,6 +70,7 @@ const AdminSettings = () => {
           className="setting-options"
           role="group"
           aria-label="Settings sections"
+          ref={settingsOptionsRef}
         >
           {settingsOptions.map((option) => (
             <button

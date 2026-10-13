@@ -1,7 +1,11 @@
-.setting-options {
+.admin-settings-page .setting-options {
+  position: relative;
   display: flex;
-  gap: 15px;
-  align-items: center;
+  align-items: stretch;
+  min-width: 0;
+  gap: 8px;
+  border-bottom: 1px solid var(--gray-200);
+  scrollbar-width: thin;
 }
 
 .setting-button {
@@ -24,15 +28,18 @@
   border-radius: 0;
 }
 
-.setting-button.active::after {
+.admin-settings-page .setting-options::after {
   content: "";
   position: absolute;
   bottom: -1px;
-  left: 0;
-  width: 100%;
+  left: var(--setting-indicator-left, 0);
+  width: var(--setting-indicator-width, 0);
   height: 2.5px;
   background-color: var(--main-color-1);
-  transition: width 0.3s ease-in-out;
+  transition:
+    left 0.3s ease-in-out,
+    width 0.3s ease-in-out;
+  pointer-events: none;
 }
 
 .settings-content {
@@ -51,16 +58,6 @@
   padding: 24px;
   border: 1px solid var(--gray-200);
   background: var(--gray-50);
-}
-
-.admin-settings-page .setting-options {
-  display: flex;
-  align-items: stretch;
-  min-width: 0;
-  gap: 8px;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--gray-200);
-  scrollbar-width: thin;
 }
 
 .admin-settings-page .setting-button {
@@ -87,8 +84,7 @@
   color: var(--default-button-color);
 }
 
-.admin-settings-page .setting-button.active::after {
-  bottom: -1px;
+.admin-settings-page .setting-options::after {
   height: 3px;
   border-radius: 3px 3px 0 0;
 }

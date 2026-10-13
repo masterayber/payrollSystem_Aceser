@@ -63,14 +63,19 @@
 .admin-deductions-page .deduction-options-table .table-header,
 .admin-deductions-page .deduction-options-table .table-content {
   display: grid;
-  grid-template-columns: minmax(180px, 1.2fr) minmax(120px, 1fr) minmax(170px, 1fr);
+  grid-template-columns: minmax(180px, 1.2fr) minmax(120px, 1fr) minmax(
+      170px,
+      1fr
+    );
   min-width: 520px;
 }
 
 .admin-deductions-page .employee-deduction-table .table-header,
 .admin-deductions-page .employee-deduction-table .table-content {
   display: grid;
-  grid-template-columns: minmax(110px, 0.9fr) repeat(2, minmax(135px, 1fr)) repeat(3, minmax(115px, 1fr));
+  grid-template-columns:
+    minmax(110px, 0.9fr) repeat(2, minmax(135px, 1fr))
+    repeat(3, minmax(115px, 1fr));
   min-width: 820px;
 }
 
@@ -125,7 +130,9 @@
   white-space: nowrap;
 }
 
-.admin-deductions-page .deduction-options-table .table-content-container:last-child {
+.admin-deductions-page
+  .deduction-options-table
+  .table-content-container:last-child {
   gap: 8px;
 }
 
@@ -145,12 +152,10 @@
 
 .admin-deductions-page .deduction-toolbar {
   display: flex;
-  justify-content: flex-end;
 }
 
 .admin-deductions-page .deduction-search {
-  flex: 1 1 280px;
-  width: min(100%, 420px);
+  width: min(100%, 500px);
   min-height: 44px;
   margin: 0;
   border: 1px solid var(--gray-200);
@@ -175,6 +180,7 @@
 }
 
 .admin-deductions-page .pagination {
+  display: flex;
   align-self: flex-end;
   align-items: center;
   gap: 12px;
@@ -185,15 +191,10 @@
 .admin-deductions-page .pagination-button {
   min-height: 38px;
   padding: 8px 12px;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--border-radius);
-  background: var(--gray-50);
-  color: var(--neutral-color-90);
-  cursor: pointer;
 }
 
 .admin-deductions-page .pagination-button:disabled {
-  color: var(--gray-400);
+  background-color: var(--gray-400);
   cursor: not-allowed;
 }
 
