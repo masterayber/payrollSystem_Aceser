@@ -26,8 +26,11 @@
 
 .reports-page .reports-description {
   margin: 0;
-  color: var(--neutral-color-80);
   font-size: 14px;
+}
+
+.reports-page .reports-description p {
+  color: var(--neutral-color-80);
   line-height: 1.5;
 }
 
@@ -44,6 +47,9 @@
   flex-direction: column;
   min-width: 0;
   gap: 8px;
+}
+
+.reports-page .reports-label p {
   color: var(--neutral-color-90);
   font-size: 13px;
   font-weight: 600;
@@ -58,6 +64,7 @@
   min-height: 44px;
   color: var(--neutral-color-90);
   font-size: 14px;
+  font-weight: 500;
   text-align: left;
 }
 

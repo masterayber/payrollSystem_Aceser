@@ -114,6 +114,31 @@ const Reports = () => {
 
   return (
     <div className="main-content reports-page">
+      <div className="data-card-container reports-summary-grid">
+        <div className="data-card reports-metric-card">
+          <div className="message-container">
+            <div className="data-title">Employees</div>
+            <span className="data-value">{employeeData.length}</span>
+          </div>
+        </div>
+
+        <div className="data-card reports-metric-card">
+          <div className="message-container">
+            <div className="data-title">Attendance Records</div>
+            <span className="data-value">{attendanceRecords.length}</span>
+          </div>
+        </div>
+
+        <div className="data-card reports-metric-card reports-range-card">
+          <div className="message-container">
+            <div className="data-title">Export Range</div>
+            <span className="data-value">
+              {getFormattedDateRange(reportType, selectedOption)}
+            </span>
+          </div>
+        </div>
+      </div>
+
       <div className="data-card reports-export-card" aria-busy={loading}>
         <div className="user-track-title">
           <p>Attendance Reports</p>
@@ -123,7 +148,7 @@ const Reports = () => {
           <p>Export attendance for all employees.</p>
           <div className="reports-actions">
             <label className="reports-label">
-              Export Mode
+              <p>Export Mode</p>
               <Dropdown
                 options={[
                   { label: "Cut-off", value: "cutoff" },
@@ -163,31 +188,6 @@ const Reports = () => {
             >
               {loading ? "Preparing..." : `Download ${reportLabel} Attendance`}
             </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="data-card-container reports-summary-grid">
-        <div className="data-card reports-metric-card">
-          <div className="message-container">
-            <div className="data-title">Employees</div>
-            <span className="data-value">{employeeData.length}</span>
-          </div>
-        </div>
-
-        <div className="data-card reports-metric-card">
-          <div className="message-container">
-            <div className="data-title">Attendance Records</div>
-            <span className="data-value">{attendanceRecords.length}</span>
-          </div>
-        </div>
-
-        <div className="data-card reports-metric-card reports-range-card">
-          <div className="message-container">
-            <div className="data-title">Export Range</div>
-            <span className="data-value">
-              {getFormattedDateRange(reportType, selectedOption)}
-            </span>
           </div>
         </div>
       </div>

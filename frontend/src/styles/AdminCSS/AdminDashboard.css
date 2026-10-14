@@ -55,7 +55,6 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;
-  gap: 16px;
   overflow: visible;
 }
 
@@ -243,7 +242,7 @@
   min-height: 120px;
   padding: 24px 12px;
   color: var(--neutral-color-80);
-  font-size: 14px;
+  font-size: 18px;
   display: flex;
   justify-content: center;
   align-items: center;

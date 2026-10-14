@@ -88,7 +88,7 @@ input[type="date"] {
 
 .input-group-signup:focus-within {
   border-color: var(--main-color-1);
-  box-shadow: 0 0 0 2px var(--neutral-color-30);
+  box-shadow: 0 0 0 1px var(--neutral-color-30);
 }
 
 .auth-page {
@@ -161,7 +161,7 @@ input[type="date"] {
 .auth-page .login-form .input-group:focus-within {
   border-color: var(--main-color-1);
   border-width: 2px;
-  box-shadow: 0 0 0 2px var(--neutral-color-30);
+  box-shadow: 0 0 0 1px var(--neutral-color-30);
 }
 
 .auth-page .input-group-signup input,

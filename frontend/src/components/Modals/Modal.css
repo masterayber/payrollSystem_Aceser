@@ -125,7 +125,12 @@
   background: var(--gray-50);
 }
 
-.modal .input-group-signup:hover {
+.modal .input-group-signup:has(input:disabled) {
+  background: var(--gray-100);
+  cursor: not-allowed;
+}
+
+.modal .input-group-signup:not(:has(input:disabled)):not(:focus-within):hover {
   border-color: var(--gray-400);
   border-width: 1px;
 }
@@ -147,6 +152,13 @@
   background: transparent;
   color: var(--neutral-color-100);
   font: inherit;
+}
+
+.modal-settings-page .input-group-signup input:disabled {
+  color: var(--neutral-color-80);
+  -webkit-text-fill-color: var(--neutral-color-80);
+  cursor: not-allowed;
+  opacity: 1;
 }
 
 .table-content {

@@ -178,8 +178,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  min-height: 36px;
+  width: 40px;
+  min-height: 40px;
   padding: 7px;
 }
 
@@ -206,7 +206,7 @@
 }
 
 .employees-page .pagination-button:disabled {
-  background-color: var(--gray-400);
+  background-color: var(--gray-200);
   cursor: not-allowed;
 }
 
@@ -239,8 +239,6 @@
 }
 
 .employee-modal-content .modal-buttons {
-  position: sticky;
-  bottom: 0;
   flex-wrap: wrap;
   padding: 16px 0 0;
   border-top: 1px solid var(--gray-200);

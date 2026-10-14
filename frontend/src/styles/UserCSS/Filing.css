@@ -186,7 +186,7 @@
 .employee-filing-page .filing-table .action-button,
 .admin-filing-page .filing-review-table .action-button {
   justify-content: center;
-  min-height: 36px;
+  min-height: 40px;
   padding: 8px 11px;
   font-size: 12px;
 }
@@ -436,7 +436,10 @@
   justify-content: flex-end;
 }
 
-.filing-modal .filing-overtime-record-list .filing-empty-row .table-content-container {
+.filing-modal
+  .filing-overtime-record-list
+  .filing-empty-row
+  .table-content-container {
   grid-column: 1 / -1;
 }
 

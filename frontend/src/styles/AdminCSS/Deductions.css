@@ -194,7 +194,7 @@
 }
 
 .admin-deductions-page .pagination-button:disabled {
-  background-color: var(--gray-400);
+  background-color: var(--gray-200);
   cursor: not-allowed;
 }
 

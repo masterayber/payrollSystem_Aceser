@@ -182,63 +182,73 @@ const AdminAttendance = () => {
     <div className="main-content admin-attendance-page">
       <div className="data-card-container admin-attendance-summary">
         <div className="data-card attendance-metric-card">
-          <div className="data-title">On-Time</div>
-          <div className="data-value">
-            {
-              filteredEmployees.filter(
-                (emp) =>
-                  calculateBehavior(
-                    emp.timeIn,
-                    emp.timeOut,
-                    emp.isBeforeHired,
-                  ) === "On-Time" &&
-                  emp.attendanceRecord?.behavior !== "On-Leave",
-              ).length
-            }
+          <div className="message-container">
+            <div className="data-title">On-Time</div>
+            <div className="data-value">
+              {
+                filteredEmployees.filter(
+                  (emp) =>
+                    calculateBehavior(
+                      emp.timeIn,
+                      emp.timeOut,
+                      emp.isBeforeHired,
+                    ) === "On-Time" &&
+                    emp.attendanceRecord?.behavior !== "On-Leave",
+                ).length
+              }
+            </div>
           </div>
         </div>
 
         <div className="data-card attendance-metric-card">
-          <div className="data-title">Late</div>
-          <div className="data-value">
-            {
-              filteredEmployees.filter(
-                (emp) => getDisplayedBehavior(emp) === "Late",
-              ).length
-            }
+          <div className="message-container">
+            <div className="data-title">Late</div>
+            <div className="data-value">
+              {
+                filteredEmployees.filter(
+                  (emp) => getDisplayedBehavior(emp) === "Late",
+                ).length
+              }
+            </div>
           </div>
         </div>
 
         <div className="data-card attendance-metric-card">
-          <div className="data-title">Half-Day</div>
-          <div className="data-value">
-            {
-              filteredEmployees.filter(
-                (emp) => getDisplayedBehavior(emp) === "Half-Day",
-              ).length
-            }
+          <div className="message-container">
+            <div className="data-title">Half-Day</div>
+            <div className="data-value">
+              {
+                filteredEmployees.filter(
+                  (emp) => getDisplayedBehavior(emp) === "Half-Day",
+                ).length
+              }
+            </div>
           </div>
         </div>
 
         <div className="data-card attendance-metric-card">
-          <div className="data-title">Absent</div>
-          <div className="data-value">
-            {
-              filteredEmployees.filter(
-                (emp) => getDisplayedBehavior(emp) === "Absent",
-              ).length
-            }
+          <div className="message-container">
+            <div className="data-title">Absent</div>
+            <div className="data-value">
+              {
+                filteredEmployees.filter(
+                  (emp) => getDisplayedBehavior(emp) === "Absent",
+                ).length
+              }
+            </div>
           </div>
         </div>
 
         <div className="data-card attendance-metric-card">
-          <div className="data-title">On-Leave</div>
-          <div className="data-value">
-            {
-              filteredEmployees.filter(
-                (emp) => getDisplayedBehavior(emp) === "On-Leave",
-              ).length
-            }
+          <div className="message-container">
+            <div className="data-title">On-Leave</div>
+            <div className="data-value">
+              {
+                filteredEmployees.filter(
+                  (emp) => getDisplayedBehavior(emp) === "On-Leave",
+                ).length
+              }
+            </div>
           </div>
         </div>
       </div>

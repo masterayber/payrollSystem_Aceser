@@ -200,8 +200,8 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                 <label>Gender</label> <span className="required">*</span>
               </div>
               <Dropdown
-                options={["--Select Gender--", ...dropdownOptions.gender]}
-                placeholder="--Select Gender--"
+                options={[...dropdownOptions.gender]}
+                placeholder="Select Gender"
                 value={addEmployee.gender}
                 onSelect={(value) => handleDropdownChange("gender", value)}
               />
@@ -266,11 +266,8 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                 <label>Designation</label> <span className="required">*</span>
               </div>
               <Dropdown
-                options={[
-                  "--Select Designation--",
-                  ...dropdownOptions.designations,
-                ]}
-                placeholder="--Select Designation--"
+                options={[...dropdownOptions.designations]}
+                placeholder="Select Designation"
                 value={addEmployee.designation}
                 onSelect={(value) => handleDropdownChange("designation", value)}
               />
@@ -283,11 +280,8 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                 <label>Department</label> <span className="required">*</span>
               </div>
               <Dropdown
-                options={[
-                  "--Select Department--",
-                  ...dropdownOptions.departments,
-                ]}
-                placeholder="--Select Department--"
+                options={[...dropdownOptions.departments]}
+                placeholder="Select Department"
                 value={addEmployee.department}
                 onSelect={(value) => handleDropdownChange("department", value)}
               />
@@ -301,13 +295,13 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                 options={
                   addEmployee.department
                     ? [
-                        "--Select Position--",
+                        "Select Position",
                         ...(dropdownOptions.positions[addEmployee.department] ||
                           []),
                       ]
-                    : ["--Select Position--"]
+                    : ["Select Position"]
                 }
-                placeholder="--Select Position--"
+                placeholder="Select Position"
                 value={addEmployee.position}
                 onSelect={(value) => handleDropdownChange("position", value)}
               />
@@ -321,11 +315,8 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                 <span className="required">*</span>
               </div>
               <Dropdown
-                options={[
-                  "--Select Employment Type--",
-                  ...dropdownOptions.employmentTypes,
-                ]}
-                placeholder="--Select Employment Type--"
+                options={[...dropdownOptions.employmentTypes]}
+                placeholder="Select Employment Type"
                 value={addEmployee.employmentType}
                 onSelect={(value) =>
                   handleDropdownChange("employmentType", value)
