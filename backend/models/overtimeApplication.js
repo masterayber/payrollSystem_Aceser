@@ -16,7 +16,8 @@ const overtimeApplicationSchema = new mongoose.Schema({
   overtimeDetails: { type: String, default: "" },
   status: {
     type: String,
-    enum: ["Pending", "Approved", "Rejected"],
+    // "Disapproved" is the value the admin and employee UIs send and display.
+    enum: ["Pending", "Approved", "Disapproved"],
     default: "Pending",
   },
   appliedAt: { type: Date, default: Date.now },

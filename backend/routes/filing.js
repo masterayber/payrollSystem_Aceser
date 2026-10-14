@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 
 const LeaveApplication = require("../models/leaveApplication");
 const OvertimeApplication = require("../models/overtimeApplication");
@@ -212,11 +213,65 @@ router.patch("/leave/:id/status", requireAdmin, async (req, res) => {
   }
 });
 
-router.patch("/overtime/:id/status", requireAdmin, async (req, res) => {
-  if (req.user.role !== "Admin")
-    return res.status(400).json({ msg: "Access Denied" });
+// Route for approving or disapproving an overtime request (admin only)
+const OVERTIME_DECISIONS = ["Approved", "Disapproved"];
 
+router.patch("/overtime/:id/status", requireAdmin, async (req, res) => {
+  const { id } = req.params;
   const { status } = req.body;
+
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ error: "Invalid overtime request ID." });
+  }
+
+  // An admin can only make a decision. Moving a request back to "Pending" is not allowed.
+  if (!OVERTIME_DECISIONS.includes(status)) {
+    return res.status(400).json({
+      error: `Status must be one of: ${OVERTIME_DECISIONS.join(", ")}.`,
+    });
+  }
+
+  try {
+    // The Pending filter is part of the update itself, so two admins acting on the same
+    // request at the same time cannot both succeed.
+    const app = await OvertimeApplication.findOneAndUpdate(
+      { _id: id, status: "Pending" },
+      { status },
+      { new: true, runValidators: true },
+    );
+
+    if (!app) {
+      const existing = await OvertimeApplication.findById(id).select("status");
+
+      if (!existing) {
+        return res.status(404).json({ error: "Overtime request not found." });
+      }
+
+      return res.status(409).json({
+        error: `This overtime request was already ${existing.status.toLowerCase()}.`,
+      });
+    }
+
+    // A disapproved request frees the day again, so the employee can file a corrected
+    // one. An approved request keeps the day marked as filed.
+    if (status === "Disapproved" && app.attendanceId) {
+      try {
+        await Attendance.findByIdAndUpdate(app.attendanceId, {
+          "overtime.isFiled": false,
+        });
+      } catch (attendanceError) {
+        console.error(
+          "Overtime disapproved, but its attendance record could not be released:",
+          attendanceError,
+        );
+      }
+    }
+
+    res.json(app);
+  } catch (err) {
+    console.error("Error updating overtime request:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Route for getting the eligible overtime of the user
