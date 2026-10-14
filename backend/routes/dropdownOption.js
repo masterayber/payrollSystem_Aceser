@@ -157,7 +157,7 @@ router.delete("/:field/delete", requireAdmin, async (req, res) => {
 });
 
 // Route to FETCH department positions
-router.get("positions/:department", requireAdmin, async (req, res) => {
+router.get("/positions/:department", requireAdmin, async (req, res) => {
   const { department } = req.params;
 
   try {

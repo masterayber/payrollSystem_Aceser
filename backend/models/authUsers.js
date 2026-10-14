@@ -46,8 +46,6 @@ const AuthSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  // Page keys (see config/pages.js) an admin has granted this user.
-  // Left unset, the user gets every page for their role.
   pageAccess: {
     type: [String],
     default: undefined,

@@ -4,11 +4,11 @@ const LeaveApplication = require("../models/leaveApplication");
 const OvertimeApplication = require("../models/overtimeApplication");
 const Attendance = require("../models/attendance");
 const auth = require("../middleware/authMiddleware");
-const { requirePage } = require("../middleware/accessMiddleware");
+const { requirePage, requireAdmin } = require("../middleware/accessMiddleware");
 
 const router = express.Router();
 
-router.get("/", auth, async (req, res) => {
+router.get("/", requireAdmin, async (req, res) => {
   if (req.user.role !== "Admin")
     return res.status(400).json({ msg: "Access Denied" });
 
@@ -126,7 +126,7 @@ router.delete("/leave/:id", requirePage("filing"), async (req, res) => {
 });
 
 // Route for approving leave requests of user by admin
-router.patch("/leave/:id/status", auth, async (req, res) => {
+router.patch("/leave/:id/status", requireAdmin, async (req, res) => {
   if (req.user.role !== "Admin")
     return res.status(400).json({ msg: "Access Denied" });
 
@@ -210,6 +210,13 @@ router.patch("/leave/:id/status", auth, async (req, res) => {
     console.error("Error updating leave requests:", err);
     res.status(500).json({ error: err.message });
   }
+});
+
+router.patch("/overtime/:id/status", requireAdmin, async (req, res) => {
+  if (req.user.role !== "Admin")
+    return res.status(400).json({ msg: "Access Denied" });
+
+  const { status } = req.body;
 });
 
 // Route for getting the eligible overtime of the user
@@ -371,7 +378,7 @@ router.delete("/overtime/:id", requirePage("filing"), async (req, res) => {
 });
 
 // Route for getting the overtime of all users
-router.get("/overtime", auth, async (req, res) => {
+router.get("/overtime", requireAdmin, async (req, res) => {
   if (req.user.role !== "Admin")
     return res.status(400).json({ msg: "Access Denied" });
 

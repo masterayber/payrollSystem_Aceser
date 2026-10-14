@@ -175,7 +175,9 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
     setIsDeleteModalOpen(false);
 
     try {
-      await API.delete(`/api/auth/delete-employee/${editEmployee.employeeId}`);
+      await API.delete(
+        `/api/employee/delete-employee/${editEmployee.employeeId}`,
+      );
 
       if (onUpdateEmployee) await onUpdateEmployee();
 
