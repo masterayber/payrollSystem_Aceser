@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Dropdown = require("../models/dropdownOption");
+const { requireAdmin } = require("../middleware/accessMiddleware");
 
 const allowedFields = ["designations", "departments", "employmentTypes"];
 
@@ -9,7 +10,7 @@ function isValidField(field) {
 }
 
 // Route for fetching dropdown options
-router.get("/", async (req, res) => {
+router.get("/", requireAdmin, async (req, res) => {
   try {
     const dropdownOptions = await Dropdown.findOne();
     res.json(dropdownOptions);
@@ -19,7 +20,7 @@ router.get("/", async (req, res) => {
 });
 
 // ADD Option Route
-router.post("/:field/add", async (req, res) => {
+router.post("/:field/add", requireAdmin, async (req, res) => {
   const { field } = req.params;
   const { option } = req.body;
 
@@ -84,7 +85,7 @@ router.post("/:field/add", async (req, res) => {
 });
 
 // EDIT Option Route
-router.put("/:field/edit", async (req, res) => {
+router.put("/:field/edit", requireAdmin, async (req, res) => {
   const { field } = req.params;
   const { oldOption, newOption } = req.body;
 
@@ -119,7 +120,7 @@ router.put("/:field/edit", async (req, res) => {
 });
 
 // DELETE Option Route
-router.delete("/:field/delete", async (req, res) => {
+router.delete("/:field/delete", requireAdmin, async (req, res) => {
   const { field } = req.params;
   const { option } = req.body;
 
@@ -155,7 +156,8 @@ router.delete("/:field/delete", async (req, res) => {
   }
 });
 
-router.get("positions/:department", async (req, res) => {
+// Route to FETCH department positions
+router.get("positions/:department", requireAdmin, async (req, res) => {
   const { department } = req.params;
 
   try {
@@ -168,7 +170,7 @@ router.get("positions/:department", async (req, res) => {
 });
 
 // Route to ADD position at department
-router.post("/positions/:department/add", async (req, res) => {
+router.post("/positions/:department/add", requireAdmin, async (req, res) => {
   const { department } = req.params;
   const { option } = req.body;
 
@@ -200,12 +202,12 @@ router.post("/positions/:department/add", async (req, res) => {
 });
 
 // Route to EDIT position at department
-router.put("/positions/:department/edit", async (req, res) => {
+router.put("/positions/:department/edit", requireAdmin, async (req, res) => {
   const { department } = req.params;
   const { oldOption, newOption } = req.body;
 
   console.log(
-    `Editing position in '${department}': '${oldOption}' => '${newOption}'`
+    `Editing position in '${department}': '${oldOption}' => '${newOption}'`,
   );
 
   // Basic Validation
@@ -250,35 +252,42 @@ router.put("/positions/:department/edit", async (req, res) => {
   }
 });
 
-router.delete("/positions/:department/delete", async (req, res) => {
-  const { department } = req.params;
-  const { option } = req.body;
+// Route to DELETE positions on department
+router.delete(
+  "/positions/:department/delete",
+  requireAdmin,
+  async (req, res) => {
+    const { department } = req.params;
+    const { option } = req.body;
 
-  console.log("Deleting position:", option, "to department:", department);
+    console.log("Deleting position:", option, "to department:", department);
 
-  if (!option || !department) {
-    return res
-      .status(400)
-      .json({ message: "Option and department are required" });
-  }
-
-  try {
-    const update = {
-      $pull: { [`positions.${department}`]: option },
-    };
-    const updated = await Dropdown.findOneAndUpdate({}, update, { new: true });
-
-    if (!updated) {
-      return res.status(404).json({ message: "Dropdown document not found" });
+    if (!option || !department) {
+      return res
+        .status(400)
+        .json({ message: "Option and department are required" });
     }
 
-    res.json({
-      message: `Position '${option}' deleted from department '${department}'`,
-      positions: updated.positions[department],
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting position" });
-  }
-});
+    try {
+      const update = {
+        $pull: { [`positions.${department}`]: option },
+      };
+      const updated = await Dropdown.findOneAndUpdate({}, update, {
+        new: true,
+      });
+
+      if (!updated) {
+        return res.status(404).json({ message: "Dropdown document not found" });
+      }
+
+      res.json({
+        message: `Position '${option}' deleted from department '${department}'`,
+        positions: updated.positions[department],
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting position" });
+    }
+  },
+);
 
 module.exports = router;

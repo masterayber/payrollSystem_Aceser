@@ -1,5 +1,4 @@
 const express = require("express");
-const mongoose = require("mongoose");
 
 const LeaveApplication = require("../models/leaveApplication");
 const OvertimeApplication = require("../models/overtimeApplication");
@@ -8,29 +7,6 @@ const auth = require("../middleware/authMiddleware");
 const { requirePage } = require("../middleware/accessMiddleware");
 
 const router = express.Router();
-
-const getDateRange = (startDate, endDate) => {
-  const dates = [];
-  const current = new Date(startDate);
-  const end = new Date(endDate);
-
-  current.setUTCHours(0, 0, 0, 0);
-  end.setUTCHours(0, 0, 0, 0);
-
-  while (current <= end) {
-    const day = current.getUTCDay();
-
-    if (day !== 0 && day !== 6) {
-      const yyyy = current.getUTCFullYear();
-      const mm = String(current.getUTCMonth() + 1).padStart(2, "0");
-      const dd = String(current.getUTCDate()).padStart(2, "0");
-      dates.push(`${yyyy}-${mm}-${dd}`);
-    }
-    current.setUTCDate(current.getUTCDate() + 1);
-  }
-
-  return dates;
-};
 
 router.get("/", auth, async (req, res) => {
   if (req.user.role !== "Admin")

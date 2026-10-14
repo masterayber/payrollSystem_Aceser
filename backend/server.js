@@ -55,6 +55,7 @@ app.use("/api/dropdownOption", dropdownRoutes);
 app.use("/api/employee", employeeRoutes);
 app.use("/api/filing", filingRoutes);
 app.use("/api/access", accessRoutes);
+app.use("/api/settings", settingsRoutes);
 
 io.on("connection", (socket) => {
   socket.on("approveUser", (data) => {
@@ -64,7 +65,7 @@ io.on("connection", (socket) => {
 
 // Connect to MongoDB
 mongoose
-  .connect("mongodb://localhost:27017/payroll_system", {
+  .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
