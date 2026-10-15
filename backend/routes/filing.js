@@ -128,9 +128,6 @@ router.delete("/leave/:id", requirePage("filing"), async (req, res) => {
 
 // Route for approving leave requests of user by admin
 router.patch("/leave/:id/status", requireAdmin, async (req, res) => {
-  if (req.user.role !== "Admin")
-    return res.status(400).json({ msg: "Access Denied" });
-
   const { status } = req.body;
 
   try {
@@ -204,6 +201,65 @@ router.patch("/leave/:id/status", requireAdmin, async (req, res) => {
       if (updatePromises.length > 0) {
         await Promise.all(updatePromises);
       }
+    } else if (status === "Disapproved") {
+      const dateKey = (date) => new Date(date).toISOString().split("T")[0];
+      const startDateKey = dateKey(app.startDate);
+      const endDateKey = dateKey(app.endDate);
+      const startDate = new Date(`${startDateKey}T00:00:00.000Z`);
+      const endDate = new Date(`${endDateKey}T23:59:59.999Z`);
+      const todayKey = dateKey(new Date());
+
+      const [attendanceRecords, otherApprovedLeaves] = await Promise.all([
+        Attendance.find({
+          userId: app.userId,
+          behavior: "On-Leave",
+          date: { $gte: startDate, $lte: endDate },
+        }).select("_id date"),
+        LeaveApplication.find({
+          _id: { $ne: app._id },
+          userId: app.userId,
+          status: "Approved",
+          startDate: { $lte: endDate },
+          endDate: { $gte: startDate },
+        }).select("startDate endDate"),
+      ]);
+
+      const activeLeaveRanges = otherApprovedLeaves.map((leave) => ({
+        start: dateKey(leave.startDate),
+        end: dateKey(leave.endDate),
+      }));
+
+      await Promise.all(
+        attendanceRecords.map((record) => {
+          const recordDateKey = dateKey(record.date);
+          const coveredByOtherLeave = activeLeaveRanges.some(
+            (range) =>
+              range.start <= recordDateKey && recordDateKey <= range.end,
+          );
+
+          if (coveredByOtherLeave) {
+            return Promise.resolve();
+          }
+
+          if (recordDateKey < todayKey) {
+            return Attendance.findByIdAndUpdate(record._id, {
+              timeIn: null,
+              timeOut: null,
+              behavior: "Absent",
+              leaveType: null,
+              overtime: {
+                isEligible: false,
+                hours: 0,
+                start: null,
+                end: null,
+                isFiled: false,
+              },
+            });
+          }
+
+          return Attendance.findByIdAndDelete(record._id);
+        }),
+      );
     }
 
     res.json(app);

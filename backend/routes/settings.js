@@ -30,7 +30,7 @@ const upload = multer({
 
 const requireSelfOrAdmin = (req, res, next) => {
   const isAdmin = req.currentUser.role === "Admin";
-  const isOwner = String(req.user.userId) === String(req.params.userId);
+  const isOwner = String(req.user.userId) === String(req.params.id);
 
   if (!isAdmin && !isOwner) {
     return res.status(403).json({ message: "Access denied" });
@@ -102,9 +102,9 @@ router.put(
 // Route for uploading a profile photo
 router.put(
   "/users/:id/profile-photo",
-  upload.single("profilePhoto"),
   requireAuthenticated,
   requireSelfOrAdmin,
+  upload.single("profilePhoto"),
   async (req, res) => {
     try {
       const userId = req.params.id;

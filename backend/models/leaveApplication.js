@@ -12,7 +12,7 @@ const leaveApplicationSchema = new mongoose.Schema({
   endDate: { type: Date, required: true },
   status: {
     type: String,
-    enum: ["Pending", "Approved", "Rejected"],
+    enum: ["Pending", "Approved", "Disapproved"],
     default: "Pending",
   },
   appliedAt: { type: Date, default: Date.now },
