@@ -1,4 +1,4 @@
-import React from "react";
+import "react";
 
 const AccessibilittySettings = () => {
   return <div>Accessibilitty Settings</div>;

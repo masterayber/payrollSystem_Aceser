@@ -2,7 +2,6 @@ import React, { useState, useContext } from "react";
 import { UserContext } from "../../context/UserContext";
 import "../../styles/UserCSS/Payslips.css";
 import { IconEye, IconEyeClosed, IconDotsVertical } from "@tabler/icons-react";
-import Dropdown from "../../components/Dropdown/Dropdown";
 import ProfilePhoto from "../../components/ProfilePhoto/ProfilePhoto";
 
 const Payslips = () => {

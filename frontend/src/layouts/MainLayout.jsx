@@ -1,6 +1,7 @@
+import { useContext } from "react";
+import PropTypes from "prop-types";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
-import { useContext } from "react";
 import { UserContext } from "../context/UserContext";
 
 const MainLayout = ({ children }) => {
@@ -15,3 +16,7 @@ const MainLayout = ({ children }) => {
 };
 
 export default MainLayout;
+
+MainLayout.propTypes = {
+  children: PropTypes.func,
+};
