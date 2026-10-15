@@ -7,7 +7,7 @@ import "../../styles/AdminCSS/Deductions.css";
 
 const Deductions = () => {
   const { employeeData } = useContext(EmployeeContext);
-  const [deductionsData, setDeductionsData] = useState({});
+  const [deductionsData] = useState({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showDeductionDropdown, setShowDeductionDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
