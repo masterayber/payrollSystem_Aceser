@@ -127,18 +127,42 @@ router.delete("/leave/:id", requirePage("filing"), async (req, res) => {
 });
 
 // Route for approving leave requests of user by admin
+const LEAVE_DECISIONS = ["Approved", "Disapproved"];
+
 router.patch("/leave/:id/status", requireAdmin, async (req, res) => {
+  const { id } = req.params;
   const { status } = req.body;
 
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ error: "Invalid leave application ID." });
+  }
+
+  // An admin can only make a decision. Moving a request back to "Pending" is not allowed.
+  if (!LEAVE_DECISIONS.includes(status)) {
+    return res.status(400).json({
+      error: `Status must be one of: ${LEAVE_DECISIONS.join(", ")}.`,
+    });
+  }
+
   try {
-    const app = await LeaveApplication.findByIdAndUpdate(
-      req.params.id,
+    // The Pending filter is part of the update itself, so two admins acting on the same
+    // request at the same time cannot both succeed.
+    const app = await LeaveApplication.findOneAndUpdate(
+      { _id: id, status: "Pending" },
       { status },
-      { new: true },
+      { new: true, runValidators: true },
     );
 
     if (!app) {
-      return res.status(404).json({ error: "Leave application not found." });
+      const existing = await LeaveApplication.findById(id).select("status");
+
+      if (!existing) {
+        return res.status(404).json({ error: "Leave application not found." });
+      }
+
+      return res.status(409).json({
+        error: `This leave application was already ${existing.status.toLowerCase()}.`,
+      });
     }
 
     if (status === "Approved") {
