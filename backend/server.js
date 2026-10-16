@@ -1,37 +1,12 @@
-const path = require("path");
-const express = require("express");
+// Load .env before anything else read process.env
+require("dotenv").config();
+
 const http = require("http");
 const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-const cors = require("cors");
 const socketIo = require("socket.io");
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: "*",
-    method: ["GET", "POST"],
-  },
-});
-
-const PORT = process.env.PORT || 5000;
-
-const authRoutes = require("./routes/auth");
-const attendanceRoutes = require("./routes/attendance");
-const dropdownRoutes = require("./routes/dropdownOption");
-const employeeRoutes = require("./routes/employee");
-const filingRoutes = require("./routes/filing");
-const accessRoutes = require("./routes/access");
-const settingsRoutes = require("./routes/settings");
-
-const dotenv = require("dotenv");
-
-const authMiddleware = require("./middleware/authMiddleware");
-
-dotenv.config();
 
 // Tokens are signed with this secret, so a missing or well-known value would let anyone
-// forge an Admin login. Refuse to start rather than run insecurely.
+// forge and Admin login. Refuse to start rather than run insecurely.
 const PLACEHOLDER_SECRETS = ["your_jwt_secret_key", "your_jwt_secret_key_here"];
 if (
   !process.env.JWT_SECRET ||
@@ -45,30 +20,21 @@ if (
   process.exit(1);
 }
 
-// Middleware
-app.use(bodyParser.json());
-app.use(cors());
-app.use(express.json());
-app.use("/api/auth", authRoutes);
-app.use("/api/attendance", attendanceRoutes);
-app.use("/api/dropdownOption", dropdownRoutes);
-app.use("/api/employee", employeeRoutes);
-app.use("/api/filing", filingRoutes);
-app.use("/api/access", accessRoutes);
-app.use("/api/settings", settingsRoutes);
+const app = require("./app");
 
-io.on("connection", (socket) => {
-  socket.on("approveUser", (data) => {
-    io.emit("userApproved", data);
-  });
+const PORT = process.env.PORT | 5000;
+
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
 });
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() =>
     console.log(
       "MongoDB connected successfully",
@@ -79,19 +45,6 @@ mongoose
 
 require("./schedulers/attendanceScheduler");
 
-// Routes
-app.get("/", (req, res) => {
-  res.send("API is running...");
-});
-
-// Start server
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
-// Example protected route
-app.get("/api/protected", authMiddleware, (req, res) => {
-  res.json({ message: "You have access to this protected route" });
-});
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
