@@ -50,7 +50,7 @@ router.put(
       const { employee, settings, email } = req.body;
 
       // Only whitelisted fields reach the Auth record. Role, status, password and
-      // page access are changed throught their own admin routes, never from here.
+      // page access are changed through their own admin routes, never from here.
       const userUpdate = {};
       if (email !== undefined) userUpdate.email = email;
 
@@ -66,7 +66,7 @@ router.put(
       // Update Settings
       const updatedEmployee = await Employee.findOneAndUpdate(
         { userId },
-        { $set: settings },
+        { $set: employee },
         { new: true },
       );
 
