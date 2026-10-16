@@ -6,6 +6,7 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const app = require("../app");
 const User = require("../models/authUsers");
+const Employee = require("../models/employees");
 
 let mongo;
 
@@ -16,6 +17,7 @@ beforeAll(async () => {
 
 afterEach(async () => {
   await User.deleteMany({});
+  await Employee.deleteMany({});
 });
 
 afterAll(async () => {
@@ -184,5 +186,28 @@ describe("PUT /api/settings/updateGeneralSettings/:id", () => {
       .send({ role: "Admin", employee: {}, settings: {} });
 
     expect(res.status).toBe(403);
+  });
+
+  it("saves the employee's own profile fields", async () => {
+    const user = await createUser();
+    await Employee.create({
+      userId: user._id,
+      firstName: "Juan",
+      lastName: "Dela Cruz",
+      email: "employee1@example.com",
+    });
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .put(`/api/settings/updateGeneralSettings/${user._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        employee: { contactNumber: "09171234567", address: { city: "Makati" } },
+        settings: {},
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.employee.contactNumber).toBe("09171234567");
+    expect(res.body.employee.address.city).toBe("Makati");
   });
 });
