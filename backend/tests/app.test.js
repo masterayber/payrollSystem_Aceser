@@ -18,7 +18,7 @@ afterEach(async () => {
 
 afterAll(async () => {
   await mongoose.disconnect();
-  await mongo.stop;
+  await mongo.stop();
 });
 
 // The pre-save hook hashes the password, so tests pass it in plain text
