@@ -33,3 +33,6 @@ jobs:
 
       - name: Backend syntax check
         run: find backend -name '*.js' -not -path '*/node_modules/*' -exec node --check {} +
+
+      - name: Backend tests
+        run: npm test

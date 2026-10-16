@@ -5,7 +5,8 @@
   "scripts": {
     "backend": "nodemon backend/server.js",
     "frontend": "npm run dev --prefix frontend",
-    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -40,7 +41,20 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
-    "nodemon": "^3.1.9"
+    "jest": "^30.5.2",
+    "mongodb-memory-server": "^11.3.0",
+    "nodemon": "^3.1.9",
+    "supertest": "^7.3.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/backend"
+    ],
+    "setupFiles": [
+      "<rootDir>/backend/tests/setupEnv.js"
+    ],
+    "testTimeout": 30000
   },
   "repository": {
     "type": "git",

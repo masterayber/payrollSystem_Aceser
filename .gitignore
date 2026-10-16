@@ -25,3 +25,6 @@ dist-ssr
 
 # Environment Variable
 .env
+
+# Claude Code context export
+export/
