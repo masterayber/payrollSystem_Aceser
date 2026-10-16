@@ -1,6 +1,6 @@
 // Utility for classification of the user depending on their time in and time out (Late, On-Time, Absent, etc...)
 
-export const calculateBehavior = ({
+const calculateBehavior = ({
   date,
   timeIn,
   timeOut,
@@ -80,3 +80,5 @@ export const calculateBehavior = ({
 
   return "On-Time";
 };
+
+module.exports = { calculateBehavior };
