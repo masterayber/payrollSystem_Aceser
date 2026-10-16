@@ -1,3 +1,5 @@
+jest.mock("../utils/nodemailer", () => jest.fn().mockResolvedValue());
+
 const request = require("supertest");
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
@@ -114,5 +116,73 @@ describe("Admin-only route guard (GET /api/employee/emloyees)", () => {
       .get("/api/employee/employees")
       .set("Authorization", `Bearer ${token}`);
     expect(res.status).toBe(200);
+  });
+});
+
+describe("POST /api/auth/forgot-password", () => {
+  it("does not return the OTP in the response", async () => {
+    await createUser();
+    const res = await request(app)
+      .post("/api/auth/forgot-password")
+      .send({ email: "employee1@example.com" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.otp).toBeUndefined();
+  });
+});
+
+describe("PUT /api/settings/updateGeneralSettings/:id", () => {
+  it("ignores role, status and password sent by an employee", async () => {
+    const user = await createUser();
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .put(`/api/settings/updateGeneralSettings/${user._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        role: "Admin",
+        status: "Inactive",
+        password: "hacked",
+        employee: {},
+        settings: {},
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.password).toBeUndefined();
+
+    const saved = await User.findById(user._id);
+    expect(saved.role).toBe("Employee");
+    expect(saved.status).toBe("Active");
+    // The old password still works, so it was not overwritten
+    expect(await loginAs("employee1")).toBeDefined();
+  });
+
+  it("still lets an employee change their own email", async () => {
+    const user = await createUser();
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .put(`/api/settings/updateGeneralSettings/${user._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ email: "new@example.com", employee: {}, settings: {} });
+
+    expect(res.status).toBe(200);
+    expect(res.body.email).toBe("new@example.com");
+  });
+
+  it("returns 403 when an employee edits someone else", async () => {
+    const other = await createUser({
+      username: "employee2",
+      email: "employee2@example.com",
+    });
+    await createUser();
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .put(`/api/settings/updateGeneralSettings/${other._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ role: "Admin", employee: {}, settings: {} });
+
+    expect(res.status).toBe(403);
   });
 });

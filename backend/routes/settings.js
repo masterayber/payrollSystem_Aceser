@@ -47,34 +47,26 @@ router.put(
   async (req, res) => {
     try {
       const userId = req.params.id;
-      const { employee, settings, ...userData } = req.body;
+      const { employee, settings, email } = req.body;
 
-      // Page access is only editable through /api/access (admin only)
-      delete userData.pageAccess;
-      delete userData.allowedPages;
+      // Only whitelisted fields reach the Auth record. Role, status, password and
+      // page access are changed throught their own admin routes, never from here.
+      const userUpdate = {};
+      if (email !== undefined) userUpdate.email = email;
 
-      const existingUser = await User.findById(userId);
-      if (!existingUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      if (!userData.profilePhoto && existingUser.profilePhoto) {
-        userData.profilePhoto = existingUser.profilePhoto;
-      }
-
-      // Update Auths
-      const updatedUser = await User.findByIdAndUpdate(userId, userData, {
+      const updatedUser = await User.findByIdAndUpdate(userId, userUpdate, {
         new: true,
-      });
+        runValidators: true,
+      }).select("-password");
 
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Update Employees
+      // Update Settings
       const updatedEmployee = await Employee.findOneAndUpdate(
-        { email: updatedUser.email },
-        { $set: employee },
+        { userId },
+        { $set: settings },
         { new: true },
       );
 

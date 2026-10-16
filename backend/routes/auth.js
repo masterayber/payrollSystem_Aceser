@@ -1,4 +1,5 @@
 const express = require("express");
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -188,7 +189,7 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(404).json({ message: "Email is not registered" });
     }
 
-    const otp = String(Math.floor(10000 + Math.random() * 900000));
+    const otp = String(crypto.randomInt(100000, 1000000));
     const expiresAt = Date.now() + 5 * 60 * 1000;
 
     otpStorage[email] = {
@@ -201,7 +202,6 @@ router.post("/forgot-password", async (req, res) => {
     res.status(200).json({
       message: "Password reset has been sent to your email",
       expiresAt,
-      otp,
     });
   } catch (err) {
     res.status(500).json({
