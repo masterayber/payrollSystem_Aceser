@@ -7,6 +7,7 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 const app = require("../app");
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
+const Settings = require("../models/settings");
 
 let mongo;
 
@@ -18,6 +19,7 @@ beforeAll(async () => {
 afterEach(async () => {
   await User.deleteMany({});
   await Employee.deleteMany({});
+  await Settings.deleteMany({});
 });
 
 afterAll(async () => {
