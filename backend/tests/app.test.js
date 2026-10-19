@@ -7,6 +7,7 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 const app = require("../app");
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
+const Settings = require("../models/settings");
 
 let mongo;
 
@@ -18,6 +19,7 @@ beforeAll(async () => {
 afterEach(async () => {
   await User.deleteMany({});
   await Employee.deleteMany({});
+  await Settings.deleteMany({});
 });
 
 afterAll(async () => {
@@ -209,5 +211,24 @@ describe("PUT /api/settings/updateGeneralSettings/:id", () => {
     expect(res.status).toBe(200);
     expect(res.body.employee.contactNumber).toBe("09171234567");
     expect(res.body.employee.address.city).toBe("Makati");
+  });
+});
+
+describe("POST /api/auth/signup", () => {
+  it("ignores role and status sent in the body", async () => {
+    const res = await request(app).post("/api/auth/signup").send({
+      firstName: "Eve",
+      lastName: "Attacker",
+      email: "eve@example.com",
+      username: "eve",
+      password: "Password123!",
+      role: "Admin",
+      status: "Active,",
+    });
+
+    expect(res.status).toBeLessThan(300);
+    const user = await User.findOne({ email: "eve@example.com" });
+    expect(user.role).toBe("Employee");
+    expect(user.status).toBe("Pending");
   });
 });
