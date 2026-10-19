@@ -11,8 +11,12 @@ const { pagesForRole } = require("../config/pages");
 const getAllowedPages = (user) => {
   const rolePages = pagesForRole(user.role);
 
-  if (user.role === "Admin" || !Array.isArray(user.pageAccess)) {
+  if (user.role === "Admin") {
     return rolePages.map((page) => page.key);
+  }
+
+  if (!Array.isArray(user.pageAccess)) {
+    return rolePages.filter((page) => !page.defaultOff).map((page) => page.key);
   }
 
   const granted = new Set(user.pageAccess);

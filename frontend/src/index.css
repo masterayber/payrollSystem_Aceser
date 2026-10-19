@@ -248,6 +248,78 @@ h3 {
   margin: 0;
 }
 
+.sidebar-group.has-active {
+  color: var(--default-button-color);
+  font-weight: 600;
+}
+
+.sidebar-chevron {
+  margin-left: auto;
+  transition: transform 0.25s ease;
+}
+
+.sidebar-chevron.open {
+  transform: rotate(90deg);
+}
+
+/* Grid rows animate from 0fr to 1fr, so the height follows the content */
+.sidebar-submenu {
+  display: grid;
+  grid-template-rows: 0fr;
+  margin-top: -4px;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 0.25s ease,
+    opacity 0.2s ease,
+    visibility 0s linear 0.25s;
+}
+
+.sidebar-submenu.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows 0.25s ease,
+    opacity 0.2s ease,
+    visibility 0s;
+}
+
+.sidebar-submenu-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar-submenu-inner .sidebar-subitem {
+  margin-top: 4px;
+}
+
+/* The submenu clips overflow, so keep the focus ring inside the button */
+.sidebar-subitem:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-chevron,
+  .sidebar-submenu,
+  .sidebar-submenu.open {
+    transition: none;
+  }
+}
+
+.sidebar-subitem {
+  min-height: 40px;
+  padding-left: 30px;
+  font-size: 14px;
+}
+
+.sidebar-subitem svg {
+  width: 18px;
+  height: 18px;
+}
+
 .header-content-container {
   width: calc(100vw - 250px);
   margin-left: 250px;
@@ -449,6 +521,27 @@ h3 {
   .sidebar-item svg {
     width: 20px;
     height: 20px;
+  }
+
+  .sidebar-subitem {
+    padding-left: 8px;
+  }
+
+  .sidebar-chevron {
+    display: none;
+  }
+
+  .sidebar-submenu,
+  .sidebar-submenu-inner {
+    display: contents;
+  }
+
+  .sidebar-submenu:not(.open) {
+    display: none;
+  }
+
+  .sidebar-submenu-inner .sidebar-subitem {
+    margin-top: 0;
   }
 
   .header {

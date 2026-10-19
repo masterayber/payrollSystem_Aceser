@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Verify Pages
 import Login from "./pages/Login";
@@ -22,6 +22,7 @@ import AdminFiling from "./pages/AdminPage/AdminFiling";
 import Reports from "./pages/AdminPage/Reports";
 import AdminSettings from "./pages/AdminPage/AdminSettings";
 
+// User Pages
 import Dashboard from "./pages/UserPage/Dashboard";
 import Payroll from "./pages/UserPage/Payroll";
 import Payslips from "./pages/UserPage/Payslips";
@@ -29,6 +30,12 @@ import Attendance from "./pages/UserPage/Attendance";
 import Calendar from "./pages/UserPage/Calendar";
 import Filing from "./pages/UserPage/Filing";
 import Settings from "./pages/UserPage/Settings";
+
+// Logistics Pages
+import LogisticsDashboard from "./pages/Logistics/LogisticsDashboard";
+import MaterialRequest from "./pages/Logistics/MaterialRequest";
+import ProjectInventory from "./pages/Logistics/ProjectInventory";
+import Deliveries from "./pages/Logistics/Deliveries";
 
 import "./index.css";
 import PrivateRoute from "./components/PrivateRoute";
@@ -39,6 +46,13 @@ import { SettingsProvider } from "./context/SettingsContext";
 import { AttendanceProvider } from "./context/AttendanceContext";
 import { FilingProvider } from "./context/FilingContext";
 import MainLayout from "./layouts/MainLayout";
+
+const LOGISTICS_ROUTES = [
+  { path: "logistics/dashboard", element: <LogisticsDashboard /> },
+  { path: "logistics/material-request", element: <MaterialRequest /> },
+  { path: "logistics/inventory", element: <ProjectInventory /> },
+  { path: "logistics/deliveries", element: <Deliveries /> },
+];
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -192,6 +206,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                       </PrivateRoute>
                     }
                   />
+
                   <Route
                     path="payroll"
                     element={
@@ -205,6 +220,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                       </PrivateRoute>
                     }
                   />
+
                   <Route
                     path="payslips"
                     element={
@@ -218,6 +234,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                       </PrivateRoute>
                     }
                   />
+
                   <Route
                     path="attendance"
                     element={
@@ -231,6 +248,28 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                       </PrivateRoute>
                     }
                   />
+
+                  {/* Logistics Routes (admins, and employees granted access) */}
+                  <Route
+                    path="logistics"
+                    element={<Navigate to="/logistics/dashboard" replace />}
+                  />
+
+                  {LOGISTICS_ROUTES.map(({ path, element }) => (
+                    <Route
+                      key={path}
+                      path={path}
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Admin", "Employee"]}
+                          pageKey="logistics"
+                        >
+                          <MainLayout>{element}</MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+                  ))}
+
                   <Route
                     path="calendar"
                     element={
@@ -244,6 +283,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                       </PrivateRoute>
                     }
                   />
+
                   <Route
                     path="filing"
                     element={
@@ -257,6 +297,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                       </PrivateRoute>
                     }
                   />
+
                   <Route
                     path="settings"
                     element={
