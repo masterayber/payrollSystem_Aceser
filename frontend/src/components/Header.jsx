@@ -5,6 +5,13 @@ import ProfilePhoto from "./ProfilePhoto/ProfilePhoto";
 import { IconCircleArrowUp, IconCircleArrowDown } from "@tabler/icons-react";
 import PropTypes from "prop-types";
 
+const logisticsTitles = [
+  { name: "Logistics Dashboard", path: "/logistics/dashboard" },
+  { name: "Material Request", path: "/logistics/material-request" },
+  { name: "Inventory per Project", path: "/logistics/inventory" },
+  { name: "Deliveries", path: "/logistics/deliveries" },
+];
+
 function Header({ role }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -113,7 +120,10 @@ function Header({ role }) {
     },
   ];
 
-  const menuTitles = role === "Admin" ? adminMenuTitles : userMenuTitles;
+  const menuTitles = [
+    ...(role === "Admin" ? adminMenuTitles : userMenuTitles),
+    ...logisticsTitles,
+  ];
 
   return (
     <header className="header">
