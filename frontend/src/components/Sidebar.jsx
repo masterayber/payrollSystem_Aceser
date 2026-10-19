@@ -11,7 +11,6 @@ import {
   IconClipboardList,
   IconBuildingWarehouse,
   IconTruckDelivery,
-  IconChevronDown,
   IconChevronRight,
   IconCalendarPlus,
   IconCalendarMonth,
