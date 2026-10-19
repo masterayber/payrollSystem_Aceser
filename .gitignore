@@ -28,3 +28,6 @@ dist-ssr
 
 # Claude Code context export
 export/
+
+# Reports
+backend/reports/
