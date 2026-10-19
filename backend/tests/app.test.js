@@ -211,3 +211,22 @@ describe("PUT /api/settings/updateGeneralSettings/:id", () => {
     expect(res.body.employee.address.city).toBe("Makati");
   });
 });
+
+describe("POST /api/auth/signup", () => {
+  it("ignores role and status sent in the body", async () => {
+    const res = await request(app).post("/api/auth/signup").send({
+      firstName: "Eve",
+      lastName: "Attacker",
+      email: "eve@example.com",
+      username: "eve",
+      password: "Password123!",
+      role: "Admin",
+      status: "Active,",
+    });
+
+    expect(res.status).toBeLessThan(300);
+    const user = await User.findOne({ email: "eve@example.com" });
+    expect(user.role).toBe("Employee");
+    expect(user.status).toBe("Pending");
+  });
+});

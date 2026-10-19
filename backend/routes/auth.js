@@ -83,16 +83,7 @@ router.post("/login", async (req, res) => {
 
 // Signup route
 router.post("/signup", async (req, res) => {
-  const {
-    firstName,
-    lastName,
-    email,
-    username,
-    password,
-    role,
-    status,
-    gender,
-  } = req.body;
+  const { firstName, lastName, email, username, password, gender } = req.body;
 
   // Check if email is already registered to the database
   try {
@@ -101,14 +92,14 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ message: "Email is already registered" });
     }
 
-    const defaultStatus = role === "Admin" ? "Regular" : "Probationary";
+    const defaultStatus = "Probationary";
 
     const user = new User({
       username,
       password,
       email,
-      role,
-      status,
+      role: "Employee",
+      status: "Pending",
       createdAt: new Date(),
     });
     await user.save();
