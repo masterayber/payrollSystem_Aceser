@@ -76,6 +76,50 @@ router.get("/employees", requireAdmin, async (req, res) => {
   }
 });
 
+// One employee's full profile, for the admin profile page
+router.get("/employees/:userId", requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
+
+    const [user, employee, settings] = await Promise.all([
+      User.findById(userId)
+        .select("username email role status profilePhoto createAt lastLogin")
+        .lean(),
+      Employee.findOne({ userId }).lean(),
+      Settings.findOne({ userId }).select("general.jobDescription").lean(),
+    ]);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const job = settings?.general?.jobDescription || {};
+
+    res.status(200).json({
+      ...user,
+      employee: employee || {},
+      jobDescription: {
+        designation: job.designation || "",
+        department: job.department || "",
+        position: job.position || "",
+        employmentType: job.employmentType || "",
+        startDate: job.startDate || "",
+        schedule: {
+          timeIn: job.schedule?.timeIn || "",
+          timeOut: job.schedule?.timeOut || "",
+        },
+      },
+    });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error fetching employee", error: err.message });
+  }
+});
+
 // Additional Information Route
 router.post("/update-info", async (req, res) => {
   const {
@@ -317,14 +361,14 @@ router.post("/add-employee-via-admin", requireAdmin, async (req, res) => {
 router.put("/edit-employee-via-admin/:id", requireAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
-    console.log("User ID:", userId);
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
 
     const {
-      firstName,
-      lastName,
-      employeeId,
+      username,
+      password,
       email,
-      gender,
       designation,
       department,
       position,
@@ -332,55 +376,61 @@ router.put("/edit-employee-via-admin/:id", requireAdmin, async (req, res) => {
       startDate,
       timeIn,
       timeOut,
-      username,
-      password,
     } = req.body;
 
-    const existingUser = await User.findById(userId);
-    if (!existingUser) {
+    const user = await User.findById(userId);
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const updateUser = await User.findByIdAndUpdate(
-      userId,
-      {
-        username,
-        password,
-        email,
-        gender,
-      },
-      { new: true },
-    );
-    console.log("Updated User:", updateUser);
+    if (username !== undefined) user.username = username;
+    if (email !== undefined) user.email = email;
+    // A non-empty password is a reset. save() runs the pre-save hook that hashes
+    // it; findByIdAndUpdate would skip the hook and store it in plain text.
+    if (typeof password === "string" && password.trim() !== "") {
+      user.password = password;
+    }
+    await user.save();
 
-    const updateEmployee = await Employee.findOneAndUpdate(
-      { userId },
-      {
-        firstName,
-        lastName,
-        employeeId,
-        email,
-        gender,
-      },
-      { new: true },
-    );
-    console.log("Updated Employee:", updateEmployee);
+    const employeeUpdate = {};
+    for (const field of [
+      "firstName",
+      "lastName",
+      "employeeId",
+      "email",
+      "gender",
+      "birthday",
+      "contactNumber",
+      "address",
+      "emergencyDetails",
+    ]) {
+      if (req.body[field] !== undefined)
+        employeeUpdate[field] = req.body[field];
+    }
+    await Employee.findOneAndUpdate({ userId }, { $set: employeeUpdate });
 
-    await Settings.findOneAndUpdate(
-      { userId },
-      {
-        $set: {
-          "general.jobDescription.designation": designation,
-          "general.jobDescription.department": department,
-          "general.jobDescription.position": position,
-          "general.jobDescription.employmentType": employmentType,
-          "general.jobDescription.startDate": startDate,
-          "general.jobDescription.schedule.timeIn": timeIn,
-          "general.jobDescription.schedule.timeOut": timeOut,
-        },
-      },
-      { new: true },
-    );
+    const jobUpdate = {};
+    const jobFields = {
+      designation,
+      department,
+      position,
+      employmentType,
+      startDate,
+    };
+    for (const [field, value] of Object.entries(jobFields)) {
+      if (value !== undefined) {
+        jobUpdate[`general.jobDescription.${field}`] = value;
+      }
+    }
+    if (timeIn !== undefined) {
+      jobUpdate["general.jobDescription.schedule.timeIn"] = timeIn;
+    }
+    if (timeOut !== undefined) {
+      jobUpdate["general.jobDescription.schedule.timeOut"] = timeOut;
+    }
+    if (Object.keys(jobUpdate).length > 0) {
+      await Settings.findOneAndUpdate({ userId }, { $set: jobUpdate });
+    }
 
     res.status(200).json({ message: "Employee updated successfully" });
   } catch (error) {

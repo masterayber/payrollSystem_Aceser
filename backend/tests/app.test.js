@@ -264,3 +264,90 @@ describe("POST /api/auth/signup", () => {
     expect(user.status).toBe("Pending");
   });
 });
+
+describe("Admin employee profile routes", () => {
+  const setup = async () => {
+    const employeeUser = await createUser();
+    await Employee.create({
+      userId: employeeUser._id,
+      firstName: "Juan",
+      lastName: "Dela Cruz",
+      email: "employee1@example.com",
+      employeeId: "EMP-001",
+    });
+    await createUser({
+      username: "admin1",
+      email: "admin1@example.com",
+      role: "Admin",
+    });
+    const token = await loginAs("admin1");
+    return { employeeUser, token };
+  };
+
+  it("returns the full profile without the password", async () => {
+    const { employeeUser, token } = await setup();
+
+    const res = await request(app)
+      .get(`/api/employee/employees/${employeeUser._id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.username).toBe("employee1");
+    expect(res.body.password).toBeUndefined();
+    expect(res.body.employee.employeeId).toBe("EMP-001");
+    expect(res.body.jobDescription.schedule).toBeDefined();
+  });
+
+  it("returns 404 for an unknown user", async () => {
+    const { token } = await setup();
+
+    const res = await request(app)
+      .get(`/api/employee/employees/${new mongoose.Types.ObjectId()}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 403 for an employee", async () => {
+    const { employeeUser } = await setup();
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .get(`/api/employee/employees/${employeeUser._id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(403);
+  });
+
+  it("saves contact and emergency details", async () => {
+    const { employeeUser, token } = await setup();
+
+    const res = await request(app)
+      .put(`/api/employee/edit-employee-via-admin/${employeeUser._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        contactNumber: "09171234567",
+        address: { city: "Makati" },
+        emergencyDetails: { contactFirstName: "Maria" },
+      });
+
+    expect(res.status).toBe(200);
+    const saved = await Employee.findOne({ userId: employeeUser._id });
+    expect(saved.contactNumber).toBe("09171234567");
+    expect(saved.address.city).toBe("Makati");
+    expect(saved.emergencyDetails.contactFirstName).toBe("Maria");
+  });
+
+  it("hashes a password reset so the employee can log in with it", async () => {
+    const { employeeUser, token } = await setup();
+
+    await request(app)
+      .put(`/api/employee/edit-employee-via-admin/${employeeUser._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ password: "NewPass123!" });
+
+    const saved = await User.findById(employeeUser._id);
+    expect(saved.password).not.toBe("NewPass123!");
+    expect(await loginAs("employee1", "NewPass123!")).toBeDefined();
+  });
+});

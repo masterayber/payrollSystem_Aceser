@@ -123,6 +123,9 @@ function Header({ role }) {
   const menuTitles = [
     ...(role === "Admin" ? adminMenuTitles : userMenuTitles),
     ...logisticsTitles,
+    ...(location.pathname.startsWith("/employees/")
+      ? [{ name: "Employee Profile", path: location.pathname }]
+      : []),
   ];
 
   return (

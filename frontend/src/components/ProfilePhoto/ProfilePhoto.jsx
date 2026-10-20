@@ -3,12 +3,12 @@ import { UserContext } from "../../context/UserContext";
 import "./ProfilePhoto.css";
 import PropTypes from "prop-types";
 
-const ProfilePhoto = ({ size = "50px" }) => {
+const ProfilePhoto = ({ size = "50px", photo: photoProp }) => {
   const { userData } = useContext(UserContext);
 
   let profilePhoto = "/assets/user-circle.svg";
 
-  const photo = userData?.profilePhoto;
+  const photo = photoProp ?? userData?.profilePhoto;
 
   if (photo) {
     if (photo.startsWith("http")) {
@@ -50,4 +50,5 @@ export default ProfilePhoto;
 
 ProfilePhoto.propTypes = {
   size: PropTypes.string.isRequired,
+  photo: PropTypes.string.isRequired,
 };

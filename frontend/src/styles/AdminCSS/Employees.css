@@ -304,6 +304,15 @@
   background: var(--gray-50);
 }
 
+.employees-page .employee-row {
+  cursor: pointer;
+}
+
+.employees-page .employee-row:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: -2px;
+}
+
 @media (max-width: 900px) {
   .employees-page .employee-toolbar {
     align-items: stretch;
