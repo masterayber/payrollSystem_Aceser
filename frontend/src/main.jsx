@@ -14,6 +14,7 @@ import CreatedAccount from "./pages/CreatedAccount";
 // Admin Pages
 import AdminDashboard from "./pages/AdminPage/AdminDashboard";
 import Employees from "./pages/AdminPage/Employees";
+import EmployeeProfile from "./pages/AdminPage/EmployeeProfile";
 import Deductions from "./pages/AdminPage/Deductions";
 import AdminPayslips from "./pages/AdminPage/AdminPayslips";
 import AdminAttendance from "./pages/AdminPage/AdminAttendance";
@@ -99,6 +100,19 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                       >
                         <MainLayout>
                           <Employees />
+                        </MainLayout>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="employees/:userId"
+                    element={
+                      <PrivateRoute
+                        allowedRoles={["Admin"]}
+                        pageKey="employees"
+                      >
+                        <MainLayout>
+                          <EmployeeProfile />
                         </MainLayout>
                       </PrivateRoute>
                     }

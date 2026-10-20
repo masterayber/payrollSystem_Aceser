@@ -1,17 +1,9 @@
-import { useState, useContext } from "react";
-import {
-  IconPlus,
-  IconEdit,
-  IconSearch,
-  IconCancel,
-  IconProgressCheck,
-  IconShieldLock,
-} from "@tabler/icons-react";
+import { useState, useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { IconPlus, IconSearch, IconProgressCheck } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import AddEmployeeModal from "../../components/Modals/AddEmployee/AddEmployeeModal";
-import EditEmployeeModal from "../../components/Modals/EditEmployee/EditEmployeeModal";
 import ApproveEmployeeModal from "../../components/Modals/Approve/ApproveEmployeeModal";
-import ManageAccessModal from "../../components/Modals/ManageAccess/ManageAccessModal";
 import "../../styles/AdminCSS/Employees.css";
 import Pagination from "../../components/Pagination/Pagination";
 import API from "../../api";
@@ -20,12 +12,17 @@ const Employees = () => {
   const { employeeData, setEmployeeData } = useContext(EmployeeContext);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [editMode, setEditMode] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
-  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
+
+  const navigate = useNavigate();
+
+  // Fresh list each time the page opens, so edits made on a profile show up
+  useEffect(() => {
+    API.get("/api/employee/employees")
+      .then((response) => setEmployeeData(response.data))
+      .catch((error) => console.error("Error loading employees:", error));
+  }, [setEmployeeData]);
 
   const itemsPerPage = 7;
 
@@ -51,16 +48,6 @@ const Employees = () => {
 
   const handleAddClick = () => {
     setIsAddModalOpen(true);
-  };
-
-  const handleEditClick = (employee) => {
-    setSelectedEmployee(employee);
-    setIsEditModalOpen(true);
-  };
-
-  const handleAccessClick = (employee) => {
-    setSelectedEmployee(employee);
-    setIsAccessModalOpen(true);
   };
 
   const handleApproveClick = () => {
@@ -132,15 +119,6 @@ const Employees = () => {
           <button
             type="button"
             className="btn employee-action-button"
-            onClick={() => setEditMode(!editMode)}
-          >
-            {editMode ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
-            {editMode ? "Cancel" : "Edit Employee"}
-          </button>
-
-          <button
-            type="button"
-            className="btn employee-action-button"
             onClick={() => handleApproveClick()}
           >
             <IconProgressCheck stroke={2} />
@@ -149,7 +127,7 @@ const Employees = () => {
         </div>
       </div>
 
-      <div className={`table employee-table ${editMode ? "edit-mode" : ""}`}>
+      <div className="table employee-table">
         <div className="table-header">
           <article className="table-header-container">
             <p>Employee ID</p>
@@ -175,15 +153,25 @@ const Employees = () => {
           <article className="table-header-container">
             <p>Start Date</p>
           </article>
-          {editMode && (
+          {/* {editMode && (
             <article className="table-header-container">
               <p>Action</p>
             </article>
-          )}
+          )} */}
         </div>
 
-        {currentEmployees.map((employee, index) => (
-          <div className="table-content" key={index}>
+        {currentEmployees.map((employee) => (
+          <div
+            className="table-content employee-row"
+            key={employee._id}
+            role="link"
+            tabIndex={0}
+            aria-label={`View ${employee.firstName} ${employee.lastName}`}
+            onClick={() => navigate(`/employees/${employee._id}`)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") navigate(`/employees/${employee._id}`);
+            }}
+          >
             <article className="table-content-container">
               <p>{employee.employeeId}</p>
             </article>
@@ -218,28 +206,6 @@ const Employees = () => {
                   : ""}
               </p>
             </article>
-            {editMode && (
-              <article className="table-content-container">
-                <div className="action-buttons">
-                  <button
-                    className="btn action-button"
-                    title="Edit employee"
-                    aria-label="Edit employee"
-                    onClick={() => handleEditClick(employee)}
-                  >
-                    <IconEdit stroke={2} />
-                  </button>
-                  <button
-                    className="btn action-button"
-                    title="Manage page access"
-                    aria-label="Manage page access"
-                    onClick={() => handleAccessClick(employee)}
-                  >
-                    <IconShieldLock stroke={2} />
-                  </button>
-                </div>
-              </article>
-            )}
           </div>
         ))}
       </div>
@@ -254,21 +220,6 @@ const Employees = () => {
         <AddEmployeeModal
           onClose={() => setIsAddModalOpen(false)}
           onUpdateEmployee={handleUpdateEmployee}
-        />
-      )}
-
-      {isEditModalOpen && selectedEmployee && (
-        <EditEmployeeModal
-          employee={selectedEmployee}
-          onClose={() => setIsEditModalOpen(false)}
-          onUpdateEmployee={handleUpdateEmployee}
-        />
-      )}
-
-      {isAccessModalOpen && selectedEmployee && (
-        <ManageAccessModal
-          employee={selectedEmployee}
-          onClose={() => setIsAccessModalOpen(false)}
         />
       )}
 

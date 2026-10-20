@@ -58,7 +58,9 @@ function Sidebar({ role, allowedPages }) {
   const [openGroups, setOpenGroups] = useState({});
 
   const renderLink = (item, className = "sidebar-item") => {
-    const isActive = location.pathname === item.path;
+    const isActive =
+      location.pathname === item.path ||
+      location.pathname.startsWith(`${item.path}/`);
     return (
       <button
         type="button"

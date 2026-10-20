@@ -31,3 +31,6 @@ export/
 
 # Reports
 backend/reports/
+
+# Profile Uploads
+backend/uploads/
