@@ -212,6 +212,38 @@ describe("PUT /api/settings/updateGeneralSettings/:id", () => {
     expect(res.body.employee.contactNumber).toBe("09171234567");
     expect(res.body.employee.address.city).toBe("Makati");
   });
+
+  it("ignores role, employeeId and userId inside the employee object", async () => {
+    const user = await createUser();
+    await Employee.create({
+      userId: user._id,
+      firstName: "Juan",
+      lastName: "Dela Cruz",
+      email: "employee1@example.com",
+      employeeId: "EMP-001",
+    });
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .put(`/api/settings/updateGeneralSettings/${user._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        employee: {
+          firstName: "Pedro",
+          role: "Admin",
+          employeeId: "EMP-999",
+          userId: "000000000000000000000000",
+        },
+        settings: {},
+      });
+
+    expect(res.status).toBe(200);
+
+    const saved = await Employee.findOne({ userId: user._id });
+    expect(saved.firstName).toBe("Pedro");
+    expect(saved.role).not.toBe("Admin");
+    expect(saved.employeeId).toBe("EMP-001");
+  });
 });
 
 describe("POST /api/auth/signup", () => {

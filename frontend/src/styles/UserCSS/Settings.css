@@ -13,13 +13,12 @@
 }
 
 .employee-settings-page .setting-options {
+  position: relative;
   display: flex;
   align-items: stretch;
   min-width: 0;
   gap: 8px;
-  overflow-x: auto;
   border-bottom: 1px solid var(--gray-200);
-  scrollbar-width: thin;
 }
 
 .employee-settings-page .setting-button {
