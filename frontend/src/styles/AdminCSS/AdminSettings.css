@@ -5,7 +5,6 @@
   min-width: 0;
   gap: 8px;
   border-bottom: 1px solid var(--gray-200);
-  scrollbar-width: thin;
 }
 
 .setting-button {

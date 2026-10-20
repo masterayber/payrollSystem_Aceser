@@ -39,6 +39,17 @@ const requireSelfOrAdmin = (req, res, next) => {
   next();
 };
 
+const EDITABLE_EMPLOYEE_FIELDS = [
+  "firstName",
+  "lastName",
+  "email",
+  "birthday",
+  "contactNumber",
+  "gender",
+  "address",
+  "emergencyDetails",
+];
+
 // Route for updating general settings
 router.put(
   "/updateGeneralSettings/:id",
@@ -63,10 +74,17 @@ router.put(
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Update Settings
+      // Update Employee
+      const employeeUpdate = {};
+      for (const field of EDITABLE_EMPLOYEE_FIELDS) {
+        if (employee?.[field] !== undefined) {
+          employeeUpdate[field] = employee[field];
+        }
+      }
+
       const updatedEmployee = await Employee.findOneAndUpdate(
         { userId },
-        { $set: employee },
+        { $set: employeeUpdate },
         { new: true },
       );
 

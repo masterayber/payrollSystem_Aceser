@@ -341,51 +341,50 @@ const GeneralSettings = () => {
         <div className="setting-tab-title">
           <p>Personal Information</p>
         </div>
-        <div className="setting-tab-flex">
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>First Name</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="firstName"
-                  placeholder={
-                    isEditing || tempData?.employee?.firstName
-                      ? "Enter First Name"
-                      : ""
-                  }
-                  value={tempData?.employee?.firstName || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+
+        <div className="input-row">
+          <div className="input-container">
+            <div className="label-container">
+              <label>First Name</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="firstName"
+                placeholder={
+                  isEditing || tempData?.employee?.firstName
+                    ? "Enter First Name"
+                    : ""
+                }
+                value={tempData?.employee?.firstName || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
             </div>
           </div>
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Last Name</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="lastName"
-                  placeholder={
-                    isEditing || tempData?.employee?.lastName
-                      ? "Enter Last Name"
-                      : ""
-                  }
-                  value={tempData?.employee?.lastName || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+
+          <div className="input-container">
+            <div className="label-container">
+              <label>Last Name</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="lastName"
+                placeholder={
+                  isEditing || tempData?.employee?.lastName
+                    ? "Enter First Name"
+                    : ""
+                }
+                value={tempData?.employee?.lastName || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
             </div>
           </div>
         </div>
-        <div className="setting-tab-container">
+
+        <div className="input-container">
           <div className="input-container">
             <div className="label-container">
               <label>Email</label>
@@ -402,46 +401,42 @@ const GeneralSettings = () => {
             </div>
           </div>
         </div>
-        <div className="setting-tab-flex">
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Birthday</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="date"
-                  name="birthday"
-                  value={
-                    tempData?.employee?.birthday
-                      ? tempData.employee?.birthday.split("T")[0]
-                      : ""
-                  }
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+
+        <div className="input-row">
+          <div className="input-container">
+            <div className="label-container">
+              <label>Birthday</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="date"
+                name="birthday"
+                value={
+                  tempData?.employee?.birthday
+                    ? tempData.employee?.birthday.split("T")[0]
+                    : ""
+                }
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
             </div>
           </div>
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Gender</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="gender"
-                  placeholder={
-                    isEditing || tempData?.employee?.gender
-                      ? "Enter Gender"
-                      : ""
-                  }
-                  value={tempData?.employee?.gender || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+
+          <div className="input-container">
+            <div className="label-container">
+              <label>Gender</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="gender"
+                placeholder={
+                  isEditing || tempData?.employee?.gender ? "Enter Gender" : ""
+                }
+                value={tempData?.employee?.gender || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
             </div>
           </div>
         </div>
@@ -451,179 +446,163 @@ const GeneralSettings = () => {
         <div className="setting-tab-title">
           <p>Contact Details</p>
         </div>
-        <div className="setting-tab-flex">
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Contact Number</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="contactNumber"
-                  placeholder={
-                    isEditing || tempData?.employee?.contactNumber
-                      ? "Enter Contact Number"
-                      : ""
-                  }
-                  value={tempData?.employee?.contactNumber || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+
+        <div className="input-row">
+          <div className="input-container">
+            <div className="label-container">
+              <label>Contact Number</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="contactNumber"
+                placeholder={
+                  isEditing || tempData?.employee?.contactNumber
+                    ? "Enter Contact Number"
+                    : ""
+                }
+                value={tempData?.employee?.contactNumber || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
             </div>
           </div>
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Country</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="address.country"
-                  placeholder={
-                    isEditing || tempData?.address?.country
-                      ? "Enter Country"
-                      : ""
-                  }
-                  value={tempData?.address?.country || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+
+          <div className="input-container">
+            <div className="label-container">
+              <label>Country</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="address.country"
+                placeholder={
+                  isEditing || tempData?.address?.country ? "Enter Country" : ""
+                }
+                value={tempData?.address?.country || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
             </div>
           </div>
         </div>
 
-        <div className="setting-tab-flex">
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Region</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="address.region"
-                  placeholder={
-                    isEditing || tempData?.address?.region ? "Enter Region" : ""
-                  }
-                  value={tempData?.address?.region || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+        <div className="input-row">
+          <div className="input-container">
+            <div className="label-container">
+              <label>Region</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="address.region"
+                placeholder={
+                  isEditing || tempData?.address?.region ? "Enter Region" : ""
+                }
+                value={tempData?.address?.region || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
             </div>
           </div>
 
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Province</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="address.province"
-                  placeholder={
-                    isEditing || tempData?.address?.province
-                      ? "Enter Province"
-                      : ""
-                  }
-                  value={tempData?.address?.province || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+          <div className="input-container">
+            <div className="label-container">
+              <label>Province</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="address.province"
+                placeholder={
+                  isEditing || tempData?.address?.province
+                    ? "Enter Province"
+                    : ""
+                }
+                value={tempData?.address?.province || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
             </div>
           </div>
         </div>
 
-        <div className="setting-tab-flex">
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>City</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="address.city"
-                  placeholder={
-                    isEditing || tempData?.address?.city ? "Enter City" : ""
-                  }
-                  value={tempData?.address?.city || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+        <div className="input-row">
+          <div className="input-container">
+            <div className="label-container">
+              <label>City</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="address.city"
+                placeholder={
+                  isEditing || tempData?.address?.city ? "Enter City" : ""
+                }
+                value={tempData?.address?.city || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
             </div>
           </div>
 
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Barangay</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="address.barangay"
-                  placeholder={
-                    isEditing || tempData?.address?.barangay
-                      ? "Enter Barangay"
-                      : ""
-                  }
-                  value={tempData?.address?.barangay || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+          <div className="input-container">
+            <div className="label-container">
+              <label>Barangay</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="address.barangay"
+                placeholder={
+                  isEditing || tempData?.address?.barangay
+                    ? "Enter Barangay"
+                    : ""
+                }
+                value={tempData?.address?.barangay || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
             </div>
           </div>
         </div>
 
-        <div className="setting-tab-flex">
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Street</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="address.street"
-                  placeholder={
-                    isEditing || tempData?.address?.street ? "Enter Street" : ""
-                  }
-                  value={tempData?.address?.street || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+        <div className="input-row">
+          <div className="input-container">
+            <div className="label-container">
+              <label>Street</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="address.street"
+                placeholder={
+                  isEditing || tempData?.address?.street ? "Enter Street" : ""
+                }
+                value={tempData?.address?.street || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
             </div>
           </div>
 
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Postal Code</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="address.postalCode"
-                  placeholder={
-                    isEditing || tempData?.address?.postalCode
-                      ? "Enter Postal Code"
-                      : ""
-                  }
-                  value={tempData?.address?.postalCode || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
+          <div className="input-container">
+            <div className="label-container">
+              <label>Postal Code</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="address.postalCode"
+                placeholder={
+                  isEditing || tempData?.address?.postalCode
+                    ? "Enter Postal Code"
+                    : ""
+                }
+                value={tempData?.address?.postalCode || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
             </div>
           </div>
         </div>
@@ -633,16 +612,47 @@ const GeneralSettings = () => {
         <div className="setting-tab-title">
           <p>Company Information</p>
         </div>
-        <div className="setting-tab-container">
+
+        <div className="input-container">
+          <div className="label-container">
+            <label>Company Name</label>
+          </div>
+          <div className="input-group-signup">
+            <input
+              type="text"
+              name="companyName"
+              placeholder="Company Name"
+              onChange={handleInputChange}
+              disabled={!isAdmin}
+            />
+          </div>
+        </div>
+
+        <div className="input-row">
           <div className="input-container">
             <div className="label-container">
-              <label>Company Name</label>
+              <label>Company Logo</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="file"
+                accept="image/*"
+                name="companyLogo"
+                onChange={handleInputChange}
+                disabled={!isAdmin}
+              />
+            </div>
+          </div>
+
+          <div className="input-container">
+            <div className="label-container">
+              <label>Company Contact</label>
             </div>
             <div className="input-group-signup">
               <input
                 type="text"
-                name="companyName"
-                placeholder="Company Name"
+                name="companyContact"
+                placeholder="Company Contact"
                 onChange={handleInputChange}
                 disabled={!isAdmin}
               />
@@ -650,51 +660,46 @@ const GeneralSettings = () => {
           </div>
         </div>
 
-        <div className="setting-tab-flex">
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Company Logo</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="file"
-                  accept="image/*"
-                  name="companyLogo"
-                  onChange={handleInputChange}
-                  disabled={!isAdmin}
-                />
-              </div>
-            </div>
+        <div className="input-container">
+          <div className="label-container">
+            <label>Designation</label>
           </div>
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Company Contact</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="companyContact"
-                  placeholder="Company Contact"
-                  onChange={handleInputChange}
-                  disabled={!isAdmin}
-                />
-              </div>
-            </div>
+          <div className="input-group-signup">
+            <input
+              type="text"
+              name="designation"
+              placeholder="Designation"
+              onChange={handleInputChange}
+              disabled={!isAdmin}
+            />
           </div>
         </div>
 
-        <div className="setting-tab-container">
+        <div className="input-row">
           <div className="input-container">
             <div className="label-container">
-              <label>Designation</label>
+              <label>Department</label>
             </div>
             <div className="input-group-signup">
               <input
                 type="text"
-                name="designation"
-                placeholder="Designation"
+                name="department"
+                placeholder="Department"
+                onChange={handleInputChange}
+                disabled={!isAdmin}
+              />
+            </div>
+          </div>
+
+          <div className="input-container">
+            <div className="label-container">
+              <label>Position</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="position"
+                placeholder="Position"
                 onChange={handleInputChange}
                 disabled={!isAdmin}
               />
@@ -702,74 +707,34 @@ const GeneralSettings = () => {
           </div>
         </div>
 
-        <div className="setting-tab-flex">
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Department</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="department"
-                  placeholder="Department"
-                  onChange={handleInputChange}
-                  disabled={!isAdmin}
-                />
-              </div>
+        <div className="input-row">
+          <div className="input-container">
+            <div className="label-container">
+              <label>Employment Type</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="employmentType"
+                placeholder="Employment Type"
+                onChange={handleInputChange}
+                disabled={!isAdmin}
+              />
             </div>
           </div>
 
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Position</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="position"
-                  placeholder="Position"
-                  onChange={handleInputChange}
-                  disabled={!isAdmin}
-                />
-              </div>
+          <div className="input-container">
+            <div className="label-container">
+              <label>Start Date</label>
             </div>
-          </div>
-        </div>
-
-        <div className="setting-tab-flex">
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Employment Type</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="employmentType"
-                  placeholder="Employment Type"
-                  onChange={handleInputChange}
-                  disabled={!isAdmin}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Start Date</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="date"
-                  name="startDate"
-                  placeholder="Start Date"
-                  onChange={handleInputChange}
-                  disabled={!isAdmin}
-                />
-              </div>
+            <div className="input-group-signup">
+              <input
+                type="date"
+                name="startDate"
+                placeholder="Start Date"
+                onChange={handleInputChange}
+                disabled={!isAdmin}
+              />
             </div>
           </div>
         </div>
@@ -779,66 +744,42 @@ const GeneralSettings = () => {
         <div className="setting-tab-title">
           <p>Emergency Contact</p>
         </div>
-        <div className="setting-tab-flex">
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Contact First Name</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="emergencyDetails.contactFirstName"
-                  placeholder={
-                    isEditing || tempData?.emergencyDetails?.contactFirstName
-                      ? "Enter Contact First Name"
-                      : ""
-                  }
-                  value={tempData?.emergencyDetails?.contactFirstName || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="setting-tab-container">
-            <div className="input-container">
-              <div className="label-container">
-                <label>Contact Last Name</label>
-              </div>
-              <div className="input-group-signup">
-                <input
-                  type="text"
-                  name="emergencyDetails.contactLastName"
-                  placeholder={
-                    isEditing || tempData?.emergencyDetails?.contactLastName
-                      ? "Enter Contact Last Name"
-                      : ""
-                  }
-                  value={tempData?.emergencyDetails?.contactLastName || ""}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <div className="setting-tab-container">
+        <div className="input-row">
           <div className="input-container">
             <div className="label-container">
-              <label>Contact Emergency Number</label>
+              <label>Contact First Name</label>
             </div>
             <div className="input-group-signup">
               <input
                 type="text"
-                name="emergencyDetails.contactEmergency"
+                name="emergencyDetails.contactFirstName"
                 placeholder={
-                  isEditing || tempData?.emergencyDetails?.contactEmergency
-                    ? "Enter Contact Emergency Number"
+                  isEditing || tempData?.emergencyDetails?.contactFirstName
+                    ? "Enter Contact First Name"
                     : ""
                 }
-                value={tempData?.emergencyDetails?.contactEmergency || ""}
+                value={tempData?.emergencyDetails?.contactFirstName || ""}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
+
+          <div className="input-container">
+            <div className="label-container">
+              <label>Contact Last Name</label>
+            </div>
+            <div className="input-group-signup">
+              <input
+                type="text"
+                name="emergencyDetails.contactLastName"
+                placeholder={
+                  isEditing || tempData?.emergencyDetails?.contactLastName
+                    ? "Enter Contact Last Name"
+                    : ""
+                }
+                value={tempData?.emergencyDetails?.contactLastName || ""}
                 onChange={handleInputChange}
                 disabled={!isEditing}
               />
@@ -846,25 +787,43 @@ const GeneralSettings = () => {
           </div>
         </div>
 
-        <div className="setting-tab-container">
-          <div className="input-container">
-            <div className="label-container">
-              <label>Contact Address</label>
-            </div>
-            <div className="input-group-signup">
-              <input
-                type="text"
-                name="emergencyDetails.contactAddress"
-                placeholder={
-                  isEditing || tempData?.emergencyDetails?.contactAddress
-                    ? "Enter Contact Address"
-                    : ""
-                }
-                value={tempData?.emergencyDetails?.contactAddress || ""}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-              />
-            </div>
+        <div className="input-container">
+          <div className="label-container">
+            <label>Contact Emergency Number</label>
+          </div>
+          <div className="input-group-signup">
+            <input
+              type="text"
+              name="emergencyDetails.contactEmergency"
+              placeholder={
+                isEditing || tempData?.emergencyDetails?.contactEmergency
+                  ? "Enter Contact Emergency Number"
+                  : ""
+              }
+              value={tempData?.emergencyDetails?.contactEmergency || ""}
+              onChange={handleInputChange}
+              disabled={!isEditing}
+            />
+          </div>
+        </div>
+
+        <div className="input-container">
+          <div className="label-container">
+            <label>Contact Address</label>
+          </div>
+          <div className="input-group-signup">
+            <input
+              type="text"
+              name="emergencyDetails.contactAddress"
+              placeholder={
+                isEditing || tempData?.emergencyDetails?.contactAddress
+                  ? "Enter Contact Address"
+                  : ""
+              }
+              value={tempData?.emergencyDetails?.contactAddress || ""}
+              onChange={handleInputChange}
+              disabled={!isEditing}
+            />
           </div>
         </div>
       </div>
