@@ -64,6 +64,23 @@ At the moment, this repository does not appear to define a dedicated automated t
 - deduction and reports features
 - file upload and document handling
 
+### Daily Reports
+
+At the start of each working day (the first session of the day), before any other work, create a **draft** daily report. Don't wait for the end of the day.
+
+- **Location:** `backend/reports/Report File/Daily Report/YYYY-MM-DD.md`, dated in Asia/Manila time. `backend/reports/` is gitignored, so write the file directly; it never goes through a commit or PR.
+- **If the file already exists** (a later session the same day), update it instead of creating a new one.
+- **Format:** copy the structure of the previous day's report: header (date, day number, repository, basis), Summary, Checklist, Commits and pull requests, What changed, Problems hit and how they were solved, Current state, Open items for the next day.
+- **Mark it as a draft:** put `**Status:** DRAFT` under the header until the day is finished.
+- **Pre-fill the draft:**
+  - Today's checklist from the previous report's "Tomorrow" list and "Open items" section.
+  - Current state from `git fetch`, `git status`, `git log` and the branch list.
+  - Leave the remaining sections as placeholders.
+- **During the day:** tick checklist items, add commits and PRs, and log problems and fixes as they happen.
+- **At the end of the day:** fill in every section, write the next day's checklist and open items, and remove the DRAFT status.
+
+Weekly reports go in `backend/reports/Report File/Weekly Report/`, and presentations (.pptx and speaker scripts, written for a non-technical audience) go in `backend/reports/Presentation/`.
+
 ### Code Quality
 
 - Frontend linting is configured through ESLint in `frontend/package.json`
