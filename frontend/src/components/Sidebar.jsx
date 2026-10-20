@@ -98,6 +98,7 @@ function Sidebar({ role, allowedPages }) {
       path: "/attendance",
       icon: <IconCalendarPlus stroke={1.75} />,
     },
+    logisticsGroup,
     {
       name: "Calendar",
       key: "calendar",
