@@ -3,6 +3,7 @@ import Cropper from "react-easy-crop";
 import { UserContext } from "../../../context/UserContext";
 import { getCroppedImg } from "../../../utils/cropImage";
 import "../Modal.css";
+import API from "../../../api";
 import ConfirmModal from "../Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
 import PropTypes from "prop-types";
@@ -47,22 +48,13 @@ const ProfilePhotoCropper = ({ imageSrc, userId, onClose, onCropComplete }) => {
       const formData = new FormData();
       formData.append("profilePhoto", file);
 
-      const response = await fetch(
-        `http://localhost:5000/api/settings/users/${userId}/profile-photo`,
-        {
-          method: "PUT",
-          body: formData,
-        },
+      const { data } = await API.put(
+        `api/settings/users/${userId}/profile-photo`,
+        formData,
       );
-
-      if (response.ok) {
-        const data = await response.json();
-        const newPhotoURL = `http://localhost:5000${data.profilePhoto}`;
-        updateUserProfilePhoto(newPhotoURL);
-        onCropComplete(newPhotoURL);
-      } else {
-        console.error("Failed to update profile photo");
-      }
+      const newPhotoURL = `http://localhost:5000${data.profilePhoto}`;
+      updateUserProfilePhoto(newPhotoURL);
+      onCropComplete(newPhotoURL);
     } catch (error) {
       console.error("Error uploading image:", error);
     }
