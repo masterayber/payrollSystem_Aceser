@@ -46,6 +46,62 @@
   overflow-wrap: anywhere;
 }
 
+.profile-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--neutral-color-0);
+}
+
+.profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.profile-identity-text h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--neutral-color-100);
+}
+
+.profile-subtitle {
+  margin-top: 2px;
+  color: var(--neutral-color-80);
+}
+
+.profile-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.profile-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--neutral-color-20);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--neutral-color-90);
+}
+
+.profile-badge.status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.profile-badge.status-pending {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
 @media (max-width: 768px) {
   .profile-grid,
   .profile-fields {

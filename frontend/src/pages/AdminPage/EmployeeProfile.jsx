@@ -10,6 +10,7 @@ import {
 import API from "../../api";
 import ProfilePhoto from "../../components/ProfilePhoto/ProfilePhoto";
 import ProfileView from "../../components/Profile/ProfileView";
+import ProfileHeader from "../../components/Profile/ProfileHeader";
 import ProfileForm from "../../components/Profile/ProfileForm.jsx";
 import {
   toProfileForm,
@@ -142,48 +143,37 @@ const EmployeeProfile = () => {
         Back to Employees
       </button>
 
-      <div className="profile-header">
-        <div className="profile-identity">
-          <ProfilePhoto size="88px" photo={profile.profilePhoto || ""} />
-          <div className="profile-identity-text">
-            <h2>{fullName}</h2>
-            {subtitle && <p className="profile-subtitle">{subtitle}</p>}
-            <div className="profile-badges">
-              {employee.employeeId && (
-                <span className="profile-badge">{employee.employeeId}</span>
-              )}
-              {job.employmentType && (
-                <span className="profile-badge">{job.employmentType}</span>
-              )}
-              <span
-                className={`profile-badge status-${String(profile.status).toLowerCase()}`}
-              >
-                {profile.status}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="profile-actions">
-          <button
-            type="button"
-            className="btn"
-            onClick={isEditing ? stopEditing : startEditing}
-          >
-            {isEditing ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
-            {isEditing ? "Cancel" : "Edit profile"}
-          </button>
-          <button
-            type="button"
-            className="btn"
-            onClick={() => setIsEmploymentOpen(true)}
-            disabled={isEditing}
-          >
-            <IconBriefcase stroke={2} />
-            Edit employment
-          </button>
-        </div>
-      </div>
+      <ProfileHeader
+        photo={<ProfilePhoto size="88px" photo={profile.profilePhoto || ""} />}
+        name={fullName}
+        subtitle={subtitle}
+        badges={[
+          { label: employee.employeeId },
+          { label: job.employmentType },
+          {
+            label: profile.status,
+            className: `status-${String(profile.status).toLowerCase()}`,
+          },
+        ]}
+      >
+        <button
+          type="button"
+          className="btn"
+          onClick={isEditing ? stopEditing : startEditing}
+        >
+          {isEditing ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
+          {isEditing ? "Cancel" : "Edit profile"}
+        </button>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => setIsEmploymentOpen(true)}
+          disabled={isEditing}
+        >
+          <IconBriefcase stroke={2} />
+          Edit employment
+        </button>
+      </ProfileHeader>
 
       {errorMessage && <p className="error-message">{errorMessage}</p>}
 

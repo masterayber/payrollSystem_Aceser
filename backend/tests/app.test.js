@@ -2,12 +2,16 @@ jest.mock("../utils/nodemailer", () => jest.fn().mockResolvedValue());
 
 const request = require("supertest");
 const mongoose = require("mongoose");
+const fs = require("fs");
+const path = require("path");
+
 const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const app = require("../app");
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
+const CompanySettings = require("../models/companySettings");
 
 let mongo;
 
@@ -20,6 +24,7 @@ afterEach(async () => {
   await User.deleteMany({});
   await Employee.deleteMany({});
   await Settings.deleteMany({});
+  await CompanySettings.deleteMany({});
 });
 
 afterAll(async () => {
@@ -244,6 +249,27 @@ describe("PUT /api/settings/updateGeneralSettings/:id", () => {
     expect(saved.role).not.toBe("Admin");
     expect(saved.employeeId).toBe("EMP-001");
   });
+
+  it("ignores settings, so an employee can't change their job details", async () => {
+    const user = await createUser();
+    await Settings.create({
+      userId: user._id,
+      general: { jobDescription: { position: "Staff" } },
+    });
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .put(`/api/settings/updateGeneralSettings/${user._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        employee: {},
+        settings: { general: { jobDescription: { position: "CEO" } } },
+      });
+
+    expect(res.status).toBe(200);
+    const saved = await Settings.findOne({ userId: user._id });
+    expect(saved.general.jobDescription.position).toBe("Staff");
+  });
 });
 
 describe("POST /api/auth/signup", () => {
@@ -349,5 +375,115 @@ describe("Admin employee profile routes", () => {
     const saved = await User.findById(employeeUser._id);
     expect(saved.password).not.toBe("NewPass123!");
     expect(await loginAs("employee1", "NewPass123!")).toBeDefined();
+  });
+});
+
+describe("Company settings (/api/settings/company)", () => {
+  const createAdmin = () =>
+    createUser({
+      username: "admin1",
+      email: "admin1@example.com",
+      role: "Admin",
+    });
+
+  // Smallest valid PNG header; multer only checks the declared type
+  const png = Buffer.from("89504e470d0a1a0a", "hex");
+
+  it("lets an employee read the defaults", async () => {
+    await createUser();
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .get("/api/settings/company")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.name).toBe("");
+    expect(res.body.dateFormat).toBe("MM-DD-YYYY");
+    expect(res.body.timeFormat).toBe("12 Hour");
+  });
+
+  it("returns 403 when an employee saves", async () => {
+    await createUser();
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .put("/api/settings/company")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "Hacked" });
+
+    expect(res.status).toBe(403);
+  });
+
+  it("saves the allowed fields and ignores the rest", async () => {
+    await createAdmin();
+    const token = await loginAs("admin1");
+
+    const res = await request(app)
+      .put("/api/settings/company")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: "ACESER Corporation",
+        contact: "(02) 8123 4567",
+        dateFormat: "YYYY-MM-DD",
+        logo: "/uploads/evil.html",
+        key: "second",
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.name).toBe("ACESER Corporation");
+    expect(res.body.dateFormat).toBe("YYYY-MM-DD");
+    expect(res.body.logo).toBe("");
+    expect(await CompanySettings.countDocuments()).toBe(1);
+  });
+
+  it("returns 400 for an unknown date format", async () => {
+    await createAdmin();
+    const token = await loginAs("admin1");
+
+    const res = await request(app)
+      .put("/api/settings/company")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dateFormat: "DD/MM/YY" });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects a logo that isn't an image", async () => {
+    await createAdmin();
+    const token = await loginAs("admin1");
+
+    const res = await request(app)
+      .put("/api/settings/company/logo")
+      .set("Authorization", `Bearer ${token}`)
+      .attach("logo", Buffer.from("<script>alert(1)</script>"), {
+        filename: "logo.html",
+        contentType: "text/html",
+      });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("uploads a logo and removes it again", async () => {
+    await createAdmin();
+    const token = await loginAs("admin1");
+
+    const upload = await request(app)
+      .put("/api/settings/company/logo")
+      .set("Authorization", `Bearer ${token}`)
+      .attach("logo", png, { filename: "logo.png", contentType: "image/png" });
+
+    expect(upload.status).toBe(200);
+    expect(upload.body.logo).toMatch(/^\/uploads\/company-logo-\d+\.png$/);
+    const filePath = path.join(__dirname, "..", upload.body.logo);
+    expect(fs.existsSync(filePath)).toBe(true);
+
+    const remove = await request(app)
+      .delete("/api/settings/company/logo")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(remove.status).toBe(200);
+    expect(remove.body.logo).toBe("");
+    expect(fs.existsSync(filePath)).toBe(false);
   });
 });
