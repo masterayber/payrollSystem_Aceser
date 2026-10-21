@@ -16,6 +16,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [editEmployee, setEditEmployee] = useState({
     ...employee,
@@ -179,8 +180,8 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
         `/api/employee/delete-employee/${editEmployee.employeeId}`,
       );
 
-      if (onUpdateEmployee) await onUpdateEmployee();
-
+      // Refresh when the message is closed; the profile page leaves on refresh
+      setIsDeleted(true);
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (error) {
       console.error("Error deleting employee", error);
@@ -560,7 +561,11 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
 
       {isConfirmedModalOpen && (
         <ConfirmedMessageModal
-          message="Employee details updated successfully"
+          message={
+            isDeleted
+              ? "Employee deleted successfully"
+              : "Employee details updated successfully"
+          }
           onClose={() => {
             setIsConfirmedModalOpen(false);
             if (onUpdateEmployee) onUpdateEmployee();

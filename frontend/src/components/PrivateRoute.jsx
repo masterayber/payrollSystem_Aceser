@@ -33,8 +33,10 @@ const PrivateRoute = ({ children, allowedRoles, pageKey }) => {
     return <Navigate to="/" replace />;
   }
 
+  // Signed in, but this route is for another role: go home, not to log in again
   if (!allowedRoles.includes(userData.role)) {
-    return <Navigate to="/" replace />;
+    const home = HOME_PAGE[userData.role];
+    return <Navigate to={home ? `/${home}` : "/"} replace />;
   }
 
   // Per-user page access set by an admin. This only decides what the UI shows; the
