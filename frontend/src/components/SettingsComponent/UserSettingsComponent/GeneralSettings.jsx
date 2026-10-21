@@ -4,6 +4,7 @@ import { UserContext } from "../../../context/UserContext";
 import API from "../../../api";
 import ProfilePhotoEditor from "../../Profile/ProfilePhotoEditor";
 import ProfileForm from "../../Profile/ProfileForm.jsx";
+import ProfileView from "../../Profile/ProfileView.jsx";
 import {
   toProfileForm,
   setField,
@@ -61,6 +62,11 @@ const GeneralSettings = () => {
   const fullName =
     `${userData?.employee?.firstName ?? ""} ${userData?.employee?.lastName ?? ""}`.trim();
 
+  const employment = {
+    ...(userData?.settings?.general?.jobDescription || {}),
+    employeeId: userData?.employee?.employeeId,
+  };
+
   return (
     <div className="settings-content">
       <div className="settings-profile">
@@ -78,24 +84,33 @@ const GeneralSettings = () => {
         </button>
       </div>
 
-      <ProfileForm form={form} onChange={handleChange} disabled={!isEditing} />
+      {isEditing ? (
+        <>
+          <ProfileForm form={form} onChange={handleChange} />
 
-      <div className="settings-button-option-container">
-        <button
-          className={`btn settings-button-option ${!isChanged ? "disabled" : ""}`}
-          onClick={() => setIsConfirmOpen(true)}
-          disabled={!isChanged}
-        >
-          Save
-        </button>
-        <button
-          className={`btn settings-button-option ${!isChanged ? "disabled" : ""}`}
-          onClick={handleCancel}
-          disabled={!isChanged}
-        >
-          Cancel
-        </button>
-      </div>
+          <div className="settings-button-option-container">
+            <button
+              className={`btn settings-button-option ${!isChanged ? "disabled" : ""}`}
+              onClick={() => setIsConfirmOpen(true)}
+              disabled={!isChanged}
+            >
+              Save
+            </button>
+            <button
+              className={`btn settings-button-option ${!isChanged ? "disabled" : ""}`}
+              onClick={handleCancel}
+              disabled={!isChanged}
+            >
+              Cancel
+            </button>
+          </div>
+        </>
+      ) : (
+        <ProfileView
+          profile={toProfileForm(userData)}
+          employment={employment}
+        />
+      )}
 
       {isConfirmOpen && (
         <ConfirmModal
