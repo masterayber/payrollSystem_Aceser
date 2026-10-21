@@ -278,7 +278,7 @@ const EmployeeProfile = () => {
 
       {isAccessOpen && (
         <ManageAccessModal
-          employee={{ _id: profile._id, ...employee }}
+          employee={{ ...employee, _id: userId }}
           onClose={() => {
             setIsAccessOpen(false);
             loadAccess();
