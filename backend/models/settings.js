@@ -7,9 +7,6 @@ const settingsSchema = new mongoose.Schema({
     default: null,
   },
   general: {
-    companyName: { type: String, default: "" },
-    companyLogo: { type: String, default: "" },
-    companyContact: { type: String, default: "" },
     jobDescription: {
       designation: {
         type: String,
@@ -40,8 +37,6 @@ const settingsSchema = new mongoose.Schema({
         },
       },
     },
-    dateFormat: { type: String, default: "MM-DD-YYYY" },
-    timeFormat: { type: String, default: "12 Hour" },
     createdAt: { type: Date, default: Date.now },
   },
   manage: {

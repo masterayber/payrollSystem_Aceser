@@ -15,7 +15,7 @@ const formatDate = (value) => {
       });
 };
 
-const Field = ({ label, value }) => (
+export const Field = ({ label, value }) => (
   <div className="profile-field">
     <dt>{label}</dt>
     <dd>{value || EMPTY}</dd>
@@ -27,7 +27,7 @@ Field.propTypes = {
   value: PropTypes.string,
 };
 
-const Card = ({ title, children }) => (
+export const Card = ({ title, children }) => (
   <section className="profile-card">
     <h4 className="profile-card-title">{title}</h4>
     <dl className="profile-fields">{children}</dl>

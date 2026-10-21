@@ -1,6 +1,9 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import "../../styles/AdminCSS/AdminSettings.css";
-import AdminGeneralSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminGeneralSettings";
+
+import GeneralSettings from "../../components/SettingsComponent/UserSettingsComponent/GeneralSettings";
+import AdminCompanySettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminCompanySettings";
+
 import AdminManageSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminManageSettings";
 import AdminAccessibilitySettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminAccessibilitySettings";
 import AdminSecuritySettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminSecuritySettings";
@@ -8,6 +11,7 @@ import AdminAboutSettings from "../../components/SettingsComponent/AdminSettings
 
 const settingsOptions = [
   { name: "General", key: "general" },
+  { name: "Company", key: "company" },
   { name: "Manage", key: "manage" },
   { name: "Accessibility", key: "accessibility" },
   { name: "Employees", key: "employees" },
@@ -19,7 +23,8 @@ const settingsOptions = [
 ];
 
 const settingsContent = {
-  general: <AdminGeneralSettings />,
+  general: <GeneralSettings showEmployment={false} />,
+  company: <AdminCompanySettings />,
   manage: <AdminManageSettings />,
   accessibility: <AdminAccessibilitySettings />,
   // employees: <EmployeesSettings />,
@@ -87,9 +92,7 @@ const AdminSettings = () => {
           ))}
         </div>
 
-        <div className="settings-panel">
-          {settingsContent[selectedOption]}
-        </div>
+        <div className="settings-panel">{settingsContent[selectedOption]}</div>
       </div>
     </div>
   );

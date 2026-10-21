@@ -7,26 +7,73 @@ const fs = require("fs");
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
-const { requireAuthenticated } = require("../middleware/accessMiddleware");
+const CompanySettings = require("../models/companySettings");
+const {
+  requireAdmin,
+  requireAuthenticated,
+} = require("../middleware/accessMiddleware");
 
 const router = express.Router();
 
+const UPLOAD_DIR = path.join(__dirname, "../uploads");
+
+const uploadDestination = (req, file, cb) => {
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  }
+  cb(null, UPLOAD_DIR);
+};
+
 const upload = multer({
   storage: multer.diskStorage({
-    destination: function (req, file, cb) {
-      const uploadDir = path.join(__dirname, "../uploads");
-
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      cb(null, uploadDir);
-    },
+    destination: uploadDestination,
     filename: function (req, file, cb) {
       cb(null, Date.now() + path.extname(file.originalname));
     },
   }),
 });
+
+// Image types a logo may be. The extension comes from this list, never from the
+// upload file name, so the file is always served as an image. No SVG: it can hold scripts.
+const LOGO_TYPES = {
+  "image/png": ".png",
+  "image/jpeg": ".jpg",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+};
+
+const logoUpload = multer({
+  storage: multer.diskStorage({
+    destination: uploadDestination,
+    filename: (req, file, cb) => {
+      cb(null, `company-logo-${Date.now()}${LOGO_TYPES[file.mimetype]}`);
+    },
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (LOGO_TYPES[file.mimetype]) return cb(null, true);
+    cb(new Error("The logo must be a PNG, JPG, WEBP or GIF image"));
+  },
+});
+
+// Multer errors become a 400 with a message instead of a 500
+const uploadLogo = (req, res, next) => {
+  logoUpload.single("logo")(req, res, (err) => {
+    if (!err) return next();
+    const message =
+      err.code === "LIMIT_FILE_SIZE"
+        ? "The logo must be 2 MB or smaller"
+        : err.message;
+    res.status(400).json({ message });
+  });
+};
+
+// Deletes a file saved under /uploads; anything else (such as a default icon) is left alone
+const removeUpload = (urlPath) => {
+  if (!urlPath?.startsWith("/uploads/")) return;
+  const filePath = path.join(__dirname, "..", urlPath);
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+};
 
 const requireSelfOrAdmin = (req, res, next) => {
   const isAdmin = req.currentUser.role === "Admin";
@@ -58,7 +105,7 @@ router.put(
   async (req, res) => {
     try {
       const userId = req.params.id;
-      const { employee, settings, email } = req.body;
+      const { employee, email } = req.body;
 
       // Only whitelisted fields reach the Auth record. Role, status, password and
       // page access are changed through their own admin routes, never from here.
@@ -88,17 +135,14 @@ router.put(
         { new: true },
       );
 
-      // Update Settings
-      const updatedSettings = await Settings.findOneAndUpdate(
-        { userId },
-        { $set: settings },
-        { new: true },
-      );
+      // Settings aren't edited here: job details change through the admin employee
+      // routes and company details through /company. Read them for the response only.
+      const currentSettings = await Settings.findOne({ userId });
 
       const combined = {
         ...updatedUser.toObject(),
         employee: updatedEmployee ? updatedEmployee.toObject() : {},
-        settings: updatedSettings ? updatedSettings.toObject() : {},
+        settings: currentSettings ? currentSettings.toObject() : {},
       };
 
       res.json(combined);
@@ -197,5 +241,85 @@ router.delete(
     }
   },
 );
+
+// ---- Company-wide settings ----
+
+const COMPANY_FIELDS = ["name", "contact", "dateFormat", "timeFormat"];
+
+// The one company record, created with the defaults the first time it's needed
+const getCompany = () =>
+  CompanySettings.findOneAndUpdate(
+    { key: "company" },
+    { $setOnInsert: { key: "company" } },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+
+const isBadInput = (err) => ["ValidationError", "CastError"].includes(err.name);
+
+// Any signed-in user: the name, logo and formats are shown to employees too
+router.get("/company", requireAuthenticated, async (req, res) => {
+  try {
+    res.json(await getCompany());
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// Admin: { name, contact, dateFormat, timeFormat }; any other field is ignored
+router.put("/company", requireAdmin, async (req, res) => {
+  try {
+    const update = { updatedBy: req.user.userId };
+    for (const field of COMPANY_FIELDS) {
+      if (req.body?.[field] !== undefined) update[field] = req.body[field];
+    }
+
+    const company = await CompanySettings.findOneAndUpdate(
+      { key: "company" },
+      { $set: update },
+      {
+        upsert: true,
+        new: true,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      },
+    );
+    res.json(company);
+  } catch (err) {
+    if (isBadInput(err)) return res.status(400).json({ message: err.message });
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// Admin: multipart form with a "logo" image. requireAdmin runs first, so a
+// non-admin's upload is never written to disk.
+router.put("/company/logo", requireAdmin, uploadLogo, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+
+    const company = await getCompany();
+    removeUpload(company.logo);
+    company.logo = `/uploads/${req.file.filename}`;
+    company.updatedBy = req.user.userId;
+    await company.save();
+
+    res.json(company);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+router.delete("/company/logo", requireAdmin, async (req, res) => {
+  try {
+    const company = await getCompany();
+    removeUpload(company.logo);
+    company.logo = "";
+    company.updatedBy = req.user.userId;
+    await company.save();
+
+    res.json(company);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
 
 module.exports = router;

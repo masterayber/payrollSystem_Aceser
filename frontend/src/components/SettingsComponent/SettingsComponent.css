@@ -230,8 +230,7 @@
   margin: 0;
 }
 
-.about-description,
-.email-support,
+.about-description .email-support,
 .company-description,
 .credit-tab {
   display: flex;
@@ -285,6 +284,42 @@
 
 .department-dropdown-container {
   margin: 0;
+}
+
+/* Company tab */
+.company-logo-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--neutral-color-0);
+  font-size: 13px;
+  color: var(--neutral-color-70);
+}
+
+.company-logo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.company-logo-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.company-error {
+  color: var(--red-status);
+}
+
+.settings-content .profile-header {
+  margin-bottom: 20px;
 }
 
 @media (max-width: 768px) {
