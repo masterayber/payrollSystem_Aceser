@@ -1,7 +1,10 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
-const { requireAdmin } = require("../middleware/accessMiddleware");
+const {
+  requireAdmin,
+  requireSignupToken,
+} = require("../middleware/accessMiddleware");
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
@@ -121,9 +124,8 @@ router.get("/employees/:userId", requireAdmin, async (req, res) => {
 });
 
 // Additional Information Route
-router.post("/update-info", async (req, res) => {
+router.post("/update-info", requireSignupToken, async (req, res) => {
   const {
-    email,
     birthday,
     contactNumber,
     gender,
@@ -134,7 +136,7 @@ router.post("/update-info", async (req, res) => {
   } = req.body;
 
   try {
-    const employee = await Employee.findOne({ email });
+    const employee = await Employee.findOne({ userId: req.signupUserId });
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
     }
@@ -149,7 +151,7 @@ router.post("/update-info", async (req, res) => {
 
     await employee.save();
 
-    const user = await User.findOne({ email });
+    const user = await User.findById(req.signupUserId);
     if (user) {
       if (gender === "Male") {
         user.profilePhoto = "/assets/genderIcons/male.svg";
@@ -173,10 +175,17 @@ router.post("/update-info", async (req, res) => {
   }
 });
 
-// Account Created Route
-router.get("/created-account/:id", async (req, res) => {
+// Account Created Route (last signup step, same signup token)
+router.get("/created-account/:id", requireSignupToken, async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id);
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: "Invalid id" });
+    }
+
+    const employee = await Employee.findOne({
+      _id: req.params.id,
+      userId: req.signupUserId,
+    });
 
     if (!employee) {
       return res.status(404).json({ message: "User not found" });
@@ -187,7 +196,7 @@ router.get("/created-account/:id", async (req, res) => {
       lastName: employee.lastName,
       gender: employee.gender,
     });
-  } catch (error) {
+  } catch (err) {
     res.status(500).json({
       message: "Server error. Please try again later.",
       error: err.message,

@@ -44,7 +44,8 @@ const Signup = () => {
         dataToSend,
       );
 
-      localStorage.setItem("email", response.data.email);
+      // Lets the next two signup pages save and read this new account only
+      sessionStorage.setItem("signupToken", response.data.signupToken);
 
       alert(response.data.message);
       navigate("/update-info");

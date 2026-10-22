@@ -118,6 +118,8 @@ input[type="date"] {
   color: var(--neutral-color-80);
   font-size: 14px;
   line-height: 1.5;
+  text-align: center;
+  margin-bottom: 6px;
 }
 
 .auth-page .required {

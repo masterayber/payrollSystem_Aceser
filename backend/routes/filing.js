@@ -9,6 +9,52 @@ const { requirePage, requireAdmin } = require("../middleware/accessMiddleware");
 
 const router = express.Router();
 
+// After a Pending-only update or delete matched nothing: 404 if the request isn't the
+// caller's, 409 if it is but an admin already decided it.
+const respondNotPending = async (res, Model, id, userId, label) => {
+  const existing = await Model.findOne({ _id: id, userId })
+    .select("status")
+    .lean();
+
+  if (!existing) {
+    return res.status(404).json({ error: `${label} not found.` });
+  }
+
+  return res.status(409).json({
+    error: `This ${label.toLowerCase()} was already ${existing.status.toLowerCase()}, so it can't be changed.`,
+  });
+};
+
+// The attendance day an overtime request points to must be the caller's own, eligible
+// for overtime, and not already used by another request. `keepAttendanceId` is the day
+// the request already uses when editing, which is allowed to stay filed.
+// Returns an error message, or null when the day is fine.
+const checkOvertimeDay = async (attendanceId, userId, keepAttendanceId) => {
+  if (!attendanceId) return null;
+
+  if (!mongoose.isValidObjectId(attendanceId)) {
+    return "Invalid attendance record.";
+  }
+
+  const day = await Attendance.findOne({
+    _id: attendanceId,
+    userId,
+    "overtime.isEligible": true,
+  })
+    .select("overtime.isFiled")
+    .lean();
+
+  if (!day) {
+    return "That day isn't one of your overtime days.";
+  }
+
+  if (day.overtime?.isFiled && attendanceId.toString() !== keepAttendanceId) {
+    return "Overtime for that day is already filed.";
+  }
+
+  return null;
+};
+
 router.get("/", requireAdmin, async (req, res) => {
   if (req.user.role !== "Admin")
     return res.status(400).json({ msg: "Access Denied" });
@@ -87,7 +133,7 @@ router.patch("/edit-leave/:id", requirePage("filing"), async (req, res) => {
 
   try {
     const updatedLeave = await LeaveApplication.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.userId },
+      { _id: req.params.id, userId: req.user.userId, status: "Pending" },
       {
         leaveType,
         leaveDetails,
@@ -98,7 +144,13 @@ router.patch("/edit-leave/:id", requirePage("filing"), async (req, res) => {
     );
 
     if (!updatedLeave) {
-      return res.status(404).json({ error: "Leave request not found." });
+      return respondNotPending(
+        res,
+        LeaveApplication,
+        req.params.id,
+        req.user.userId,
+        "Leave request",
+      );
     }
 
     res.json(updatedLeave);
@@ -114,10 +166,17 @@ router.delete("/leave/:id", requirePage("filing"), async (req, res) => {
     const leave = await LeaveApplication.findOneAndDelete({
       _id: req.params.id,
       userId: req.user.userId,
+      status: "Pending",
     });
 
     if (!leave) {
-      return res.status(404).json({ error: "Leave request not found" });
+      return respondNotPending(
+        res,
+        LeaveApplication,
+        req.params.id,
+        req.user.userId,
+        "Leave request",
+      );
     }
 
     res.json({ message: "Leave request deleted successfully" });
@@ -407,6 +466,11 @@ router.post("/apply-overtime", requirePage("filing"), async (req, res) => {
     req.body;
 
   try {
+    const dayError = await checkOvertimeDay(attendanceId, req.user.userId);
+    if (dayError) {
+      return res.status(400).json({ error: dayError });
+    }
+
     const app = new OvertimeApplication({
       userId: req.user.userId,
       attendanceId,
@@ -446,10 +510,25 @@ router.patch("/edit-overtime/:id", requirePage("filing"), async (req, res) => {
       return res.status(404).json({ error: "Overtime request not found." });
     }
 
+    if (existingApp.status !== "Pending") {
+      return res.status(409).json({
+        error: `This overtime request was already ${existingApp.status.toLowerCase()}, so it can't be changed.`,
+      });
+    }
+
     const previousAttendanceId = existingApp.attendanceId?.toString();
 
+    const dayError = await checkOvertimeDay(
+      attendanceId,
+      req.user.userId,
+      previousAttendanceId,
+    );
+    if (dayError) {
+      return res.status(400).json({ error: dayError });
+    }
+
     const updatedApp = await OvertimeApplication.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.userId },
+      { _id: req.params.id, userId: req.user.userId, status: "Pending" },
       {
         attendanceId,
         selectedOvertime,
@@ -461,7 +540,13 @@ router.patch("/edit-overtime/:id", requirePage("filing"), async (req, res) => {
     );
 
     if (!updatedApp) {
-      return res.status(404).json({ error: "Overtime request not found." });
+      return respondNotPending(
+        res,
+        OvertimeApplication,
+        req.params.id,
+        req.user.userId,
+        "Overtime request",
+      );
     }
 
     if (
@@ -491,10 +576,17 @@ router.delete("/overtime/:id", requirePage("filing"), async (req, res) => {
     const overtime = await OvertimeApplication.findOneAndDelete({
       _id: req.params.id,
       userId: req.user.userId,
+      status: "Pending",
     });
 
     if (!overtime) {
-      return res.status(404).json({ error: "Overtime request not found" });
+      return respondNotPending(
+        res,
+        OvertimeApplication,
+        req.params.id,
+        req.user.userId,
+        "Overtime request",
+      );
     }
 
     const attendanceId = overtime.attendanceId;

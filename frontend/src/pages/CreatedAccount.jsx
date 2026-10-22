@@ -8,6 +8,7 @@ const CreatedAccount = () => {
   const { id } = useParams();
 
   const handleGoToLogIn = () => {
+    sessionStorage.removeItem("signupToken");
     navigate("/");
   };
 
@@ -22,6 +23,11 @@ const CreatedAccount = () => {
       try {
         const response = await axios.get(
           `http://localhost:5000/api/employee/created-account/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem("signupToken")}`,
+            },
+          },
         );
 
         if (response.data) {

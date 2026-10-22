@@ -16,7 +16,6 @@ const AdditionalInfo = () => {
 
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const email = localStorage.getItem("email");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,9 +32,11 @@ const AdditionalInfo = () => {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/employee/update-info",
+        formData,
         {
-          email,
-          ...formData,
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("signupToken")}`,
+          },
         },
       );
 

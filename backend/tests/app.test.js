@@ -12,6 +12,9 @@ const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
 const CompanySettings = require("../models/companySettings");
+const Attendance = require("../models/attendance");
+const LeaveApplication = require("../models/leaveApplication");
+const OvertimeApplication = require("../models/overtimeApplication");
 
 let mongo;
 
@@ -25,6 +28,9 @@ afterEach(async () => {
   await Employee.deleteMany({});
   await Settings.deleteMany({});
   await CompanySettings.deleteMany({});
+  await Attendance.deleteMany({});
+  await LeaveApplication.deleteMany({});
+  await OvertimeApplication.deleteMany({});
 });
 
 afterAll(async () => {
@@ -485,5 +491,237 @@ describe("Company settings (/api/settings/company)", () => {
     expect(remove.status).toBe(200);
     expect(remove.body.logo).toBe("");
     expect(fs.existsSync(filePath)).toBe(false);
+  });
+});
+
+describe("Signup steps (update-info, created-account)", () => {
+  const signup = (email = "new@example.com", username = "newuser") =>
+    request(app).post("/api/auth/signup").send({
+      firstName: "New",
+      lastName: "User",
+      email,
+      username,
+      password: "Password123!",
+    });
+
+  const info = {
+    birthday: "1995-05-05",
+    contactNumber: "09170000000",
+    gender: "Female",
+    contactFirstName: "Ana",
+    contactLastName: "Cruz",
+    contactEmergency: "09171111111",
+    contactAddress: "Manila",
+  };
+
+  it("returns 401 without the signup token", async () => {
+    await signup();
+
+    const res = await request(app)
+      .post("/api/employee/update-info")
+      .send({ email: "new@example.com", ...info });
+
+    expect(res.status).toBe(401);
+    const employee = await Employee.findOne({ email: "new@example.com" });
+    expect(employee.contactNumber).toBe("");
+  });
+
+  it("updates only the token's own employee, whatever email is sent", async () => {
+    await signup("other@example.com", "other");
+    const { signupToken } = (await signup()).body;
+
+    const res = await request(app)
+      .post("/api/employee/update-info")
+      .set("Authorization", `Bearer ${signupToken}`)
+      .send({ email: "other@example.com", ...info });
+
+    expect(res.status).toBe(200);
+    const own = await Employee.findOne({ email: "new@example.com" });
+    const other = await Employee.findOne({ email: "other@example.com" });
+    expect(own.contactNumber).toBe(info.contactNumber);
+    expect(other.contactNumber).toBe("");
+  });
+
+  it("returns 403 once the account is approved", async () => {
+    const { signupToken } = (await signup()).body;
+    await User.updateOne({ email: "new@example.com" }, { status: "Active" });
+
+    const res = await request(app)
+      .post("/api/employee/update-info")
+      .set("Authorization", `Bearer ${signupToken}`)
+      .send(info);
+
+    expect(res.status).toBe(403);
+  });
+
+  it("can't be used as a login token", async () => {
+    const { signupToken } = (await signup()).body;
+    await User.updateOne({ email: "new@example.com" }, { status: "Active" });
+
+    const res = await request(app)
+      .get("/api/filing/user-leave-requests")
+      .set("Authorization", `Bearer ${signupToken}`);
+
+    expect(res.status).toBe(401);
+  });
+
+  it("only shows the token's own account on Created Account", async () => {
+    await signup("other@example.com", "other");
+    const { signupToken } = (await signup()).body;
+    const other = await Employee.findOne({ email: "other@example.com" });
+
+    const res = await request(app)
+      .get(`/api/employee/created-account/${other._id}`)
+      .set("Authorization", `Bearer ${signupToken}`);
+
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("Employee filing changes (Pending only, own overtime days)", () => {
+  let employee;
+  let token;
+
+  beforeEach(async () => {
+    employee = await createUser();
+    token = await loginAs("employee1");
+  });
+
+  const createLeave = (status = "Pending", userId = employee._id) =>
+    LeaveApplication.create({
+      userId,
+      leaveType: "Vacation Leave",
+      leaveDetails: "Family trip",
+      startDate: "2026-10-26",
+      endDate: "2026-10-27",
+      status,
+    });
+
+  // 08:00-20:00 makes the day eligible for overtime (the pre-save hook works it out)
+  const createOvertimeDay = (userId = employee._id, date = "2026-10-05") =>
+    Attendance.create({
+      userId,
+      date,
+      timeIn: new Date(`${date}T08:00:00Z`),
+      timeOut: new Date(`${date}T20:00:00Z`),
+    });
+
+  it("still lets an employee edit a Pending leave", async () => {
+    const leave = await createLeave();
+
+    const res = await request(app)
+      .patch(`/api/filing/edit-leave/${leave._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ leaveDetails: "Changed" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.leaveDetails).toBe("Changed");
+  });
+
+  it("returns 409 when editing an Approved leave", async () => {
+    const leave = await createLeave("Approved");
+
+    const res = await request(app)
+      .patch(`/api/filing/edit-leave/${leave._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ leaveDetails: "Changed" });
+
+    expect(res.status).toBe(409);
+    const saved = await LeaveApplication.findById(leave._id);
+    expect(saved.leaveDetails).toBe("Family trip");
+  });
+
+  it("returns 409 when deleting a Disapproved leave", async () => {
+    const leave = await createLeave("Disapproved");
+
+    const res = await request(app)
+      .delete(`/api/filing/leave/${leave._id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(409);
+    expect(await LeaveApplication.exists({ _id: leave._id })).toBeTruthy();
+  });
+
+  it("returns 404 for someone else's leave", async () => {
+    const other = await createUser({
+      username: "employee2",
+      email: "employee2@example.com",
+    });
+    const leave = await createLeave("Pending", other._id);
+
+    const res = await request(app)
+      .delete(`/api/filing/leave/${leave._id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 409 when deleting an Approved overtime and keeps the day filed", async () => {
+    const day = await createOvertimeDay();
+    await Attendance.updateOne({ _id: day._id }, { "overtime.isFiled": true });
+    const overtime = await OvertimeApplication.create({
+      userId: employee._id,
+      attendanceId: day._id,
+      selectedOvertime: "2026-10-05",
+      end: "20:00",
+      status: "Approved",
+    });
+
+    const res = await request(app)
+      .delete(`/api/filing/overtime/${overtime._id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(409);
+    const saved = await Attendance.findById(day._id);
+    expect(saved.overtime.isFiled).toBe(true);
+  });
+
+  it("rejects overtime filed against someone else's attendance day", async () => {
+    const other = await createUser({
+      username: "employee2",
+      email: "employee2@example.com",
+    });
+    const otherDay = await createOvertimeDay(other._id);
+
+    const res = await request(app)
+      .post("/api/filing/apply-overtime")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        attendanceId: otherDay._id,
+        selectedOvertime: "2026-10-05",
+        end: "20:00",
+      });
+
+    expect(res.status).toBe(400);
+    const saved = await Attendance.findById(otherDay._id);
+    expect(saved.overtime.isFiled).toBe(false);
+  });
+
+  it("rejects an edit that moves overtime to someone else's day", async () => {
+    const ownDay = await createOvertimeDay();
+    const other = await createUser({
+      username: "employee2",
+      email: "employee2@example.com",
+    });
+    const otherDay = await createOvertimeDay(other._id);
+    const overtime = await OvertimeApplication.create({
+      userId: employee._id,
+      attendanceId: ownDay._id,
+      selectedOvertime: "2026-10-05",
+      end: "20:00",
+    });
+
+    const res = await request(app)
+      .patch(`/api/filing/edit-overtime/${overtime._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        attendanceId: otherDay._id,
+        selectedOvertime: "2026-10-05",
+        end: "20:00",
+      });
+
+    expect(res.status).toBe(400);
+    const saved = await Attendance.findById(otherDay._id);
+    expect(saved.overtime.isFiled).toBe(false);
   });
 });

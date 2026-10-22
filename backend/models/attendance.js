@@ -52,6 +52,9 @@ const attendanceSchema = new mongoose.Schema({
       default: false,
     },
   },
+  sample: {
+    type: Boolean,
+  },
 });
 
 attendanceSchema.set("toJSON", {

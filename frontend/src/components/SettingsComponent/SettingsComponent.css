@@ -230,7 +230,8 @@
   margin: 0;
 }
 
-.about-description .email-support,
+.about-description,
+.email-support,
 .company-description,
 .credit-tab {
   display: flex;

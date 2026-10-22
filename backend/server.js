@@ -22,7 +22,7 @@ if (
 
 const app = require("./app");
 
-const PORT = process.env.PORT | 5000;
+const PORT = process.env.PORT || 5000;
 
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -42,8 +42,6 @@ mongoose
     ),
   )
   .catch((err) => console.error("MongoDB connection error:", err));
-
-require("./schedulers/attendanceScheduler");
 
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
