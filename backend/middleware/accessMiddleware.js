@@ -1,4 +1,5 @@
 const authMiddleware = require("./authMiddleware");
+const jwt = require("jsonwebtoken");
 const User = require("../models/authUsers");
 const { getAllowedPages } = require("../utils/pageAccess");
 
@@ -53,4 +54,48 @@ const requirePage = (pageKey) => [
 
 const requireAuthenticated = [authMiddleware, loadCurrentUser];
 
-module.exports = { requireAdmin, requirePage, requireAuthenticated };
+// For the two signup steps after POST /api/auth/signup, before an admin approves the account.
+// Accepts only the short-lived signup token, and only while the account is still Pending.
+const requireSignupToken = async (req, res, next) => {
+  const token = req.header("Authorization")?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ message: "No token provided" });
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return res
+      .status(401)
+      .json({ message: "Signup session expired. Please sign up again." });
+  }
+
+  if (decoded.purpose !== "signup") {
+    return res.status(401).json({ message: "Token is not valid" });
+  }
+
+  try {
+    const user = await User.findById(decoded.userId).select("status").lean();
+    if (!user) {
+      return res.status(401).json({ message: "Token is not valid" });
+    }
+    if (user.status !== "Pending") {
+      return res
+        .status(403)
+        .json({ message: "This account is already set up. Please log in." });
+    }
+
+    req.signupUserId = decoded.userId;
+    next();
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+module.exports = {
+  requireAdmin,
+  requirePage,
+  requireAuthenticated,
+  requireSignupToken,
+};

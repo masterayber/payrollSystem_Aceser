@@ -164,7 +164,17 @@ router.post("/signup", async (req, res) => {
     const settings = new Settings(settingsData);
     await settings.save();
 
-    res.status(200).json({ message: "User created successfully", email });
+    // Short-lived token that only lets this new account finish signup
+    // (Additional Information and Created Account). authMiddleware rejects it everywhere else.
+    const signupToken = jwt.sign(
+      { userId: user._id, purpose: "signup" },
+      process.env.JWT_SECRET,
+      { expiresIn: "30m" },
+    );
+
+    res
+      .status(200)
+      .json({ message: "User created successfully", email, signupToken });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }

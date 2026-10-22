@@ -13,6 +13,12 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(authHeader, process.env.JWT_SECRET);
+
+    // Signup tokens only work on the signup routes, never as a login
+    if (decoded.purpose) {
+      return res.status(401).json({ message: "Token is not valid" });
+    }
+
     req.user = decoded;
     next();
   } catch (err) {
