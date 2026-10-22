@@ -24,49 +24,50 @@ const uploadDestination = (req, file, cb) => {
   cb(null, UPLOAD_DIR);
 };
 
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: uploadDestination,
-    filename: function (req, file, cb) {
-      cb(null, Date.now() + path.extname(file.originalname));
-    },
-  }),
-});
-
-// Image types a logo may be. The extension comes from this list, never from the
+// Image types an upload may be. The extension comes from this list, never from the
 // upload file name, so the file is always served as an image. No SVG: it can hold scripts.
-const LOGO_TYPES = {
+const IMAGE_TYPES = {
   "image/png": ".png",
   "image/jpeg": ".jpg",
   "image/webp": ".webp",
   "image/gif": ".gif",
 };
 
-const logoUpload = multer({
-  storage: multer.diskStorage({
-    destination: uploadDestination,
-    filename: (req, file, cb) => {
-      cb(null, `company-logo-${Date.now()}${LOGO_TYPES[file.mimetype]}`);
+// Upload middleware for one image field: PNG, JPG, WEBP or GIF up to 2 MB, saved as
+// <prefix>-<time>.<ext>. Multer errors become a 400 with a message instead of a 500.
+const imageUpload = (field, prefix, label) => {
+  const upload = multer({
+    storage: multer.diskStorage({
+      destination: uploadDestination,
+      filename: (req, file, cb) => {
+        cb(null, `${prefix}-${Date.now()}${IMAGE_TYPES[file.mimetype]}`);
+      },
+    }),
+    limits: { fileSize: 2 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      if (IMAGE_TYPES[file.mimetype]) return cb(null, true);
+      cb(new Error(`The ${label} must be a PNG, JPG, WEBP or GIF image`));
     },
-  }),
-  limits: { fileSize: 2 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (LOGO_TYPES[file.mimetype]) return cb(null, true);
-    cb(new Error("The logo must be a PNG, JPG, WEBP or GIF image"));
-  },
-});
+  }).single(field);
 
-// Multer errors become a 400 with a message instead of a 500
-const uploadLogo = (req, res, next) => {
-  logoUpload.single("logo")(req, res, (err) => {
-    if (!err) return next();
-    const message =
-      err.code === "LIMIT_FILE_SIZE"
-        ? "The logo must be 2 MB or smaller"
-        : err.message;
-    res.status(400).json({ message });
-  });
+  return (req, res, next) => {
+    upload(req, res, (err) => {
+      if (!err) return next();
+      const message =
+        err.code === "LIMIT_FILE_SIZE"
+          ? `The ${label} must be 2 MB or smaller`
+          : err.message;
+      res.status(400).json({ message });
+    });
+  };
 };
+
+const uploadLogo = imageUpload("logo", "company-logo", "logo");
+const uploadProfilePhoto = imageUpload(
+  "profilePhoto",
+  "profile-photo",
+  "profile photo",
+);
 
 // Deletes a file saved under /uploads; anything else (such as a default icon) is left alone
 const removeUpload = (urlPath) => {
@@ -158,24 +159,22 @@ router.put(
   "/users/:id/profile-photo",
   requireAuthenticated,
   requireSelfOrAdmin,
-  upload.single("profilePhoto"),
+  uploadProfilePhoto,
   async (req, res) => {
     try {
       const userId = req.params.id;
       const user = await User.findById(userId);
 
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user) {
+        if (req.file) removeUpload(`/uploads/${req.file.filename}`);
+        return res.status(404).json({ message: "User not found" });
+      }
 
       if (!req.file)
         return res.status(400).json({ message: "No file uploaded" });
 
-      if (user.profilePhoto) {
-        const oldFilePath = path.join(__dirname, "..", user.profilePhoto);
-
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
-        }
-      }
+      // Only a previous upload is deleted; a default icon under /assets stays
+      removeUpload(user.profilePhoto);
 
       user.profilePhoto = `/uploads/${req.file.filename}`;
       await user.save();
@@ -205,14 +204,7 @@ router.delete(
         return res.status(404).json({ message: "User not found" });
       }
 
-      const filePath = path.join(__dirname, "..", user.profilePhoto);
-
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        console.log("File deleted successfully:", filePath);
-      } else {
-        console.log("File not found:", filePath);
-      }
+      removeUpload(user.profilePhoto);
 
       let defaultPhoto = "/assets/user-circle.svg";
 

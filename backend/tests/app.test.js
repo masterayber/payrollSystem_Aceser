@@ -725,3 +725,61 @@ describe("Employee filing changes (Pending only, own overtime days)", () => {
     expect(saved.overtime.isFiled).toBe(false);
   });
 });
+
+describe("Profile photo upload (/api/settings/users/:id/profile-photo)", () => {
+  const png = Buffer.from("89504e470d0a1a0a", "hex");
+
+  it("rejects a file that isn't an image", async () => {
+    const user = await createUser();
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .put(`/api/settings/users/${user._id}/profile-photo`)
+      .set("Authorization", `Bearer ${token}`)
+      .attach("profilePhoto", Buffer.from("<script>alert(1)</script>"), {
+        filename: "photo.html",
+        contentType: "text/html",
+      });
+
+    expect(res.status).toBe(400);
+    const saved = await User.findById(user._id);
+    expect(saved.profilePhoto || "").not.toMatch(/\.html$/);
+  });
+
+  it("rejects an image over 2 MB", async () => {
+    const user = await createUser();
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .put(`/api/settings/users/${user._id}/profile-photo`)
+      .set("Authorization", `Bearer ${token}`)
+      .attach("profilePhoto", Buffer.alloc(2 * 1024 * 1024 + 1), {
+        filename: "photo.jpg",
+        contentType: "image/jpeg",
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/2 MB/);
+  });
+
+  it("names the file from its image type, not the uploaded name", async () => {
+    const user = await createUser();
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .put(`/api/settings/users/${user._id}/profile-photo`)
+      .set("Authorization", `Bearer ${token}`)
+      .attach("profilePhoto", png, {
+        filename: "photo.html",
+        contentType: "image/png",
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.profilePhoto).toMatch(
+      /^\/uploads\/profile-photo-\d+\.png$/,
+    );
+    const filePath = path.join(__dirname, "..", res.body.profilePhoto);
+    expect(fs.existsSync(filePath)).toBe(true);
+    fs.unlinkSync(filePath);
+  });
+});
