@@ -209,7 +209,11 @@ const Deductions = () => {
         )}
       </div>
 
-      <Pagination currentPage={currentPage} totalPages={totalPages} />
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       {isAddModalOpen && (
         <AddModal

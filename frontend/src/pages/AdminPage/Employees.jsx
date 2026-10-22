@@ -214,7 +214,11 @@ const Employees = () => {
         <p className="no-data">No employees found.</p>
       )}
 
-      <Pagination currentPage={currentPage} totalPages={totalPages} />
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       {isAddModalOpen && (
         <AddEmployeeModal

@@ -220,29 +220,28 @@ const Filing = () => {
                   </span>
                 </article>
                 <article className="table-content-container">
-                  {user.status !== "Disapproved" &&
-                    user.status !== "Approved" && (
-                      <>
-                        <button
-                          className="btn action-button"
-                          type="button"
-                          aria-label={`Edit ${user.leaveType} leave request`}
-                          title="Edit leave request"
-                          onClick={() => handleEditLeave(user)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn action-button"
-                          type="button"
-                          aria-label={`Delete ${user.leaveType} leave request`}
-                          title="Delete leave request"
-                          onClick={() => handleDeleteTarget(user, "leave")}
-                        >
-                          Delete
-                        </button>
-                      </>
-                    )}
+                  {user.status === "Pending" && (
+                    <>
+                      <button
+                        className="btn action-button"
+                        type="button"
+                        aria-label={`Edit ${user.leaveType} leave request`}
+                        title="Edit leave request"
+                        onClick={() => handleEditLeave(user)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn action-button"
+                        type="button"
+                        aria-label={`Delete ${user.leaveType} leave request`}
+                        title="Delete leave request"
+                        onClick={() => handleDeleteTarget(user, "leave")}
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </article>
               </div>
             ))
@@ -305,24 +304,29 @@ const Filing = () => {
                   </span>
                 </article>
                 <article className="table-content-container">
-                  <button
-                    className="btn action-button"
-                    type="button"
-                    aria-label="Edit overtime request"
-                    title="Edit overtime request"
-                    onClick={() => handleEditOvertime(overtime)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn action-button"
-                    type="button"
-                    aria-label="Delete overtime request"
-                    title="Delete overtime request"
-                    onClick={() => handleDeleteTarget(overtime, "overtime")}
-                  >
-                    Delete
-                  </button>
+                  {/* Only waiting requests can change; the server refuses the rest (409) */}
+                  {overtime.status === "Pending" && (
+                    <>
+                      <button
+                        className="btn action-button"
+                        type="button"
+                        aria-label="Edit overtime request"
+                        title="Edit overtime request"
+                        onClick={() => handleEditOvertime(overtime)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn action-button"
+                        type="button"
+                        aria-label="Delete overtime request"
+                        title="Delete overtime request"
+                        onClick={() => handleDeleteTarget(overtime, "overtime")}
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </article>
               </div>
             ))

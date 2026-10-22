@@ -103,7 +103,7 @@ export const UserProvider = ({ children }) => {
         setIsRefreshing(false);
       }
     },
-    [userData],
+    [userData?._id],
   );
 
   const updateUserDataLocally = useCallback((updates) => {

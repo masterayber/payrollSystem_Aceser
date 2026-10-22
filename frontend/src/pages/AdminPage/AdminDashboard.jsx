@@ -16,10 +16,11 @@ const AdminDashboard = () => {
   const { employeeData } = useContext(EmployeeContext);
   const navigate = useNavigate();
 
-  const [showDailyDropdown, setShowDailyDropdown] = useState(false);
-  const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
-  const [showPayrollDropdown, setShowPayrollDropdown] = useState(false);
-  const [showPendingDropdown, setShowPendingDropdown] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const showDailyDropdown = openDropdown === "daily";
+  const showCalendarDropdown = openDropdown === "calendar";
+  const showPayrollDropdown = openDropdown === "payroll";
+  const showPendingDropdown = openDropdown === "pending";
   const [timedInCount, setTimedInCount] = useState(0);
   const [timedOutCount, setTimedOutCount] = useState(0);
   const [onTimeCount, setOnTimeCount] = useState(0);
@@ -37,25 +38,14 @@ const AdminDashboard = () => {
   const pendingDropdownRef = useRef(null);
   const pendingSvgRef = useRef(null);
 
-  const toggleDailyDropdown = (event) => {
+  const toggleDropdown = (name) => (event) => {
     event.stopPropagation();
-    setShowDailyDropdown((prev) => !prev);
+    setOpenDropdown((prev) => (prev === name ? null : name));
   };
-
-  const toggleCalendarDropdown = (event) => {
-    event.stopPropagation();
-    setShowCalendarDropdown((prev) => !prev);
-  };
-
-  const togglePayrollDropdown = (event) => {
-    event.stopPropagation();
-    setShowPayrollDropdown((prev) => !prev);
-  };
-
-  const togglePendingDropdown = (event) => {
-    event.stopPropagation();
-    setShowPendingDropdown((prev) => !prev);
-  };
+  const toggleDailyDropdown = toggleDropdown("daily");
+  const toggleCalendarDropdown = toggleDropdown("calendar");
+  const togglePayrollDropdown = toggleDropdown("payroll");
+  const togglePendingDropdown = toggleDropdown("pending");
 
   useEffect(() => {
     const fetchTodayAttendance = async () => {
@@ -126,62 +116,34 @@ const AdminDashboard = () => {
     };
 
     fetchPendingUsers();
+  }, []);
+
+  // Close the open dropdown when clicking outside it (or its toggle icon)
+  useEffect(() => {
+    if (!openDropdown) return;
+
+    const refs = {
+      daily: [dailyDropdownRef, dailySvgRef],
+      calendar: [calendarDropdownRef, calendarSvgRef],
+      payroll: [payrollDropdownRef, payrollSvgRef],
+      pending: [pendingDropdownRef, pendingSvgRef],
+    };
 
     const handleClickOutside = (event) => {
+      const [dropdownRef, svgRef] = refs[openDropdown];
       if (
-        showDailyDropdown &&
-        dailyDropdownRef.current &&
-        !dailyDropdownRef.current.contains(event.target) &&
-        dailySvgRef.current &&
-        !dailySvgRef.current.contains(event.target)
+        !dropdownRef.current?.contains(event.target) &&
+        !svgRef.current?.contains(event.target)
       ) {
-        setShowDailyDropdown(false);
-      }
-
-      if (
-        showCalendarDropdown &&
-        calendarDropdownRef.current &&
-        !calendarDropdownRef.current.contains(event.target) &&
-        calendarSvgRef.current &&
-        !calendarSvgRef.current.contains(event.target)
-      ) {
-        setShowCalendarDropdown(false);
-      }
-
-      if (
-        showPayrollDropdown &&
-        payrollDropdownRef.current &&
-        !payrollDropdownRef.current.contains(event.target) &&
-        payrollSvgRef.current &&
-        !payrollSvgRef.current.contains(event.target)
-      ) {
-        setShowPayrollDropdown(false);
-      }
-
-      if (
-        showPendingDropdown &&
-        pendingDropdownRef.current &&
-        !pendingDropdownRef.current.contains(event.target) &&
-        pendingSvgRef.current &&
-        !pendingSvgRef.current.contains(event.target)
-      ) {
-        setShowPendingDropdown(false);
+        setOpenDropdown(null);
       }
     };
 
-    if (
-      showDailyDropdown ||
-      showCalendarDropdown ||
-      showPayrollDropdown ||
-      showPendingDropdown
-    ) {
-      document.addEventListener("click", handleClickOutside);
-    }
-
+    document.addEventListener("click", handleClickOutside);
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
-  });
+  }, [openDropdown]);
 
   const todayAttendanceData = {
     onTime: onTimeCount,
