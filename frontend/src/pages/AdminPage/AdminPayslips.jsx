@@ -138,7 +138,11 @@ const AdminPayslips = () => {
         )}
       </div>
 
-      <Pagination totalPages={totalPages} currentPage={currentPage} />
+      <Pagination
+        totalPages={totalPages}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };
