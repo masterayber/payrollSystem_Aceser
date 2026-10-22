@@ -34,3 +34,6 @@ backend/reports/
 
 # Profile Uploads
 backend/uploads/
+
+# Claude md file
+CLAUDE.md
