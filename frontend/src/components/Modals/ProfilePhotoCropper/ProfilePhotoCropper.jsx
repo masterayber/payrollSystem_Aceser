@@ -57,6 +57,7 @@ const ProfilePhotoCropper = ({ imageSrc, userId, onClose, onCropComplete }) => {
       onCropComplete(newPhotoURL);
     } catch (error) {
       console.error("Error uploading image:", error);
+      alert(error.response?.data?.message || "Upload failed");
     }
   };
 
