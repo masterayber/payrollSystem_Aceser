@@ -783,3 +783,30 @@ describe("Profile photo upload (/api/settings/users/:id/profile-photo)", () => {
     fs.unlinkSync(filePath);
   });
 });
+
+describe("Attendance in login and /me", () => {
+  it("sends dates as YYYY-MM-DD and times as HH:MM:SS", async () => {
+    const user = await createUser();
+    await Attendance.create({
+      userId: user._id,
+      date: "2026-10-22",
+      timeIn: new Date("2026-10-22T08:03:00Z"),
+      timeOut: new Date("2026-10-22T17:30:15Z"),
+    });
+
+    const login = await request(app)
+      .post("/api/auth/login")
+      .send({ username: "employee1", password: "Password123!" });
+    const me = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${login.body.token}`);
+
+    for (const res of [login, me]) {
+      expect(res.status).toBe(200);
+      const [record] = res.body.user.attendance;
+      expect(record.date).toBe("2026-10-22");
+      expect(record.timeIn).toBe("08:03:00");
+      expect(record.timeOut).toBe("17:30:15");
+    }
+  });
+});

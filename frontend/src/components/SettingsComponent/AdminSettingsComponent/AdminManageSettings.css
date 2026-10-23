@@ -1,0 +1,188 @@
+/* Settings > Manage: one card per list, two columns on wide screens */
+.manage-settings .manage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+.manage-settings .manage-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--neutral-color-0);
+}
+
+.manage-settings .manage-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.manage-settings .manage-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.manage-settings .manage-card-title h3 {
+  margin: 0;
+  color: var(--neutral-color-100);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.manage-settings .manage-count {
+  min-width: 24px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-80);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.manage-settings .manage-add-button {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--default-button-color);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.manage-settings .manage-add-button:hover:not(:disabled) {
+  background: var(--hover-button-color);
+}
+
+.manage-settings .manage-add-button:disabled {
+  background: var(--gray-300);
+  cursor: not-allowed;
+}
+
+.manage-settings .manage-department-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.manage-settings .manage-department-picker p {
+  color: var(--neutral-color-80);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.manage-settings .manage-department-picker .dropdown-container {
+  display: block;
+  width: 100%;
+}
+
+.manage-settings .manage-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 320px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+}
+
+.manage-settings .manage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 6px 8px 6px 14px;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+.manage-settings .manage-row:last-child {
+  border-bottom: 0;
+}
+
+.manage-settings .manage-row:hover {
+  background: var(--gray-100);
+}
+
+.manage-settings .manage-row-name {
+  overflow: hidden;
+  color: var(--neutral-color-90);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manage-settings .manage-row-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.manage-settings .manage-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--neutral-color-80);
+  cursor: pointer;
+}
+
+.manage-settings .manage-icon-button:hover {
+  background: var(--gray-200);
+  color: var(--default-button-color);
+}
+
+.manage-settings .manage-icon-button.danger:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.manage-settings .manage-icon-button:focus-visible,
+.manage-settings .manage-add-button:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: 2px;
+}
+
+.manage-settings .manage-empty {
+  padding: 20px 14px;
+  border: 1px dashed var(--gray-300);
+  border-radius: var(--border-radius);
+  color: var(--neutral-color-70);
+  font-size: 14px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .manage-settings .manage-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .manage-settings .manage-card {
+    padding: 16px;
+  }
+}

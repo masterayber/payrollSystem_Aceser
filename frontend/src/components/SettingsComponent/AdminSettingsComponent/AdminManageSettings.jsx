@@ -1,14 +1,13 @@
-import { useState, useEffect, useRef } from "react";
-import {
-  IconEdit,
-  IconSquareRoundedX,
-  IconDotsVertical,
-} from "@tabler/icons-react";
+import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import API from "../../../api";
 import AddModal from "../../Modals/DropdownOption/AddOption/AddOption";
 import EditModal from "../../Modals/DropdownOption/EditOption/EditOption";
 import ConfirmModal from "../../Modals/Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../../Modals/Confirmed/ConfirmedMessageModal";
 import Dropdown from "../../Dropdown/Dropdown";
+import "./AdminManageSettings.css";
 
 const DROPDOWN_TYPES = [
   {
@@ -32,15 +31,65 @@ const DROPDOWN_TYPES = [
   // Add dropdowns here when needed
 ];
 
+const singularOf = (type) =>
+  type === "positions"
+    ? "Position"
+    : DROPDOWN_TYPES.find((d) => d.key === type)?.singular || "";
+
+// The rows of one card; Edit and Delete are icon buttons labelled for screen readers
+const OptionList = ({ options, emptyText, onEdit, onDelete }) => {
+  if (options.length === 0) {
+    return <p className="manage-empty">{emptyText}</p>;
+  }
+
+  return (
+    <ul className="manage-list">
+      {options.map((option) => (
+        <li className="manage-row" key={option}>
+          <span className="manage-row-name" title={option}>
+            {option}
+          </span>
+          <div className="manage-row-actions">
+            <button
+              type="button"
+              className="manage-icon-button"
+              title="Edit"
+              aria-label={`Edit ${option}`}
+              onClick={() => onEdit(option)}
+            >
+              <IconEdit size={18} stroke={2} />
+            </button>
+            <button
+              type="button"
+              className="manage-icon-button danger"
+              title="Delete"
+              aria-label={`Delete ${option}`}
+              onClick={() => onDelete(option)}
+            >
+              <IconTrash size={18} stroke={2} />
+            </button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+OptionList.propTypes = {
+  options: PropTypes.arrayOf(PropTypes.string).isRequired,
+  emptyText: PropTypes.string.isRequired,
+  onEdit: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+};
+
 const AdminManageSettings = () => {
   const [dropdownOptions, setDropdownOptions] = useState({
     designations: [],
     departments: [],
     employmentTypes: [],
-    positions: [],
+    positions: {},
   });
 
-  const [showDropdownOption, setShowDropdownOption] = useState({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -55,16 +104,13 @@ const AdminManageSettings = () => {
   // Positions Management
   const [selectedDepartment, setSelectedDepartment] = useState("");
 
-  const addSvgRef = useRef(null);
-
   useEffect(() => {
     fetchDropdowns();
   }, []);
 
   const fetchDropdowns = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/dropdownOption");
-      const data = await res.json();
+      const { data } = await API.get("/api/dropdownOption");
 
       // Ensure all expected properties exists with default empty arrays
       const safeData = {
@@ -75,6 +121,10 @@ const AdminManageSettings = () => {
       };
 
       setDropdownOptions(safeData);
+      // Clear the picked department once it's renamed or deleted
+      setSelectedDepartment((prev) =>
+        safeData.departments.includes(prev) ? prev : "",
+      );
     } catch (error) {
       console.error("Error fetching dropdowns:", error);
       // Set Default empty state on error
@@ -87,23 +137,8 @@ const AdminManageSettings = () => {
     }
   };
 
-  const toggleDropdownOption = (type, event) => {
-    event.stopPropagation();
-    setShowDropdownOption((prev) => ({
-      ...Object.fromEntries(DROPDOWN_TYPES.map((d) => [d.key, false])),
-      [type]: !prev[type],
-    }));
-  };
-
-  const handleAddClick = (type, department = "") => {
+  const handleAddClick = (type) => {
     setCurrentDropdownType(type);
-    setShowDropdownOption((prev) => ({
-      ...prev,
-      [type]: false,
-    }));
-    if (type === "positions") {
-      setSelectedDepartment(department);
-    }
     setIsAddModalOpen(true);
   };
 
@@ -151,9 +186,9 @@ const AdminManageSettings = () => {
         : null;
       if (!isPositions && !dropdownMeta) return;
 
-      const baseUrl = "http://localhost:5000/api/dropdownOption";
+      const baseUrl = "/api/dropdownOption";
       const url = isPositions
-        ? `${baseUrl}/positions/${selectedDepartment}/${confirmAction}`
+        ? `${baseUrl}/positions/${encodeURIComponent(selectedDepartment)}/${confirmAction}`
         : `${baseUrl}/${dropdownMeta.api}/${confirmAction}`;
 
       const bodyMap = {
@@ -184,13 +219,7 @@ const AdminManageSettings = () => {
         return;
       }
 
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) throw new Error(`Failed to ${confirmAction}`);
+      await API.request({ url, method, data: body });
 
       await fetchDropdowns();
 
@@ -201,184 +230,105 @@ const AdminManageSettings = () => {
       setTimeout(() => setIsConfirmedMessageModalOpen(true), 300);
     } catch (error) {
       console.error(`Error during ${confirmAction}:`, error);
-      alert("An error occurred while processing request.");
+      alert(
+        error.response?.data?.message ||
+          "An error occurred while processing request.",
+      );
     }
   };
 
-  const handleDropdownChange = (type, value) => {
-    if (type === "department") {
-      setSelectedDepartment(value);
-    }
-  };
-
-  const getDropdownOptions = (key) => {
-    return dropdownOptions[key] || [];
-  };
+  const hasDepartments = dropdownOptions.departments.length > 0;
+  const positionOptions = selectedDepartment
+    ? dropdownOptions.positions[selectedDepartment] || []
+    : [];
+  const positionsEmptyText = !hasDepartments
+    ? "Add a department first."
+    : selectedDepartment
+      ? `No positions in ${selectedDepartment} yet.`
+      : "Pick a department to see its positions.";
 
   return (
-    <div className="settings-content">
+    <div className="settings-content manage-settings">
       <div className="setting-tab">
         <div className="setting-tab-title">
           <p>Manage Employment Configuration</p>
         </div>
 
-        {DROPDOWN_TYPES.map((dropdown) => (
-          <div className="setting-tab-table" key={dropdown.key}>
-            <div className="table-container">
-              <div className="table-title">
-                <p>{dropdown.label}</p>
-                <div className="dots-button-container">
-                  <IconDotsVertical
-                    stroke={2}
-                    onClick={(e) => toggleDropdownOption(dropdown.key, e)}
-                    ref={addSvgRef}
-                    className="dots-button"
-                  />
-                  {showDropdownOption[dropdown.key] && (
-                    <div className="dropdown-details" ref={addSvgRef}>
-                      <button
-                        className="dropdown-item-details"
-                        onClick={() => handleAddClick(dropdown.key)}
-                      >
-                        Add Option
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="table">
-                <div className="table-header">
-                  <article className="table-header-container">
-                    <p>{dropdown.singular}</p>
-                  </article>
-                  <hr className="header-hr" />
-                  <article className="table-header-container">
-                    <p>Action</p>
-                  </article>
-                </div>
-                {getDropdownOptions(dropdown.key).length > 0 ? (
-                  dropdownOptions[dropdown.key]?.map((option, index) => (
-                    <div className="table-content" key={index}>
-                      <article className="table-content-container">
-                        <p>{option}</p>
-                      </article>
-                      <article className="table-content-container">
-                        <button
-                          className="btn action-button"
-                          onClick={() => handleEditClick(dropdown.key, option)}
-                        >
-                          <IconEdit stroke={2} />
-                          Edit
-                        </button>
-                        <button
-                          className="btn action-button"
-                          onClick={() =>
-                            handleDeleteClick(dropdown.key, option)
-                          }
-                        >
-                          <IconSquareRoundedX stroke={2} />
-                          Delete
-                        </button>
-                      </article>
-                    </div>
-                  ))
-                ) : (
-                  <p className="no-data">No {dropdown.singular} found.</p>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
+        <div className="manage-grid">
+          {DROPDOWN_TYPES.map((dropdown) => {
+            const options = dropdownOptions[dropdown.key] || [];
 
-        <div className="setting-tab-table">
-          <div className="table-container">
-            <div className="table-title">
-              <p>Position</p>
-            </div>
-            <div className="input-container department-dropdown-container">
-              <Dropdown
-                options={[
-                  "--Select Department--",
-                  ...dropdownOptions.departments,
-                ]}
-                placeholder="--Select Department--"
-                value={selectedDepartment}
-                onSelect={(value) => handleDropdownChange("department", value)}
-              />
-            </div>
-            {selectedDepartment && (
-              <>
-                <div className="add-position-btn-container">
+            return (
+              <section className="manage-card" key={dropdown.key}>
+                <div className="manage-card-header">
+                  <div className="manage-card-title">
+                    <h3>{dropdown.label}</h3>
+                    <span className="manage-count">{options.length}</span>
+                  </div>
                   <button
-                    className="action-button"
-                    onClick={() =>
-                      handleAddClick("positions", selectedDepartment)
-                    }
+                    type="button"
+                    className="manage-add-button"
+                    onClick={() => handleAddClick(dropdown.key)}
                   >
-                    Add Position
+                    <IconPlus size={16} stroke={2.5} />
+                    Add
                   </button>
                 </div>
-                <div className="table">
-                  <div className="table-header">
-                    <article className="table-header-container">
-                      <p>Positions</p>
-                    </article>
-                    <hr className="header-hr" />
-                    <article className="table-header-container">
-                      <p>Action</p>
-                    </article>
-                  </div>
-                  {(dropdownOptions.positions?.[selectedDepartment] || [])
-                    .length === 0 ? (
-                    <p className="no-data">No Positions for this department.</p>
-                  ) : (
-                    dropdownOptions.positions[selectedDepartment].map(
-                      (option, index) => (
-                        <div className="table-content" key={index}>
-                          <article className="table-content-container">
-                            <p>{option}</p>
-                          </article>
-                          <article className="table-content-container">
-                            <button
-                              className="action-button"
-                              onClick={() =>
-                                handleEditClick("positions", option)
-                              }
-                            >
-                              <IconEdit stroke={2} />
-                              Edit
-                            </button>
-                            <button
-                              className="action-button"
-                              onClick={() =>
-                                handleDeleteClick("positions", option)
-                              }
-                            >
-                              <IconSquareRoundedX stroke={2} />
-                              Delete
-                            </button>
-                          </article>
-                        </div>
-                      ),
-                    )
-                  )}
-                </div>
-              </>
-            )}
-          </div>
+                <OptionList
+                  options={options}
+                  emptyText={`No ${dropdown.label.toLowerCase()} yet.`}
+                  onEdit={(option) => handleEditClick(dropdown.key, option)}
+                  onDelete={(option) => handleDeleteClick(dropdown.key, option)}
+                />
+              </section>
+            );
+          })}
+
+          <section className="manage-card">
+            <div className="manage-card-header">
+              <div className="manage-card-title">
+                <h3>Positions</h3>
+                {selectedDepartment && (
+                  <span className="manage-count">{positionOptions.length}</span>
+                )}
+              </div>
+              <button
+                type="button"
+                className="manage-add-button"
+                onClick={() => handleAddClick("positions")}
+                disabled={!selectedDepartment}
+                title={selectedDepartment ? undefined : "Pick a department first"}
+              >
+                <IconPlus size={16} stroke={2.5} />
+                Add
+              </button>
+            </div>
+            <div className="manage-department-picker">
+              <p>Department</p>
+              <Dropdown
+                options={dropdownOptions.departments}
+                placeholder="Select a department"
+                value={selectedDepartment}
+                onSelect={setSelectedDepartment}
+              />
+            </div>
+            <OptionList
+              options={positionOptions}
+              emptyText={positionsEmptyText}
+              onEdit={(option) => handleEditClick("positions", option)}
+              onDelete={(option) => handleDeleteClick("positions", option)}
+            />
+          </section>
         </div>
       </div>
 
       {isAddModalOpen && (
         <AddModal
-          title={`Add Option`}
+          title={`Add ${singularOf(currentDropdownType)}`}
           message={
             currentDropdownType === "positions"
               ? `Add a new position for ${selectedDepartment}:`
-              : `Add a new ${
-                  DROPDOWN_TYPES.find((d) => d.key === currentDropdownType)
-                    ?.singular || ""
-                } option:`
+              : `Add a new ${singularOf(currentDropdownType)} option:`
           }
           onClose={() => setIsAddModalOpen(false)}
           onAddOption={handleConfirmAdd}
@@ -388,11 +338,12 @@ const AdminManageSettings = () => {
 
       {isEditModalOpen && (
         <EditModal
-          title="Edit Option"
-          message={`Edit the ${
-            DROPDOWN_TYPES.find((d) => d.key === currentDropdownType)
-              ?.singular || ""
-          } option:`}
+          title={`Edit ${singularOf(currentDropdownType)}`}
+          message={
+            currentDropdownType === "positions"
+              ? `Edit the position in ${selectedDepartment}:`
+              : `Edit the ${singularOf(currentDropdownType)} option:`
+          }
           onClose={() => setIsEditModalOpen(false)}
           onEditOption={handleConfirmEdit}
           confirmText="Edit"
@@ -414,10 +365,7 @@ const AdminManageSettings = () => {
                   ? `Are you sure you want to change ${selectedOption} to ${optionToAdd} in the ${selectedDepartment} department?`
                   : `Are you sure you want to delete ${selectedOption} from the ${selectedDepartment} department?`
               : confirmAction === "add"
-                ? `Are you sure you want to add "${optionToAdd}" as a new ${
-                    DROPDOWN_TYPES.find((d) => d.key === currentDropdownType)
-                      ?.singular
-                  }?`
+                ? `Are you sure you want to add "${optionToAdd}" as a new ${singularOf(currentDropdownType)}?`
                 : confirmAction === "edit"
                   ? `Are you sure you want to change "${selectedOption}" to "${optionToAdd}"?`
                   : `Are you sure you want to delete "${selectedOption}"?`
