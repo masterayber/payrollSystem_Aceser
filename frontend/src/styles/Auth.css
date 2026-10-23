@@ -208,6 +208,24 @@ input[type="date"] {
   color: var(--neutral-color-90);
 }
 
+.auth-page .feedback-message.success {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.auth-page .feedback-message.warning {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.auth-page .feedback-message.error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
 .auth-page .button-container {
   display: flex;
   align-items: center;

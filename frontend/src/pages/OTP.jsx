@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/OTP.css";
+import { feedbackFromError } from "../utils/feedback";
 
 const OTP = () => {
   const [otp, setOtp] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300000); // Initial timer in milliseconds
   const [expiresAt, setExpiresAt] = useState(Date.now() + 300000); // Initial expiration time
@@ -16,7 +17,11 @@ const OTP = () => {
 
   useEffect(() => {
     if (!email) {
-      setMessage("Invalid session. Please try again.");
+      setMessage({
+        type: "error",
+        text: "Invalid session. Please try again.",
+      });
+
       setTimeout(() => {
         navigate("/forgot-password");
       }, 3000);
@@ -45,20 +50,20 @@ const OTP = () => {
   const handleOtp = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
+    setMessage(null);
 
     try {
       const response = await axios.post("http://localhost:5000/api/auth/otp", {
         email,
         otp,
       });
-      setMessage(response.data.message);
+      setMessage({ type: "success", text: response.data.message });
       alert(response.data.message);
       navigate("/reset-password", {
         state: { resetToken: response.data.resetToken },
       });
     } catch (error) {
-      setMessage(error.response?.data?.message || "Error occurred");
+      setMessage(feedbackFromError(error, "Error occurred"));
       alert(error.response?.data?.message || "Error Occurred");
     } finally {
       setLoading(false);
@@ -67,19 +72,19 @@ const OTP = () => {
 
   const handleResend = async () => {
     setLoading(true);
-    setMessage("");
+    setMessage(null);
     try {
       const response = await axios.post(
         "http://localhost:5000/api/auth/forgot-password",
         { email },
       );
-      setMessage(response.data.message);
+      setMessage({ type: "success", text: response.data.message });
 
       const newExpiresAt = response.data.expiresAt; // Get new expiration time
       setExpiresAt(newExpiresAt); // Update the expiration time
       setTimeLeft(newExpiresAt - Date.now()); // Reset the timer
     } catch (error) {
-      setMessage(error.response?.data?.message || "Error occurred");
+      setMessage(feedbackFromError(error, "Error occurred"));
     } finally {
       setLoading(false);
     }
@@ -109,9 +114,16 @@ const OTP = () => {
             <input
               type="text"
               name="otp"
-              placeholder="Enter OTP"
+              placeholder="Enter 6-digit code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              pattern="\d{6}"
+              title="Enter the 6-digit code from your email"
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              onChange={(e) =>
+                setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
               required
             />
           </div>
@@ -126,7 +138,10 @@ const OTP = () => {
           </button>
         </div>
 
-        {message && <p className="feedback-message">{message}</p>}
+        {message && (
+          <p className={`feedback-message ${message.type}`}>{message.text}</p>
+        )}
+
         <div className="button-container">
           <button type="submit" className="verify-button" disabled={loading}>
             {loading ? "Verifying..." : "Verify"}

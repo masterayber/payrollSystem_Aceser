@@ -2,11 +2,12 @@ import { useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Reset.css";
+import { feedbackFromError } from "../utils/feedback";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,7 +23,7 @@ const ResetPassword = () => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      setMessage("Passwords do not match");
+      setMessage({ type: "warning", text: "Passwords do not match" });
       return;
     }
 
@@ -41,7 +42,7 @@ const ResetPassword = () => {
       alert("Password reset successfully! Please log in.");
       navigate("/");
     } catch (error) {
-      setMessage(error.response?.data?.message || "Error occurred");
+      setMessage(feedbackFromError(error, "Error occurred"));
     } finally {
       setLoading(false);
     }
@@ -75,7 +76,9 @@ const ResetPassword = () => {
           </div>
         </div>
 
-        {message && <p className="feedback-message">{message}</p>}
+        {message && (
+          <p className={`feedback-message ${message.type}`}>{message.text}</p>
+        )}
 
         <button type="submit" className="reset-button" disabled={loading}>
           {loading ? "Resetting..." : "Reset Password"}
