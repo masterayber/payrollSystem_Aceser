@@ -7,66 +7,26 @@ import Dropdown from "../../components/Dropdown/Dropdown";
 import Pagination from "../../components/Pagination/Pagination";
 import { isWeekend } from "date-fns";
 import { IconDotsVertical } from "@tabler/icons-react";
+import {
+  MONTHS,
+  getCutoffLabel,
+  getCutoffOptions,
+  getCutoffRange,
+  parseCutoffValue,
+  toManilaDate,
+} from "../../utils/cutoff";
 
 const Attendance = () => {
   const { userData } = useContext(UserContext);
 
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const generateCutoffOptions = () => {
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    const options = [];
-
-    let monthsEmployed = 12;
-    if (userData?.createdAt) {
-      const hireDate = new Date(userData.createdAt);
-      const hireMonth = hireDate.getMonth();
-      const hireYear = hireDate.getFullYear();
-      monthsEmployed =
-        (currentYear - hireYear) * 12 + (currentMonth - hireMonth) + 1;
-    }
-
-    const monthsToShow = Math.min(monthsEmployed, 12);
-
-    for (let offset = 0; offset >= -(monthsToShow - 1); offset--) {
-      const monthIndex = (((currentMonth + offset) % 12) + 12) % 12;
-      const year = currentYear + Math.floor((currentMonth + offset) / 12);
-      const monthName = months[monthIndex];
-
-      options.push(`${monthName} 2nd Cut-off ${year}`);
-      options.push(`${monthName} 1st Cut-off ${year}`);
-    }
-    return options;
-  };
-
-  const cutoffOptions = generateCutoffOptions();
-
-  const getDefaultCutoff = () => {
-    const today = new Date();
-    const day = today.getDate();
-    const monthName = months[today.getMonth()];
-    const year = today.getFullYear();
-    const cutoff = day <= 10 || day >= 26 ? "1st" : "2nd";
-    return `${monthName} ${cutoff} Cut-off ${year}`;
-  };
+  // The current cut-off first, back to the hire date or one year (24 cut-offs)
+  const cutoffOptions = getCutoffOptions({
+    count: 24,
+    since: userData?.createdAt ? toManilaDate(userData.createdAt) : undefined,
+  });
 
   const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
-  const [selectedCutoff, setSelectedCutoff] = useState(getDefaultCutoff());
+  const [selectedCutoff, setSelectedCutoff] = useState(cutoffOptions[0].value);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
 
@@ -74,19 +34,6 @@ const Attendance = () => {
 
   const downloadDropdownRef = useRef(null);
   const downloadSvgRef = useRef(null);
-
-  const parseCutoff = (cutoffStr) => {
-    const isFirst = cutoffStr.includes("1st");
-    const parts = cutoffStr.split(" ");
-    const monthName = parts[0];
-    const year = parseInt(parts[parts.length - 1]);
-    return {
-      monthIndex: months.indexOf(monthName),
-      monthName,
-      year,
-      cutoff: isFirst ? "1st" : "2nd",
-    };
-  };
 
   const toggleDownloadDropdown = (event) => {
     event.stopPropagation();
@@ -101,28 +48,7 @@ const Attendance = () => {
     return `${year}-${month}-${day}`;
   };
 
-  const getCutoffRange = (monthIndex, year, cutoff) => {
-    if (cutoff === "2nd") {
-      const start = `${year}-${String(monthIndex + 1).padStart(2, "0")}-11`;
-      const end = `${year}-${String(monthIndex + 1).padStart(2, "0")}-25`;
-      return { start, end };
-    } else {
-      const prevMonthIndex = monthIndex === 0 ? 11 : monthIndex - 1;
-      const prevYear = monthIndex === 0 ? year - 1 : year;
-      const prevDaysInMonth = new Date(
-        prevYear,
-        prevMonthIndex + 1,
-        0,
-      ).getDate();
-      const startDay = Math.min(26, prevDaysInMonth);
-      const start = `${prevYear}-${String(prevMonthIndex + 1).padStart(2, "0")}-${String(startDay).padStart(2, "0")}`;
-      const end = `${year}-${String(monthIndex + 1).padStart(2, "0")}-10`;
-      return { start, end };
-    }
-  };
-
-  const generateCutoffAttendance = (attendance, monthIndex, year, cutoff) => {
-    const { start, end } = getCutoffRange(monthIndex, year, cutoff);
+  const generateCutoffAttendance = (attendance, { start, end }) => {
     const todayKey = formatKey(new Date());
     const hireKey = userData.createdAt?.split("T")[0];
 
@@ -178,13 +104,13 @@ const Attendance = () => {
     return fullData.reverse();
   };
 
-  const { monthIndex, monthName, year, cutoff } = parseCutoff(selectedCutoff);
+  const selected = parseCutoffValue(selectedCutoff);
+  const selectedRange = getCutoffRange(selected);
+  const monthName = MONTHS[selected.monthIndex];
 
   const filteredAttendance = generateCutoffAttendance(
     userAttendance,
-    monthIndex,
-    year,
-    cutoff,
+    selectedRange,
   );
 
   const totalPages = Math.ceil(filteredAttendance.length / itemsPerPage);
@@ -224,7 +150,7 @@ const Attendance = () => {
   const metrics = calculateMetrics();
 
   const handleDownload = () => {
-    const { start, end } = getCutoffRange(monthIndex, year, cutoff);
+    const { start, end } = selectedRange;
 
     const cutoffDates = [];
     const startDate = new Date(start);
@@ -349,7 +275,7 @@ const Attendance = () => {
     for (let c = 0; c < totalCols; c++) setCell(ws1, 0, c, "", "s", {});
 
     setCell(ws1, 1, 0, "", "s", {});
-    setCell(ws1, 1, 1, `ACESER Corporation - "${selectedCutoff}"`, "s", {
+    setCell(ws1, 1, 1, `ACESER Corporation - "${getCutoffLabel(selected)}"`, "s", {
       font: { bold: true, sz: 12, color: { rgb: "000000" } },
       alignment: centerAlign,
     });
@@ -525,7 +451,7 @@ const Attendance = () => {
     XLSX.utils.book_append_sheet(
       workbook,
       ws1,
-      `${monthName} ${cutoff} Cutoff`,
+      `${monthName} ${selected.half} Cutoff`,
     );
     XLSX.utils.book_append_sheet(workbook, ws2, "Remarks");
 
@@ -535,7 +461,7 @@ const Attendance = () => {
 
     XLSX.writeFile(
       workbook,
-      `Attendance_${employeeName}_${monthName}_${cutoff}Cutoff_${year}.xlsx`,
+      `Attendance_${employeeName}_${monthName}_${selected.half}Cutoff_${selected.year}.xlsx`,
     );
 
     setShowDownloadDropdown(false);

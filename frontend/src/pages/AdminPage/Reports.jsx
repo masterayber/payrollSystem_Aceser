@@ -6,12 +6,11 @@ import "../../styles/AdminCSS/Reports.css";
 import API from "../../api";
 
 import {
-  formatMonthValue,
-  getCutoffOptions,
   getMonthOptions,
   getDateRange,
   getFormattedDateRange,
 } from "../../utils/reports/reportHelpers";
+import { getCutoffOptions } from "../../utils/cutoff";
 import { AttendanceSheet } from "../../utils/reports/attendanceSheet";
 import { LeaveSheet } from "../../utils/reports/leave";
 import { LateSheet } from "../../utils/reports/late";
@@ -19,29 +18,22 @@ import { RemarksSheet } from "../../utils/reports/remarks";
 
 const Reports = () => {
   const { employeeData } = useContext(EmployeeContext);
-  const [reportType, setReportType] = useState("cutoff");
-  const [selectedOption, setSelectedOption] = useState("");
-  const [attendanceRecords, setAttendanceRecords] = useState([]);
-  const [loading, setLoading] = useState(false);
 
+  // Both lists start at the current period
   const cutoffOptions = getCutoffOptions();
   const monthOptions = getMonthOptions();
 
-  useEffect(() => {
-    const today = new Date();
-    const monthIndex = today.getMonth();
-    const year = today.getFullYear();
-    const day = today.getDate();
-    const cutoff = day >= 26 ? "2nd" : "1st";
+  const [reportType, setReportType] = useState("cutoff");
+  const [selectedOption, setSelectedOption] = useState(cutoffOptions[0].value);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-    if (reportType === "month") {
-      setSelectedOption(formatMonthValue(year, monthIndex));
-    } else {
-      setSelectedOption(
-        `${year}-${String(monthIndex + 1).padStart(2, "0")}-${cutoff}`,
-      );
-    }
-  }, [reportType]);
+  const handleReportTypeChange = (type) => {
+    setReportType(type);
+    setSelectedOption(
+      type === "month" ? monthOptions[0].value : cutoffOptions[0].value,
+    );
+  };
 
   useEffect(() => {
     const fetchAttendance = async () => {
@@ -156,7 +148,7 @@ const Reports = () => {
                 ]}
                 placeholder="Select Export Mode"
                 value={reportType}
-                onSelect={setReportType}
+                onSelect={handleReportTypeChange}
               />
             </label>
             {reportType === "cutoff" ? (
