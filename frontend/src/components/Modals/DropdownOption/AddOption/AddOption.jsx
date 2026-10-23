@@ -44,16 +44,16 @@ const AddOptionModal = ({
           />
         </div>
         <div className="modal-buttons">
-          <button onClick={onClose} className="modal-button">
+          <button onClick={onClose} className="btn modal-button">
             Cancel
           </button>
-          <button onClick={handleAddClick} className="modal-button">
+          <button onClick={handleAddClick} className="btn modal-button">
             {confirmText}
           </button>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };
 

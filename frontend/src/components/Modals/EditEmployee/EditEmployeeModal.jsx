@@ -177,7 +177,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
 
     try {
       await API.delete(
-        `/api/employee/delete-employee/${editEmployee.employeeId}`,
+        `/api/employee/delete-employee/${encodeURIComponent(employee.employeeId)}`,
       );
 
       // Refresh when the message is closed; the profile page leaves on refresh

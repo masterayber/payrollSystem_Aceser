@@ -154,9 +154,7 @@ const AdminAttendance = () => {
     .filter((employee) => {
       if (!employee) return false;
       return (
-        employee.employeeId
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
+        employee.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         employee.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         employee.lastName?.toLowerCase().includes(searchQuery.toLowerCase())
       );

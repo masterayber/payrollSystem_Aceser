@@ -7,6 +7,7 @@ const {
   requireAdmin,
   requireAuthenticated,
 } = require("../middleware/accessMiddleware");
+const { toClientAttendance } = require("../utils/clientAttendance");
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
@@ -66,7 +67,7 @@ router.post("/login", async (req, res) => {
       allowedPages: getAllowedPages(userObj),
       employee: employee || null,
       settings: settings || null,
-      attendance: attendance || [],
+      attendance: (attendance || []).map(toClientAttendance),
       leaveRequests: leaveRequests || [],
       overtimeRequests: overtimeRequests || [],
     };
@@ -296,7 +297,7 @@ router.get("/me", requireAuthenticated, async (req, res) => {
         allowedPages: getAllowedPages(user),
         employee: employee || null,
         settings: settings || null,
-        attendance: attendance || [],
+        attendance: (attendance || []).map(toClientAttendance),
         leaveRequests: leaveRequests || [],
         overtimeRequests: overtimeRequests || [],
       },
