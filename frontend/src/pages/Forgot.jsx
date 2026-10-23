@@ -3,22 +3,27 @@ import axios from "axios";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Forgot.css";
+import { feedbackFromError } from "../utils/feedback";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleForgot = async (e) => {
     e.preventDefault();
     setLoading(true); // Start loading
-    setMessage(""); // Reset the message
+    setMessage(null); // Reset the message
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setMessage("Please enter a valid email address");
+      setMessage({
+        type: "warning",
+        text: "Please enter a valid email address",
+      });
+
       setLoading(false);
       return;
     }
@@ -28,12 +33,13 @@ const ForgotPassword = () => {
         "http://localhost:5000/api/auth/forgot-password",
         { email },
       );
-      setMessage(response.data.message);
+      setMessage({ type: "success", text: response.data.message });
+
       navigate("/otp", {
         state: { email, expiresAt: response.data.expiresAt },
       });
     } catch (error) {
-      setMessage(error.response?.data?.message || "Something went wrong");
+      setMessage(feedbackFromError(error, "Something went wrong"));
     } finally {
       setLoading(false); // Stop loading
     }
@@ -68,7 +74,9 @@ const ForgotPassword = () => {
             />
           </div>
         </div>
-        {message && <p className="feedback-message">{message}</p>}
+        {message && (
+          <p className={`feedback-message ${message.type}`}>{message.text}</p>
+        )}
 
         <button type="submit" className="btn send-button" disabled={loading}>
           {loading ? "Sending..." : "Send"}

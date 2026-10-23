@@ -1,5 +1,4 @@
 const express = require("express");
-const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -15,31 +14,41 @@ const Attendance = require("../models/attendance");
 const LeaveApplication = require("../models/leaveApplication");
 const OvertimeApplication = require("../models/overtimeApplication");
 
+const { issueCode, checkCode } = require("../utils/otpStore");
+
 const sendEmail = require("../utils/nodemailer");
 const { getAllowedPages } = require("../utils/pageAccess");
 
-const router = express.Router();
+const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
 
-let otpStorage = {}; // Temporarily stores OTPs for demonstration
+const isFilledString = (value) =>
+  typeof value === "string" && value.trim() !== "";
+
+const router = express.Router();
 
 // Login route
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
+    if (!isFilledString(username) || !isFilledString(password)) {
+      return res
+        .status(400)
+        .json({ message: "Username and password are required" });
+    }
 
     const user = await User.findOne({ username });
+    const isMatch = await bcrypt.compare(
+      password,
+      user ? user.password : DUMMY_HASH,
+    );
 
-    if (!user) {
-      return res.status(401).json({ message: "Invalid Username" });
+    // One reply for an unknown username and a wrong password
+    if (!user || !isMatch) {
+      return res.status(401).json({ message: "Invalid username or password" });
     }
 
     if (user.status !== "Active") {
       return res.status(403).json({ message: "Account is pending approval" });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid username or password" });
     }
 
     const token = jwt.sign(
@@ -183,7 +192,10 @@ router.post("/signup", async (req, res) => {
 
 // Forgot Password route
 router.post("/forgot-password", async (req, res) => {
-  const { email } = req.body;
+  if (!isFilledString(req.body.email)) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+  const email = req.body.email.trim();
 
   try {
     const user = await User.findOne({ email });
@@ -191,19 +203,18 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(404).json({ message: "Email is not registered" });
     }
 
-    const otp = String(crypto.randomInt(100000, 1000000));
-    const expiresAt = Date.now() + 5 * 60 * 1000;
+    const code = issueCode(email);
+    if (code.retryAfterMs) {
+      return res.status(429).json({
+        message: "Please wait a minute before requesting another code.",
+      });
+    }
 
-    otpStorage[email] = {
-      otp,
-      expiresAt,
-    };
-
-    await sendEmail(email, otp);
+    await sendEmail(email, code.otp);
 
     res.status(200).json({
       message: "Password reset has been sent to your email",
-      expiresAt,
+      expiresAt: code.expiresAt,
     });
   } catch (err) {
     res.status(500).json({
@@ -214,26 +225,39 @@ router.post("/forgot-password", async (req, res) => {
 });
 
 // OTP route
-router.post("/otp", async (req, res) => {
+router.post("/otp", (req, res) => {
   const { email, otp } = req.body;
-  const storedOtp = otpStorage[email];
 
-  if (!storedOtp) {
-    return res.status(400).json({ message: "Invalid or expired OTP" });
+  // A badly formed code is turned away without using up a try
+  if (!isFilledString(email) || !/^\d{6}$/.test(otp)) {
+    return res
+      .status(400)
+      .json({ message: "Enter the 6-digit code from your email." });
   }
 
-  if (Date.now() > storedOtp.expiresAt) {
-    return res.status(400).json({ message: "OTP is expired" });
+  const { result, triesLeft } = checkCode(email.trim(), otp);
+  if (result === "locked") {
+    return res.status(429).json({
+      message: "Too many incorrect codes. Please request a new one.",
+    });
+  }
+  if (result === "expired") {
+    return res.status(400).json({
+      message: "This code has expired. Please request a new one.",
+    });
+  }
+  if (result === "wrong") {
+    return res.status(400).json({
+      message: `Incorrect code. ${triesLeft} ${triesLeft === 1 ? "try" : "tries"} left.`,
+    });
   }
 
-  if (storedOtp.otp !== otp) {
-    return res.status(400).json({ message: "Incorrect OTP" });
-  }
-
-  const resetToken = jwt.sign({ email }, process.env.JWT_SECRET, {
-    expiresIn: "5m",
-  });
-  delete otpStorage[email]; // Delete OTP from local storage
+  // The purpose keeps this token from working as a login, and a login from working here
+  const resetToken = jwt.sign(
+    { email: email.trim(), purpose: "reset" },
+    process.env.JWT_SECRET,
+    { expiresIn: "5m" },
+  );
 
   res.status(200).json({ message: "OTP verified.", resetToken });
 });
@@ -246,9 +270,18 @@ router.post("/reset-password", async (req, res) => {
     return res.status(400).json({ message: "Reset token is required" });
   }
 
+  if (!isFilledString(password)) {
+    return res.status(400).json({ message: "Password is required" });
+  }
+
   try {
     // Verify JWT token
     const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+
+    if (decoded.purpose !== "reset") {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
     const email = decoded.email;
 
     // Find user by email

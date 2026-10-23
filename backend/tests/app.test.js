@@ -15,6 +15,8 @@ const CompanySettings = require("../models/companySettings");
 const Attendance = require("../models/attendance");
 const LeaveApplication = require("../models/leaveApplication");
 const OvertimeApplication = require("../models/overtimeApplication");
+const sendEmail = require("../utils/nodemailer");
+const { clearCodes, MAX_ATTEMPTS } = require("../utils/otpStore");
 
 let mongo;
 
@@ -31,6 +33,8 @@ afterEach(async () => {
   await Attendance.deleteMany({});
   await LeaveApplication.deleteMany({});
   await OvertimeApplication.deleteMany({});
+  clearCodes();
+  sendEmail.mockClear();
 });
 
 afterAll(async () => {
@@ -82,17 +86,44 @@ describe("POST /api/auth/login", () => {
       .post("/api/auth/login")
       .send({ username: "employee1", password: "wrong" });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
     expect(res.body.token).toBeUndefined();
   });
 
-  it("rejects an account pending approval", async () => {
+  it("gives an unknown username the same reply as a wrong password", async () => {
+    await createUser();
+    const wrongPassword = await request(app)
+      .post("/api/auth/login")
+      .send({ username: "employee1", password: "wrong" });
+    const unknownUser = await request(app)
+      .post("/api/auth/login")
+      .send({ username: "nobody", password: "wrong" });
+
+    expect(unknownUser.status).toBe(wrongPassword.status);
+    expect(unknownUser.body).toEqual(wrongPassword.body);
+  });
+
+  it("only says an account is pending once the password is right", async () => {
     await createUser({ status: "Pending" });
-    const res = await request(app)
+    const right = await request(app)
       .post("/api/auth/login")
       .send({ username: "employee1", password: "Password123!" });
+    const wrong = await request(app)
+      .post("/api/auth/login")
+      .send({ username: "employee1", password: "wrong" });
 
-    expect(res.status).toBe(403);
+    expect(right.status).toBe(403);
+    expect(wrong.status).toBe(401);
+  });
+
+  it("rejects a username that isn't text", async () => {
+    await createUser();
+    const res = await request(app)
+      .post("/api/auth/login")
+      .send({ username: { $ne: null }, password: "Password123!" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.token).toBeUndefined();
   });
 });
 
@@ -143,6 +174,111 @@ describe("POST /api/auth/forgot-password", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.otp).toBeUndefined();
+  });
+  it("says an unregistered email isn't registered, and sends nothing", async () => {
+    const res = await request(app)
+      .post("/api/auth/forgot-password")
+      .send({ email: "nobody@example.com" });
+
+    expect(res.status).toBe(404);
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("makes you wait a minute before another code", async () => {
+    await createUser();
+    const send = () =>
+      request(app)
+        .post("/api/auth/forgot-password")
+        .send({ email: "employee1@example.com" });
+
+    expect((await send()).status).toBe(200);
+    expect((await send()).status).toBe(429);
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("OTP and password reset", () => {
+  // Requests a code and reads it from the mocked email
+  const requestCode = async () => {
+    await request(app)
+      .post("/api/auth/forgot-password")
+      .send({ email: "employee1@example.com" });
+    return sendEmail.mock.calls.at(-1)[1];
+  };
+
+  const sendOtp = (otp) =>
+    request(app)
+      .post("/api/auth/otp")
+      .send({ email: "employee1@example.com", otp });
+
+  it("resets the password with the emailed code", async () => {
+    await createUser();
+    const otp = await requestCode();
+
+    const verified = await sendOtp(otp);
+    expect(verified.status).toBe(200);
+
+    const reset = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ resetToken: verified.body.resetToken, password: "NewPass123!" });
+    expect(reset.status).toBe(200);
+    expect(await loginAs("employee1", "NewPass123!")).toBeDefined();
+  });
+
+  it("says how many tries are left after a wrong code", async () => {
+    await createUser();
+    const otp = await requestCode();
+    const wrong = otp === "111111" ? "222222" : "111111";
+
+    const res = await sendOtp(wrong);
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe(
+      `Incorrect code. ${MAX_ATTEMPTS - 1} tries left.`,
+    );
+  });
+
+  it("turns away a code that isn't 6 digits without using a try", async () => {
+    await createUser();
+    const otp = await requestCode();
+
+    for (let i = 0; i < MAX_ATTEMPTS; i += 1) {
+      expect((await sendOtp("12ab")).status).toBe(400);
+    }
+    expect((await sendOtp(otp)).status).toBe(200);
+  });
+
+  it("locks the code after too many wrong tries", async () => {
+    await createUser();
+    const otp = await requestCode();
+    const wrong = otp === "111111" ? "222222" : "111111";
+
+    for (let i = 1; i < MAX_ATTEMPTS; i += 1) {
+      expect((await sendOtp(wrong)).status).toBe(400);
+    }
+    expect((await sendOtp(wrong)).status).toBe(429);
+    // Even the right code no longer works
+    expect((await sendOtp(otp)).status).toBe(429);
+  });
+
+  it("does not accept a reset token as a login", async () => {
+    await createUser();
+    const verified = await sendOtp(await requestCode());
+
+    const res = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${verified.body.resetToken}`);
+    expect(res.status).toBe(401);
+  });
+
+  it("does not accept a login token as a reset token", async () => {
+    await createUser();
+    const token = await loginAs("employee1");
+
+    const res = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ resetToken: token, password: "Hijacked123!" });
+    expect(res.status).toBe(400);
+    expect(await loginAs("employee1")).toBeDefined();
   });
 });
 
