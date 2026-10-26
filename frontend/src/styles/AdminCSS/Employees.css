@@ -169,6 +169,29 @@
   white-space: nowrap;
 }
 
+/* The type badge with the "Due for regularization" badge under it */
+.employees-page .employee-table .table-content-container .employee-type-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.employees-page .employee-due-badge {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 3px 8px;
+  border: 1px solid #fde68a;
+  border-radius: 999px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .employees-page .action-buttons {
   display: flex;
   gap: 8px;

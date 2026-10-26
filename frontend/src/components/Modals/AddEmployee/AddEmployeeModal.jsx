@@ -7,6 +7,7 @@ import ConfirmModal from "../Confirm/ConfirmModal";
 import CancelModal from "../Cancel/CancelModal";
 import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
 import API from "../../../api";
+import { manilaToday } from "../../../utils/cutoff";
 
 const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -25,6 +26,8 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
     position: "",
     employmentType: "",
     startDate: "",
+    regularizationDate: "",
+    basicPay: "",
     timeIn: "",
     timeOut: "",
   });
@@ -71,10 +74,16 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
   };
 
   const handleDropdownChange = (field, value) => {
-    setAddEmployee({
-      ...addEmployee,
-      [field]: value,
-    });
+    const next = { ...addEmployee, [field]: value };
+    // A regular employee needs a date of regularization; start with today
+    if (
+      field === "employmentType" &&
+      value === "Regular" &&
+      !next.regularizationDate
+    ) {
+      next.regularizationDate = manilaToday();
+    }
+    setAddEmployee(next);
     setHasChanges(true);
   };
 
@@ -138,6 +147,8 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (error) {
       console.error("Failed adding employee:", error);
+      setIsConfirmModalOpen(false);
+      alert(error.response?.data?.message || "Could not add the employee.");
     }
   };
 
@@ -333,6 +344,42 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                   type="date"
                   name="startDate"
                   value={addEmployee.startDate}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Date of Regularization</label>
+                {addEmployee.employmentType === "Regular" && (
+                  <span className="required">*</span>
+                )}
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="date"
+                  name="regularizationDate"
+                  value={addEmployee.regularizationDate}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="input-container">
+              <div className="label-container">
+                <label>Basic Pay (monthly, PHP)</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="number"
+                  name="basicPay"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={addEmployee.basicPay}
                   onChange={handleChange}
                 />
               </div>

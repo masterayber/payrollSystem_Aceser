@@ -46,6 +46,25 @@
   overflow-wrap: anywhere;
 }
 
+.profile-secret {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-secret-toggle {
+  display: inline-flex;
+  padding: 2px;
+  border: 0;
+  background: none;
+  color: var(--neutral-color-70);
+  cursor: pointer;
+}
+
+.profile-secret-toggle:hover {
+  color: var(--main-color-1);
+}
+
 .profile-header {
   display: flex;
   flex-wrap: wrap;

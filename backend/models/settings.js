@@ -26,6 +26,15 @@ const settingsSchema = new mongoose.Schema({
       startDate: {
         type: Date,
       },
+      regularizationDate: {
+        type: Date,
+        default: null,
+      },
+      basicPay: {
+        type: Number,
+        min: 0,
+        default: null,
+      },
       schedule: {
         timeIn: {
           type: String,

@@ -9,6 +9,8 @@ const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
 
+const { checkJobDetails } = require("../utils/jobDetails");
+
 const router = express.Router();
 
 // Router for getting all the employees data
@@ -63,6 +65,8 @@ router.get("/employees", requireAdmin, async (req, res) => {
                 position: "",
                 employmentType: "",
                 startDate: "",
+                regularizationDate: null,
+                basicPay: null,
                 schedule: { timeIn: "", timeOut: "" },
               },
             ],
@@ -110,6 +114,8 @@ router.get("/employees/:userId", requireAdmin, async (req, res) => {
         position: job.position || "",
         employmentType: job.employmentType || "",
         startDate: job.startDate || "",
+        regularizationDate: job.regularizationDate || "",
+        basicPay: job.basicPay ?? null,
         schedule: {
           timeIn: job.schedule?.timeIn || "",
           timeOut: job.schedule?.timeOut || "",
@@ -304,6 +310,11 @@ router.post("/add-employee-via-admin", requireAdmin, async (req, res) => {
       timeOut,
     } = req.body;
 
+    const job = checkJobDetails(req.body);
+    if (job.error) {
+      return res.status(400).json({ message: job.error });
+    }
+
     const user = new User({
       username,
       password,
@@ -345,6 +356,7 @@ router.post("/add-employee-via-admin", requireAdmin, async (req, res) => {
           position: position,
           employmentType: employmentType,
           startDate: startDate,
+          ...job.fields,
           schedule: {
             timeIn: timeIn,
             timeOut: timeOut,
@@ -392,6 +404,14 @@ router.put("/edit-employee-via-admin/:id", requireAdmin, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    const saved = await Settings.findOne({ userId })
+      .select("general.jobDescription")
+      .lean();
+    const job = checkJobDetails(req.body, saved?.general?.jobDescription);
+    if (job.error) {
+      return res.status(400).json({ message: job.error });
+    }
+
     if (username !== undefined) user.username = username;
     if (email !== undefined) user.email = email;
     // A non-empty password is a reset. save() runs the pre-save hook that hashes
@@ -431,6 +451,11 @@ router.put("/edit-employee-via-admin/:id", requireAdmin, async (req, res) => {
         jobUpdate[`general.jobDescription.${field}`] = value;
       }
     }
+
+    for (const [field, value] of Object.entries(job.fields)) {
+      jobUpdate[`general.jobDescription.${field}`] = value;
+    }
+
     if (timeIn !== undefined) {
       jobUpdate["general.jobDescription.schedule.timeIn"] = timeIn;
     }

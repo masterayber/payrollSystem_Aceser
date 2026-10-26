@@ -518,6 +518,65 @@ describe("Admin employee profile routes", () => {
     expect(saved.password).not.toBe("NewPass123!");
     expect(await loginAs("employee1", "NewPass123!")).toBeDefined();
   });
+
+  it("saves basic pay and the date of regularization", async () => {
+    const { employeeUser, token } = await setup();
+    await Settings.create({ userId: employeeUser._id });
+
+    const res = await request(app)
+      .put(`/api/employee/edit-employee-via-admin/${employeeUser._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        employmentType: "Regular",
+        regularizationDate: "2026-10-26",
+        basicPay: "25000",
+      });
+
+    expect(res.status).toBe(200);
+    const profile = await request(app)
+      .get(`/api/employee/employees/${employeeUser._id}`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(profile.body.jobDescription.basicPay).toBe(25000);
+    expect(profile.body.jobDescription.regularizationDate).toMatch(
+      /^2026-10-26/,
+    );
+  });
+
+  it("rejects a regular employee without a date of regularization and saves nothing", async () => {
+    const { employeeUser, token } = await setup();
+    await Settings.create({ userId: employeeUser._id });
+
+    const res = await request(app)
+      .put(`/api/employee/edit-employee-via-admin/${employeeUser._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ username: "renamed", employmentType: "Regular" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/date of regularization/);
+    const user = await User.findById(employeeUser._id);
+    expect(user.username).toBe("employee1");
+  });
+
+  it("rejects negative basic pay when adding an employee", async () => {
+    const { token } = await setup();
+
+    const res = await request(app)
+      .post("/api/employee/add-employee-via-admin")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        firstName: "Ana",
+        lastName: "Santos",
+        employeeId: "EMP-002",
+        email: "ana@example.com",
+        username: "ana",
+        password: "Password123!",
+        employmentType: "Probationary",
+        basicPay: -100,
+      });
+
+    expect(res.status).toBe(400);
+    expect(await User.findOne({ username: "ana" })).toBeNull();
+  });
 });
 
 describe("Company settings (/api/settings/company)", () => {

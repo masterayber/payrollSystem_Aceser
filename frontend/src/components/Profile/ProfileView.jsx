@@ -1,4 +1,6 @@
+import { useState } from "react";
 import PropTypes from "prop-types";
+import { IconEye, IconEyeClosed } from "@tabler/icons-react";
 import "./Profile.css";
 
 const EMPTY = "—";
@@ -15,6 +17,14 @@ const formatDate = (value) => {
       });
 };
 
+const formatPeso = (value) =>
+  value === null || value === undefined || value === ""
+    ? EMPTY
+    : Number(value).toLocaleString("en-PH", {
+        style: "currency",
+        currency: "PHP",
+      });
+
 export const Field = ({ label, value }) => (
   <div className="profile-field">
     <dt>{label}</dt>
@@ -23,6 +33,40 @@ export const Field = ({ label, value }) => (
 );
 
 Field.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string,
+};
+
+// A field that stays hidden until the eye button is pressed, like a password
+export const SecretField = ({ label, value }) => {
+  const [isShown, setIsShown] = useState(false);
+  const hasValue = Boolean(value) && value !== EMPTY;
+
+  return (
+    <div className="profile-field">
+      <dt>{label}</dt>
+      <dd className="profile-secret">
+        <span>{!hasValue ? EMPTY : isShown ? value : "₱ •••••••"}</span>
+        {hasValue && (
+          <button
+            type="button"
+            className="profile-secret-toggle"
+            aria-label={isShown ? `Hide ${label}` : `Show ${label}`}
+            onClick={() => setIsShown(!isShown)}
+          >
+            {isShown ? (
+              <IconEye stroke={2} size={18} />
+            ) : (
+              <IconEyeClosed stroke={2} size={18} />
+            )}
+          </button>
+        )}
+      </dd>
+    </div>
+  );
+};
+
+SecretField.propTypes = {
   label: PropTypes.string.isRequired,
   value: PropTypes.string,
 };
@@ -71,6 +115,14 @@ const ProfileView = ({ profile, employment }) => {
           <Field label="Department" value={employment.department} />
           <Field label="Position" value={employment.position} />
           <Field label="Start date" value={formatDate(employment.startDate)} />
+          <Field
+            label="Date of regularization"
+            value={formatDate(employment.regularizationDate)}
+          />
+          <SecretField
+            label="Basic pay (monthly)"
+            value={formatPeso(employment.basicPay)}
+          />
           <Field label="Schedule" value={schedule} />
         </Card>
       )}
