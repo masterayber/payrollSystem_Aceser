@@ -139,7 +139,11 @@ const AdminCompanySettings = () => {
   if (!company) {
     return (
       <div className="settings-content">
-        <p className="company-error">{errorMessage || "Loading..."}</p>
+        {errorMessage ? (
+          <p className="feedback-message error">{errorMessage}</p>
+        ) : (
+          <p>Loading...</p>
+        )}
       </div>
     );
   }
@@ -197,7 +201,7 @@ const AdminCompanySettings = () => {
         onChange={handleLogoChange}
       />
 
-      {errorMessage && <p className="company-error">{errorMessage}</p>}
+      {errorMessage && <p className="feedback-message error">{errorMessage}</p>}
 
       {isEditing ? (
         <>

@@ -197,6 +197,26 @@
   gap: 8px;
 }
 
+/* Resigned employees: muted row, red badge */
+.employees-page
+  .employee-table
+  .employee-row.resigned
+  .table-content-container {
+  color: var(--neutral-color-70);
+}
+
+.employees-page .employee-resigned-badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border: 1px solid #fecaca;
+  border-radius: 999px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .employees-page .action-button {
   display: flex;
   align-items: center;
@@ -289,12 +309,6 @@
 .employee-modal-content .access-note {
   color: var(--neutral-color-80);
   opacity: 1;
-}
-
-.employee-modal-content .error-message {
-  margin-top: 14px;
-  color: var(--red-status);
-  font-size: 14px;
 }
 
 .employee-modal-table {

@@ -58,7 +58,3 @@
   background: #e0f2fe;
   color: #075985;
 }
-
-.employee-profile-page .error-message {
-  color: var(--red-status);
-}

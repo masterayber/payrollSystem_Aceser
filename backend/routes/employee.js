@@ -9,12 +9,16 @@ const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
 
-const { checkJobDetails } = require("../utils/jobDetails");
+const { checkJobDetails, checkResignation } = require("../utils/jobDetails");
 
 const router = express.Router();
 
-// Router for getting all the employees data
+// Router for getting all the employees data. Only active employees, unless
+// ?includeResigned=true (the Employees page lists resigned employees at the bottom).
 router.get("/employees", requireAdmin, async (req, res) => {
+  const statuses =
+    req.query.includeResigned === "true" ? ["Active", "Resigned"] : ["Active"];
+
   try {
     const employees = await Employee.aggregate([
       {
@@ -42,7 +46,7 @@ router.get("/employees", requireAdmin, async (req, res) => {
       { $unwind: "$userDetails" },
       {
         $match: {
-          "userDetails.status": "Active",
+          "userDetails.status": { $in: statuses },
           "userDetails.role": "Employee",
         },
       },
@@ -55,6 +59,7 @@ router.get("/employees", requireAdmin, async (req, res) => {
           email: 1,
           gender: 1,
           username: "$userDetails.username",
+          status: "$userDetails.status",
           createdAt: "$userDetails.createdAt",
           jobDescription: {
             $ifNull: [
@@ -116,6 +121,8 @@ router.get("/employees/:userId", requireAdmin, async (req, res) => {
         startDate: job.startDate || "",
         regularizationDate: job.regularizationDate || "",
         basicPay: job.basicPay ?? null,
+        resignationDate: job.resignationDate || "",
+        resignationReason: job.resignationReason || "",
         schedule: {
           timeIn: job.schedule?.timeIn || "",
           timeOut: job.schedule?.timeOut || "",
@@ -287,6 +294,105 @@ router.get("/latest-employeeId", requireAdmin, async (req, res) => {
     return res
       .status(500)
       .json({ message: "Failed to fetch latest employee ID" });
+  }
+});
+
+// Marks an employee as resigned. They can no longer log in (every route only lets
+// Active accounts through), and their attendance, filings and pay records are kept.
+router.patch("/employees/:userId/resign", requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
+    if (String(req.user.userId) === userId) {
+      return res
+        .status(400)
+        .json({ message: "You can't mark your own account as resigned." });
+    }
+
+    const settings = await Settings.findOne({ userId })
+      .select("general.jobDescription")
+      .lean();
+    const resignation = checkResignation(
+      req.body,
+      settings?.general?.jobDescription,
+    );
+    if (resignation.error) {
+      return res.status(400).json({ message: resignation.error });
+    }
+
+    // The Active filter is part of the update, so it only happens once
+    const user = await User.findOneAndUpdate(
+      { _id: userId, status: "Active" },
+      { status: "Resigned", updatedAt: new Date() },
+    );
+    if (!user) {
+      const exists = await User.exists({ _id: userId });
+      return exists
+        ? res
+            .status(409)
+            .json({ message: "Only an active employee can resign." })
+        : res.status(404).json({ message: "User not found" });
+    }
+
+    await Settings.findOneAndUpdate(
+      { userId },
+      {
+        $set: {
+          "general.jobDescription.resignationDate":
+            resignation.fields.resignationDate,
+          "general.jobDescription.resignationReason":
+            resignation.fields.resignationReason,
+        },
+      },
+      { upsert: true },
+    );
+
+    res.status(200).json({ message: "Employee marked as resigned" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Failed to mark as resigned", error: err.message });
+  }
+});
+
+// Undoes a resignation, e.g. one marked by mistake: the account can log in again
+router.patch("/employees/:userId/reinstate", requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
+
+    const user = await User.findOneAndUpdate(
+      { _id: userId, status: "Resigned" },
+      { status: "Active", updatedAt: new Date() },
+    );
+    if (!user) {
+      const exists = await User.exists({ _id: userId });
+      return exists
+        ? res
+            .status(409)
+            .json({ message: "Only a resigned employee can be reinstated." })
+        : res.status(404).json({ message: "User not found" });
+    }
+
+    await Settings.findOneAndUpdate(
+      { userId },
+      {
+        $set: {
+          "general.jobDescription.resignationDate": null,
+          "general.jobDescription.resignationReason": "",
+        },
+      },
+    );
+
+    res.status(200).json({ message: "Employee reinstated" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Failed to reinstate", error: err.message });
   }
 });
 

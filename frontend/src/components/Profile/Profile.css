@@ -121,6 +121,11 @@
   color: #854d0e;
 }
 
+.profile-badge.status-resigned {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 @media (max-width: 768px) {
   .profile-grid,
   .profile-fields {

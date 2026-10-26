@@ -1005,3 +1005,141 @@ describe("Attendance in login and /me", () => {
     }
   });
 });
+
+describe("Resign and reinstate (/api/employee/employees/:userId)", () => {
+  const setup = async () => {
+    const employeeUser = await createUser();
+    await Employee.create({
+      userId: employeeUser._id,
+      firstName: "Juan",
+      lastName: "Dela Cruz",
+      email: "employee1@example.com",
+      employeeId: "EMP-001",
+    });
+    await Settings.create({
+      userId: employeeUser._id,
+      general: { jobDescription: { startDate: new Date("2026-01-05") } },
+    });
+    const admin = await createUser({
+      username: "admin1",
+      email: "admin1@example.com",
+      role: "Admin",
+    });
+    const token = await loginAs("admin1");
+    return { employeeUser, admin, token };
+  };
+
+  const resign = (userId, token, body) =>
+    request(app)
+      .patch(`/api/employee/employees/${userId}/resign`)
+      .set("Authorization", `Bearer ${token}`)
+      .send(body);
+
+  const reinstate = (userId, token) =>
+    request(app)
+      .patch(`/api/employee/employees/${userId}/reinstate`)
+      .set("Authorization", `Bearer ${token}`);
+
+  it("marks the employee resigned, keeps the date and reason, and blocks their login", async () => {
+    const { employeeUser, token } = await setup();
+    const employeeToken = await loginAs("employee1");
+
+    const res = await resign(employeeUser._id, token, {
+      resignationDate: "2026-10-30",
+      resignationReason: "Moving abroad",
+    });
+
+    expect(res.status).toBe(200);
+    expect((await User.findById(employeeUser._id)).status).toBe("Resigned");
+    const settings = await Settings.findOne({ userId: employeeUser._id });
+    expect(settings.general.jobDescription.resignationReason).toBe(
+      "Moving abroad",
+    );
+
+    const login = await request(app)
+      .post("/api/auth/login")
+      .send({ username: "employee1", password: "Password123!" });
+    expect(login.status).toBe(403);
+    expect(login.body.message).toMatch(/no longer active/);
+
+    // A session opened before the resignation stops working too
+    const me = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${employeeToken}`);
+    expect(me.status).toBe(401);
+  });
+
+  it("lists resigned employees only when asked", async () => {
+    const { employeeUser, token } = await setup();
+    await resign(employeeUser._id, token, { resignationDate: "2026-10-30" });
+
+    const active = await request(app)
+      .get("/api/employee/employees")
+      .set("Authorization", `Bearer ${token}`);
+    expect(active.body).toHaveLength(0);
+
+    const all = await request(app)
+      .get("/api/employee/employees?includeResigned=true")
+      .set("Authorization", `Bearer ${token}`);
+    expect(all.body).toHaveLength(1);
+    expect(all.body[0].status).toBe("Resigned");
+  });
+
+  it("rejects a bad date, a second resignation and the admin's own account", async () => {
+    const { employeeUser, admin, token } = await setup();
+
+    const before = await resign(employeeUser._id, token, {
+      resignationDate: "2025-12-31",
+    });
+    expect(before.status).toBe(400);
+    expect(before.body.message).toMatch(/before the start date/);
+
+    await resign(employeeUser._id, token, { resignationDate: "2026-10-30" });
+    const again = await resign(employeeUser._id, token, {
+      resignationDate: "2026-10-30",
+    });
+    expect(again.status).toBe(409);
+
+    const self = await resign(admin._id, token, {
+      resignationDate: "2026-10-30",
+    });
+    expect(self.status).toBe(400);
+  });
+
+  it("reinstates a resigned employee and clears the resignation", async () => {
+    const { employeeUser, token } = await setup();
+    await resign(employeeUser._id, token, { resignationDate: "2026-10-30" });
+
+    const res = await reinstate(employeeUser._id, token);
+
+    expect(res.status).toBe(200);
+    expect((await User.findById(employeeUser._id)).status).toBe("Active");
+    const settings = await Settings.findOne({ userId: employeeUser._id });
+    expect(settings.general.jobDescription.resignationDate).toBeNull();
+    expect(await loginAs("employee1")).toBeDefined();
+
+    expect((await reinstate(employeeUser._id, token)).status).toBe(409);
+  });
+
+  it("returns 403 for an employee", async () => {
+    const { employeeUser } = await setup();
+    const employeeToken = await loginAs("employee1");
+
+    const res = await resign(employeeUser._id, employeeToken, {
+      resignationDate: "2026-10-30",
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it("doesn't let the approve route reactivate a resigned employee", async () => {
+    const { employeeUser, token } = await setup();
+    await resign(employeeUser._id, token, { resignationDate: "2026-10-30" });
+
+    const res = await request(app)
+      .put(`/api/auth/users/${employeeUser._id}/status`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(404);
+    expect((await User.findById(employeeUser._id)).status).toBe("Resigned");
+  });
+});

@@ -189,7 +189,9 @@ const EditEmployeeAttendanceModal = ({
             </div>
           </div>
 
-          {errorMessage && <p className="error-message">{errorMessage}</p>}
+          {errorMessage && (
+            <p className="feedback-message error">{errorMessage}</p>
+          )}
 
           <div className="modal-buttons">
             <button

@@ -19,7 +19,7 @@ import {
   lateFill,
   dayNames,
 } from "./excelStyles";
-import { formatKey } from "./reportHelpers";
+import { formatKey, isNotEmployedOn } from "./reportHelpers";
 
 const buildAttendanceMap = (attendanceRecords) => {
   const attendanceMap = {};
@@ -94,8 +94,8 @@ const formatLateConversion = (totalSeconds) => {
   return `${conversion.toFixed(2)} hrs`;
 };
 
-const getCellValue = (employeeAttendance, dateKey, isBeforeHire) => {
-  if (isBeforeHire) return "";
+const getCellValue = (employeeAttendance, dateKey, isNotEmployed) => {
+  if (isNotEmployed) return "";
 
   const record = employeeAttendance[dateKey];
   return record?.behavior === "Late" ? getLateDuration(record.timeIn) : "";
@@ -225,7 +225,6 @@ export const LateSheet = ({
 
   employees.forEach((employee) => {
     const employeeAttendance = attendanceMap[employee._id] || {};
-    const hireKey = employee.createdAt ? formatKey(employee.createdAt) : null;
     let totalLateSeconds = 0;
 
     setCell(ws3, rowIndex, 0, number, "n", {
@@ -252,9 +251,9 @@ export const LateSheet = ({
       const isWeekendDay = dayIndex === 0 || dayIndex === 6;
       const dayFill = getDayFill(d);
       const record = employeeAttendance[dateKey];
-      const isBeforeHire = hireKey && dateKey < hireKey;
+      const isNotEmployed = isNotEmployedOn(employee, dateKey);
 
-      if (!isBeforeHire && record?.behavior === "Late") {
+      if (!isNotEmployed && record?.behavior === "Late") {
         totalLateSeconds += getLateSeconds(record.timeIn);
         dailyLateCounts[i] += 1;
       }
@@ -263,7 +262,7 @@ export const LateSheet = ({
         employeeAttendance,
         dateKey,
         isWeekendDay,
-        isBeforeHire,
+        isNotEmployed,
       );
 
       setCell(ws3, rowIndex, 5 + i, cellValue, "s", {

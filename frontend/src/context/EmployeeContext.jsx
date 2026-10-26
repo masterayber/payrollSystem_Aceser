@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import API from "../api";
 import { UserContext } from "./UserContext";
+import { activeFirst } from "../utils/employees";
 
 export const EmployeeContext = createContext();
 
@@ -22,9 +23,10 @@ export const EmployeeProvider = ({ children }) => {
     const fetchEmployees = async () => {
       try {
         const response = await API.get("/api/employee/employees", {
+          params: { includeResigned: true },
           signal: controller.signal,
         });
-        setEmployeeData(response.data);
+        setEmployeeData(activeFirst(response.data));
       } catch (error) {
         if (!controller.signal.aborted) {
           console.error("Error fetching employees:", error);

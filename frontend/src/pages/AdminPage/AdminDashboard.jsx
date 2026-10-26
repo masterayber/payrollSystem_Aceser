@@ -10,6 +10,7 @@ import { IconDotsVertical } from "@tabler/icons-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import API from "../../api";
+import { activeOnly } from "../../utils/employees";
 
 const AdminDashboard = () => {
   const { userData } = useContext(UserContext);
@@ -53,7 +54,7 @@ const AdminDashboard = () => {
         const today = new Date();
         const formattedToday = today.toISOString().split("T")[0].trim();
 
-        const employees = employeeData;
+        const employees = activeOnly(employeeData);
 
         // Fetch today's attendance
         const attRes = await API.get("/api/attendance/attendance", {
@@ -173,7 +174,7 @@ const AdminDashboard = () => {
         <div className="data-card dashboard-stat-card">
           <div className="message-container">
             <div className="data-title">Total employees</div>
-            <div className="data-value">{employeeData.length}</div>
+            <div className="data-value">{activeOnly(employeeData).length}</div>
           </div>
         </div>
 

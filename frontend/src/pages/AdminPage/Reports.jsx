@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import XLSX from "xlsx-js-style";
 import { EmployeeContext } from "../../context/EmployeeContext";
+import { activeOnly, isPastLastWorkingDay } from "../../utils/employees";
 import Dropdown from "../../components/Dropdown/Dropdown";
 import "../../styles/AdminCSS/Reports.css";
 import API from "../../api";
@@ -57,13 +58,17 @@ const Reports = () => {
       selectedOption,
     );
 
+    const reportEmployees = employeeData.filter(
+      (employee) => !isPastLastWorkingDay(employee, start),
+    );
+
     const { ws1 } = AttendanceSheet({
       label,
       monthName,
       cutoff,
       startDate: new Date(start),
       endDate: new Date(end),
-      employeeData,
+      employeeData: reportEmployees,
       attendanceRecords,
     });
 
@@ -73,7 +78,7 @@ const Reports = () => {
       cutoff,
       startDate: new Date(start),
       endDate: new Date(end),
-      employeeData,
+      employeeData: reportEmployees,
       attendanceRecords,
     });
 
@@ -83,7 +88,7 @@ const Reports = () => {
       cutoff,
       startDate: new Date(start),
       endDate: new Date(end),
-      employeeData,
+      employeeData: reportEmployees,
       attendanceRecords,
     });
 
@@ -110,7 +115,9 @@ const Reports = () => {
         <div className="data-card reports-metric-card">
           <div className="message-container">
             <div className="data-title">Employees</div>
-            <span className="data-value">{employeeData.length}</span>
+            <span className="data-value">
+              {activeOnly(employeeData).length}
+            </span>
           </div>
         </div>
 
