@@ -7,6 +7,16 @@ import ApproveEmployeeModal from "../../components/Modals/Approve/ApproveEmploye
 import "../../styles/AdminCSS/Employees.css";
 import Pagination from "../../components/Pagination/Pagination";
 import API from "../../api";
+import { manilaToday } from "../../utils/cutoff";
+
+const PROBATION_MONTHS = 6;
+
+const isDueForRegularization = (job) => {
+  if (job?.employmentType !== "Probationary" || !job.startDate) return false;
+  const due = new Date(job.startDate);
+  due.setUTCMonth(due.getUTCMonth() + PROBATION_MONTHS);
+  return due.toISOString().slice(0, 10) <= manilaToday();
+};
 
 const Employees = () => {
   const { employeeData, setEmployeeData } = useContext(EmployeeContext);
@@ -191,10 +201,18 @@ const Employees = () => {
               <p>{employee.jobDescription?.position || ""}</p>
             </article>
             <article className="table-content-container">
-              <p>
+              <p className="employee-type-cell">
                 <span className="employee-type-badge">
                   {employee.jobDescription?.employmentType || ""}
                 </span>
+                {isDueForRegularization(employee.jobDescription) && (
+                  <span
+                    className="employee-due-badge"
+                    title="Due for regularization"
+                  >
+                    Due for regularization
+                  </span>
+                )}
               </p>
             </article>
             <article className="table-content-container">

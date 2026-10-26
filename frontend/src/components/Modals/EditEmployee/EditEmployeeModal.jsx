@@ -9,6 +9,7 @@ import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
 import { IconAlertTriangle, IconCancel, IconCheck } from "@tabler/icons-react";
 import DeleteModal from "../Delete/DeleteModal";
 import API from "../../../api";
+import { manilaToday, toManilaDate } from "../../../utils/cutoff";
 
 const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
@@ -31,6 +32,10 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
             .toISOString()
             .split("T")[0]
         : "",
+      regularizationDate: employee.jobDescription.regularizationDate
+        ? toManilaDate(employee.jobDescription.regularizationDate)
+        : "",
+      basicPay: employee.jobDescription.basicPay ?? "",
       schedule: {
         timeIn: employee.jobDescription.schedule.timeIn || "",
         timeOut: employee.jobDescription.schedule.timeOut || "",
@@ -61,12 +66,12 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "startDate") {
+    if (["startDate", "regularizationDate", "basicPay"].includes(name)) {
       setEditEmployee((prev) => ({
         ...prev,
         jobDescription: {
           ...prev.jobDescription,
-          startDate: value,
+          [name]: value,
         },
       }));
     } else if (name === "timeIn" || name === "timeOut") {
@@ -99,7 +104,20 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
           position: "",
         },
       }));
-    } else if (["designation", "position", "employmentType"].includes(field)) {
+    } else if (field === "employmentType") {
+      // A regular employee needs a date of regularization; start with today
+      setEditEmployee((prev) => ({
+        ...prev,
+        jobDescription: {
+          ...prev.jobDescription,
+          employmentType: value,
+          regularizationDate:
+            value === "Regular" && !prev.jobDescription.regularizationDate
+              ? manilaToday()
+              : prev.jobDescription.regularizationDate,
+        },
+      }));
+    } else if (["designation", "position"].includes(field)) {
       setEditEmployee((prev) => ({
         ...prev,
         jobDescription: {
@@ -198,6 +216,8 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
       position: editEmployee.jobDescription.position,
       employmentType: editEmployee.jobDescription.employmentType,
       startDate: editEmployee.jobDescription.startDate,
+      regularizationDate: editEmployee.jobDescription.regularizationDate,
+      basicPay: editEmployee.jobDescription.basicPay,
       timeIn: editEmployee.jobDescription.schedule.timeIn,
       timeOut: editEmployee.jobDescription.schedule.timeOut,
     };
@@ -213,6 +233,8 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (error) {
       console.error("Error updating employee:", error);
+      setIsConfirmModalOpen(false);
+      alert(error.response?.data?.message || "Could not update the employee.");
     }
   };
 
@@ -438,6 +460,42 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                   type="date"
                   name="startDate"
                   value={editEmployee.jobDescription.startDate}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
+                <label>Date of Regularization </label>
+                {editEmployee.jobDescription.employmentType === "Regular" && (
+                  <span className="required">*</span>
+                )}
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="date"
+                  name="regularizationDate"
+                  value={editEmployee.jobDescription.regularizationDate}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="input-container">
+              <div className="label-container">
+                <label>Basic Pay (monthly, PHP)</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="number"
+                  name="basicPay"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={editEmployee.jobDescription.basicPay}
                   onChange={handleChange}
                 />
               </div>
