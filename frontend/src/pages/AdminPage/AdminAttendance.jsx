@@ -8,6 +8,7 @@ import API from "../../api";
 import EditEmployeeAttendanceModal from "../../components/Modals/EditEmployee/EditEmployeeAttendanceModal";
 import "../../styles/AdminCSS/AdminAttendance.css";
 import Pagination from "../../components/Pagination/Pagination";
+import { isPastLastWorkingDay } from "../../utils/employees";
 
 const AdminAttendance = () => {
   const { employeeData } = useContext(EmployeeContext);
@@ -117,11 +118,13 @@ const AdminAttendance = () => {
   };
 
   const filteredEmployees = (employeeData || [])
+    .filter(
+      (employee) => !isPastLastWorkingDay(employee, formatDate(selectedDate)),
+    )
     .map((employee) => {
       const selected = formatDate(selectedDate);
       const createdDate = formatDate(new Date(employee.createdAt));
       const isBeforeHired = new Date(selected) < new Date(createdDate);
-
       const attendanceRecord = getAttendanceForEmployee(employee._id);
       const isWeekend = [0, 6].includes(new Date(selected).getDay());
       const isFutureDate = selected > formatDate(new Date());
@@ -185,13 +188,7 @@ const AdminAttendance = () => {
             <div className="data-value">
               {
                 filteredEmployees.filter(
-                  (emp) =>
-                    calculateBehavior(
-                      emp.timeIn,
-                      emp.timeOut,
-                      emp.isBeforeHired,
-                    ) === "On-Time" &&
-                    emp.attendanceRecord?.behavior !== "On-Leave",
+                  (emp) => getDisplayedBehavior(emp) === "On-Time",
                 ).length
               }
             </div>

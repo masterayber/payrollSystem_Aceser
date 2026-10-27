@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconPlus, IconSearch, IconProgressCheck } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
@@ -7,6 +7,7 @@ import ApproveEmployeeModal from "../../components/Modals/Approve/ApproveEmploye
 import "../../styles/AdminCSS/Employees.css";
 import Pagination from "../../components/Pagination/Pagination";
 import API from "../../api";
+import { activeFirst } from "../../utils/employees";
 import { manilaToday } from "../../utils/cutoff";
 
 const PROBATION_MONTHS = 6;
@@ -19,7 +20,9 @@ const isDueForRegularization = (job) => {
 };
 
 const Employees = () => {
-  const { employeeData, setEmployeeData } = useContext(EmployeeContext);
+  const { setEmployeeData } = useContext(EmployeeContext);
+  // Active and resigned employees, also shared with the other admin pages
+  const [employees, setEmployees] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -28,25 +31,45 @@ const Employees = () => {
   const navigate = useNavigate();
 
   // Fresh list each time the page opens, so edits made on a profile show up
-  useEffect(() => {
-    API.get("/api/employee/employees")
-      .then((response) => setEmployeeData(response.data))
-      .catch((error) => console.error("Error loading employees:", error));
+  const loadEmployees = useCallback(async () => {
+    try {
+      const { data } = await API.get("/api/employee/employees", {
+        params: { includeResigned: true },
+      });
+      setEmployees(data);
+      setEmployeeData(activeFirst(data));
+    } catch (error) {
+      console.error("Error loading employees:", error);
+    }
   }, [setEmployeeData]);
+
+  // Fresh list each time the page opens, so edits made on a profile show up
+  useEffect(() => {
+    loadEmployees();
+  }, [loadEmployees]);
 
   const itemsPerPage = 7;
 
-  const probationaryCount = employeeData.filter(
+  // Active employees first, resigned ones at the bottom
+  const activeEmployees = employees.filter(
+    (employee) => employee.status !== "Resigned",
+  );
+  const resignedEmployees = employees.filter(
+    (employee) => employee.status === "Resigned",
+  );
+
+  const probationaryCount = activeEmployees.filter(
     (employee) => employee.jobDescription.employmentType === "Probationary",
   ).length;
-  const regularCount = employeeData.filter(
+  const regularCount = activeEmployees.filter(
     (employee) => employee.jobDescription.employmentType === "Regular",
   ).length;
 
-  const filteredEmployees = employeeData.filter((employee) =>
-    Object.values(employee).some((value) =>
-      value.toString().toLowerCase().includes(searchQuery.toLowerCase()),
-    ),
+  const filteredEmployees = [...activeEmployees, ...resignedEmployees].filter(
+    (employee) =>
+      Object.values(employee).some((value) =>
+        value.toString().toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
   );
 
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
@@ -64,14 +87,7 @@ const Employees = () => {
     setIsApproveModalOpen(true);
   };
 
-  const handleUpdateEmployee = async () => {
-    try {
-      const response = await API.get("/api/employee/employees");
-      setEmployeeData(response.data);
-    } catch (error) {
-      console.error("Error refreshing employees after update:", error);
-    }
-  };
+  const handleUpdateEmployee = loadEmployees;
 
   return (
     <div className="main-content employees-page">
@@ -79,7 +95,7 @@ const Employees = () => {
         <div className="data-card employee-stat-card">
           <div className="message-container">
             <div className="data-title">Total employees</div>
-            <div className="data-value">{employeeData.length}</div>
+            <div className="data-value">{activeEmployees.length}</div>
           </div>
         </div>
 
@@ -172,7 +188,7 @@ const Employees = () => {
 
         {currentEmployees.map((employee) => (
           <div
-            className="table-content employee-row"
+            className={`table-content employee-row ${employee.status === "Resigned" ? "resigned" : ""}`}
             key={employee._id}
             role="link"
             tabIndex={0}
@@ -202,17 +218,22 @@ const Employees = () => {
             </article>
             <article className="table-content-container">
               <p className="employee-type-cell">
-                <span className="employee-type-badge">
-                  {employee.jobDescription?.employmentType || ""}
-                </span>
-                {isDueForRegularization(employee.jobDescription) && (
-                  <span
-                    className="employee-due-badge"
-                    title="Due for regularization"
-                  >
-                    Due for regularization
+                {employee.status === "Resigned" ? (
+                  <span className="employee-resigned-badge">Resigned</span>
+                ) : (
+                  <span className="employee-type-badge">
+                    {employee.jobDescription?.employmentType || ""}
                   </span>
                 )}
+                {employee.status !== "Resigned" &&
+                  isDueForRegularization(employee.jobDescription) && (
+                    <span
+                      className="employee-due-badge"
+                      title="Due for regularization"
+                    >
+                      Due for regularization
+                    </span>
+                  )}
               </p>
             </article>
             <article className="table-content-container">

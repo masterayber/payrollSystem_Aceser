@@ -1,4 +1,4 @@
-const { checkJobDetails } = require("../utils/jobDetails");
+const { checkJobDetails, checkResignation } = require("../utils/jobDetails");
 
 describe("checkJobDetails", () => {
   it("keeps basic pay as a number rounded to centavos", () => {
@@ -63,5 +63,35 @@ describe("checkJobDetails", () => {
     expect(checkJobDetails({ contactNumber: "0917" }, current)).toEqual({
       fields: {},
     });
+  });
+});
+
+describe("checkResignation", () => {
+  it("keeps the date and a trimmed reason", () => {
+    expect(
+      checkResignation({
+        resignationDate: "2026-10-30",
+        resignationReason: "  Moving abroad ",
+      }),
+    ).toEqual({
+      fields: {
+        resignationDate: "2026-10-30",
+        resignationReason: "Moving abroad",
+      },
+    });
+  });
+
+  it("needs a valid last working day", () => {
+    expect(checkResignation({}).error).toMatch(/last working day/);
+    expect(checkResignation({ resignationDate: "2026-02-30x" }).error).toMatch(
+      /last working day/,
+    );
+  });
+
+  it("rejects a last working day before the start date", () => {
+    const job = { startDate: new Date("2026-05-01") };
+    expect(
+      checkResignation({ resignationDate: "2026-04-30" }, job).error,
+    ).toMatch(/before the start date/);
   });
 });

@@ -73,4 +73,30 @@ const checkJobDetails = (body, current = {}) => {
   return { fields };
 };
 
-module.exports = { checkJobDetails };
+// Checks the last working day and reason an admin sends when an employee resigns.
+// `job` is the saved job description. Returns { error } or { fields } to save.
+const checkResignation = (body, job = {}) => {
+  const { resignationDate, resignationReason = "" } = body;
+
+  if (
+    typeof resignationDate !== "string" ||
+    !DATE_PATTERN.test(resignationDate) ||
+    !toDateKey(resignationDate)
+  ) {
+    return { error: "Enter the last working day as a valid date." };
+  }
+  if (typeof resignationReason !== "string" || resignationReason.length > 500) {
+    return { error: "The reason must be text of up to 500 characters." };
+  }
+
+  const startDate = toDateKey(job.startDate);
+  if (startDate && resignationDate < startDate) {
+    return { error: "The last working day can't be before the start date." };
+  }
+
+  return {
+    fields: { resignationDate, resignationReason: resignationReason.trim() },
+  };
+};
+
+module.exports = { checkJobDetails, checkResignation };

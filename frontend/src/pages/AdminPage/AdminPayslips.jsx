@@ -6,12 +6,14 @@ import {
   IconDotsVertical,
 } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
+import { activeOnly } from "../../utils/employees";
 import Pagination from "../../components/Pagination/Pagination";
 import "../../styles/AdminCSS/AdminPayslips.css";
 
 const AdminPayslips = () => {
-  const { employeeData } = useContext(EmployeeContext);
-
+  const { employeeData: allEmployees } = useContext(EmployeeContext);
+  // Resigned employees are left out until final pay is part of the payroll design
+  const employeeData = activeOnly(allEmployees);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;

@@ -1,12 +1,15 @@
 import { useState, useContext, useEffect, useRef } from "react";
 import { IconSearch, IconDotsVertical } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
+import { activeOnly } from "../../utils/employees";
 import AddModal from "../../components/Modals/DropdownOption/AddOption/AddOption";
 import Pagination from "../../components/Pagination/Pagination";
 import "../../styles/AdminCSS/Deductions.css";
 
 const Deductions = () => {
-  const { employeeData } = useContext(EmployeeContext);
+  const { employeeData: allEmployees } = useContext(EmployeeContext);
+  // Resigned employees are left out until final pay is part of the payroll design
+  const employeeData = activeOnly(allEmployees);
   const [deductionsData] = useState({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showDeductionDropdown, setShowDeductionDropdown] = useState(false);

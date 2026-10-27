@@ -124,6 +124,19 @@ const ProfileView = ({ profile, employment }) => {
             value={formatPeso(employment.basicPay)}
           />
           <Field label="Schedule" value={schedule} />
+
+          {employment.resignationDate && (
+            <>
+              <Field
+                label="Last working day"
+                value={formatDate(employment.resignationDate)}
+              />
+              <Field
+                label="Reason for leaving"
+                value={employment.resignationReason}
+              />
+            </>
+          )}
         </Card>
       )}
 

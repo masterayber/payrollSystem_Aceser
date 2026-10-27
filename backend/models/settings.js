@@ -35,6 +35,14 @@ const settingsSchema = new mongoose.Schema({
         min: 0,
         default: null,
       },
+      resignationDate: {
+        type: Date,
+        default: null,
+      },
+      resignationReason: {
+        type: String,
+        default: "",
+      },
       schedule: {
         timeIn: {
           type: String,

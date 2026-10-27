@@ -6,6 +6,8 @@ import {
   IconCancel,
   IconEdit,
   IconShieldLock,
+  IconUserCheck,
+  IconUserOff,
 } from "@tabler/icons-react";
 import API from "../../api";
 import ProfilePhoto from "../../components/ProfilePhoto/ProfilePhoto";
@@ -20,6 +22,7 @@ import EditEmployeeModal from "../../components/Modals/EditEmployee/EditEmployee
 import ManageAccessModal from "../../components/Modals/ManageAccess/ManageAccessModal";
 import ConfirmModal from "../../components/Modals/Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../../components/Modals/Confirmed/ConfirmedMessageModal";
+import ResignEmployeeModal from "../../components/Modals/Resign/ResignEmployeeModal";
 import "../../components/SettingsComponent/SettingsComponent.css";
 import "../../styles/AdminCSS/EmployeeProfile.css";
 
@@ -37,6 +40,9 @@ const EmployeeProfile = () => {
   const [isSavedOpen, setIsSavedOpen] = useState(false);
   const [isEmploymentOpen, setIsEmploymentOpen] = useState(false);
   const [isAccessOpen, setIsAccessOpen] = useState(false);
+  const [isResignOpen, setIsResignOpen] = useState(false);
+  const [isReinstateOpen, setIsReinstateOpen] = useState(false);
+  const [doneMessage, setDoneMessage] = useState("");
 
   const loadProfile = useCallback(async () => {
     try {
@@ -72,7 +78,11 @@ const EmployeeProfile = () => {
   if (!profile) {
     return (
       <div className="main-content employee-profile-page">
-        <p>{errorMessage || "Loading..."}</p>
+        {errorMessage ? (
+          <p className="feedback-message error">{errorMessage}</p>
+        ) : (
+          <p>Loading...</p>
+        )}
       </div>
     );
   }
@@ -82,6 +92,7 @@ const EmployeeProfile = () => {
     `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() ||
     profile.username;
   const job = profile.jobDescription;
+  const isResigned = profile.status === "Resigned";
   const subtitle = [job.designation, job.department]
     .filter(Boolean)
     .join(" · ");
@@ -132,6 +143,23 @@ const EmployeeProfile = () => {
     }
   };
 
+  const handleResigned = async () => {
+    setIsResignOpen(false);
+    await loadProfile();
+    setTimeout(() => setDoneMessage(`${fullName} is marked as resigned.`), 300);
+  };
+
+  const handleReinstate = async () => {
+    setIsReinstateOpen(false);
+    try {
+      await API.patch(`/api/employee/employees/${userId}/reinstate`);
+      await loadProfile();
+      setTimeout(() => setDoneMessage(`${fullName} is active again.`), 300);
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || "Could not reinstate.");
+    }
+  };
+
   return (
     <div className="main-content employee-profile-page">
       <button
@@ -164,6 +192,7 @@ const EmployeeProfile = () => {
           {isEditing ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
           {isEditing ? "Cancel" : "Edit profile"}
         </button>
+
         <button
           type="button"
           className="btn"
@@ -173,9 +202,31 @@ const EmployeeProfile = () => {
           <IconBriefcase stroke={2} />
           Edit employment
         </button>
+
+        {isResigned ? (
+          <button
+            type="button"
+            className="btn"
+            onClick={() => setIsReinstateOpen(true)}
+            disabled={isEditing}
+          >
+            <IconUserCheck stroke={2} />
+            Reinstate
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="btn"
+            onClick={() => setIsResignOpen(true)}
+            disabled={isEditing}
+          >
+            <IconUserOff stroke={2} />
+            Mark as resigned
+          </button>
+        )}
       </ProfileHeader>
 
-      {errorMessage && <p className="error-message">{errorMessage}</p>}
+      {errorMessage && <p className="feedback-message error">{errorMessage}</p>}
 
       {isEditing ? (
         <div className="settings-content profile-edit">
@@ -199,7 +250,11 @@ const EmployeeProfile = () => {
       ) : (
         <ProfileView
           profile={toProfileForm(profile)}
-          employment={{ ...job, employeeId: employee.employeeId }}
+          employment={{
+            ...job,
+            employeeId: employee.employeeId,
+            employmentType: isResigned ? "Resigned" : job.employmentType,
+          }}
         />
       )}
 
@@ -263,6 +318,33 @@ const EmployeeProfile = () => {
           employee={modalEmployee}
           onClose={() => setIsEmploymentOpen(false)}
           onUpdateEmployee={loadProfile}
+        />
+      )}
+
+      {isResignOpen && (
+        <ResignEmployeeModal
+          userId={userId}
+          name={fullName}
+          onClose={() => setIsResignOpen(false)}
+          onResigned={handleResigned}
+        />
+      )}
+
+      {isReinstateOpen && (
+        <ConfirmModal
+          title="Reinstate Employee"
+          message={`Reinstate ${fullName}? They will be able to log in again, and the resignation date and reason are cleared.`}
+          onClose={() => setIsReinstateOpen(false)}
+          onConfirm={handleReinstate}
+          confirmText="Yes, Reinstate"
+          cancelText="No"
+        />
+      )}
+
+      {doneMessage && (
+        <ConfirmedMessageModal
+          message={doneMessage}
+          onClose={() => setDoneMessage("")}
         />
       )}
 

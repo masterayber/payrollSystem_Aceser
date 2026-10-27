@@ -23,7 +23,7 @@ const AuthSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Pending", "Active", "Inactive"],
+    enum: ["Pending", "Active", "Inactive", "Resigned"],
     default: "Pending",
   },
   profilePhoto: {

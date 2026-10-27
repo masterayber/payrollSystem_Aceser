@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 const {
   requireAdmin,
@@ -48,7 +49,11 @@ router.post("/login", async (req, res) => {
     }
 
     if (user.status !== "Active") {
-      return res.status(403).json({ message: "Account is pending approval" });
+      const message =
+        user.status === "Resigned"
+          ? "This account is no longer active."
+          : "Account is pending approval.";
+      return res.status(403).json({ message });
     }
 
     const token = jwt.sign(
@@ -344,15 +349,20 @@ router.get("/me", requireAuthenticated, async (req, res) => {
 router.put("/users/:id/status", requireAdmin, async (req, res) => {
   const { id } = req.params;
 
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ error: "Invalid user id" });
+  }
+
   try {
-    const result = await User.findByIdAndUpdate(
-      id,
+    // Approves pending accounts only; a resigned employee is reinstated from their profile
+    const result = await User.findOneAndUpdate(
+      { _id: id, status: "Pending" },
       { status: "Active" },
       { new: true },
     );
 
     if (!result) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "No pending account with that id" });
     }
 
     res.json({ message: "User approved successfully", user: result });

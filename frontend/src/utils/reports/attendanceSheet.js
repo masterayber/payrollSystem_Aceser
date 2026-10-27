@@ -20,7 +20,7 @@ import {
   sleaveFill,
   dayNames,
 } from "./excelStyles";
-import { formatKey } from "./reportHelpers";
+import { formatKey, isNotEmployedOn } from "./reportHelpers";
 
 const buildAttendanceMap = (attendanceRecords) => {
   const attendanceMap = {};
@@ -37,9 +37,9 @@ const getCellValue = (
   employeeAttendance,
   dateKey,
   isWeekendDay,
-  isBeforeHire,
+  isNotEmployed,
 ) => {
-  if (isBeforeHire) return "-";
+  if (isNotEmployed) return "-";
 
   const record = employeeAttendance[dateKey];
   if (record) {
@@ -169,7 +169,6 @@ export const AttendanceSheet = ({
 
   employees.forEach((employee) => {
     const employeeAttendance = attendanceMap[employee._id] || {};
-    const hireKey = employee.createdAt ? formatKey(employee.createdAt) : null;
 
     setCell(ws1, rowIndex, 0, number, "n", {
       font: { sz: 11, ...blackFont },
@@ -196,10 +195,10 @@ export const AttendanceSheet = ({
       const dayFill = getDayFill(d);
       const record = employeeAttendance[dateKey];
       const behaviorFill = getBehaviorFill(employeeAttendance[dateKey]);
-      const isBeforeHire = hireKey && dateKey < hireKey;
+      const isNotEmployed = isNotEmployedOn(employee, dateKey);
 
       if (
-        !isBeforeHire &&
+        !isNotEmployed &&
         !isWeekendDay &&
         record &&
         record?.behavior !== "On-Time"
@@ -211,7 +210,7 @@ export const AttendanceSheet = ({
         employeeAttendance,
         dateKey,
         isWeekendDay,
-        isBeforeHire,
+        isNotEmployed,
       );
 
       setCell(ws1, rowIndex, 5 + i, cellValue, "s", {
