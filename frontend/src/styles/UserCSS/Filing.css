@@ -33,6 +33,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.employee-filing-page .filing-metric-card .data-note {
+  margin-top: 4px;
+  color: var(--neutral-color-70);
+  font-size: 12px;
+}
+
 .employee-filing-page .application-container {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

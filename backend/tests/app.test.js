@@ -1143,3 +1143,179 @@ describe("Resign and reinstate (/api/employee/employees/:userId)", () => {
     expect((await User.findById(employeeUser._id)).status).toBe("Resigned");
   });
 });
+
+describe("Leave credits (VL and SL)", () => {
+  // Regularized 2026-01-05: 15 VL for 2026, 15 SL each month
+  const setup = async ({ regularizationDate = "2026-01-05" } = {}) => {
+    const employeeUser = await createUser();
+    await Settings.create({
+      userId: employeeUser._id,
+      general: {
+        jobDescription: {
+          startDate: new Date("2025-07-01"),
+          regularizationDate:
+            regularizationDate && new Date(regularizationDate),
+        },
+      },
+    });
+    const admin = await createUser({
+      username: "admin1",
+      email: "admin1@example.com",
+      role: "Admin",
+    });
+    return {
+      employeeUser,
+      admin,
+      token: await loginAs("employee1"),
+      adminToken: await loginAs("admin1"),
+    };
+  };
+
+  const apply = (token, body) =>
+    request(app)
+      .post("/api/filing/apply-leave")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ leaveDetails: "Family trip", ...body });
+
+  it("accepts VL that fits and refuses VL over the balance", async () => {
+    const { token } = await setup();
+
+    // Nov 2-20: 15 weekdays
+    const fits = await apply(token, {
+      leaveType: "Vacation Leave",
+      startDate: "2026-11-02",
+      endDate: "2026-11-20",
+    });
+    expect(fits.status).toBe(201);
+
+    // The pending request holds all 15 days
+    const over = await apply(token, {
+      leaveType: "Vacation Leave",
+      startDate: "2026-11-23",
+      endDate: "2026-11-23",
+    });
+    expect(over.status).toBe(400);
+    expect(over.body.error).toBe(
+      "Not enough Vacation Leave: 0 days left, and this request needs 1.",
+    );
+    expect(await LeaveApplication.countDocuments()).toBe(1);
+  });
+
+  it("refuses VL and SL before regularization, but not other leave types", async () => {
+    const { token } = await setup({ regularizationDate: null });
+
+    const sick = await apply(token, {
+      leaveType: "Sick Leave",
+      startDate: "2026-11-02",
+      endDate: "2026-11-02",
+    });
+    expect(sick.status).toBe(400);
+    expect(sick.body.error).toMatch(/date of regularization/);
+
+    const other = await apply(token, {
+      leaveType: "Maternity Leave",
+      startDate: "2026-11-02",
+      endDate: "2026-12-31",
+    });
+    expect(other.status).toBe(201);
+  });
+
+  it("refuses dates that are missing or the wrong way round", async () => {
+    const { token } = await setup();
+
+    const res = await apply(token, {
+      leaveType: "Vacation Leave",
+      startDate: "2026-11-05",
+      endDate: "2026-11-02",
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("The end date can't be before the start date.");
+  });
+
+  it("checks an edit that changes the dates, leaving out the request itself", async () => {
+    const { employeeUser, token } = await setup();
+    const leave = await LeaveApplication.create({
+      userId: employeeUser._id,
+      leaveType: "Vacation Leave",
+      leaveDetails: "Family trip",
+      startDate: "2026-11-02",
+      endDate: "2026-11-20",
+    });
+    const edit = (body) =>
+      request(app)
+        .patch(`/api/filing/edit-leave/${leave._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send(body);
+
+    // Still 15 days: fits, because its own days aren't counted twice
+    expect((await edit({ endDate: "2026-11-20" })).status).toBe(200);
+
+    const over = await edit({ endDate: "2026-11-23" });
+    expect(over.status).toBe(400);
+    expect(over.body.error).toMatch(/Not enough Vacation Leave/);
+    const saved = await LeaveApplication.findById(leave._id);
+    expect(saved.endDate.toISOString().slice(0, 10)).toBe("2026-11-20");
+  });
+
+  it("refuses to approve SL over the month's 15 days and leaves it Pending", async () => {
+    const { employeeUser, adminToken } = await setup();
+    const sick = (startDate, endDate, status) =>
+      LeaveApplication.create({
+        userId: employeeUser._id,
+        leaveType: "Sick Leave",
+        leaveDetails: "Flu",
+        startDate,
+        endDate,
+        status,
+      });
+    // 14 approved days in November, then a 2-day request filed before credits were checked
+    await sick("2026-11-02", "2026-11-19", "Approved");
+    const pending = await sick("2026-11-26", "2026-11-27", "Pending");
+
+    const res = await request(app)
+      .patch(`/api/filing/leave/${pending._id}/status`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "Approved" });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/Not enough Sick Leave for November 2026/);
+    expect((await LeaveApplication.findById(pending._id)).status).toBe(
+      "Pending",
+    );
+  });
+
+  it("returns the balance to the employee and the admin, with the opening balance", async () => {
+    const { employeeUser, token, adminToken } = await setup();
+    await Settings.updateOne(
+      { userId: employeeUser._id },
+      { "general.jobDescription.vacationLeaveOpening": 4 },
+    );
+    await LeaveApplication.create({
+      userId: employeeUser._id,
+      leaveType: "Vacation Leave",
+      leaveDetails: "Family trip",
+      startDate: "2026-05-04",
+      endDate: "2026-05-08",
+      status: "Approved",
+    });
+
+    const own = await request(app)
+      .get("/api/filing/leave-credits")
+      .set("Authorization", `Bearer ${token}`);
+    expect(own.status).toBe(200);
+    expect(own.body.vacation).toMatchObject({ used: 5, pending: 0 });
+    expect(own.body.vacation.available).toBe(own.body.vacation.earned - 5);
+    expect(own.body.vacation.earned).toBeGreaterThanOrEqual(19);
+
+    const asAdmin = await request(app)
+      .get(`/api/filing/leave-credits/${employeeUser._id}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(asAdmin.status).toBe(200);
+    expect(asAdmin.body).toEqual(own.body);
+
+    const notAdmin = await request(app)
+      .get(`/api/filing/leave-credits/${employeeUser._id}`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(notAdmin.status).toBe(403);
+  });
+});

@@ -121,6 +121,7 @@ router.get("/employees/:userId", requireAdmin, async (req, res) => {
         startDate: job.startDate || "",
         regularizationDate: job.regularizationDate || "",
         basicPay: job.basicPay ?? null,
+        vacationLeaveOpening: job.vacationLeaveOpening || 0,
         resignationDate: job.resignationDate || "",
         resignationReason: job.resignationReason || "",
         schedule: {

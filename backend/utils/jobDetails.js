@@ -1,4 +1,4 @@
-// Checks the basic pay and regularization date an admin sends for an employee's job.
+// Checks the basic pay, VL opening balance and regularization date an admin sends for an employee's job.
 // `body` is the request body; `current` is the saved job description ({} for a new
 // employee). Returns { error } or { fields } with only the fields that were sent,
 // cleaned up ("" or null clears a field).
@@ -31,6 +31,19 @@ const checkJobDetails = (body, current = {}) => {
       }
       fields.basicPay = Math.round(pay * 100) / 100;
     }
+  }
+
+  if (body.vacationLeaveOpening !== undefined) {
+    const days = isEmpty(body.vacationLeaveOpening)
+      ? 0
+      : Number(body.vacationLeaveOpening);
+    if (!Number.isInteger(days) || days < 0) {
+      return {
+        error:
+          "The VL opening balance must be a whole number of days, 0 or more.",
+      };
+    }
+    fields.vacationLeaveOpening = days;
   }
 
   if (body.regularizationDate !== undefined) {

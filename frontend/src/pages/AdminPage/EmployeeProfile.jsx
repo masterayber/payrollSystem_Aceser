@@ -11,7 +11,8 @@ import {
 } from "@tabler/icons-react";
 import API from "../../api";
 import ProfilePhoto from "../../components/ProfilePhoto/ProfilePhoto";
-import ProfileView from "../../components/Profile/ProfileView";
+import ProfileView, { Card, Field } from "../../components/Profile/ProfileView";
+import { daysText, monthName } from "../../utils/leaveCredits";
 import ProfileHeader from "../../components/Profile/ProfileHeader";
 import ProfileForm from "../../components/Profile/ProfileForm.jsx";
 import {
@@ -32,6 +33,7 @@ const EmployeeProfile = () => {
 
   const [profile, setProfile] = useState(null);
   const [access, setAccess] = useState(null);
+  const [credits, setCredits] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [form, setForm] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -70,10 +72,20 @@ const EmployeeProfile = () => {
     }
   }, [userId]);
 
+  const loadCredits = useCallback(async () => {
+    try {
+      const { data } = await API.get(`/api/filing/leave-credits/${userId}`);
+      setCredits(data);
+    } catch {
+      setCredits(null);
+    }
+  }, [userId]);
+
   useEffect(() => {
     loadProfile();
     loadAccess();
-  }, [loadProfile, loadAccess]);
+    loadCredits();
+  }, [loadProfile, loadAccess, loadCredits]);
 
   if (!profile) {
     return (
@@ -258,6 +270,29 @@ const EmployeeProfile = () => {
         />
       )}
 
+      {credits && (
+        <div className="profile-grid">
+          <Card title="Leave Credits">
+            <Field
+              label="Vacation Leave left"
+              value={daysText(credits.vacation.available)}
+            />
+            <Field
+              label="VL earned, used, pending"
+              value={`${credits.vacation.earned}, ${credits.vacation.used}, ${credits.vacation.pending}`}
+            />
+            <Field
+              label={`Sick Leave left (${monthName(credits.sick.month)})`}
+              value={daysText(credits.sick.available)}
+            />
+            <Field
+              label="VL opening balance"
+              value={daysText(job.vacationLeaveOpening || 0)}
+            />
+          </Card>
+        </div>
+      )}
+
       <section className="profile-card access-card">
         <div className="access-card-header">
           <h4 className="profile-card-title">Page Access</h4>
@@ -317,7 +352,10 @@ const EmployeeProfile = () => {
         <EditEmployeeModal
           employee={modalEmployee}
           onClose={() => setIsEmploymentOpen(false)}
-          onUpdateEmployee={loadProfile}
+          onUpdateEmployee={() => {
+            loadProfile();
+            loadCredits();
+          }}
         />
       )}
 
