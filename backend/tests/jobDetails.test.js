@@ -7,6 +7,18 @@ describe("checkJobDetails", () => {
     });
   });
 
+  it("keeps the VL opening balance as whole days (empty means 0)", () => {
+    expect(checkJobDetails({ vacationLeaveOpening: "4" })).toEqual({
+      fields: { vacationLeaveOpening: 4 },
+    });
+    expect(checkJobDetails({ vacationLeaveOpening: "" })).toEqual({
+      fields: { vacationLeaveOpening: 0 },
+    });
+    expect(checkJobDetails({ vacationLeaveOpening: "2.5" }).error).toMatch(
+      /whole number/,
+    );
+  });
+
   it("clears basic pay and the date when sent empty", () => {
     expect(checkJobDetails({ basicPay: "", regularizationDate: "" })).toEqual({
       fields: { basicPay: null, regularizationDate: null },

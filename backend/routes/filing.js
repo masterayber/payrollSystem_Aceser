@@ -4,8 +4,17 @@ const mongoose = require("mongoose");
 const LeaveApplication = require("../models/leaveApplication");
 const OvertimeApplication = require("../models/overtimeApplication");
 const Attendance = require("../models/attendance");
-const auth = require("../middleware/authMiddleware");
+const Settings = require("../models/settings");
 const { requirePage, requireAdmin } = require("../middleware/accessMiddleware");
+
+const {
+  CREDIT_LEAVE_TYPES,
+  toDateKey,
+  manilaToday,
+  leaveBalance,
+  checkLeaveDates,
+  checkLeaveCredits,
+} = require("../utils/leaveCredits");
 
 const router = express.Router();
 
@@ -23,6 +32,28 @@ const respondNotPending = async (res, Model, id, userId, label) => {
   return res.status(409).json({
     error: `This ${label.toLowerCase()} was already ${existing.status.toLowerCase()}, so it can't be changed.`,
   });
+};
+
+// The job description and VL/SL requests an employee's leave credits are worked out from.
+// `excludeId` leaves out the request being edited or approved.
+const loadCreditData = async (userId, excludeId) => {
+  const [settings, leaves] = await Promise.all([
+    Settings.findOne({ userId }).select("general.jobDescription").lean(),
+    LeaveApplication.find({
+      userId,
+      leaveType: { $in: CREDIT_LEAVE_TYPES },
+      status: { $in: ["Pending", "Approved"] },
+      ...(excludeId ? { _id: { $ne: excludeId } } : {}),
+    }).lean(),
+  ]);
+  return { job: settings?.general?.jobDescription || {}, leaves };
+};
+
+// Why a VL or SL request doesn't fit the employee's credits, or null when it does
+const creditError = async (userId, request, excludeId) => {
+  if (!CREDIT_LEAVE_TYPES.includes(request.leaveType)) return null;
+  const { job, leaves } = await loadCreditData(userId, excludeId);
+  return checkLeaveCredits(job, leaves, request);
 };
 
 // The attendance day an overtime request points to must be the caller's own, eligible
@@ -108,11 +139,46 @@ router.get("/user-leave-requests", requirePage("filing"), async (req, res) => {
   }
 });
 
-// Route for applying for leave
+// The caller's own VL and SL balance
+router.get("/leave-credits", requirePage("filing"), async (req, res) => {
+  try {
+    const { job, leaves } = await loadCreditData(req.user.userId);
+    res.json(leaveBalance(job, leaves, manilaToday()));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// An employee's VL and SL balance, for the admin profile page
+router.get("/leave-credits/:userId", requireAdmin, async (req, res) => {
+  const { userId } = req.params;
+  if (!mongoose.isValidObjectId(userId)) {
+    return res.status(400).json({ error: "Invalid user ID." });
+  }
+
+  try {
+    const { job, leaves } = await loadCreditData(userId);
+    res.json(leaveBalance(job, leaves, manilaToday()));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Route for applying for leave. VL and SL must fit the employee's credits.
 router.post("/apply-leave", requirePage("filing"), async (req, res) => {
   const { leaveType, leaveDetails, startDate, endDate } = req.body;
 
+  const dates = checkLeaveDates({ startDate, endDate });
+  if (dates.error) {
+    return res.status(400).json({ error: dates.error });
+  }
+
   try {
+    const error = await creditError(req.user.userId, { leaveType, ...dates });
+    if (error) {
+      return res.status(400).json({ error });
+    }
+
     const app = new LeaveApplication({
       userId: req.user.userId,
       leaveType,
@@ -127,11 +193,39 @@ router.post("/apply-leave", requirePage("filing"), async (req, res) => {
   }
 });
 
-// Route for editing leave request
+// Route for editing leave request. A change of type or dates is checked again.
 router.patch("/edit-leave/:id", requirePage("filing"), async (req, res) => {
   const { leaveType, leaveDetails, startDate, endDate } = req.body;
 
   try {
+    const current =
+      [leaveType, startDate, endDate].some((value) => value !== undefined) &&
+      (await LeaveApplication.findOne({
+        _id: req.params.id,
+        userId: req.user.userId,
+        status: "Pending",
+      }).lean());
+
+    // Not found or no longer Pending: the update below answers 404 or 409
+    if (current) {
+      const dates = checkLeaveDates({
+        startDate: startDate ?? toDateKey(current.startDate),
+        endDate: endDate ?? toDateKey(current.endDate),
+      });
+      if (dates.error) {
+        return res.status(400).json({ error: dates.error });
+      }
+
+      const error = await creditError(
+        req.user.userId,
+        { leaveType: leaveType ?? current.leaveType, ...dates },
+        current._id,
+      );
+      if (error) {
+        return res.status(400).json({ error });
+      }
+    }
+
     const updatedLeave = await LeaveApplication.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.userId, status: "Pending" },
       {
@@ -204,6 +298,29 @@ router.patch("/leave/:id/status", requireAdmin, async (req, res) => {
   }
 
   try {
+    // VL and SL are checked again: the credits may have changed since it was filed
+    if (status === "Approved") {
+      const pending = await LeaveApplication.findOne({
+        _id: id,
+        status: "Pending",
+      }).lean();
+
+      if (pending) {
+        const error = await creditError(
+          pending.userId,
+          {
+            leaveType: pending.leaveType,
+            startKey: toDateKey(pending.startDate),
+            endKey: toDateKey(pending.endDate),
+          },
+          pending._id,
+        );
+        if (error) {
+          return res.status(409).json({ error });
+        }
+      }
+    }
+
     // The Pending filter is part of the update itself, so two admins acting on the same
     // request at the same time cannot both succeed.
     const app = await LeaveApplication.findOneAndUpdate(

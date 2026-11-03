@@ -36,6 +36,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
         ? toManilaDate(employee.jobDescription.regularizationDate)
         : "",
       basicPay: employee.jobDescription.basicPay ?? "",
+      vacationLeaveOpening: employee.jobDescription.vacationLeaveOpening ?? 0,
       schedule: {
         timeIn: employee.jobDescription.schedule.timeIn || "",
         timeOut: employee.jobDescription.schedule.timeOut || "",
@@ -66,7 +67,14 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (["startDate", "regularizationDate", "basicPay"].includes(name)) {
+    if (
+      [
+        "startDate",
+        "regularizationDate",
+        "basicPay",
+        "vacationLeaveOpening",
+      ].includes(name)
+    ) {
       setEditEmployee((prev) => ({
         ...prev,
         jobDescription: {
@@ -218,6 +226,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
       startDate: editEmployee.jobDescription.startDate,
       regularizationDate: editEmployee.jobDescription.regularizationDate,
       basicPay: editEmployee.jobDescription.basicPay,
+      vacationLeaveOpening: editEmployee.jobDescription.vacationLeaveOpening,
       timeIn: editEmployee.jobDescription.schedule.timeIn,
       timeOut: editEmployee.jobDescription.schedule.timeOut,
     };
@@ -496,6 +505,25 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                   step="0.01"
                   placeholder="0.00"
                   value={editEmployee.jobDescription.basicPay}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="input-row">
+            <div className="input-container">
+              <div className="label-container">
+                <label>VL Opening Balance (days)</label>
+              </div>
+              <div className="input-group-signup">
+                <input
+                  type="number"
+                  name="vacationLeaveOpening"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  value={editEmployee.jobDescription.vacationLeaveOpening}
                   onChange={handleChange}
                 />
               </div>

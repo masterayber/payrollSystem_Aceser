@@ -7,7 +7,20 @@ import ConfirmedMessageModal from "../../Confirmed/ConfirmedMessageModal";
 import "../../Modal.css";
 import Dropdown from "../../../Dropdown/Dropdown";
 
-const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
+import {
+  CREDIT_LEAVE_TYPES,
+  countWeekdays,
+  daysText,
+  monthName,
+} from "../../../../utils/leaveCredits";
+
+const LeaveModal = ({
+  mode,
+  request,
+  credits,
+  onClose,
+  onUpdateLeaveRequests,
+}) => {
   const leaveTypeOptions = [
     "Vacation Leave",
     "Sick Leave",
@@ -46,6 +59,7 @@ const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [isSingleDayLeave, setIsSingleDayLeave] = useState(
     isEdit ? formData.startDate === formData.endDate : false,
   );
@@ -136,6 +150,7 @@ const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
       }
 
       setIsConfirmModalOpen(false);
+      setErrorMessage("");
       if (onUpdateLeaveRequests) onUpdateLeaveRequests();
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (err) {
@@ -143,6 +158,8 @@ const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
         `Failed ${isEdit ? "updating" : "applying for"} leave:`,
         err,
       );
+      setIsConfirmModalOpen(false);
+      setErrorMessage(err.message);
     }
   };
 
@@ -172,6 +189,23 @@ const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
     setIsConfirmedModalOpen(false);
     onClose();
   };
+
+  const getCreditNote = () => {
+    if (!credits || !CREDIT_LEAVE_TYPES.includes(formData.leaveType)) {
+      return "";
+    }
+    const balance =
+      formData.leaveType === "Vacation Leave"
+        ? `Vacation Leave left: ${daysText(credits.vacation.available)}.`
+        : `Sick Leave left in ${monthName(credits.sick.month)}: ${daysText(credits.sick.available)}.`;
+    const requested =
+      formData.startDate && formData.endDate >= formData.startDate
+        ? ` This request: ${daysText(countWeekdays(formData.startDate, formData.endDate))} (Monday to Friday).`
+        : "";
+    return balance + requested;
+  };
+
+  const creditNote = getCreditNote();
 
   return ReactDOM.createPortal(
     <div className="modal filing-modal filing-leave-modal">
@@ -262,6 +296,11 @@ const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
             </div>
           </div>
 
+          {creditNote && <p className="feedback-message">{creditNote}</p>}
+          {errorMessage && (
+            <p className="feedback-message error">{errorMessage}</p>
+          )}
+
           <div className="modal-buttons">
             <button
               type="button"
@@ -326,6 +365,7 @@ const LeaveModal = ({ mode, request, onClose, onUpdateLeaveRequests }) => {
 LeaveModal.propTypes = {
   mode: PropTypes.oneOf(["add", "edit"]).isRequired,
   request: PropTypes.object,
+  credits: PropTypes.object,
   onClose: PropTypes.func.isRequired,
   onUpdateLeaveRequests: PropTypes.func,
 };

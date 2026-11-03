@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useCallback } from "react";
 import { formatDate, formatFullMonthDate } from "../../utils/dateFormatter";
 import LeaveModal from "../../components/Modals/Filing/Leave/LeaveModal";
 import OvertimeModal from "../../components/Modals/Filing/Overtime/OvertimeModal";
@@ -8,6 +8,7 @@ import "../../styles/UserCSS/Filing.css";
 import API from "../../api";
 import { FilingContext } from "../../context/FilingContext";
 import ConfirmedMessageModal from "../../components/Modals/Confirmed/ConfirmedMessageModal";
+import { daysText, monthName } from "../../utils/leaveCredits";
 
 const Filing = () => {
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
@@ -19,6 +20,7 @@ const Filing = () => {
   const [userOvertimeLists, setUserOvertimeLists] = useState([]);
   const [selectedLeaveRequest, setSelectedLeaveRequest] = useState(null);
   const [selectedOvertimeRequest, setSelectedOvertimeRequest] = useState(null);
+  const [credits, setCredits] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState({
     type: null,
     request: null,
@@ -28,6 +30,16 @@ const Filing = () => {
     overtimeRequests: userOvertimeRequests,
     refreshFilingData,
   } = useContext(FilingContext);
+
+  // VL and SL balance; reloaded whenever the leave requests change
+  const loadCredits = useCallback(async () => {
+    try {
+      const { data } = await API.get("/api/filing/leave-credits");
+      setCredits(data);
+    } catch (error) {
+      console.error("Error fetching leave credits:", error);
+    }
+  }, []);
 
   const handleApplyLeave = () => {
     setIsApplyLeaveOpen(true);
@@ -79,7 +91,7 @@ const Filing = () => {
 
       setIsDeleteModalOpen(false);
       setDeleteTarget({ type: null, request: null });
-      await refreshFilingData();
+      await Promise.all([refreshFilingData(), loadCredits()]);
 
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (err) {
@@ -88,7 +100,7 @@ const Filing = () => {
   };
 
   const handleUserLeaveRequests = async () => {
-    await refreshFilingData();
+    await Promise.all([refreshFilingData(), loadCredits()]);
   };
 
   const handleUserOvertimeRequests = async () => {
@@ -112,7 +124,8 @@ const Filing = () => {
 
   useEffect(() => {
     refreshFilingData();
-  }, [refreshFilingData]);
+    loadCredits();
+  }, [refreshFilingData, loadCredits]);
 
   const leavePendingCount = userLeaveRequests.filter(
     (request) => request.status === "Pending",
@@ -131,6 +144,35 @@ const Filing = () => {
             <div className="data-value">{leavePendingCount}</div>
           </div>
         </div>
+
+        {credits && (
+          <>
+            <div className="data-card filing-metric-card">
+              <div className="message-container">
+                <div className="data-title">Vacation Leave Left</div>
+                <div className="data-value">{credits.vacation.available}</div>
+                <div className="data-note">
+                  {daysText(credits.vacation.earned)} earned,{" "}
+                  {credits.vacation.used} used, {credits.vacation.pending}{" "}
+                  pending
+                </div>
+              </div>
+            </div>
+
+            <div className="data-card filing-metric-card">
+              <div className="message-container">
+                <div className="data-title">
+                  Sick Leave Left ({monthName(credits.sick.month)})
+                </div>
+                <div className="data-value">{credits.sick.available}</div>
+                <div className="data-note">
+                  {daysText(credits.sick.earned)} this month,{" "}
+                  {credits.sick.used} used, {credits.sick.pending} pending
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="data-card filing-metric-card">
           <div className="message-container">
@@ -337,6 +379,7 @@ const Filing = () => {
       {isApplyLeaveOpen && (
         <LeaveModal
           mode="add"
+          credits={credits}
           onClose={() => setIsApplyLeaveOpen(false)}
           onUpdateLeaveRequests={handleUserLeaveRequests}
         />

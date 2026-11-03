@@ -35,6 +35,11 @@ const settingsSchema = new mongoose.Schema({
         min: 0,
         default: null,
       },
+      vacationLeaveOpening: {
+        type: Number,
+        min: 0,
+        default: 0,
+      },
       resignationDate: {
         type: Date,
         default: null,

@@ -18,6 +18,7 @@ const AdminFiling = () => {
   const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionError, setActionError] = useState("");
 
   const fetchLeaveRequests = async () => {
     try {
@@ -61,6 +62,7 @@ const AdminFiling = () => {
   };
 
   const handleActionClick = (request, action, type = "leave") => {
+    setActionError("");
     setSelectedRequest(request);
     setSelectedRequestType(type);
     setSelectedAction(action);
@@ -90,7 +92,9 @@ const AdminFiling = () => {
       setSelectedAction("");
     } catch (err) {
       console.error("Failed to update request status:", err);
-      setError("Unable to update request status.");
+      setActionError(
+        err.response?.data?.error || "Unable to update request status.",
+      );
       setIsConfirmModalOpen(false);
       setSelectedRequest(null);
       setSelectedAction("");
@@ -136,6 +140,8 @@ const AdminFiling = () => {
         </div>
       </div>
 
+      {actionError && <p className="feedback-message error">{actionError}</p>}
+
       <div className="data-card filing-review-card">
         <div className="user-track-title">
           <p>Leave Requests</p>
@@ -165,7 +171,9 @@ const AdminFiling = () => {
             </article>
           </div>
           {isLoading ? (
-            <p className="no-data filing-empty-state">Loading leave requests...</p>
+            <p className="no-data filing-empty-state">
+              Loading leave requests...
+            </p>
           ) : error ? (
             <p className="no-data filing-empty-state">{error}</p>
           ) : leaveRequests.length === 0 ? (
