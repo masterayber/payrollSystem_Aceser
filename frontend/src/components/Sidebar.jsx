@@ -17,7 +17,30 @@ import {
   IconFiles,
   IconGraph,
   IconSettings,
+  IconUsersGroup,
 } from "@tabler/icons-react";
+
+// A page counts as showing on its own path and on paths below it (/employees/:userId)
+const isPathActive = (pathname, path) =>
+  pathname === path || pathname.startsWith(`${path}/`);
+
+// allowedPages comes from the server. Until it has loaded, show the role's menu.
+// A group with its own access key (Logistics) shows whole or not at all; a group
+// without one (HR) keeps the children whose page keys are allowed, and hides
+// itself when none are.
+const filterByAccess = (items, allowedPages) => {
+  if (!Array.isArray(allowedPages)) return items;
+
+  return items.flatMap((item) => {
+    if (allowedPages.includes(item.key)) return [item];
+    if (!item.children) return [];
+
+    const children = item.children.filter((child) =>
+      allowedPages.includes(child.key),
+    );
+    return children.length ? [{ ...item, children }] : [];
+  });
+};
 
 const logisticsGroup = {
   name: "Logistics",
@@ -58,9 +81,7 @@ function Sidebar({ role, allowedPages }) {
   const [openGroups, setOpenGroups] = useState({});
 
   const renderLink = (item, className = "sidebar-item") => {
-    const isActive =
-      location.pathname === item.path ||
-      location.pathname.startsWith(`${item.path}/`);
+    const isActive = isPathActive(location.pathname, item.path);
     return (
       <button
         type="button"
@@ -129,28 +150,42 @@ function Sidebar({ role, allowedPages }) {
       icon: <IconLayoutDashboard stroke={1.75} />,
     },
     {
-      name: "Employees",
-      key: "employees",
-      path: "/employees",
-      icon: <IconUserSquare stroke={1.75} />,
-    },
-    {
-      name: "Deductions",
-      key: "deductions",
-      path: "/deductions",
-      icon: <IconFileMinus stroke={1.75} />,
-    },
-    {
-      name: "Pay Slips",
-      key: "admin-payslips",
-      path: "/admin-payslips",
-      icon: <IconCashBanknote stroke={1.75} />,
-    },
-    {
-      name: "Attendance",
-      key: "admin-attendance",
-      path: "/admin-attendance",
-      icon: <IconCalendarPlus stroke={1.75} />,
+      // No access key of its own: each page keeps its own (see filterByAccess)
+      name: "HR",
+      key: "hr",
+      icon: <IconUsersGroup stroke={1.75} />,
+      children: [
+        {
+          name: "Employees",
+          key: "employees",
+          path: "/employees",
+          icon: <IconUserSquare stroke={1.75} />,
+        },
+        {
+          name: "Deductions",
+          key: "deductions",
+          path: "/deductions",
+          icon: <IconFileMinus stroke={1.75} />,
+        },
+        {
+          name: "Pay Slips",
+          key: "admin-payslips",
+          path: "/admin-payslips",
+          icon: <IconCashBanknote stroke={1.75} />,
+        },
+        {
+          name: "Attendance",
+          key: "admin-attendance",
+          path: "/admin-attendance",
+          icon: <IconCalendarPlus stroke={1.75} />,
+        },
+        {
+          name: "Reports",
+          key: "reports",
+          path: "/reports",
+          icon: <IconGraph stroke={1.75} />,
+        },
+      ],
     },
     logisticsGroup,
     {
@@ -166,12 +201,6 @@ function Sidebar({ role, allowedPages }) {
       icon: <IconFiles stroke={1.75} />,
     },
     {
-      name: "Reports",
-      key: "reports",
-      path: "/reports",
-      icon: <IconGraph stroke={1.75} />,
-    },
-    {
       name: "Settings",
       key: "admin-settings",
       path: "/admin-settings",
@@ -181,10 +210,7 @@ function Sidebar({ role, allowedPages }) {
 
   const roleMenuItems = role === "Admin" ? adminMenuItems : userMenuItems;
 
-  // allowedPages comes from the server. Until it has loaded, show the role's menu.
-  const menuItems = Array.isArray(allowedPages)
-    ? roleMenuItems.filter((item) => allowedPages.includes(item.key))
-    : roleMenuItems;
+  const menuItems = filterByAccess(roleMenuItems, allowedPages);
 
   return (
     <div className="sidebar">
@@ -204,8 +230,8 @@ function Sidebar({ role, allowedPages }) {
           if (!item.children) return renderLink(item);
 
           // A group starts open while one of its pages is showing
-          const hasActive = item.children.some(
-            (child) => location.pathname === child.path,
+          const hasActive = item.children.some((child) =>
+            isPathActive(location.pathname, child.path),
           );
           const isOpen = openGroups[item.key] ?? hasActive;
 
