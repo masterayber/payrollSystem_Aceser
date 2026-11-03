@@ -37,3 +37,6 @@ backend/uploads/
 
 # Claude md file
 CLAUDE.md
+
+# Claude Code project setup (agents, skills, settings): local only
+.claude/

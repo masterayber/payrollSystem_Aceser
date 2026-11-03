@@ -138,13 +138,6 @@ const Filing = () => {
   return (
     <div className="main-content employee-filing-page">
       <div className="data-card-container filing-summary-grid">
-        <div className="data-card filing-metric-card">
-          <div className="message-container">
-            <div className="data-title">Pending Leave Requests</div>
-            <div className="data-value">{leavePendingCount}</div>
-          </div>
-        </div>
-
         {credits && (
           <>
             <div className="data-card filing-metric-card">
@@ -173,6 +166,13 @@ const Filing = () => {
             </div>
           </>
         )}
+
+        <div className="data-card filing-metric-card">
+          <div className="message-container">
+            <div className="data-title">Pending Leave Requests</div>
+            <div className="data-value">{leavePendingCount}</div>
+          </div>
+        </div>
 
         <div className="data-card filing-metric-card">
           <div className="message-container">
