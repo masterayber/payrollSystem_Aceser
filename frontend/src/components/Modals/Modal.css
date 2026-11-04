@@ -224,3 +224,12 @@
   font-size: 14px;
   opacity: 0.6;
 }
+
+.access-group-title {
+  margin: 12px 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--neutral-color-70);
+}

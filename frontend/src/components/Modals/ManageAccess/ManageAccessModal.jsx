@@ -2,19 +2,28 @@ import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import API from "../../../api";
+import ConfirmModal from "../Confirm/ConfirmModal";
+import CancelModal from "../Cancel/CancelModal";
+import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
 import "../Modal.css";
 
 const ManageAccessModal = ({ employee, onClose }) => {
   const [pages, setPages] = useState([]);
   const [selected, setSelected] = useState(new Set());
+  // The pages as last loaded or saved, to tell whether Cancel would lose changes
+  const [savedPages, setSavedPages] = useState(new Set());
   const [customized, setCustomized] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isCancelOpen, setIsCancelOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const applyAccess = (data) => {
     setPages(data.pages);
     setSelected(new Set(data.allowedPages));
+    setSavedPages(new Set(data.allowedPages));
     setCustomized(data.customized);
   };
 
@@ -58,26 +67,77 @@ const ManageAccessModal = ({ employee, onClose }) => {
     });
   };
 
-  const save = async (body, closeAfter) => {
+  // Resolves true when the server accepted the change
+  const save = async (body) => {
     setSaving(true);
     setErrorMessage("");
     try {
       const { data } = await API.put(`/api/access/users/${employee._id}`, body);
       applyAccess(data);
-      if (closeAfter) onClose();
+      return true;
     } catch (error) {
       setErrorMessage(
         error.response?.data?.message || "Could not save page access.",
       );
+      return false;
     } finally {
       setSaving(false);
     }
   };
 
-  const handleSave = () => save({ pages: [...selected] }, true);
-  const handleReset = () => save({ reset: true }, false);
+  // Save stays off until the ticks differ from the last loaded or saved set;
+  // a save or a reset refreshes both, so Save turns off again after either
+  const hasChanges =
+    selected.size !== savedPages.size ||
+    [...selected].some((key) => !savedPages.has(key));
+
+  const handleCancelClick = () => {
+    if (hasChanges) setIsCancelOpen(true);
+    else onClose();
+  };
+
+  const handleSaveClick = () => {
+    if (!hasChanges || saving) return;
+    setErrorMessage("");
+    setIsConfirmOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (saving) return;
+    const saved = await save({ pages: [...selected] });
+    setIsConfirmOpen(false);
+    if (saved) {
+      setTimeout(
+        () => setSuccessMessage("Page access updated successfully"),
+        300,
+      );
+    }
+  };
+
+  const handleReset = () => save({ reset: true });
 
   const fullName = `${employee.firstName} ${employee.lastName}`;
+
+  // The logistics pages sit under their own heading
+  const isLogistics = (page) => page.key.startsWith("logistics-");
+  const pageGroups = [
+    { title: "", pages: pages.filter((page) => !isLogistics(page)) },
+    { title: "Logistics", pages: pages.filter(isLogistics) },
+  ].filter((group) => group.pages.length > 0);
+
+  const renderOption = (page) => (
+    <label key={page.key} className="access-option">
+      <input
+        type="checkbox"
+        className="modal-checkbox"
+        checked={selected.has(page.key)}
+        disabled={page.locked || saving}
+        onChange={() => togglePage(page.key)}
+      />
+      <span>{page.label.replace(/^Logistics: /, "")}</span>
+      {page.locked && <span className="access-note">Always available</span>}
+    </label>
+  );
 
   return ReactDOM.createPortal(
     <div className="modal">
@@ -97,25 +157,15 @@ const ManageAccessModal = ({ employee, onClose }) => {
 
         {loading && <p>Loading...</p>}
 
-        {!loading && pages.length > 0 && (
-          <div className="access-list">
-            {pages.map((page) => (
-              <label key={page.key} className="access-option">
-                <input
-                  type="checkbox"
-                  className="modal-checkbox"
-                  checked={selected.has(page.key)}
-                  disabled={page.locked || saving}
-                  onChange={() => togglePage(page.key)}
-                />
-                <span>{page.label}</span>
-                {page.locked && (
-                  <span className="access-note">Always available</span>
-                )}
-              </label>
-            ))}
-          </div>
-        )}
+        {!loading &&
+          pageGroups.map((group) => (
+            <div className="access-list" key={group.title || "general"}>
+              {group.title && (
+                <p className="access-group-title">{group.title}</p>
+              )}
+              {group.pages.map(renderOption)}
+            </div>
+          ))}
 
         {errorMessage && (
           <p className="feedback-message error">{errorMessage}</p>
@@ -133,7 +183,7 @@ const ManageAccessModal = ({ employee, onClose }) => {
           <button
             type="button"
             className="btn modal-button"
-            onClick={onClose}
+            onClick={handleCancelClick}
             disabled={saving}
           >
             Cancel
@@ -141,13 +191,42 @@ const ManageAccessModal = ({ employee, onClose }) => {
           <button
             type="button"
             className="btn modal-button"
-            onClick={handleSave}
-            disabled={loading || saving || pages.length === 0}
+            onClick={handleSaveClick}
+            disabled={loading || saving || pages.length === 0 || !hasChanges}
           >
             {saving ? "Saving..." : "Save"}
           </button>
         </div>
       </div>
+
+      {isCancelOpen && (
+        <CancelModal
+          title="Cancel Changes"
+          message="Are you sure you want to cancel changing this employee's page access?"
+          onClose={() => setIsCancelOpen(false)}
+          onConfirm={() => {
+            setIsCancelOpen(false);
+            onClose();
+          }}
+          cancelText="No"
+          confirmText="Yes, Cancel"
+        />
+      )}
+
+      {isConfirmOpen && (
+        <ConfirmModal
+          title="Confirm Changes"
+          message={`Are you sure you want to change the page access of ${fullName}?`}
+          onClose={() => setIsConfirmOpen(false)}
+          onConfirm={handleSave}
+          cancelText="No"
+          confirmText="Yes, Save"
+        />
+      )}
+
+      {successMessage && (
+        <ConfirmedMessageModal message={successMessage} onClose={onClose} />
+      )}
     </div>,
     document.body,
   );

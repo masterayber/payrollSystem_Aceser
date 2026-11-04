@@ -1,0 +1,350 @@
+/* Shared look for the Logistics tables, toolbars, chips and form modals.
+   Used by the Setup tabs and the ItemMasterTable / SupplierTable components,
+   which the procurement pages reuse later. Table columns come from the
+   --logistics-columns custom property set on each table. */
+
+.logistics-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  width: 100%;
+}
+
+.logistics-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.logistics-toolbar .search-container {
+  width: min(100%, 420px);
+  min-height: 44px;
+  margin: 0;
+}
+
+.logistics-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.logistics-filters .dropdown-container {
+  min-width: 170px;
+}
+
+.logistics-filters .dropdown-button {
+  min-height: 44px;
+  background: var(--gray-50);
+}
+
+.logistics-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.logistics-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 14px;
+}
+
+/* Table */
+.logistics-table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--gray-50);
+}
+
+.logistics-table .table-header,
+.logistics-table .table-content {
+  display: grid;
+  grid-template-columns: var(--logistics-columns, repeat(5, minmax(120px, 1fr)));
+  align-items: stretch;
+  width: 100%;
+  min-width: var(--logistics-min-width, 900px);
+}
+
+.logistics-table .table-header-container,
+.logistics-table .table-content-container {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 14px;
+  overflow: hidden;
+}
+
+.logistics-table .table-header-container {
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-90);
+}
+
+.logistics-table .table-header-container p {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.logistics-table .table-content {
+  border-bottom: 1px solid var(--gray-200);
+  transition: background-color 0.16s ease;
+}
+
+.logistics-table .table-content:last-child {
+  border-bottom: 0;
+}
+
+.logistics-table .table-content:hover {
+  background: var(--neutral-color-20);
+}
+
+.logistics-table .table-content.clickable {
+  cursor: pointer;
+}
+
+.logistics-table .table-content.clickable:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: -2px;
+}
+
+/* Last column: the pencil, same look as Setup > Lists and Settings > Manage */
+.logistics-table .logistics-row-actions {
+  justify-content: flex-end;
+}
+
+.logistics-table .manage-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--neutral-color-80);
+  cursor: pointer;
+}
+
+.logistics-table .manage-icon-button:hover {
+  background: var(--gray-200);
+  color: var(--default-button-color);
+}
+
+.logistics-table .manage-icon-button:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: 2px;
+}
+
+.logistics-table .table-content-container {
+  min-height: 54px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  background: transparent;
+  color: var(--neutral-color-90);
+}
+
+.logistics-table .table-content-container p {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logistics-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  padding: 36px 16px;
+  color: var(--neutral-color-80);
+  font-size: 15px;
+  text-align: center;
+}
+
+/* Status chips */
+.logistics-badge {
+  display: inline-block;
+  max-width: 100%;
+  padding: 5px 9px;
+  overflow: hidden;
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-80);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logistics-badge.active {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.logistics-badge.pending,
+.logistics-badge.onhold {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.logistics-badge.inactive,
+.logistics-badge.closed {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.logistics-badge.completed {
+  border-color: #bae6fd;
+  background: #e0f2fe;
+  color: #075985;
+}
+
+/* Form modal (on top of Modal.css) */
+.modal-content.logistics-modal {
+  width: min(820px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  padding: 28px;
+}
+
+.logistics-modal > h3 {
+  margin-bottom: 8px;
+  color: var(--neutral-color-100);
+  font-size: 22px;
+  line-height: 1.3;
+}
+
+.logistics-modal .form-container {
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.logistics-modal .input-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.logistics-modal .input-container {
+  min-width: 0;
+}
+
+.logistics-modal .dropdown-container {
+  display: block;
+  width: 100%;
+}
+
+.logistics-modal .modal-buttons {
+  flex-wrap: wrap;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--gray-200);
+}
+
+.logistics-form-help {
+  margin-top: 4px;
+  color: var(--neutral-color-70);
+  font-size: 13px;
+}
+
+.logistics-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  min-height: 46px;
+  align-items: center;
+}
+
+.logistics-radio-group label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* Checkbox list (multi-picker) */
+.logistics-checklist {
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--gray-50);
+}
+
+.logistics-check-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--gray-200);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.logistics-check-option:last-child {
+  border-bottom: 0;
+}
+
+.logistics-check-option:has(input:checked) {
+  background: var(--neutral-color-20);
+}
+
+.logistics-check-option .logistics-check-meta {
+  margin-left: auto;
+  color: var(--neutral-color-70);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Current members under the pickers, with one warning line each */
+.logistics-member-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.logistics-member-notes .feedback-message {
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .modal-content.logistics-modal {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+    padding: 20px;
+  }
+
+  .logistics-modal .input-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .logistics-toolbar .search-container {
+    width: 100%;
+  }
+}

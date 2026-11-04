@@ -10,6 +10,7 @@ const employeeRoutes = require("./routes/employee");
 const filingRoutes = require("./routes/filing");
 const accessRoutes = require("./routes/access");
 const settingsRoutes = require("./routes/settings");
+const logisticsRoutes = require("./routes/logistics");
 
 const authMiddleware = require("./middleware/authMiddleware");
 
@@ -28,6 +29,7 @@ app.use("/api/employee", employeeRoutes);
 app.use("/api/filing", filingRoutes);
 app.use("/api/access", accessRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/logistics", logisticsRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running...");
