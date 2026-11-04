@@ -18,6 +18,13 @@ import {
   IconGraph,
   IconSettings,
   IconUsersGroup,
+  IconChecklist,
+  IconShoppingCart,
+  IconFileInvoice,
+  IconFileCheck,
+  IconCalculator,
+  IconArrowsExchange,
+  IconAdjustments,
 } from "@tabler/icons-react";
 
 // A page counts as showing on its own path and on paths below it (/employees/:userId)
@@ -25,9 +32,9 @@ const isPathActive = (pathname, path) =>
   pathname === path || pathname.startsWith(`${path}/`);
 
 // allowedPages comes from the server. Until it has loaded, show the role's menu.
-// A group with its own access key (Logistics) shows whole or not at all; a group
-// without one (HR) keeps the children whose page keys are allowed, and hides
-// itself when none are.
+// A group with its own access key shows whole or not at all; a group without
+// one (HR, Logistics) keeps the children whose page keys are allowed, and
+// hides itself when none are.
 const filterByAccess = (items, allowedPages) => {
   if (!Array.isArray(allowedPages)) return items;
 
@@ -42,36 +49,89 @@ const filterByAccess = (items, allowedPages) => {
   });
 };
 
+// Each logistics page has its own access key; the group key below only names
+// the open/closed state (it is not an access key: see filterByAccess).
+const logisticsPages = [
+  {
+    name: "Dashboard",
+    key: "logistics-dashboard",
+    path: "/logistics/dashboard",
+    icon: <IconLayoutDashboard stroke={1.75} />,
+  },
+  {
+    name: "Material Requests",
+    key: "logistics-material-requests",
+    path: "/logistics/material-requests",
+    icon: <IconClipboardList stroke={1.75} />,
+  },
+  {
+    name: "MR Approvals",
+    key: "logistics-mr-approvals",
+    path: "/logistics/mr-approvals",
+    icon: <IconChecklist stroke={1.75} />,
+  },
+  {
+    name: "Procurement Queue",
+    key: "logistics-procurement",
+    path: "/logistics/procurement",
+    icon: <IconShoppingCart stroke={1.75} />,
+  },
+  {
+    name: "Purchase Orders",
+    key: "logistics-purchase-orders",
+    path: "/logistics/purchase-orders",
+    icon: <IconFileInvoice stroke={1.75} />,
+  },
+  {
+    name: "PO Approvals",
+    key: "logistics-po-approvals",
+    path: "/logistics/po-approvals",
+    icon: <IconFileCheck stroke={1.75} />,
+  },
+  {
+    name: "Accounting",
+    key: "logistics-accounting",
+    path: "/logistics/accounting",
+    icon: <IconCalculator stroke={1.75} />,
+  },
+  {
+    name: "Deliveries",
+    key: "logistics-deliveries",
+    path: "/logistics/deliveries",
+    icon: <IconTruckDelivery stroke={1.75} />,
+  },
+  {
+    name: "Project Inventory",
+    key: "logistics-inventory",
+    path: "/logistics/inventory",
+    icon: <IconBuildingWarehouse stroke={1.75} />,
+  },
+  {
+    name: "Withdrawals and Transfers",
+    key: "logistics-movements",
+    path: "/logistics/movements",
+    icon: <IconArrowsExchange stroke={1.75} />,
+  },
+];
+
+const logisticsSetupPage = {
+  name: "Setup",
+  key: "logistics-setup",
+  path: "/logistics/setup",
+  icon: <IconAdjustments stroke={1.75} />,
+};
+
 const logisticsGroup = {
   name: "Logistics",
   key: "logistics",
   icon: <IconTruck stroke={1.75} />,
-  children: [
-    {
-      name: "Dashboard",
-      key: "logistics-dashboard",
-      path: "/logistics/dashboard",
-      icon: <IconLayoutDashboard stroke={1.75} />,
-    },
-    {
-      name: "Material Request",
-      key: "logistics-material-request",
-      path: "/logistics/material-request",
-      icon: <IconClipboardList stroke={1.75} />,
-    },
-    {
-      name: "Inventory per Project",
-      key: "logistics-inventory",
-      path: "/logistics/inventory",
-      icon: <IconBuildingWarehouse stroke={1.75} />,
-    },
-    {
-      name: "Deliveries",
-      key: "logistics-deliveries",
-      path: "/logistics/deliveries",
-      icon: <IconTruckDelivery stroke={1.75} />,
-    },
-  ],
+  children: logisticsPages,
+};
+
+// Setup is admin only
+const adminLogisticsGroup = {
+  ...logisticsGroup,
+  children: [...logisticsPages, logisticsSetupPage],
 };
 
 function Sidebar({ role, allowedPages }) {
@@ -187,7 +247,7 @@ function Sidebar({ role, allowedPages }) {
         },
       ],
     },
-    logisticsGroup,
+    adminLogisticsGroup,
     {
       name: "Calendar",
       key: "admin-calendar",

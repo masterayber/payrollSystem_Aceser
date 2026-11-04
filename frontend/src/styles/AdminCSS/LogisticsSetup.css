@@ -1,0 +1,38 @@
+/* Logistics > Setup: the tab bar reuses AdminSettings.css (admin-settings-page);
+   the tables and modals reuse components/Logistics/Logistics.css */
+
+/* The settings page animates its indicator from JS; here the active tab
+   simply underlines itself */
+.logistics-setup-page .logistics-setup-tabs::after {
+  display: none;
+}
+
+.logistics-setup-page .logistics-setup-tabs .setting-button.active {
+  box-shadow: inset 0 -3px 0 var(--main-color-1);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.logistics-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.logistics-banner .feedback-message {
+  margin: 0;
+}
+
+.logistics-banner .feedback-message p + p {
+  margin-top: 4px;
+}
+
+.logistics-banner-button {
+  margin-top: 10px;
+  min-height: 38px;
+  padding: 8px 14px;
+}
+
+/* Lists tab: one card per managed list, same look as Settings > Manage */
+.logistics-lists .manage-grid {
+  margin-top: 4px;
+}

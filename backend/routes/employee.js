@@ -10,6 +10,7 @@ const Employee = require("../models/employees");
 const Settings = require("../models/settings");
 
 const { checkJobDetails, checkResignation } = require("../utils/jobDetails");
+const { emitToUsers } = require("../utils/realtime");
 
 const router = express.Router();
 
@@ -571,6 +572,11 @@ router.put("/edit-employee-via-admin/:id", requireAdmin, async (req, res) => {
     }
     if (Object.keys(jobUpdate).length > 0) {
       await Settings.findOneAndUpdate({ userId }, { $set: jobUpdate });
+    }
+
+    // A changed position or department changes the person's logistics roles
+    if (position !== undefined || department !== undefined) {
+      emitToUsers([userId], "access.changed", { reason: "jobDescription" });
     }
 
     res.status(200).json({ message: "Employee updated successfully" });

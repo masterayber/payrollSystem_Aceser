@@ -1,8 +1,8 @@
-// Material Request Page
+// Material Requests Page
 const MaterialRequest = () => {
   return (
     <div className="main-content">
-      <p>Material Request Page</p>
+      <p>Material Requests Page</p>
     </div>
   );
 };

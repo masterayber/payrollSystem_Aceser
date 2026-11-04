@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { IconEye, IconEyeClosed } from "@tabler/icons-react";
 import "./Profile.css";
 
-const EMPTY = "—";
+export const EMPTY = "—";
 
 const formatDate = (value) => {
   if (!value) return EMPTY;
@@ -124,6 +124,14 @@ const ProfileView = ({ profile, employment }) => {
             value={formatPeso(employment.basicPay)}
           />
           <Field label="Schedule" value={schedule} />
+
+          {/* Admin profile only: where the person sits in the Logistics module */}
+          {employment.logisticsProjects && (
+            <Field
+              label="Logistics projects"
+              value={employment.logisticsProjects}
+            />
+          )}
 
           {employment.resignationDate && (
             <>

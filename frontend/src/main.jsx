@@ -35,8 +35,15 @@ import Settings from "./pages/UserPage/Settings";
 // Logistics Pages
 import LogisticsDashboard from "./pages/Logistics/LogisticsDashboard";
 import MaterialRequest from "./pages/Logistics/MaterialRequest";
-import ProjectInventory from "./pages/Logistics/ProjectInventory";
+import MRApprovals from "./pages/Logistics/MRApprovals";
+import ProcurementQueue from "./pages/Logistics/ProcurementQueue";
+import PurchaseOrders from "./pages/Logistics/PurchaseOrders";
+import POApprovals from "./pages/Logistics/POApprovals";
+import Accounting from "./pages/Logistics/Accounting";
 import Deliveries from "./pages/Logistics/Deliveries";
+import ProjectInventory from "./pages/Logistics/ProjectInventory";
+import Movements from "./pages/Logistics/Movements";
+import LogisticsSetup from "./pages/Logistics/Setup/Setup";
 
 import "./index.css";
 import PrivateRoute from "./components/PrivateRoute";
@@ -46,13 +53,67 @@ import { EmployeeProvider } from "./context/EmployeeContext";
 import { SettingsProvider } from "./context/SettingsContext";
 import { AttendanceProvider } from "./context/AttendanceContext";
 import { FilingProvider } from "./context/FilingContext";
+import { LogisticsProvider } from "./context/LogisticsContext";
 import MainLayout from "./layouts/MainLayout";
 
+// One access key per page (an admin ticks them in Manage Access); Setup is admin only
 const LOGISTICS_ROUTES = [
-  { path: "logistics/dashboard", element: <LogisticsDashboard /> },
-  { path: "logistics/material-request", element: <MaterialRequest /> },
-  { path: "logistics/inventory", element: <ProjectInventory /> },
-  { path: "logistics/deliveries", element: <Deliveries /> },
+  {
+    path: "logistics/dashboard",
+    pageKey: "logistics-dashboard",
+    element: <LogisticsDashboard />,
+  },
+  {
+    path: "logistics/material-requests",
+    pageKey: "logistics-material-requests",
+    element: <MaterialRequest />,
+  },
+  {
+    path: "logistics/mr-approvals",
+    pageKey: "logistics-mr-approvals",
+    element: <MRApprovals />,
+  },
+  {
+    path: "logistics/procurement",
+    pageKey: "logistics-procurement",
+    element: <ProcurementQueue />,
+  },
+  {
+    path: "logistics/purchase-orders",
+    pageKey: "logistics-purchase-orders",
+    element: <PurchaseOrders />,
+  },
+  {
+    path: "logistics/po-approvals",
+    pageKey: "logistics-po-approvals",
+    element: <POApprovals />,
+  },
+  {
+    path: "logistics/accounting",
+    pageKey: "logistics-accounting",
+    element: <Accounting />,
+  },
+  {
+    path: "logistics/deliveries",
+    pageKey: "logistics-deliveries",
+    element: <Deliveries />,
+  },
+  {
+    path: "logistics/inventory",
+    pageKey: "logistics-inventory",
+    element: <ProjectInventory />,
+  },
+  {
+    path: "logistics/movements",
+    pageKey: "logistics-movements",
+    element: <Movements />,
+  },
+  {
+    path: "logistics/setup",
+    pageKey: "logistics-setup",
+    allowedRoles: ["Admin"],
+    element: <LogisticsSetup />,
+  },
 ];
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -62,271 +123,275 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <SettingsProvider>
           <AttendanceProvider>
             <FilingProvider>
-              <BrowserRouter>
-                <ScrollToTop />
-                <Routes>
-                  {/* Public Routes */}
-                  <Route path="/" element={<Login />} />
-                  <Route path="signup" element={<Signup />} />
-                  <Route path="forgot-password" element={<ForgotPassword />} />
-                  <Route path="otp" element={<OTP />} />
-                  <Route path="reset-password" element={<ResetPassword />} />
-                  <Route path="update-info" element={<AdditionalInfo />} />
-                  <Route
-                    path="created-account/:id"
-                    element={<CreatedAccount />}
-                  />
-
-                  {/* Admin Routes */}
-                  <Route
-                    path="admin-dashboard"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Admin"]}
-                        pageKey="admin-dashboard"
-                      >
-                        <MainLayout>
-                          <AdminDashboard />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="employees"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Admin"]}
-                        pageKey="employees"
-                      >
-                        <MainLayout>
-                          <Employees />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="employees/:userId"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Admin"]}
-                        pageKey="employees"
-                      >
-                        <MainLayout>
-                          <EmployeeProfile />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="deductions"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Admin"]}
-                        pageKey="deductions"
-                      >
-                        <MainLayout>
-                          <Deductions />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="admin-payslips"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Admin"]}
-                        pageKey="admin-payslips"
-                      >
-                        <MainLayout>
-                          <AdminPayslips />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="admin-attendance"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Admin"]}
-                        pageKey="admin-attendance"
-                      >
-                        <MainLayout>
-                          <AdminAttendance />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="admin-calendar"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Admin"]}
-                        pageKey="admin-calendar"
-                      >
-                        <MainLayout>
-                          <AdminCalendar />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="admin-filing"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Admin"]}
-                        pageKey="admin-filing"
-                      >
-                        <MainLayout>
-                          <AdminFiling />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="reports"
-                    element={
-                      <PrivateRoute allowedRoles={["Admin"]} pageKey="reports">
-                        <MainLayout>
-                          <Reports />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="admin-settings"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Admin"]}
-                        pageKey="admin-settings"
-                      >
-                        <MainLayout>
-                          <AdminSettings />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-
-                  {/* Protected Routes with Employee Layout */}
-                  <Route
-                    path="dashboard"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Employee"]}
-                        pageKey="dashboard"
-                      >
-                        <MainLayout>
-                          <Dashboard />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-
-                  <Route
-                    path="payroll"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Employee"]}
-                        pageKey="payroll"
-                      >
-                        <MainLayout>
-                          <Payroll />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-
-                  <Route
-                    path="payslips"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Employee"]}
-                        pageKey="payslips"
-                      >
-                        <MainLayout>
-                          <Payslips />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-
-                  <Route
-                    path="attendance"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Employee"]}
-                        pageKey="attendance"
-                      >
-                        <MainLayout>
-                          <Attendance />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-
-                  {/* Logistics Routes (admins, and employees granted access) */}
-                  <Route
-                    path="logistics"
-                    element={<Navigate to="/logistics/dashboard" replace />}
-                  />
-
-                  {LOGISTICS_ROUTES.map(({ path, element }) => (
+              <LogisticsProvider>
+                <BrowserRouter>
+                  <ScrollToTop />
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route path="/" element={<Login />} />
+                    <Route path="signup" element={<Signup />} />
+                    <Route path="forgot-password" element={<ForgotPassword />} />
+                    <Route path="otp" element={<OTP />} />
+                    <Route path="reset-password" element={<ResetPassword />} />
+                    <Route path="update-info" element={<AdditionalInfo />} />
                     <Route
-                      key={path}
-                      path={path}
+                      path="created-account/:id"
+                      element={<CreatedAccount />}
+                    />
+  
+                    {/* Admin Routes */}
+                    <Route
+                      path="admin-dashboard"
                       element={
                         <PrivateRoute
-                          allowedRoles={["Admin", "Employee"]}
-                          pageKey="logistics"
+                          allowedRoles={["Admin"]}
+                          pageKey="admin-dashboard"
                         >
-                          <MainLayout>{element}</MainLayout>
+                          <MainLayout>
+                            <AdminDashboard />
+                          </MainLayout>
                         </PrivateRoute>
                       }
                     />
-                  ))}
-
-                  <Route
-                    path="calendar"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Employee"]}
-                        pageKey="calendar"
-                      >
-                        <MainLayout>
-                          <Calendar />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-
-                  <Route
-                    path="filing"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Employee"]}
-                        pageKey="filing"
-                      >
-                        <MainLayout>
-                          <Filing />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-
-                  <Route
-                    path="settings"
-                    element={
-                      <PrivateRoute
-                        allowedRoles={["Employee"]}
-                        pageKey="settings"
-                      >
-                        <MainLayout>
-                          <Settings />
-                        </MainLayout>
-                      </PrivateRoute>
-                    }
-                  />
-                </Routes>
-              </BrowserRouter>
+                    <Route
+                      path="employees"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Admin"]}
+                          pageKey="employees"
+                        >
+                          <MainLayout>
+                            <Employees />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="employees/:userId"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Admin"]}
+                          pageKey="employees"
+                        >
+                          <MainLayout>
+                            <EmployeeProfile />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="deductions"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Admin"]}
+                          pageKey="deductions"
+                        >
+                          <MainLayout>
+                            <Deductions />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="admin-payslips"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Admin"]}
+                          pageKey="admin-payslips"
+                        >
+                          <MainLayout>
+                            <AdminPayslips />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="admin-attendance"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Admin"]}
+                          pageKey="admin-attendance"
+                        >
+                          <MainLayout>
+                            <AdminAttendance />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="admin-calendar"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Admin"]}
+                          pageKey="admin-calendar"
+                        >
+                          <MainLayout>
+                            <AdminCalendar />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="admin-filing"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Admin"]}
+                          pageKey="admin-filing"
+                        >
+                          <MainLayout>
+                            <AdminFiling />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="reports"
+                      element={
+                        <PrivateRoute allowedRoles={["Admin"]} pageKey="reports">
+                          <MainLayout>
+                            <Reports />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="admin-settings"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Admin"]}
+                          pageKey="admin-settings"
+                        >
+                          <MainLayout>
+                            <AdminSettings />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+  
+                    {/* Protected Routes with Employee Layout */}
+                    <Route
+                      path="dashboard"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Employee"]}
+                          pageKey="dashboard"
+                        >
+                          <MainLayout>
+                            <Dashboard />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+  
+                    <Route
+                      path="payroll"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Employee"]}
+                          pageKey="payroll"
+                        >
+                          <MainLayout>
+                            <Payroll />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+  
+                    <Route
+                      path="payslips"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Employee"]}
+                          pageKey="payslips"
+                        >
+                          <MainLayout>
+                            <Payslips />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+  
+                    <Route
+                      path="attendance"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Employee"]}
+                          pageKey="attendance"
+                        >
+                          <MainLayout>
+                            <Attendance />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+  
+                    {/* Logistics Routes (admins, and employees granted access) */}
+                    <Route
+                      path="logistics"
+                      element={<Navigate to="/logistics/dashboard" replace />}
+                    />
+  
+                    {LOGISTICS_ROUTES.map(
+                      ({ path, pageKey, allowedRoles, element }) => (
+                        <Route
+                          key={path}
+                          path={path}
+                          element={
+                            <PrivateRoute
+                              allowedRoles={allowedRoles || ["Admin", "Employee"]}
+                              pageKey={pageKey}
+                            >
+                              <MainLayout>{element}</MainLayout>
+                            </PrivateRoute>
+                          }
+                        />
+                      ),
+                    )}
+  
+                    <Route
+                      path="calendar"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Employee"]}
+                          pageKey="calendar"
+                        >
+                          <MainLayout>
+                            <Calendar />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+  
+                    <Route
+                      path="filing"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Employee"]}
+                          pageKey="filing"
+                        >
+                          <MainLayout>
+                            <Filing />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+  
+                    <Route
+                      path="settings"
+                      element={
+                        <PrivateRoute
+                          allowedRoles={["Employee"]}
+                          pageKey="settings"
+                        >
+                          <MainLayout>
+                            <Settings />
+                          </MainLayout>
+                        </PrivateRoute>
+                      }
+                    />
+                  </Routes>
+                </BrowserRouter>
+              </LogisticsProvider>
             </FilingProvider>
           </AttendanceProvider>
         </SettingsProvider>

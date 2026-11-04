@@ -11,7 +11,11 @@ import {
 } from "@tabler/icons-react";
 import API from "../../api";
 import ProfilePhoto from "../../components/ProfilePhoto/ProfilePhoto";
-import ProfileView, { Card, Field } from "../../components/Profile/ProfileView";
+import ProfileView, {
+  Card,
+  EMPTY,
+  Field,
+} from "../../components/Profile/ProfileView";
 import { daysText, monthName } from "../../utils/leaveCredits";
 import ProfileHeader from "../../components/Profile/ProfileHeader";
 import ProfileForm from "../../components/Profile/ProfileForm.jsx";
@@ -27,6 +31,11 @@ import ResignEmployeeModal from "../../components/Modals/Resign/ResignEmployeeMo
 import "../../components/SettingsComponent/SettingsComponent.css";
 import "../../styles/AdminCSS/EmployeeProfile.css";
 
+const MEMBER_ROLE_LABELS = {
+  ProjectInCharge: "In-charge",
+  DocumentController: "Document Controller",
+};
+
 const EmployeeProfile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -34,6 +43,7 @@ const EmployeeProfile = () => {
   const [profile, setProfile] = useState(null);
   const [access, setAccess] = useState(null);
   const [credits, setCredits] = useState(null);
+  const [logisticsProjects, setLogisticsProjects] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [form, setForm] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -81,11 +91,33 @@ const EmployeeProfile = () => {
     }
   }, [userId]);
 
+  // "ACE01 (In-charge), ACE02 (Document Controller)"; hidden when the request fails
+  const loadLogisticsProjects = useCallback(async () => {
+    try {
+      const { data } = await API.get("/api/logistics/projects", {
+        params: { memberId: userId },
+      });
+      setLogisticsProjects(
+        data.length
+          ? data
+              .map(
+                (project) =>
+                  `${project.code} (${MEMBER_ROLE_LABELS[project.memberRole] || project.memberRole})`,
+              )
+              .join(", ")
+          : EMPTY,
+      );
+    } catch {
+      setLogisticsProjects(null);
+    }
+  }, [userId]);
+
   useEffect(() => {
     loadProfile();
     loadAccess();
     loadCredits();
-  }, [loadProfile, loadAccess, loadCredits]);
+    loadLogisticsProjects();
+  }, [loadProfile, loadAccess, loadCredits, loadLogisticsProjects]);
 
   if (!profile) {
     return (
@@ -266,6 +298,7 @@ const EmployeeProfile = () => {
             ...job,
             employeeId: employee.employeeId,
             employmentType: isResigned ? "Resigned" : job.employmentType,
+            logisticsProjects,
           }}
         />
       )}

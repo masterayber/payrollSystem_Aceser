@@ -7,9 +7,16 @@ import PropTypes from "prop-types";
 
 const logisticsTitles = [
   { name: "Logistics Dashboard", path: "/logistics/dashboard" },
-  { name: "Material Request", path: "/logistics/material-request" },
-  { name: "Inventory per Project", path: "/logistics/inventory" },
+  { name: "Material Requests", path: "/logistics/material-requests" },
+  { name: "MR Approvals", path: "/logistics/mr-approvals" },
+  { name: "Procurement Queue", path: "/logistics/procurement" },
+  { name: "Purchase Orders", path: "/logistics/purchase-orders" },
+  { name: "PO Approvals", path: "/logistics/po-approvals" },
+  { name: "Accounting", path: "/logistics/accounting" },
   { name: "Deliveries", path: "/logistics/deliveries" },
+  { name: "Project Inventory", path: "/logistics/inventory" },
+  { name: "Withdrawals and Transfers", path: "/logistics/movements" },
+  { name: "Logistics Setup", path: "/logistics/setup" },
 ];
 
 function Header({ role }) {
@@ -109,10 +116,6 @@ function Header({ role }) {
     {
       name: "Reports",
       path: "/reports",
-    },
-    {
-      name: "Reports",
-      path: "/admin-reports",
     },
     {
       name: "Settings",
