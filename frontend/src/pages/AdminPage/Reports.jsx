@@ -3,6 +3,7 @@ import XLSX from "xlsx-js-style";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import { activeOnly, isPastLastWorkingDay } from "../../utils/employees";
 import Dropdown from "../../components/Dropdown/Dropdown";
+import ThirteenthMonthReport from "../../components/ThirteenthMonth/ThirteenthMonthReport";
 import "../../styles/AdminCSS/Reports.css";
 import API from "../../api";
 
@@ -190,6 +191,8 @@ const Reports = () => {
           </div>
         </div>
       </div>
+
+      <ThirteenthMonthReport />
     </div>
   );
 };
