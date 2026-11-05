@@ -116,6 +116,18 @@ export const lateFill = {
   fgColor: { rgb: "F8CBAD" },
 };
 
+// 13th month: a cut-off that has not ended yet (projected)
+export const projectedFill = {
+  patternType: "solid",
+  fgColor: { rgb: "E7E6E6" },
+};
+
+// 13th month: a Resigned employee's row (paler than projectedFill so projected cells still show)
+export const resignedFill = {
+  patternType: "solid",
+  fgColor: { rgb: "F2F2F2" },
+};
+
 export const setCell = (ws, r, c, value, type, style) => {
   const addr = XLSX.utils.encode_cell({ r, c });
   ws[addr] = { v: value, t: type, s: style };

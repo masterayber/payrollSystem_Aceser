@@ -8,8 +8,11 @@ const {
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
+const BasicPayChange = require("../models/basicPayChange");
 
 const { checkJobDetails, checkResignation } = require("../utils/jobDetails");
+const { payChangesToRecord } = require("../utils/basicPayHistory");
+const { manilaToday } = require("../utils/leaveCredits");
 const { emitToUsers } = require("../utils/realtime");
 
 const router = express.Router();
@@ -572,6 +575,29 @@ router.put("/edit-employee-via-admin/:id", requireAdmin, async (req, res) => {
     }
     if (Object.keys(jobUpdate).length > 0) {
       await Settings.findOneAndUpdate({ userId }, { $set: jobUpdate });
+    }
+
+    // A changed basic pay goes into the pay history (13th month uses the pay in force
+    // each day). The first change also records the old pay, so earlier days keep it.
+    if (job.fields.basicPay !== undefined) {
+      const savedJob = saved?.general?.jobDescription || {};
+      const todayKey = manilaToday();
+      const changes = payChangesToRecord({
+        oldPay: savedJob.basicPay,
+        newPay: job.fields.basicPay,
+        hasHistory: Boolean(await BasicPayChange.exists({ userId })),
+        startDate: startDate !== undefined ? startDate : savedJob.startDate,
+        todayKey,
+      });
+      for (const { amount, effectiveFrom } of changes) {
+        await BasicPayChange.findOneAndUpdate(
+          { userId, effectiveFrom: new Date(`${effectiveFrom}T00:00:00Z`) },
+          {
+            $set: { amount, changedBy: req.user.userId, changedAt: new Date() },
+          },
+          { upsert: true, runValidators: true, setDefaultsOnInsert: true },
+        );
+      }
     }
 
     // A changed position or department changes the person's logistics roles

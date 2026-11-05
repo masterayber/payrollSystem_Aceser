@@ -28,6 +28,7 @@ import ManageAccessModal from "../../components/Modals/ManageAccess/ManageAccess
 import ConfirmModal from "../../components/Modals/Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../../components/Modals/Confirmed/ConfirmedMessageModal";
 import ResignEmployeeModal from "../../components/Modals/Resign/ResignEmployeeModal";
+import ThirteenthMonthCard from "../../components/ThirteenthMonth/ThirteenthMonthCard";
 import "../../components/SettingsComponent/SettingsComponent.css";
 import "../../styles/AdminCSS/EmployeeProfile.css";
 
@@ -303,8 +304,8 @@ const EmployeeProfile = () => {
         />
       )}
 
-      {credits && (
-        <div className="profile-grid">
+      <div className="profile-grid">
+        {credits && (
           <Card title="Leave Credits">
             <Field
               label="Vacation Leave left"
@@ -323,8 +324,11 @@ const EmployeeProfile = () => {
               value={daysText(job.vacationLeaveOpening || 0)}
             />
           </Card>
-        </div>
-      )}
+        )}
+
+        {/* Admin only: amounts come from the server, hidden until clicked */}
+        <ThirteenthMonthCard userId={userId} refreshKey={profile} />
+      </div>
 
       <section className="profile-card access-card">
         <div className="access-card-header">

@@ -11,6 +11,7 @@ const filingRoutes = require("./routes/filing");
 const accessRoutes = require("./routes/access");
 const settingsRoutes = require("./routes/settings");
 const logisticsRoutes = require("./routes/logistics");
+const thirteenthMonthRoutes = require("./routes/thirteenthMonth");
 
 const authMiddleware = require("./middleware/authMiddleware");
 
@@ -30,6 +31,7 @@ app.use("/api/filing", filingRoutes);
 app.use("/api/access", accessRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/logistics", logisticsRoutes);
+app.use("/api/thirteenth-month", thirteenthMonthRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running...");

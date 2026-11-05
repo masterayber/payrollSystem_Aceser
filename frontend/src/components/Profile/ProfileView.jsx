@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { IconEye, IconEyeClosed } from "@tabler/icons-react";
+import { formatPeso } from "../../utils/money";
 import "./Profile.css";
 
 export const EMPTY = "—";
@@ -16,14 +17,6 @@ const formatDate = (value) => {
         day: "numeric",
       });
 };
-
-const formatPeso = (value) =>
-  value === null || value === undefined || value === ""
-    ? EMPTY
-    : Number(value).toLocaleString("en-PH", {
-        style: "currency",
-        currency: "PHP",
-      });
 
 export const Field = ({ label, value }) => (
   <div className="profile-field">
@@ -71,15 +64,19 @@ SecretField.propTypes = {
   value: PropTypes.string,
 };
 
-export const Card = ({ title, children }) => (
+// `message` (optional) is a line shown in place of, or above, the fields (loading,
+// not available, an error)
+export const Card = ({ title, message, children }) => (
   <section className="profile-card">
     <h4 className="profile-card-title">{title}</h4>
-    <dl className="profile-fields">{children}</dl>
+    {message && <div className="profile-card-message">{message}</div>}
+    {children && <dl className="profile-fields">{children}</dl>}
   </section>
 );
 
 Card.propTypes = {
   title: PropTypes.string.isRequired,
+  message: PropTypes.node,
   children: PropTypes.node,
 };
 
