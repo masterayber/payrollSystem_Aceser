@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { IconCancel, IconEdit } from "@tabler/icons-react";
 import { UserContext } from "../../../context/UserContext";
+import { roleLabel } from "../../../utils/roles";
 import PropTypes from "prop-types";
 import API from "../../../api";
 import ProfilePhotoEditor from "../../Profile/ProfilePhotoEditor";
@@ -71,7 +72,7 @@ const GeneralSettings = ({ showEmployment = true }) => {
   // Employees see their job under their name; admins see their role
   const subtitle = showEmployment
     ? [job.designation, job.department].filter(Boolean).join(" · ")
-    : userData?.role;
+    : roleLabel(userData?.role);
   const badges = [
     ...(showEmployment
       ? [{ label: employment.employeeId }, { label: job.employmentType }]

@@ -13,16 +13,19 @@ import {
   getCutoffOptions,
   getCutoffRange,
   parseCutoffValue,
-  toManilaDate,
 } from "../../utils/cutoff";
+import { hireDateKey } from "../../utils/employees";
 
 const Attendance = () => {
   const { userData } = useContext(UserContext);
 
-  // The current cut-off first, back to the hire date or one year (24 cut-offs)
+  // The start date in the job description (the account's createdAt when there is none)
+  const hireKey = hireDateKey(userData);
+
+  // The current cut-off first, back to the start date or one year (24 cut-offs)
   const cutoffOptions = getCutoffOptions({
     count: 24,
-    since: userData?.createdAt ? toManilaDate(userData.createdAt) : undefined,
+    since: hireKey || undefined,
   });
 
   const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
@@ -50,7 +53,6 @@ const Attendance = () => {
 
   const generateCutoffAttendance = (attendance, { start, end }) => {
     const todayKey = formatKey(new Date());
-    const hireKey = userData.createdAt?.split("T")[0];
 
     const attendanceMap = new Map(
       attendance.map((att) => [att.date.split("T")[0], att]),

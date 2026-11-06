@@ -5,7 +5,7 @@ import {
   parseCutoffValue,
 } from "../cutoff";
 
-import { isPastLastWorkingDay } from "../employees";
+import { hireDateKey, isPastLastWorkingDay } from "../employees";
 
 export const formatMonthValue = (year, monthIndex) =>
   `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
@@ -18,8 +18,9 @@ export const formatKey = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+// Before the start date (createdAt when there is none) or after the last working day
 export const isNotEmployedOn = (employee, dateKey) => {
-  const hireKey = employee.createdAt ? formatKey(employee.createdAt) : null;
+  const hireKey = hireDateKey(employee);
   return (
     Boolean(hireKey && dateKey < hireKey) ||
     isPastLastWorkingDay(employee, dateKey)

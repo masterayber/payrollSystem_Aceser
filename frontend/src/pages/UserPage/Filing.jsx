@@ -76,18 +76,10 @@ const Filing = () => {
         return;
       }
 
-      const url = `http://localhost:5000/api/filing/${deleteTarget.type}/${deleteTarget.request._id}`;
-      const res = await fetch(url, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Delete failed");
-      }
+      // API adds the Authorization header; a non-2xx reply throws to the catch below
+      await API.delete(
+        `/api/filing/${deleteTarget.type}/${deleteTarget.request._id}`,
+      );
 
       setIsDeleteModalOpen(false);
       setDeleteTarget({ type: null, request: null });
@@ -95,7 +87,11 @@ const Filing = () => {
 
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (err) {
-      console.error("Failed deleting request:", err);
+      console.error(
+        "Failed deleting request:",
+        err.response?.data?.error || "Delete failed",
+        err,
+      );
     }
   };
 

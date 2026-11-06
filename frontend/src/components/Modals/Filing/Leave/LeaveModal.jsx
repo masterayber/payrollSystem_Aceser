@@ -6,6 +6,7 @@ import ConfirmModal from "../../Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../../Confirmed/ConfirmedMessageModal";
 import "../../Modal.css";
 import Dropdown from "../../../Dropdown/Dropdown";
+import API from "../../../../api";
 
 import {
   CREDIT_LEAVE_TYPES,
@@ -128,25 +129,11 @@ const LeaveModal = ({
         return;
       }
 
-      const url = isEdit
-        ? `http://localhost:5000/api/filing/edit-leave/${request._id}`
-        : "http://localhost:5000/api/filing/apply-leave";
-      const method = isEdit ? "PATCH" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(
-          errorData.error || `${isEdit ? "Update" : "Submission"} failed`,
-        );
+      // API adds the Authorization header and sends formData as JSON
+      if (isEdit) {
+        await API.patch(`/api/filing/edit-leave/${request._id}`, formData);
+      } else {
+        await API.post("/api/filing/apply-leave", formData);
       }
 
       setIsConfirmModalOpen(false);
@@ -159,7 +146,14 @@ const LeaveModal = ({
         err,
       );
       setIsConfirmModalOpen(false);
-      setErrorMessage(err.message);
+      // Server refusal: its { error } text, else the generic message; no reply at all
+      // (server down): the network error's own message
+      setErrorMessage(
+        err.response
+          ? err.response.data?.error ||
+              `${isEdit ? "Update" : "Submission"} failed`
+          : err.message,
+      );
     }
   };
 

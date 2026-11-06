@@ -14,8 +14,17 @@ const { checkJobDetails, checkResignation } = require("../utils/jobDetails");
 const { payChangesToRecord } = require("../utils/basicPayHistory");
 const { manilaToday } = require("../utils/leaveCredits");
 const { emitToUsers } = require("../utils/realtime");
+const {
+  nextEmployeeId,
+  createEmployeeAccount,
+} = require("../utils/employeeAccount");
+const { isAdminRole } = require("../config/roles");
+const { isHiddenAccount } = require("../utils/hiddenAccounts");
 
 const router = express.Router();
+
+// Super Admin and Admin accounts are hidden: the profile, edit, delete, resign and
+// reinstate routes answer for them exactly as for a missing account (404).
 
 // Router for getting all the employees data. Only active employees, unless
 // ?includeResigned=true (the Employees page lists resigned employees at the bottom).
@@ -108,7 +117,7 @@ router.get("/employees/:userId", requireAdmin, async (req, res) => {
       Settings.findOne({ userId }).select("general.jobDescription").lean(),
     ]);
 
-    if (!user) {
+    if (!user || isAdminRole(user.role)) {
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -260,7 +269,11 @@ router.delete(
       const { employeeId } = req.params;
 
       const employee = await Employee.findOne({ employeeId });
-      if (!employee) {
+      if (
+        !employee ||
+        isAdminRole(employee.role) ||
+        (await isHiddenAccount(employee.userId))
+      ) {
         return res.status(404).json({ message: "Employee not found" });
       }
 
@@ -281,18 +294,7 @@ router.delete(
 
 router.get("/latest-employeeId", requireAdmin, async (req, res) => {
   try {
-    const lastEmployee = await Employee.findOne({
-      employeeId: { $regex: /^AC-\d+$/ },
-    })
-      .sort({ employeeId: -1 })
-      .collation({ locale: "en_US", numericOrdering: true });
-
-    let newEmployeeId = "AC-001";
-    if (lastEmployee && lastEmployee.employeeId) {
-      const lastNumber = parseInt(lastEmployee.employeeId.split("-")[1], 10);
-      newEmployeeId = `AC-${String(lastNumber + 1).padStart(3, "0")}`;
-    }
-
+    const newEmployeeId = await nextEmployeeId();
     res.json({ newEmployeeId });
   } catch (error) {
     console.error("Error fetching latest Employee ID", error);
@@ -314,6 +316,9 @@ router.patch("/employees/:userId/resign", requireAdmin, async (req, res) => {
       return res
         .status(400)
         .json({ message: "You can't mark your own account as resigned." });
+    }
+    if (await isHiddenAccount(userId)) {
+      return res.status(404).json({ message: "User not found" });
     }
 
     const settings = await Settings.findOne({ userId })
@@ -369,6 +374,9 @@ router.patch("/employees/:userId/reinstate", requireAdmin, async (req, res) => {
     if (!mongoose.isValidObjectId(userId)) {
       return res.status(400).json({ message: "Invalid user id" });
     }
+    if (await isHiddenAccount(userId)) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const user = await User.findOneAndUpdate(
       { _id: userId, status: "Resigned" },
@@ -404,78 +412,16 @@ router.patch("/employees/:userId/reinstate", requireAdmin, async (req, res) => {
 // Route for adding employee via admin manually
 router.post("/add-employee-via-admin", requireAdmin, async (req, res) => {
   try {
-    const {
-      firstName,
-      lastName,
-      employeeId,
-      gender,
-      email,
-      username,
-      password,
-      designation,
-      department,
-      position,
-      employmentType,
-      startDate,
-      timeIn,
-      timeOut,
-    } = req.body;
-
     const job = checkJobDetails(req.body);
     if (job.error) {
       return res.status(400).json({ message: job.error });
     }
 
-    const user = new User({
-      username,
-      password,
-      email,
-      role: "Employee",
-      status: "Active",
-      createdAt: new Date(),
-    });
-    await user.save();
-
-    let employeeData = {
-      userId: user._id,
-      firstName,
-      lastName,
-      employeeId,
-      email,
-      gender,
-      role: user.role,
-      birthday: "",
-      contactNumber: "",
-      emergencyDetails: {
-        contactFirstName: "",
-        contactLastName: "",
-        contactEmergency: "",
-        contactAddress: "",
-      },
-      createdAt: new Date(),
-    };
-
-    const employee = new Employee(employeeData);
-    await employee.save();
-
-    const settings = new Settings({
-      userId: user._id,
-      general: {
-        jobDescription: {
-          designation: designation,
-          department: department,
-          position: position,
-          employmentType: employmentType,
-          startDate: startDate,
-          ...job.fields,
-          schedule: {
-            timeIn: timeIn,
-            timeOut: timeOut,
-          },
-        },
-      },
-    });
-    await settings.save();
+    // Always an Employee-role account; a role sent in the body is ignored
+    const { user, employee, settings } = await createEmployeeAccount(
+      req.body,
+      job.fields,
+    );
 
     res.status(201).json({
       message: "Employee account created successfully",
@@ -511,7 +457,7 @@ router.put("/edit-employee-via-admin/:id", requireAdmin, async (req, res) => {
     } = req.body;
 
     const user = await User.findById(userId);
-    if (!user) {
+    if (!user || isAdminRole(user.role)) {
       return res.status(404).json({ message: "User not found" });
     }
 

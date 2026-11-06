@@ -17,6 +17,7 @@ import ProfileView, {
   Field,
 } from "../../components/Profile/ProfileView";
 import { daysText, monthName } from "../../utils/leaveCredits";
+import { isAdminRole } from "../../utils/roles";
 import ProfileHeader from "../../components/Profile/ProfileHeader";
 import ProfileForm from "../../components/Profile/ProfileForm.jsx";
 import {
@@ -58,14 +59,23 @@ const EmployeeProfile = () => {
   const [doneMessage, setDoneMessage] = useState("");
 
   const loadProfile = useCallback(async () => {
+    // Not found: back to the Employees list, as for a deleted employee
+    const leaveProfile = () => navigate("/employees", { replace: true });
+
     try {
       const { data } = await API.get(`/api/employee/employees/${userId}`);
+      // Super Admin and Admin accounts are not employees; the server already
+      // answers 404 for them, this only guards against a stale response
+      if (isAdminRole(data.role)) {
+        leaveProfile();
+        return;
+      }
       setProfile(data);
       setErrorMessage("");
     } catch (error) {
-      // Deleted from the Edit Employee modal, or a bad link
+      // Deleted from the Edit Employee modal, a hidden account, or a bad link
       if (error.response?.status === 404) {
-        navigate("/employees", { replace: true });
+        leaveProfile();
         return;
       }
       setErrorMessage(

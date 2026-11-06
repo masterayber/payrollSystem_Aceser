@@ -2,10 +2,15 @@ const authMiddleware = require("./authMiddleware");
 const jwt = require("jsonwebtoken");
 const User = require("../models/authUsers");
 const { getAllowedPages } = require("../utils/pageAccess");
+const { isAdminRole } = require("../config/roles");
 
 // The JWT only proves who the caller was when the token was issued. Role, status and
 // page access can change afterwards, so they are re-read from the database on every
 // request. That is what makes an admin's change take effect immediately.
+// Status is checked first: an account that is not Active is refused as such. Then, if
+// the role inside the token no longer matches the stored role (any change, in either
+// direction, Admin <-> Super Admin included), the session ends: 401 ROLE_CHANGED, so
+// the screen signs the user out and they sign in again with a token for the new role.
 const loadCurrentUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.userId)
@@ -14,6 +19,13 @@ const loadCurrentUser = async (req, res, next) => {
 
     if (!user || user.status !== "Active") {
       return res.status(401).json({ message: "Account is not active" });
+    }
+
+    if (req.user.role !== user.role) {
+      return res.status(401).json({
+        message: "Your role has changed. Please sign in again.",
+        code: "ROLE_CHANGED",
+      });
     }
 
     req.currentUser = user;
@@ -27,7 +39,7 @@ const requireAdmin = [
   authMiddleware,
   loadCurrentUser,
   (req, res, next) => {
-    if (req.currentUser.role !== "Admin") {
+    if (!isAdminRole(req.currentUser.role)) {
       return res.status(403).json({ message: "Admin access required" });
     }
     next();
@@ -35,12 +47,12 @@ const requireAdmin = [
 ];
 
 // Guards an Employee API route so it follows the same page permissions as the UI.
-// Admins are never restricted by page access, so they always pass.
+// Admins (both admin roles) are never restricted by page access, so they always pass.
 const requirePage = (pageKey) => [
   authMiddleware,
   loadCurrentUser,
   (req, res, next) => {
-    if (req.currentUser.role === "Admin") return next();
+    if (isAdminRole(req.currentUser.role)) return next();
 
     if (!getAllowedPages(req.currentUser).includes(pageKey)) {
       return res.status(403).json({

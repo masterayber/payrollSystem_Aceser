@@ -3,8 +3,12 @@ const mongoose = require("mongoose");
 
 const User = require("../models/authUsers");
 const { PAGES, pagesForRole } = require("../config/pages");
-const { getAllowedPages } = require("../utils/pageAccess");
+const {
+  getAllowedPages,
+  normalizePageAccess,
+} = require("../utils/pageAccess");
 const { requireAdmin } = require("../middleware/accessMiddleware");
+const { isAdminRole, roleLabel } = require("../config/roles");
 
 const router = express.Router();
 
@@ -14,6 +18,7 @@ const describeAccess = (user) => ({
   // true when an admin has set explicit access, false when the role default applies
   customized: Array.isArray(user.pageAccess),
   allowedPages: getAllowedPages(user),
+  // pagesForRole gives both admin roles the Admin pages
   pages: pagesForRole(user.role),
 });
 
@@ -32,10 +37,13 @@ router.get("/pages", requireAdmin, (req, res) => {
 // What one user can currently open
 router.get("/users/:userId", requireAdmin, validUserId, async (req, res) => {
   try {
+    // Super Admin and Admin accounts are hidden: answered as missing
     const user = await User.findById(req.params.userId)
       .select("role pageAccess")
       .lean();
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user || isAdminRole(user.role)) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.json(describeAccess(user));
   } catch (err) {
@@ -56,13 +64,10 @@ router.put("/users/:userId", requireAdmin, validUserId, async (req, res) => {
         .json({ message: "You cannot change your own page access" });
     }
 
+    // Super Admin and Admin accounts are hidden (and never restricted): answered as missing
     const target = await User.findById(userId).select("role").lean();
-    if (!target) return res.status(404).json({ message: "User not found" });
-
-    if (target.role === "Admin") {
-      return res
-        .status(400)
-        .json({ message: "Page access cannot be restricted for admins" });
+    if (!target || isAdminRole(target.role)) {
+      return res.status(404).json({ message: "User not found" });
     }
 
     let update;
@@ -83,16 +88,16 @@ router.put("/users/:userId", requireAdmin, validUserId, async (req, res) => {
       const invalid = [...new Set(pages)].filter((key) => !validKeys.has(key));
       if (invalid.length > 0) {
         return res.status(400).json({
-          message: `Not a page for the ${target.role} role: ${invalid.join(", ")}`,
+          message: `Not a page for the ${roleLabel(target.role)} role: ${invalid.join(", ")}`,
         });
       }
 
-      const keep = new Set(pages);
-      const normalized = rolePages
-        .filter((page) => page.locked || keep.has(page.key))
-        .map((page) => page.key);
-
-      update = { $set: { pageAccess: normalized, updatedAt: new Date() } };
+      update = {
+        $set: {
+          pageAccess: normalizePageAccess(target.role, pages),
+          updatedAt: new Date(),
+        },
+      };
     }
 
     const updated = await User.findByIdAndUpdate(userId, update, {

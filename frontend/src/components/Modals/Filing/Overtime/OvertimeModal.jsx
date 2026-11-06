@@ -10,6 +10,7 @@ import ConfirmModal from "../../Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../../Confirmed/ConfirmedMessageModal";
 import Pagination from "../../../Pagination/Pagination";
 import "../../Modal.css";
+import API from "../../../../api";
 
 const OvertimeModal = ({
   mode,
@@ -124,12 +125,10 @@ const OvertimeModal = ({
         return;
       }
 
-      let url, method, body;
-
+      // API adds the Authorization header and sends the body as JSON; a non-2xx
+      // reply throws to the catch below
       if (isEdit) {
-        url = `http://localhost:5000/api/filing/edit-overtime/${request._id}`;
-        method = "PATCH";
-        body = JSON.stringify({
+        await API.patch(`/api/filing/edit-overtime/${request._id}`, {
           attendanceId: selectedOvertime?._id,
           selectedOvertime: selectedOvertime?.date,
           start,
@@ -137,9 +136,7 @@ const OvertimeModal = ({
           overtimeDetails: overtimeDetails.trim(),
         });
       } else {
-        url = "http://localhost:5000/api/filing/apply-overtime";
-        method = "POST";
-        body = JSON.stringify({
+        await API.post("/api/filing/apply-overtime", {
           attendanceId: selectedOvertime?._id,
           selectedOvertime: selectedOvertime?.date,
           start: selectedOvertime?.overtime?.start,
@@ -148,28 +145,14 @@ const OvertimeModal = ({
         });
       }
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body,
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(
-          errorData.error || `${isEdit ? "Update" : "Submission"} failed`,
-        );
-      }
-
       setIsConfirmModalOpen(false);
       if (onUpdateOvertimeRequests) onUpdateOvertimeRequests();
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (err) {
       console.error(
         `Failed ${isEdit ? "updating" : "applying for"} overtime:`,
+        err.response?.data?.error ||
+          `${isEdit ? "Update" : "Submission"} failed`,
         err,
       );
     }
@@ -399,7 +382,7 @@ const OvertimeModal = ({
           message={
             isEdit
               ? "Overtime request successfully updated."
-              : "Appication sumitted successfully!"
+              : "Application submitted successfully!"
           }
           onClose={closeConfirmed}
         />

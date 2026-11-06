@@ -467,7 +467,9 @@
 }
 
 .filing-modal .filing-overtime-record-list .pagination {
+  display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 8px;
   padding: 10px;
 }

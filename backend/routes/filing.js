@@ -6,6 +6,12 @@ const OvertimeApplication = require("../models/overtimeApplication");
 const Attendance = require("../models/attendance");
 const Settings = require("../models/settings");
 const { requirePage, requireAdmin } = require("../middleware/accessMiddleware");
+const { isAdminRole } = require("../config/roles");
+const {
+  findVisibleUser,
+  isHiddenAccount,
+  hiddenUserIds,
+} = require("../utils/hiddenAccounts");
 
 const {
   CREDIT_LEAVE_TYPES,
@@ -86,11 +92,15 @@ const checkOvertimeDay = async (attendanceId, userId, keepAttendanceId) => {
   return null;
 };
 
+// The role is read from the database (requireAdmin loads it), not from the token,
+// so a token issued before a role change still works
 router.get("/", requireAdmin, async (req, res) => {
-  if (req.user.role !== "Admin")
+  if (!isAdminRole(req.currentUser.role))
     return res.status(400).json({ msg: "Access Denied" });
 
+  // Super Admin and Admin requests never show in the list
   const apps = await LeaveApplication.aggregate([
+    { $match: { userId: { $nin: await hiddenUserIds() } } },
     {
       $lookup: {
         from: "employees",
@@ -157,6 +167,11 @@ router.get("/leave-credits/:userId", requireAdmin, async (req, res) => {
   }
 
   try {
+    // A missing account and a hidden one (Super Admin or Admin) have no credits
+    if (!(await findVisibleUser(userId))) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
     const { job, leaves } = await loadCreditData(userId);
     res.json(leaveBalance(job, leaves, manilaToday()));
   } catch (err) {
@@ -298,6 +313,12 @@ router.patch("/leave/:id/status", requireAdmin, async (req, res) => {
   }
 
   try {
+    // A Super Admin or Admin request is hidden: answered as missing
+    const owner = await LeaveApplication.findById(id).select("userId").lean();
+    if (owner && (await isHiddenAccount(owner.userId))) {
+      return res.status(404).json({ error: "Leave application not found." });
+    }
+
     // VL and SL are checked again: the credits may have changed since it was filed
     if (status === "Approved") {
       const pending = await LeaveApplication.findOne({
@@ -488,6 +509,12 @@ router.patch("/overtime/:id/status", requireAdmin, async (req, res) => {
   }
 
   try {
+    // A Super Admin or Admin request is hidden: answered as missing
+    const owner = await OvertimeApplication.findById(id).select("userId").lean();
+    if (owner && (await isHiddenAccount(owner.userId))) {
+      return res.status(404).json({ error: "Overtime request not found." });
+    }
+
     // The Pending filter is part of the update itself, so two admins acting on the same
     // request at the same time cannot both succeed.
     const app = await OvertimeApplication.findOneAndUpdate(
@@ -723,10 +750,12 @@ router.delete("/overtime/:id", requirePage("filing"), async (req, res) => {
 
 // Route for getting the overtime of all users
 router.get("/overtime", requireAdmin, async (req, res) => {
-  if (req.user.role !== "Admin")
+  if (!isAdminRole(req.currentUser.role))
     return res.status(400).json({ msg: "Access Denied" });
 
+  // Super Admin and Admin requests never show in the list
   const apps = await OvertimeApplication.aggregate([
+    { $match: { userId: { $nin: await hiddenUserIds() } } },
     {
       $lookup: {
         from: "employees",
