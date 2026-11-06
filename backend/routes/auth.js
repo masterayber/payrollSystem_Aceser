@@ -19,6 +19,7 @@ const { issueCode, checkCode } = require("../utils/otpStore");
 
 const sendEmail = require("../utils/nodemailer");
 const { getAllowedPages } = require("../utils/pageAccess");
+const { VISIBLE_ROLE } = require("../utils/hiddenAccounts");
 
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
 
@@ -355,8 +356,9 @@ router.put("/users/:id/status", requireAdmin, async (req, res) => {
 
   try {
     // Approves pending accounts only; a resigned employee is reinstated from their profile
+    // A Super Admin or Admin account is hidden: answered as missing
     const result = await User.findOneAndUpdate(
-      { _id: id, status: "Pending" },
+      { _id: id, status: "Pending", role: VISIBLE_ROLE },
       { status: "Active" },
       { new: true },
     );
@@ -374,7 +376,10 @@ router.put("/users/:id/status", requireAdmin, async (req, res) => {
 // List route for pending accounts for the admin approval workflow
 router.get("/pending-users", requireAdmin, async (req, res) => {
   try {
-    const pendingUsers = await User.find({ status: "Pending" });
+    const pendingUsers = await User.find({
+      status: "Pending",
+      role: VISIBLE_ROLE,
+    });
 
     const enrichedUsers = await Promise.all(
       pendingUsers.map(async (user) => {

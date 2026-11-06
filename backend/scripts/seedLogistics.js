@@ -16,6 +16,7 @@ const Project = require("../models/project");
 const Item = require("../models/item");
 const Supplier = require("../models/supplier");
 const { seedReserved } = require("../routes/logistics/setup");
+const { ADMIN_ROLES } = require("../config/roles");
 
 const DEMO_PROJECT = {
   code: "ACE01",
@@ -65,7 +66,9 @@ async function run() {
     console.log(`  units of measure added: ${reserved.added.unitsOfMeasure}`);
   }
 
-  const admin = await Auth.findOne({ role: "Admin" }).sort({ createdAt: 1 });
+  const admin = await Auth.findOne({ role: { $in: ADMIN_ROLES } }).sort({
+    createdAt: 1,
+  });
   if (!admin) {
     console.error("No Admin account found; create one before seeding.");
     await mongoose.disconnect();

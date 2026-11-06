@@ -1,6 +1,7 @@
 import { Fragment, useState } from "react";
 import PropTypes from "prop-types";
 import { useNavigate, useLocation } from "react-router-dom";
+import { isAdminRole } from "../utils/roles";
 import {
   IconLayoutDashboard,
   IconUserSquare,
@@ -268,7 +269,7 @@ function Sidebar({ role, allowedPages }) {
     },
   ];
 
-  const roleMenuItems = role === "Admin" ? adminMenuItems : userMenuItems;
+  const roleMenuItems = isAdminRole(role) ? adminMenuItems : userMenuItems;
 
   const menuItems = filterByAccess(roleMenuItems, allowedPages);
 

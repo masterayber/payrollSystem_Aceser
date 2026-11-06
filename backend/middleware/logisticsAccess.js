@@ -10,6 +10,7 @@ const Project = require("../models/project");
 const { getAllowedPages } = require("../utils/pageAccess");
 const { isLogisticsPage } = require("../config/pages");
 const { SITE_ROLES } = require("../config/logistics");
+const { isAdminRole } = require("../config/roles");
 const {
   headOfficeRoles,
   siteRole,
@@ -45,7 +46,7 @@ const loadLogistics = async (req, res, next) => {
 
     req.logistics = {
       userId,
-      isAdmin: req.currentUser?.role === "Admin",
+      isAdmin: isAdminRole(req.currentUser?.role),
       jobDescription,
       position,
       department,
@@ -131,7 +132,7 @@ const requireAnyLogisticsPage = [
   loadCurrentUser,
   loadLogistics,
   (req, res, next) => {
-    if (req.currentUser.role === "Admin") return next();
+    if (isAdminRole(req.currentUser.role)) return next();
 
     const allowed = getAllowedPages(req.currentUser);
     if (!allowed.some((key) => isLogisticsPage(key))) {

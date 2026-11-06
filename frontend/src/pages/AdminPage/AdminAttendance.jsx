@@ -8,7 +8,7 @@ import API from "../../api";
 import EditEmployeeAttendanceModal from "../../components/Modals/EditEmployee/EditEmployeeAttendanceModal";
 import "../../styles/AdminCSS/AdminAttendance.css";
 import Pagination from "../../components/Pagination/Pagination";
-import { isPastLastWorkingDay } from "../../utils/employees";
+import { hireDateKey, isPastLastWorkingDay } from "../../utils/employees";
 
 const AdminAttendance = () => {
   const { employeeData } = useContext(EmployeeContext);
@@ -123,8 +123,10 @@ const AdminAttendance = () => {
     )
     .map((employee) => {
       const selected = formatDate(selectedDate);
-      const createdDate = formatDate(new Date(employee.createdAt));
-      const isBeforeHired = new Date(selected) < new Date(createdDate);
+      // "Not Hired Yet" only before the start date (createdAt when there is
+      // none); days after it with no record show as missing, for Edit Attendance
+      const hireKey = hireDateKey(employee);
+      const isBeforeHired = Boolean(hireKey) && selected < hireKey;
       const attendanceRecord = getAttendanceForEmployee(employee._id);
       const isWeekend = [0, 6].includes(new Date(selected).getDay());
       const isFutureDate = selected > formatDate(new Date());

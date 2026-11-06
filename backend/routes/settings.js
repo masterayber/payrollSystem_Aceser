@@ -1,5 +1,4 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -12,6 +11,8 @@ const {
   requireAdmin,
   requireAuthenticated,
 } = require("../middleware/accessMiddleware");
+const { isAdminRole } = require("../config/roles");
+const { isHiddenAccount } = require("../utils/hiddenAccounts");
 
 const router = express.Router();
 
@@ -76,12 +77,24 @@ const removeUpload = (urlPath) => {
   if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 };
 
-const requireSelfOrAdmin = (req, res, next) => {
-  const isAdmin = req.currentUser.role === "Admin";
+const requireSelfOrAdmin = async (req, res, next) => {
+  const isAdmin = isAdminRole(req.currentUser.role);
   const isOwner = String(req.user.userId) === String(req.params.id);
 
   if (!isAdmin && !isOwner) {
     return res.status(403).json({ message: "Access denied" });
+  }
+
+  // Super Admin and Admin accounts are hidden from other accounts: answered as missing.
+  // The account itself still edits its own settings.
+  if (!isOwner) {
+    try {
+      if (await isHiddenAccount(req.params.id)) {
+        return res.status(404).json({ message: "User not found" });
+      }
+    } catch (err) {
+      return res.status(500).json({ message: "Server error", error: err.message });
+    }
   }
 
   next();

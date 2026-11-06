@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import API from "../api";
 import { UserContext } from "./UserContext";
+import { isAdminRole } from "../utils/roles";
 
 export const AttendanceContext = createContext();
 
@@ -12,7 +13,7 @@ export const AttendanceProvider = ({ children }) => {
   useEffect(() => {
     if (loading) return undefined;
 
-    if (userData?.role !== "Admin") {
+    if (!isAdminRole(userData?.role)) {
       setAttendanceData([]);
       return undefined;
     }

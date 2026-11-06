@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { ROLES } = require("../config/roles");
 
 const employeeSchema = new mongoose.Schema({
   userId: {
@@ -24,7 +25,7 @@ const employeeSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["Admin", "Employee"],
+    enum: ROLES,
   },
   birthday: {
     type: Date,

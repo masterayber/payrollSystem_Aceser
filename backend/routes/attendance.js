@@ -8,6 +8,11 @@ const Attendance = require("../models/attendance");
 const Employee = require("../models/employees");
 const User = require("../models/authUsers");
 const { requireAdmin, requirePage } = require("../middleware/accessMiddleware");
+const { isAdminRole } = require("../config/roles");
+const {
+  findVisibleUser,
+  hiddenUserIds,
+} = require("../utils/hiddenAccounts");
 
 const ZKTecoService = require("../utils/zktecoService");
 
@@ -38,12 +43,26 @@ const requireZktecoCallbackAuth = (req, res, next) => {
   next();
 };
 
-const requireSelfOrAdmin = (req, res, next) => {
-  const isAdmin = req.currentUser.role === "Admin";
+// An admin opening another account's attendance: a missing account and a hidden one
+// (Super Admin or Admin) both answer 404 "User not found"
+const requireSelfOrAdmin = async (req, res, next) => {
+  const isAdmin = isAdminRole(req.currentUser.role);
   const isOwner = String(req.user.userId) === String(req.params.userId);
 
   if (!isAdmin && !isOwner) {
     return res.status(403).json({ message: "Access denied" });
+  }
+
+  if (!isOwner) {
+    try {
+      if (!(await findVisibleUser(req.params.userId))) {
+        return res.status(404).json({ message: "User not found" });
+      }
+    } catch (err) {
+      return res
+        .status(500)
+        .json({ message: "Server error", error: err.message });
+    }
   }
 
   next();
@@ -406,13 +425,11 @@ router.get("/attendance", requireAdmin, async (req, res) => {
   try {
     const { date } = req.query;
 
-    let attendance;
+    // Super Admin and Admin attendance never shows in the lists, dashboard or reports
+    const filter = { userId: { $nin: await hiddenUserIds() } };
+    if (date) filter.date = date.trim();
 
-    if (date) {
-      attendance = await Attendance.find({ date: date.trim() });
-    } else {
-      attendance = await Attendance.find({});
-    }
+    const attendance = await Attendance.find(filter);
 
     res.json(attendance);
   } catch (err) {
@@ -496,6 +513,10 @@ router.put("/edit-attendance/:id", requireAdmin, async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid user ID" });
     }
+    // A missing account and a hidden one (Super Admin or Admin) get no attendance
+    if (!(await findVisibleUser(userId))) {
+      return res.status(404).json({ message: "User not found" });
+    }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) {
       return res
         .status(400)
@@ -552,15 +573,12 @@ router.post("/create-blank.today", requireAdmin, async (req, res) => {
     const skippedRecords = [];
 
     for (const emp of employees) {
-      if (emp.role === "Admin") {
-        skippedRecords.push({
-          name: `${emp.firstName} ${emp.lastName}`,
-          reason: "Admin user",
-        });
-        continue;
-      }
+      // Super Admin and Admin accounts are hidden: left out without a mention. The
+      // Auth role is checked too, in case the Employee record's role is out of date.
+      if (isAdminRole(emp.role)) continue;
 
       const user = await User.findOne({ email: emp.email });
+      if (user && isAdminRole(user.role)) continue;
 
       if (!user || user.status === "Pending") {
         skippedRecords.push({

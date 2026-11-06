@@ -37,6 +37,12 @@ const {
 } = require("../../utils/logisticsAccess");
 const { counterKeysForProject } = require("../../utils/documentNumbers");
 const { emitToUsers } = require("../../utils/realtime");
+const {
+  VISIBLE_ROLE,
+  isHiddenAccount,
+  hiddenUserIdSet,
+  withoutHiddenMembers,
+} = require("../../utils/hiddenAccounts");
 
 const router = express.Router();
 
@@ -57,13 +63,14 @@ const personName = (employee, auth) => {
   return full || auth?.username || "";
 };
 
-// Auth, Employee and Settings for a set of user ids, keyed by user id
+// Auth, Employee and Settings for a set of user ids, keyed by user id. Super Admin and
+// Admin accounts are hidden: left out, so they are "Person not found." as members.
 const loadPeople = async (ids) => {
   const unique = [...new Set(ids.map(idString).filter(Boolean))];
   if (unique.length === 0) return new Map();
 
   const [auths, employees, settings] = await Promise.all([
-    Auth.find({ _id: { $in: unique } })
+    Auth.find({ _id: { $in: unique }, role: VISIBLE_ROLE })
       .select("username status")
       .lean(),
     Employee.find({ userId: { $in: unique } })
@@ -109,10 +116,13 @@ const memberShape = (person, roleName) =>
 
 // The project detail shape the Setup page shows: the project fields plus the
 // In-charge and Document Controllers with their position flags, and counts
-// (zero until the document phases land).
+// (zero until the document phases land). Super Admin and Admin ids are left out
+// of the raw inChargeId / documentControllerIds as well.
 const projectDetail = async (project) => {
-  const plain =
-    typeof project.toObject === "function" ? project.toObject() : { ...project };
+  const plain = withoutHiddenMembers(
+    typeof project.toObject === "function" ? project.toObject() : { ...project },
+    await hiddenUserIdSet(),
+  );
   const controllerIds = (plain.documentControllerIds || []).map(idString);
   const people = await loadPeople([plain.inChargeId, ...controllerIds]);
 
@@ -358,6 +368,9 @@ router.get("/projects", requireAnyLogisticsPage, async (req, res) => {
       if (!mongoose.isValidObjectId(memberId)) {
         return res.status(400).json({ message: "Invalid person ID." });
       }
+      // A hidden account (Super Admin or Admin) answers like an unknown id: no projects
+      if (await isHiddenAccount(memberId)) return res.json([]);
+
       const projects = await Project.find({
         $or: [{ inChargeId: memberId }, { documentControllerIds: memberId }],
       })
@@ -380,9 +393,16 @@ router.get("/projects", requireAnyLogisticsPage, async (req, res) => {
     const filter = {};
     if (status) filter.status = status;
 
+    // Super Admin and Admin ids are left out of the raw member fields (one lookup)
+    const visible = async (projects) => {
+      if (projects.length === 0) return projects;
+      const hidden = await hiddenUserIdSet();
+      return projects.map((project) => withoutHiddenMembers(project, hidden));
+    };
+
     if (logistics.isAdmin || logistics.headOfficeRoles.length > 0) {
       const projects = await Project.find(filter).sort({ code: 1 }).lean();
-      return res.json(projects);
+      return res.json(await visible(projects));
     }
 
     if (logistics.siteRole) {
@@ -396,12 +416,14 @@ router.get("/projects", requireAnyLogisticsPage, async (req, res) => {
         .sort({ code: 1 })
         .lean();
       return res.json(
-        projects.filter((project) =>
-          rolesOnProject(
-            logistics.userId,
-            logistics.jobDescription,
-            project,
-          ).has(logistics.siteRole),
+        await visible(
+          projects.filter((project) =>
+            rolesOnProject(
+              logistics.userId,
+              logistics.jobDescription,
+              project,
+            ).has(logistics.siteRole),
+          ),
         ),
       );
     }
@@ -438,9 +460,11 @@ router.get("/projects/eligible", requireAdmin, async (req, res) => {
         .map((setting) => [String(setting.userId), setting]),
     );
 
+    // Never a Super Admin or Admin account
     const auths = await Auth.find({
       _id: { $in: [...byUser.keys()] },
       status: "Active",
+      role: VISIBLE_ROLE,
     })
       .select("username")
       .lean();

@@ -1,3 +1,5 @@
+const { pageRole } = require("./roles");
+
 // Single source of truth for every page that can be granted or revoked.
 //
 // key        - matches the route path without the leading slash (e.g. "/payroll" -> "payroll")
@@ -64,6 +66,8 @@ const PAGES = [
   { key: "admin-settings", label: "Settings", role: "Admin", locked: true },
 ];
 
-const pagesForRole = (role) => PAGES.filter((page) => page.role === role);
+// Both admin roles (Admin, Super Admin) get the Admin pages
+const pagesForRole = (role) =>
+  PAGES.filter((page) => page.role === pageRole(role));
 
 module.exports = { PAGES, pagesForRole, LOGISTICS_PAGE_KEYS, isLogisticsPage };

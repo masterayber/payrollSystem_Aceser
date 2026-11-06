@@ -20,6 +20,7 @@ import {
   dayNames,
 } from "./excelStyles";
 import { formatKey, isNotEmployedOn } from "./reportHelpers";
+import { isAdminRole } from "../roles";
 
 const buildAttendanceMap = (attendanceRecords) => {
   const attendanceMap = {};
@@ -217,7 +218,7 @@ export const LateSheet = ({
 
   // Employee List
   const attendanceMap = buildAttendanceMap(attendanceRecords);
-  const employees = employeeData.filter((e) => e.role !== "Admin");
+  const employees = employeeData.filter((e) => !isAdminRole(e.role));
   const dailyLateCounts = cutoffDates.map(() => 0);
 
   let rowIndex = 5;

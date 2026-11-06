@@ -120,6 +120,9 @@ const ProjectFormModal = ({ projectId, onClose, onSaved }) => {
         );
 
         if (detail) {
+          // Only the members the server could name: a hidden (Super Admin or
+          // Admin) or deleted account is left out, so it never shows as a raw
+          // id and the next save drops it
           const loaded = {
             code: detail.code || "",
             name: detail.name || "",
@@ -127,8 +130,8 @@ const ProjectFormModal = ({ projectId, onClose, onSaved }) => {
             status: detail.status || "Active",
             startDate: (detail.startDate || "").slice(0, 10),
             remarks: detail.remarks || "",
-            inChargeId: detail.inChargeId || "",
-            documentControllerIds: detail.documentControllerIds || [],
+            inChargeId: detail.inCharge?._id || "",
+            documentControllerIds: currentControllers.map((member) => member._id),
           };
           setForm(loaded);
           setInitialForm(loaded);

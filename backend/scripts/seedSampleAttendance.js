@@ -16,6 +16,7 @@ require("dotenv").config({ path: path.join(__dirname, "..", "..", ".env") });
 const Employee = require("../models/employees");
 const User = require("../models/authUsers");
 const Attendance = require("../models/attendance");
+const { isAdminRole } = require("../config/roles");
 
 const args = process.argv.slice(2);
 const apply = args.includes("--apply");
@@ -91,7 +92,7 @@ async function seed() {
   let skipped = 0;
 
   for (const emp of employees) {
-    if (emp.role === "Admin") continue;
+    if (isAdminRole(emp.role)) continue;
 
     const user = await User.findOne({ email: emp.email });
     if (!user || user.status === "Pending") continue;

@@ -4,6 +4,7 @@ import { UserContext } from "../context/UserContext";
 import ProfilePhoto from "./ProfilePhoto/ProfilePhoto";
 import { IconCircleArrowUp, IconCircleArrowDown } from "@tabler/icons-react";
 import PropTypes from "prop-types";
+import { isAdminRole } from "../utils/roles";
 
 const logisticsTitles = [
   { name: "Logistics Dashboard", path: "/logistics/dashboard" },
@@ -124,7 +125,7 @@ function Header({ role }) {
   ];
 
   const menuTitles = [
-    ...(role === "Admin" ? adminMenuTitles : userMenuTitles),
+    ...(isAdminRole(role) ? adminMenuTitles : userMenuTitles),
     ...logisticsTitles,
     ...(location.pathname.startsWith("/employees/")
       ? [{ name: "Employee Profile", path: location.pathname }]

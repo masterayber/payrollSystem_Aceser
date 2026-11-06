@@ -28,6 +28,12 @@ const ProjectsTab = () => {
     return person ? `${person.firstName} ${person.lastName}` : "";
   };
 
+  // Document Controllers who are employees: the list's ids may still hold a
+  // hidden (Super Admin or Admin) account, which is not counted
+  const controllerCount = (ids = []) =>
+    ids.filter((id) => employeeData.some((employee) => employee._id === id))
+      .length;
+
   const loadProjects = useCallback(async () => {
     try {
       const { data } = await API.get("/api/logistics/projects");
@@ -116,7 +122,7 @@ const ProjectsTab = () => {
               <p>{project.inCharge?.name || nameOf(project.inChargeId) || "—"}</p>
             </article>
             <article className="table-content-container">
-              <p>{(project.documentControllerIds || []).length}</p>
+              <p>{controllerCount(project.documentControllerIds)}</p>
             </article>
             <article className="table-content-container">
               <p>{(project.startDate || "").slice(0, 10) || "—"}</p>

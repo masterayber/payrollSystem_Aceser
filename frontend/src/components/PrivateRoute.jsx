@@ -2,6 +2,7 @@ import { useContext } from "react";
 import PropTypes from "prop-types";
 import { Navigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
+import { pageRole } from "../utils/roles";
 
 const INACTIVITY_LIMIT = 60 * 60 * 1000;
 
@@ -33,15 +34,18 @@ const PrivateRoute = ({ children, allowedRoles, pageKey }) => {
     return <Navigate to="/" replace />;
   }
 
+  // Super Admin uses the Admin pages, so routes only ever list "Admin"
+  const role = pageRole(userData.role);
+
   // Signed in, but this route is for another role: go home, not to log in again
-  if (!allowedRoles.includes(userData.role)) {
-    const home = HOME_PAGE[userData.role];
+  if (!allowedRoles.includes(role)) {
+    const home = HOME_PAGE[role];
     return <Navigate to={home ? `/${home}` : "/"} replace />;
   }
 
   // Per-user page access set by an admin. This only decides what the UI shows; the
   // server still has to enforce it on the API (see requirePage in accessMiddleware).
-  const homePage = HOME_PAGE[userData.role];
+  const homePage = HOME_PAGE[role];
   if (
     pageKey &&
     pageKey !== homePage &&
