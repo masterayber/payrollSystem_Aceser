@@ -16,11 +16,18 @@ import {
   dayFill,
   setCell,
   getDayFill,
-  vleaveFill,
-  sleaveFill,
+  dayColumnWidth,
   dayNames,
 } from "./excelStyles";
 import { formatKey, isNotEmployedOn } from "./reportHelpers";
+import {
+  NOT_EMPLOYED,
+  getLeaveMark,
+  isUnfiledAbsence,
+  leaveLegendEntries,
+  writeLegend,
+} from "./leaveCodes";
+import { manilaToday } from "../cutoff";
 import { isAdminRole } from "../roles";
 
 const buildAttendanceMap = (attendanceRecords) => {
@@ -34,35 +41,17 @@ const buildAttendanceMap = (attendanceRecords) => {
   return attendanceMap;
 };
 
-const getCellValue = (
-  employeeAttendance,
-  dateKey,
-  isWeekendDay,
-  isNotEmployed,
-) => {
-  if (isNotEmployed) return "-";
+// The text and fill of one day: an approved leave's code (VL, SL, LWOP, ML, ...), LWOP also
+// for an Absent row or a past weekday with no row, LATE, "/" for a half day, "-" when not employed
+export const getDayCell = ({ record, dateKey, todayKey, isNotEmployed }) => {
+  if (isNotEmployed) return { text: NOT_EMPLOYED.code };
 
-  const record = employeeAttendance[dateKey];
-  if (record) {
-    if (record.behavior === "On-Time") return "";
-    if (record.behavior === "Late") return "LATE";
-    if (record.leaveType === "Vacation Leave") return "VL";
-    if (record.leaveType === "Sick Leave") return "SL";
-    if (record.behavior === "Absent") return "LWOP";
-    if (record.behavior === "Half-Day") return "/";
-    return "";
-  }
+  const mark = getLeaveMark({ record, dateKey, todayKey, isNotEmployed });
+  if (mark) return { text: mark.code, fill: mark.fill };
 
-  if (isWeekendDay) return "";
-  return "";
-};
-
-const getBehaviorFill = (record) => {
-  if (record?.behavior === "Late") return redFill;
-  if (record?.leaveType === "Vacation Leave") return vleaveFill;
-  if (record?.leaveType === "Sick Leave") return sleaveFill;
-
-  return null;
+  if (record?.behavior === "Late") return { text: "LATE", fill: redFill };
+  if (record?.behavior === "Half-Day") return { text: "/" };
+  return { text: "" };
 };
 
 export const AttendanceSheet = ({
@@ -164,6 +153,8 @@ export const AttendanceSheet = ({
   const attendanceMap = buildAttendanceMap(attendanceRecords);
   const employees = employeeData.filter((e) => !isAdminRole(e.role));
   const dailyCounts = cutoffDates.map(() => 0);
+  const todayKey = manilaToday();
+  let longestDayText = 0;
 
   let rowIndex = 5;
   let number = 1;
@@ -195,28 +186,24 @@ export const AttendanceSheet = ({
       const isWeekendDay = dayIndex === 0 || dayIndex === 6;
       const dayFill = getDayFill(d);
       const record = employeeAttendance[dateKey];
-      const behaviorFill = getBehaviorFill(employeeAttendance[dateKey]);
       const isNotEmployed = isNotEmployedOn(employee, dateKey);
+      const cell = getDayCell({ record, dateKey, todayKey, isNotEmployed });
 
+      // Every weekday that isn't On-Time, including unfiled absences (LWOP) with no row
       if (
         !isNotEmployed &&
         !isWeekendDay &&
-        record &&
-        record?.behavior !== "On-Time"
+        ((record && record.behavior !== "On-Time") ||
+          isUnfiledAbsence({ record, dateKey, todayKey, isNotEmployed }))
       ) {
         dailyCounts[i] += 1;
       }
 
-      const cellValue = getCellValue(
-        employeeAttendance,
-        dateKey,
-        isWeekendDay,
-        isNotEmployed,
-      );
+      longestDayText = Math.max(longestDayText, cell.text.length);
+      const fill = cell.fill || dayFill;
 
-      setCell(ws1, rowIndex, 5 + i, cellValue, "s", {
-        ...(dayFill ? { fill: dayFill } : {}),
-        ...(behaviorFill || dayFill ? { fill: behaviorFill || dayFill } : {}),
+      setCell(ws1, rowIndex, 5 + i, cell.text, "s", {
+        ...(fill ? { fill } : {}),
         border: allBorders,
         alignment: centerAlign,
       });
@@ -235,6 +222,14 @@ export const AttendanceSheet = ({
     });
   });
 
+  // Legend, one blank row under the employees
+  const lastRow = writeLegend(ws1, rowIndex + 1, [
+    { code: "LATE", meaning: "Late", fill: redFill },
+    { code: "/", meaning: "Half day" },
+    ...leaveLegendEntries({ includeLwop: true }),
+    NOT_EMPLOYED,
+  ]);
+
   ws1["!merges"] = [
     { s: { r: 2, c: 1 }, e: { r: 2, c: 4 } },
     { s: { r: 3, c: 1 }, e: { r: 3, c: 4 } },
@@ -242,16 +237,18 @@ export const AttendanceSheet = ({
 
   ws1["!ref"] = XLSX.utils.encode_range({
     s: { r: 0, c: 0 },
-    e: { r: rowIndex - 1, c: totalCols - 1 },
+    e: { r: lastRow, c: totalCols - 1 },
   });
 
+  // All day columns share one width, wide enough for the longest code shown
+  const dayWidth = dayColumnWidth(longestDayText);
   ws1["!cols"] = [
     { wch: 3 },
     { wch: 9 },
     { wch: 37 },
     { wch: 16 },
     { wch: 16 },
-    ...cutoffDates.map(() => ({ wch: 9 })),
+    ...cutoffDates.map(() => ({ wch: dayWidth })),
   ];
 
   ws1["!rows"] = [
@@ -259,7 +256,7 @@ export const AttendanceSheet = ({
     { hpt: 16 },
     { hpt: 16 },
     { hpt: 16 },
-    ...Array(rowIndex - 4).fill({ hpt: 16 }),
+    ...Array(lastRow - 3).fill({ hpt: 16 }),
   ];
 
   return { ws1, cutoff };

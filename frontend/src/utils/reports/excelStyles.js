@@ -150,4 +150,22 @@ export const sleaveFill = {
   fgColor: { rgb: "9BC2E6" },
 };
 
+// LWOP: an approved Leave Without Pay, or a workday missed without an approved leave
+export const lwopFill = {
+  patternType: "solid",
+  fgColor: { rgb: "FFC000" },
+};
+
+// The other approved leave types (ML, PL, SPL, STL, VAWC, SLW, AL, LEAVE) share one fill
+export const otherLeaveFill = {
+  patternType: "solid",
+  fgColor: { rgb: "CCC0DA" },
+};
+
+// Day columns are 9 wide, and wider only if a cell's text would not fit
+export const DAY_COLUMN_WIDTH = 9;
+
+export const dayColumnWidth = (longestText = 0) =>
+  Math.max(DAY_COLUMN_WIDTH, longestText + 2);
+
 export const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
