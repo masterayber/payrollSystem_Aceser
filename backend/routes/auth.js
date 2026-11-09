@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 
 const {
   requireAdmin,
-  requireAuthenticated,
+  requireAuthenticatedBeforePasswordChange,
 } = require("../middleware/accessMiddleware");
 const { toClientAttendance } = require("../utils/clientAttendance");
 const User = require("../models/authUsers");
@@ -20,11 +20,25 @@ const { issueCode, checkCode } = require("../utils/otpStore");
 const sendEmail = require("../utils/nodemailer");
 const { getAllowedPages } = require("../utils/pageAccess");
 const { VISIBLE_ROLE } = require("../utils/hiddenAccounts");
+const { checkNewPassword } = require("../utils/password");
 
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
 
 const isFilledString = (value) =>
   typeof value === "string" && value.trim() !== "";
+
+// The password flag as a boolean (false on accounts created before it existed)
+const passwordFlags = (user) => ({
+  mustChangePassword: user.mustChangePassword === true,
+});
+
+// Fields never sent back in the login and /me replies: the password hash, and
+// createdBySuperAdmin, a retired field some older records still carry
+const stripPrivateFields = (user) => {
+  delete user.password;
+  delete user.createdBySuperAdmin;
+  return user;
+};
 
 const router = express.Router();
 
@@ -53,9 +67,14 @@ router.post("/login", async (req, res) => {
       const message =
         user.status === "Resigned"
           ? "This account is no longer active."
-          : "Account is pending approval.";
+          : user.status === "Inactive"
+            ? "This account is disabled."
+            : "Account is pending approval.";
       return res.status(403).json({ message });
     }
+
+    // A pending password change does not stop the login: the token is issued and
+    // every route but /me and change-password answers PASSWORD_CHANGE_REQUIRED.
 
     const token = jwt.sign(
       { userId: user._id, role: user.role },
@@ -74,11 +93,11 @@ router.post("/login", async (req, res) => {
         OvertimeApplication.find({ userId: user._id }).lean(),
       ]);
 
-    const userObj = user.toObject();
-    delete userObj.password;
+    const userObj = stripPrivateFields(user.toObject());
 
     const combinedData = {
       ...userObj,
+      ...passwordFlags(userObj),
       allowedPages: getAllowedPages(userObj),
       employee: employee || null,
       settings: settings || null,
@@ -100,6 +119,12 @@ router.post("/login", async (req, res) => {
 // Signup route
 router.post("/signup", async (req, res) => {
   const { firstName, lastName, email, username, password, gender } = req.body;
+
+  // The password rule, before anything is looked up or created
+  const passwordRefusal = checkNewPassword({ next: password, wording: "plain" });
+  if (passwordRefusal) {
+    return res.status(400).json({ message: passwordRefusal });
+  }
 
   // Check if email is already registered to the database
   try {
@@ -276,8 +301,11 @@ router.post("/reset-password", async (req, res) => {
     return res.status(400).json({ message: "Reset token is required" });
   }
 
-  if (!isFilledString(password)) {
-    return res.status(400).json({ message: "Password is required" });
+  // The password rule, the same for every account (no database needed, so it is
+  // checked first). No "different from the current one" check here.
+  const refusal = checkNewPassword({ next: password });
+  if (refusal) {
+    return res.status(400).json({ message: refusal });
   }
 
   try {
@@ -299,7 +327,11 @@ router.post("/reset-password", async (req, res) => {
     // Hash the new password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await User.updateOne({ email }, { $set: { password: hashedPassword } });
+    // The person chose their own password, so a pending forced change is done too
+    await User.updateOne(
+      { email },
+      { $set: { password: hashedPassword, mustChangePassword: false } },
+    );
 
     res.status(200).json({
       message:
@@ -311,8 +343,58 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-// Route for refresh the signed-in user
-router.get("/me", requireAuthenticated, async (req, res) => {
+// Change password, for any signed-in account. Also the forced change at first sign-in,
+// so it works while `mustChangePassword` is set. Refusals in this order: missing,
+// current wrong, too short (the password rule), same as the current one.
+router.post(
+  "/change-password",
+  requireAuthenticatedBeforePasswordChange,
+  async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    if (!isFilledString(currentPassword) || !isFilledString(newPassword)) {
+      return res
+        .status(400)
+        .json({ message: "Current and new password are required." });
+    }
+
+    try {
+      const user = await User.findById(req.user.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (!(await bcrypt.compare(currentPassword, user.password))) {
+        return res
+          .status(400)
+          .json({ message: "Current password is incorrect." });
+      }
+
+      const refusal = checkNewPassword({
+        next: newPassword,
+        current: currentPassword,
+      });
+      if (refusal) {
+        return res.status(400).json({ message: refusal });
+      }
+
+      // save() runs the pre-save hook that hashes the password
+      user.password = newPassword;
+      user.mustChangePassword = false;
+      user.updatedAt = new Date();
+      await user.save();
+
+      res
+        .status(200)
+        .json({ message: "Password changed.", mustChangePassword: false });
+    } catch (err) {
+      res.status(500).json({ message: "Server error", error: err.message });
+    }
+  },
+);
+
+// Route for refresh the signed-in user (works while a password change is pending, so
+// the screen can learn it has to show the change-password page)
+router.get("/me", requireAuthenticatedBeforePasswordChange, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).lean();
     if (!user) {
@@ -328,11 +410,12 @@ router.get("/me", requireAuthenticated, async (req, res) => {
         OvertimeApplication.find({ userId: user._id }).lean(),
       ]);
 
-    delete user.password;
+    stripPrivateFields(user);
 
     res.status(200).json({
       user: {
         ...user,
+        ...passwordFlags(user),
         allowedPages: getAllowedPages(user),
         employee: employee || null,
         settings: settings || null,

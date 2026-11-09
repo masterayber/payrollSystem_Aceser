@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useCallback } from "react";
 import propTypes from "prop-types";
 import API from "../api";
-import { endSession, isRoleChangedError } from "../utils/session";
+import { endSession, sessionEndReason } from "../utils/session";
 
 const INACTIVITY_LIMIT = 60 * 60 * 1000;
 const ACTIVITY_EVENTS = [
@@ -19,7 +19,8 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // reason: "" (silent), "inactive" or "roleChanged" (see utils/session.js)
+  // reason: "" (silent), "inactive", "roleChanged" or "accountInactive"
+  // (see utils/session.js)
   const clearSession = useCallback((reason = "") => {
     setUserData(null);
     endSession(reason);
@@ -51,6 +52,8 @@ export const UserProvider = ({ children }) => {
       const response = await API.get("/api/auth/me");
       const user = response.data.user;
 
+      // The whole user from the server, so mustChangePassword (sent by login and /me)
+      // stays in userData
       if (user) {
         setUserData(user);
         localStorage.setItem("userData", JSON.stringify(user));
@@ -59,9 +62,9 @@ export const UserProvider = ({ children }) => {
       return true;
     } catch (error) {
       console.error("Error refreshing user data:", error);
-      // The API interceptor normally handles ROLE_CHANGED first (and this catch is not
-      // reached); this keeps the role-changed message if it ever gets here.
-      clearSession(isRoleChangedError(error) ? "roleChanged" : "");
+      // The API interceptor normally handles ROLE_CHANGED and ACCOUNT_INACTIVE first
+      // (and this catch is not reached); this keeps their messages if it ever gets here.
+      clearSession(sessionEndReason(error));
       return false;
     } finally {
       setIsRefreshing(false);

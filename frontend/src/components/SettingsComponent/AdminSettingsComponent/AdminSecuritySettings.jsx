@@ -1,4 +1,5 @@
 import "react";
+import PasswordSettings from "../UserSettingsComponent/PasswordSettings";
 
 const AdminSecuritySettings = () => {
   return (
@@ -7,6 +8,9 @@ const AdminSecuritySettings = () => {
         <div className="setting-tab-title">
           <p>Security & Privacy</p>
         </div>
+
+        {/* The signed-in admin's own password, above the policy toggles */}
+        <PasswordSettings />
 
         <div className="setting-tab-container">
           <div className="setting-section">

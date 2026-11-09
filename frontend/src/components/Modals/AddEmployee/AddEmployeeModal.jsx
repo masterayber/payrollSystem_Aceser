@@ -8,6 +8,7 @@ import CancelModal from "../Cancel/CancelModal";
 import ConfirmedMessageModal from "../Confirmed/ConfirmedMessageModal";
 import API from "../../../api";
 import { manilaToday } from "../../../utils/cutoff";
+import { checkPassword, PASSWORD_HINT } from "../../../utils/password";
 
 const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -32,6 +33,8 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
     timeOut: "",
   });
   const [hasChanges, setHasChanges] = useState(false);
+  // In-form { type, text } message (the password check before saving)
+  const [message, setMessage] = useState(null);
 
   const [dropdownOptions, setDropdownOptions] = useState({
     gender: [],
@@ -105,6 +108,13 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
       alert("Inputs cannot be empty");
       return;
     }
+
+    const passwordProblem = checkPassword(addEmployee.password);
+    if (passwordProblem) {
+      setMessage({ type: "warning", text: passwordProblem });
+      return;
+    }
+    setMessage(null);
 
     try {
       const response = await API.post("/api/employee/check-user-exists", {
@@ -268,6 +278,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                   required
                 />
               </div>
+              <p className="password-rule">{PASSWORD_HINT}</p>
             </div>
           </div>
 
@@ -421,6 +432,10 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
               </div>
             </div>
           </div>
+
+          {message && (
+            <p className={`feedback-message ${message.type}`}>{message.text}</p>
+          )}
 
           <div className="modal-buttons">
             <button

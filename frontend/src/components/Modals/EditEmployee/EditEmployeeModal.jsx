@@ -10,6 +10,7 @@ import { IconAlertTriangle, IconCancel, IconCheck } from "@tabler/icons-react";
 import DeleteModal from "../Delete/DeleteModal";
 import API from "../../../api";
 import { manilaToday, toManilaDate } from "../../../utils/cutoff";
+import { checkPassword, PASSWORD_HINT } from "../../../utils/password";
 
 const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
@@ -19,6 +20,8 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  // In-form { type, text } message (the password check before saving)
+  const [message, setMessage] = useState(null);
   const [editEmployee, setEditEmployee] = useState({
     ...employee,
     gender: employee.gender || "",
@@ -169,6 +172,16 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
       alert("Inputs cannot be empty");
       return;
     }
+
+    // A typed password is a reset (blank keeps the current one), so only then the rule
+    const newPassword = editEmployee.password || "";
+    const passwordProblem =
+      newPassword.trim() !== "" ? checkPassword(newPassword) : null;
+    if (passwordProblem) {
+      setMessage({ type: "warning", text: passwordProblem });
+      return;
+    }
+    setMessage(null);
 
     try {
       const response = await API.post("/api/employee/check-user-exists", {
@@ -397,6 +410,9 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                   </button>
                 )}
               </div>
+              {isPasswordResetOpen && (
+                <p className="password-rule">{PASSWORD_HINT}</p>
+              )}
             </div>
           </div>
 
@@ -565,6 +581,10 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
               </div>
             </div>
           </div>
+
+          {message && (
+            <p className={`feedback-message ${message.type}`}>{message.text}</p>
+          )}
 
           <div className="modal-buttons">
             <button

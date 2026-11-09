@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { isAdminRole } from "../utils/roles";
+import { CHANGE_PASSWORD_PATH } from "../utils/session";
 import {
   IconUserFilled,
   IconLockFilled,
@@ -39,7 +40,10 @@ const Login = () => {
 
       setInitialUserData(updatedUserData);
 
-      if (isAdminRole(response.data.user.role)) {
+      if (user?.mustChangePassword) {
+        // Signed in with a temporary password: it has to be replaced first
+        navigate(CHANGE_PASSWORD_PATH);
+      } else if (isAdminRole(response.data.user.role)) {
         navigate("/admin-dashboard");
       } else {
         navigate("/dashboard");

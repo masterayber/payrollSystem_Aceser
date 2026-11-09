@@ -2,12 +2,10 @@ import { useContext } from "react";
 import PropTypes from "prop-types";
 import { Navigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
-import { pageRole } from "../utils/roles";
+import { HOME_PAGE, homePath, pageRole } from "../utils/roles";
+import { CHANGE_PASSWORD_PATH } from "../utils/session";
 
 const INACTIVITY_LIMIT = 60 * 60 * 1000;
-
-// Landing page for each role. Locked server-side, so it is always reachable.
-const HOME_PAGE = { Admin: "admin-dashboard", Employee: "dashboard" };
 
 const PrivateRoute = ({ children, allowedRoles, pageKey }) => {
   const { userData, clearSession, loading } = useContext(UserContext);
@@ -34,13 +32,17 @@ const PrivateRoute = ({ children, allowedRoles, pageKey }) => {
     return <Navigate to="/" replace />;
   }
 
+  // Still on a temporary password: nothing else opens until it is changed
+  if (userData.mustChangePassword) {
+    return <Navigate to={CHANGE_PASSWORD_PATH} replace />;
+  }
+
   // Super Admin uses the Admin pages, so routes only ever list "Admin"
   const role = pageRole(userData.role);
 
   // Signed in, but this route is for another role: go home, not to log in again
   if (!allowedRoles.includes(role)) {
-    const home = HOME_PAGE[role];
-    return <Navigate to={home ? `/${home}` : "/"} replace />;
+    return <Navigate to={homePath(userData.role)} replace />;
   }
 
   // Per-user page access set by an admin. This only decides what the UI shows; the

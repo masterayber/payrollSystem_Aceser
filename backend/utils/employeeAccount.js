@@ -21,7 +21,13 @@ const nextEmployeeId = async () => {
 // account, the way Add Employee does. `details` is the request body; `jobFields` the
 // cleaned fields from checkJobDetails (basic pay, regularization date, VL opening).
 // The role is always "Employee". The Auth pre-save hook hashes the password.
-const createEmployeeAccount = async (details, jobFields = {}) => {
+// `mustChangePassword` comes only from the caller's options (Add Employee passes true),
+// never from `details`; it defaults to false.
+const createEmployeeAccount = async (
+  details,
+  jobFields = {},
+  { mustChangePassword = false } = {},
+) => {
   const {
     firstName,
     lastName,
@@ -45,6 +51,7 @@ const createEmployeeAccount = async (details, jobFields = {}) => {
     email,
     role: "Employee",
     status: "Active",
+    mustChangePassword: mustChangePassword === true,
     createdAt: new Date(),
   });
   await user.save();

@@ -4,27 +4,43 @@ const User = require("../models/authUsers");
 const { getAllowedPages } = require("../utils/pageAccess");
 const { isAdminRole } = require("../config/roles");
 
-// The JWT only proves who the caller was when the token was issued. Role, status and
-// page access can change afterwards, so they are re-read from the database on every
-// request. That is what makes an admin's change take effect immediately.
-// Status is checked first: an account that is not Active is refused as such. Then, if
-// the role inside the token no longer matches the stored role (any change, in either
-// direction, Admin <-> Super Admin included), the session ends: 401 ROLE_CHANGED, so
-// the screen signs the user out and they sign in again with a token for the new role.
+// The JWT only proves who the caller was when the token was issued. Role, status,
+// page access and the password flags can change afterwards, so they are re-read from
+// the database on every request. That is what makes an admin's change take effect
+// immediately. Every signed-in route goes through here. Checks, in order:
+// 1. Status: an account that is missing or not Active (Pending, Inactive, Resigned) is
+//    refused: 401 ACCOUNT_INACTIVE, so the screen signs the user out.
+// 2. Role: if the role inside the token no longer matches the stored role (any change,
+//    in either direction, Admin <-> Super Admin included), the session ends: 401
+//    ROLE_CHANGED, and they sign in again with a token for the new role.
+// 3. Password: while `mustChangePassword` is set, every route is refused with 403
+//    PASSWORD_CHANGE_REQUIRED, except the ones marked with allowBeforePasswordChange
+//    (GET /api/auth/me and POST /api/auth/change-password). Blocked by default, so a
+//    new route can't forget the check.
 const loadCurrentUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.userId)
-      .select("role status pageAccess")
+      .select("role status pageAccess mustChangePassword")
       .lean();
 
     if (!user || user.status !== "Active") {
-      return res.status(401).json({ message: "Account is not active" });
+      return res.status(401).json({
+        message: "Account is not active",
+        code: "ACCOUNT_INACTIVE",
+      });
     }
 
     if (req.user.role !== user.role) {
       return res.status(401).json({
         message: "Your role has changed. Please sign in again.",
         code: "ROLE_CHANGED",
+      });
+    }
+
+    if (user.mustChangePassword === true && !req.allowBeforePasswordChange) {
+      return res.status(403).json({
+        message: "Please change your password before continuing.",
+        code: "PASSWORD_CHANGE_REQUIRED",
       });
     }
 
@@ -64,7 +80,21 @@ const requirePage = (pageKey) => [
   },
 ];
 
+// Keep loadCurrentUser second: middleware/logisticsAccess.js takes it from here
 const requireAuthenticated = [authMiddleware, loadCurrentUser];
+
+// Marks a route as usable while the account must still change its password.
+// Goes before loadCurrentUser; only /me and change-password use it.
+const allowBeforePasswordChange = (req, res, next) => {
+  req.allowBeforePasswordChange = true;
+  next();
+};
+
+const requireAuthenticatedBeforePasswordChange = [
+  authMiddleware,
+  allowBeforePasswordChange,
+  loadCurrentUser,
+];
 
 // For the two signup steps after POST /api/auth/signup, before an admin approves the account.
 // Accepts only the short-lived signup token, and only while the account is still Pending.
@@ -109,5 +139,7 @@ module.exports = {
   requireAdmin,
   requirePage,
   requireAuthenticated,
+  requireAuthenticatedBeforePasswordChange,
+  allowBeforePasswordChange,
   requireSignupToken,
 };

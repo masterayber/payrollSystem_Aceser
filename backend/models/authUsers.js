@@ -51,6 +51,14 @@ const AuthSchema = new mongoose.Schema({
     type: [String],
     default: undefined,
   },
+  // True while the account must set its own password before using the app. Set true
+  // only when an admin or the Super Admin sets the password (Add Employee, Edit
+  // Employee with a password); cleared by POST /api/auth/change-password or a Forgot
+  // password reset. The default stays false, so existing accounts are not forced.
+  mustChangePassword: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Format createdAt date

@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
+import { checkPassword, PASSWORD_HINT } from "../utils/password";
 import "../styles/Signup.css";
 
 const Signup = () => {
@@ -15,6 +16,8 @@ const Signup = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  // In-form { type, text } message (the password check before sending)
+  const [message, setMessage] = useState(null);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -33,6 +36,12 @@ const Signup = () => {
       alert("Passwords do not match");
       return;
     }
+    const passwordProblem = checkPassword(formData.password);
+    if (passwordProblem) {
+      setMessage({ type: "warning", text: passwordProblem });
+      return;
+    }
+    setMessage(null);
 
     // Remove confirmPassword before sending the request
     const { ...dataToSend } = formData;
@@ -160,6 +169,7 @@ const Signup = () => {
                   required
                 />
               </div>
+              <p className="password-rule">{PASSWORD_HINT}</p>
             </div>
             <div className="input-container">
               <div className="label-container">
@@ -179,6 +189,10 @@ const Signup = () => {
               </div>
             </div>
           </div>
+
+          {message && (
+            <p className={`feedback-message ${message.type}`}>{message.text}</p>
+          )}
         </div>
 
         <div className="terms-container">

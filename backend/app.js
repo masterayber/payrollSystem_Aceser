@@ -13,7 +13,7 @@ const settingsRoutes = require("./routes/settings");
 const logisticsRoutes = require("./routes/logistics");
 const thirteenthMonthRoutes = require("./routes/thirteenthMonth");
 
-const authMiddleware = require("./middleware/authMiddleware");
+const { requireAuthenticated } = require("./middleware/accessMiddleware");
 
 const app = express();
 
@@ -37,8 +37,9 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// Example protected route
-app.get("/api/protected", authMiddleware, (req, res) => {
+// Example protected route (through loadCurrentUser like every signed-in route, so an
+// inactive account, a changed role or a pending password change is refused here too)
+app.get("/api/protected", requireAuthenticated, (req, res) => {
   res.json({ message: "You have access to this protected route" });
 });
 

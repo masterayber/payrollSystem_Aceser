@@ -103,7 +103,9 @@
 .employee-attendance-page .attendance-record-table .table-header,
 .employee-attendance-page .attendance-record-table .table-content {
   display: grid;
-  grid-template-columns: minmax(150px, 1.3fr) repeat(2, minmax(90px, 0.8fr)) minmax(100px, 0.9fr) minmax(120px, 1fr);
+  grid-template-columns:
+    minmax(150px, 1.3fr) repeat(2, minmax(90px, 0.8fr))
+    minmax(100px, 0.9fr) minmax(120px, 1fr);
   min-width: 660px;
 }
 
@@ -159,7 +161,10 @@
 }
 
 .employee-attendance-page .employee-attendance-log .pagination {
+  display: flex;
   align-self: flex-end;
+  gap: 8px;
+  align-items: center;
   color: var(--neutral-color-80);
   font-size: 14px;
 }
