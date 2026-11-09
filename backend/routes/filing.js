@@ -294,6 +294,71 @@ router.delete("/leave/:id", requirePage("filing"), async (req, res) => {
   }
 });
 
+// Marks each day of an approved leave On-Leave with the leave's type: a new row for a day
+// without one, and an existing row that isn't On-Leave yet is overwritten. All or nothing:
+// when a write fails, the new rows are removed, the overwritten rows are put back as they
+// were, and the error is thrown again.
+const markLeaveDays = async (leave) => {
+  const onLeave = {
+    timeIn: null,
+    timeOut: null,
+    behavior: "On-Leave",
+    leaveType: leave.leaveType,
+    overtime: {
+      isEligible: false,
+      hours: 0,
+      isFiled: false,
+    },
+  };
+
+  const newRows = [];
+  const changedRows = []; // as they were before this leave
+  const endDate = new Date(leave.endDate);
+
+  for (
+    let currentDate = new Date(leave.startDate);
+    currentDate <= endDate;
+    currentDate.setDate(currentDate.getDate() + 1)
+  ) {
+    const formattedDate = currentDate.toISOString().split("T")[0];
+
+    const existing = await Attendance.findOne({
+      userId: leave.userId,
+      date: formattedDate,
+    }).lean();
+
+    if (!existing) {
+      // The id is set here, so a failed insert can be cleaned up by id
+      newRows.push({
+        _id: new mongoose.Types.ObjectId(),
+        userId: leave.userId,
+        date: formattedDate,
+        ...onLeave,
+      });
+    } else if (existing.behavior !== "On-Leave") {
+      changedRows.push(existing);
+    }
+  }
+
+  try {
+    if (newRows.length > 0) {
+      await Attendance.insertMany(newRows);
+    }
+    // One at a time, so no write is still running when a failure is undone
+    for (const row of changedRows) {
+      await Attendance.findOneAndUpdate({ _id: row._id }, onLeave, {
+        runValidators: true,
+      });
+    }
+  } catch (err) {
+    await Promise.all([
+      Attendance.deleteMany({ _id: { $in: newRows.map((row) => row._id) } }),
+      ...changedRows.map((row) => Attendance.replaceOne({ _id: row._id }, row)),
+    ]);
+    throw err;
+  }
+};
+
 // Route for approving leave requests of user by admin
 const LEAVE_DECISIONS = ["Approved", "Disapproved"];
 
@@ -363,64 +428,23 @@ router.patch("/leave/:id/status", requireAdmin, async (req, res) => {
     }
 
     if (status === "Approved") {
-      const startDate = new Date(app.startDate);
-      const endDate = new Date(app.endDate);
-
-      const newAttendanceRecords = [];
-      const updatePromises = [];
-
-      for (
-        let currentDate = new Date(startDate);
-        currentDate <= endDate;
-        currentDate.setDate(currentDate.getDate() + 1)
-      ) {
-        const formattedDate = currentDate.toISOString().split("T")[0];
-
-        const existingAttendance = await Attendance.findOne({
-          userId: app.userId,
-          date: formattedDate,
+      // A leave is only Approved with its attendance days written. When they can't be
+      // written, it goes back to Pending so it can be decided again.
+      try {
+        await markLeaveDays(app);
+      } catch (attendanceError) {
+        console.error(
+          "Leave approval undone, its attendance could not be written:",
+          attendanceError,
+        );
+        await LeaveApplication.updateOne(
+          { _id: app._id, status: "Approved" },
+          { status: "Pending" },
+        );
+        return res.status(500).json({
+          error:
+            "The leave couldn't be approved because its attendance days couldn't be updated. It is still pending; please try again.",
         });
-
-        if (!existingAttendance) {
-          newAttendanceRecords.push({
-            userId: app.userId,
-            date: formattedDate,
-            timeIn: null,
-            timeOut: null,
-            behavior: "On-Leave",
-            leaveType: app.leaveType,
-            overtime: {
-              isEligible: false,
-              hours: 0,
-              isFiled: false,
-            },
-          });
-        } else if (existingAttendance.behavior !== "On-Leave") {
-          updatePromises.push(
-            Attendance.findOneAndUpdate(
-              { _id: existingAttendance._id },
-              {
-                timeIn: null,
-                timeOut: null,
-                behavior: "On-Leave",
-                leaveType: app.leaveType,
-                overtime: {
-                  isEligible: false,
-                  hours: 0,
-                  isFiled: false,
-                },
-              },
-            ),
-          );
-        }
-      }
-
-      if (newAttendanceRecords.length > 0) {
-        await Attendance.insertMany(newAttendanceRecords);
-      }
-
-      if (updatePromises.length > 0) {
-        await Promise.all(updatePromises);
       }
     } else if (status === "Disapproved") {
       const dateKey = (date) => new Date(date).toISOString().split("T")[0];

@@ -31,9 +31,10 @@ const attendanceSchema = new mongoose.Schema({
       "Pending",
     ],
   },
+  // The type of the approved leave that covers this day. It is copied from the leave
+  // application, which accepts any leave type, so it isn't limited to VL and SL.
   leaveType: {
     type: String,
-    enum: ["Vacation Leave", "Sick Leave"],
     default: null,
   },
   overtime: {

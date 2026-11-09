@@ -15,11 +15,17 @@ import {
   dayFill,
   setCell,
   getDayFill,
-  vleaveFill,
-  sleaveFill,
+  dayColumnWidth,
   dayNames,
 } from "./excelStyles";
 import { formatKey, isNotEmployedOn } from "./reportHelpers";
+import {
+  NOT_EMPLOYED,
+  isLeaveSheetDay,
+  leaveMarkFor,
+  leaveLegendEntries,
+  writeLegend,
+} from "./leaveCodes";
 import { isAdminRole } from "../roles";
 
 const buildAttendanceMap = (attendanceRecords) => {
@@ -33,30 +39,15 @@ const buildAttendanceMap = (attendanceRecords) => {
   return attendanceMap;
 };
 
-const getCellValue = (
-  employeeAttendance,
-  dateKey,
-  isWeekendDay,
-  isNotEmployed,
-) => {
-  if (isNotEmployed) return "-";
+// Approved leaves only: the leave's code (VL, SL, ML, PL, ...), "-" when not employed.
+// LWOP is an absence, not a leave: approved or not, it shows (and counts) only on the
+// Attendance sheet, so here it is blank.
+export const getLeaveDayCell = ({ record, isNotEmployed }) => {
+  if (isNotEmployed) return { text: NOT_EMPLOYED.code };
+  if (!isLeaveSheetDay(record)) return { text: "" };
 
-  const record = employeeAttendance[dateKey];
-  if (record) {
-    if (record.leaveType === "Vacation Leave") return "VL";
-    if (record.leaveType === "Sick Leave") return "SL";
-    return "";
-  }
-
-  if (isWeekendDay) return "";
-  return "";
-};
-
-const getBehaviorFill = (record) => {
-  if (record?.leaveType === "Vacation Leave") return vleaveFill;
-  if (record?.leaveType === "Sick Leave") return sleaveFill;
-
-  return null;
+  const { code, fill } = leaveMarkFor(record.leaveType);
+  return { text: code, fill };
 };
 
 export const LeaveSheet = ({
@@ -155,6 +146,7 @@ export const LeaveSheet = ({
   const attendanceMap = buildAttendanceMap(attendanceRecords);
   const employees = employeeData.filter((e) => !isAdminRole(e.role));
   const dailyLeaveCounts = cutoffDates.map(() => 0);
+  let longestDayText = 0;
 
   let rowIndex = 5;
   let number = 1;
@@ -182,27 +174,21 @@ export const LeaveSheet = ({
 
     cutoffDates.forEach((d, i) => {
       const dateKey = formatKey(d);
-      const dayIndex = d.getDay();
-      const isWeekendDay = dayIndex === 0 || dayIndex === 6;
       const dayFill = getDayFill(d);
       const record = employeeAttendance[dateKey];
-      const behaviorFill = getBehaviorFill(employeeAttendance[dateKey]);
       const isNotEmployed = isNotEmployedOn(employee, dateKey);
+      const cell = getLeaveDayCell({ record, isNotEmployed });
 
-      if (!isNotEmployed && record?.behavior === "On-Leave") {
+      // Approved leave days only, LWOP excluded
+      if (!isNotEmployed && isLeaveSheetDay(record)) {
         dailyLeaveCounts[i] += 1;
       }
 
-      const cellValue = getCellValue(
-        employeeAttendance,
-        dateKey,
-        isWeekendDay,
-        isNotEmployed,
-      );
+      longestDayText = Math.max(longestDayText, cell.text.length);
+      const fill = cell.fill || dayFill;
 
-      setCell(ws2, rowIndex, 5 + i, cellValue, "s", {
-        ...(dayFill ? { fill: dayFill } : {}),
-        ...(behaviorFill || dayFill ? { fill: behaviorFill || dayFill } : {}),
+      setCell(ws2, rowIndex, 5 + i, cell.text, "s", {
+        ...(fill ? { fill } : {}),
         border: allBorders,
         alignment: centerAlign,
       });
@@ -221,6 +207,12 @@ export const LeaveSheet = ({
     });
   });
 
+  // Legend, one blank row under the employees
+  const lastRow = writeLegend(ws2, rowIndex + 1, [
+    ...leaveLegendEntries(),
+    NOT_EMPLOYED,
+  ]);
+
   ws2["!merges"] = [
     { s: { r: 2, c: 1 }, e: { r: 2, c: 4 } },
     { s: { r: 3, c: 1 }, e: { r: 3, c: 4 } },
@@ -228,16 +220,18 @@ export const LeaveSheet = ({
 
   ws2["!ref"] = XLSX.utils.encode_range({
     s: { r: 0, c: 0 },
-    e: { r: rowIndex - 1, c: totalCols - 1 },
+    e: { r: lastRow, c: totalCols - 1 },
   });
 
+  // All day columns share one width, wide enough for the longest code shown
+  const dayWidth = dayColumnWidth(longestDayText);
   ws2["!cols"] = [
     { wch: 3 },
     { wch: 9 },
     { wch: 37 },
     { wch: 16 },
     { wch: 16 },
-    ...cutoffDates.map(() => ({ wch: 9 })),
+    ...cutoffDates.map(() => ({ wch: dayWidth })),
   ];
 
   ws2["!rows"] = [
@@ -245,7 +239,7 @@ export const LeaveSheet = ({
     { hpt: 16 },
     { hpt: 16 },
     { hpt: 16 },
-    ...Array(rowIndex - 4).fill({ hpt: 16 }),
+    ...Array(lastRow - 3).fill({ hpt: 16 }),
   ];
 
   return { ws2, cutoff };
