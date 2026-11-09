@@ -96,7 +96,7 @@ const person = async (
 
 const as = (token) => ({ Authorization: `Bearer ${token}` });
 
-const admin = () => person("admin", { role: "Admin" });
+const admin = () => person("admin", { role: "Super Admin" });
 const inCharge = (username = "ic") =>
   person(username, { position: "Project In-charge" });
 const controller = (username = "dc") =>
@@ -682,6 +682,225 @@ describe("PUT /api/logistics/projects/:id", () => {
       .send(projectBody());
     expect(missing.status).toBe(404);
     expect(missing.body.message).toBe("Project not found.");
+  });
+});
+
+// Rule 16: an Admin can't seat, unseat or move its own linked employee on a project
+// (project membership is where the site roles are given). Reads stay open, and an edit
+// that leaves that seat as it was passes.
+describe("an Admin can't change its linked employee's project seat (rule 16)", () => {
+  const OWN_RECORD = {
+    message: "You can't act on your own employee record.",
+    code: "OWN_EMPLOYEE_RECORD",
+  };
+
+  // An Admin account as POST /api/admins makes it: Auth record only
+  const adminAccount = async (username, extra = {}) => {
+    const user = await User.create({
+      username,
+      password: "Password123!",
+      email: `${username}@example.com`,
+      role: "Admin",
+      status: "Active",
+      firstName: "Rhea",
+      lastName: "Cruz",
+      pageAccess: ["logistics-setup"],
+      ...extra,
+    });
+    return { user, token: await loginAs(username) };
+  };
+
+  const setup = async () => {
+    const sa = await admin();
+    const own = await inCharge("ana");
+    const ownDc = await controller("dcana");
+    const ic = await inCharge("ic");
+    const dc = await controller("dc");
+    const hr = await adminAccount("hr", { linkedEmployeeId: own.user._id });
+    const hrDc = await adminAccount("hrdc", { linkedEmployeeId: ownDc.user._id });
+    const plain = await adminAccount("plain");
+    return { sa, own, ownDc, ic, dc, hr, hrDc, plain };
+  };
+
+  const post = (token, body) =>
+    request(app).post("/api/logistics/projects").set(as(token)).send(body);
+  const put = (token, project, body) =>
+    request(app)
+      .put(`/api/logistics/projects/${project._id}`)
+      .set(as(token))
+      .send(body);
+
+  describe("POST /api/logistics/projects", () => {
+    it("refuses naming the linked employee as In-charge or Document Controller and saves nothing", async () => {
+      const { own, ownDc, hr, hrDc } = await setup();
+
+      const asInCharge = await post(
+        hr.token,
+        projectBody({ inChargeId: String(own.user._id) }),
+      );
+      expect(asInCharge.status).toBe(403);
+      expect(asInCharge.body).toEqual(OWN_RECORD);
+
+      const asController = await post(
+        hrDc.token,
+        projectBody({ documentControllerIds: [String(ownDc.user._id)] }),
+      );
+      expect(asController.status).toBe(403);
+      expect(asController.body).toEqual(OWN_RECORD);
+
+      expect(await Project.countDocuments()).toBe(0);
+    });
+
+    it("refuses before checking the other fields", async () => {
+      const { own, hr } = await setup();
+      const res = await post(
+        hr.token,
+        projectBody({ name: "", inChargeId: String(own.user._id) }),
+      );
+      expect(res.status).toBe(403);
+      expect(res.body).toEqual(OWN_RECORD);
+    });
+
+    it("lets the linked Admin seat anyone else", async () => {
+      const { ic, dc, hr } = await setup();
+      const res = await post(
+        hr.token,
+        projectBody({
+          inChargeId: String(ic.user._id),
+          documentControllerIds: [String(dc.user._id)],
+        }),
+      );
+      expect(res.status).toBe(201);
+      expect(res.body.inCharge._id).toBe(String(ic.user._id));
+    });
+
+    it("never stops the Super Admin or an unlinked Admin", async () => {
+      const { sa, own, plain } = await setup();
+      const bySuper = await post(
+        sa.token,
+        projectBody({ inChargeId: String(own.user._id) }),
+      );
+      expect(bySuper.status).toBe(201);
+
+      const byPlain = await post(
+        plain.token,
+        projectBody({ code: "ACE02", inChargeId: String(own.user._id) }),
+      );
+      expect(byPlain.status).toBe(201);
+      expect(byPlain.body.inCharge._id).toBe(String(own.user._id));
+    });
+
+    it("still needs the Setup tick first", async () => {
+      const { own } = await setup();
+      const noTick = await adminAccount("notick", {
+        linkedEmployeeId: own.user._id,
+        pageAccess: ["logistics-material-requests"],
+      });
+      const res = await post(
+        noTick.token,
+        projectBody({ inChargeId: String(own.user._id) }),
+      );
+      expect(res.status).toBe(403);
+      expect(res.body.code).toBe("PAGE_ACCESS_DENIED");
+    });
+  });
+
+  describe("PUT /api/logistics/projects/:id", () => {
+    it("refuses seating, unseating or moving the linked employee and saves nothing", async () => {
+      const { sa, own, ownDc, ic, hr, hrDc } = await setup();
+      const empty = await makeProject(sa.user._id, { inChargeId: ic.user._id });
+      const seated = await makeProject(sa.user._id, {
+        code: "ACE02",
+        inChargeId: own.user._id,
+      });
+      const seatedDc = await makeProject(sa.user._id, {
+        code: "ACE03",
+        documentControllerIds: [ownDc.user._id],
+      });
+
+      const cases = [
+        // Seat as In-charge
+        [hr, empty, { inChargeId: String(own.user._id) }],
+        // Unseat the In-charge
+        [hr, seated, { inChargeId: null, name: "Renamed" }],
+        // Seat as Document Controller
+        [hrDc, empty, { documentControllerIds: [String(ownDc.user._id)] }],
+        // Unseat the Document Controller
+        [hrDc, seatedDc, { documentControllerIds: [] }],
+      ];
+      for (const [who, project, body] of cases) {
+        const res = await put(who.token, project, body);
+        expect(res.status).toBe(403);
+        expect(res.body).toEqual(OWN_RECORD);
+      }
+
+      const stillEmpty = await Project.findById(empty._id);
+      expect(String(stillEmpty.inChargeId)).toBe(String(ic.user._id));
+      expect(stillEmpty.documentControllerIds).toHaveLength(0);
+      const stillSeated = await Project.findById(seated._id);
+      expect(String(stillSeated.inChargeId)).toBe(String(own.user._id));
+      expect(stillSeated.name).toBe("Demo Tower");
+      expect(
+        (await Project.findById(seatedDc._id)).documentControllerIds.map(String),
+      ).toEqual([String(ownDc.user._id)]);
+    });
+
+    it("lets the linked Admin edit a project its employee sits on when the seat stays", async () => {
+      const { sa, own, dc, hr } = await setup();
+      const project = await makeProject(sa.user._id, { inChargeId: own.user._id });
+
+      const leftOut = await put(hr.token, project, { remarks: "Rainy season" });
+      expect(leftOut.status).toBe(200);
+      expect(leftOut.body.remarks).toBe("Rainy season");
+
+      const sameSeat = await put(
+        hr.token,
+        project,
+        projectBody({
+          name: "Demo Tower 2",
+          inChargeId: String(own.user._id),
+          documentControllerIds: [String(dc.user._id)],
+        }),
+      );
+      expect(sameSeat.status).toBe(200);
+      expect(sameSeat.body.name).toBe("Demo Tower 2");
+      expect(sameSeat.body.documentControllers.map((m) => m._id)).toEqual([
+        String(dc.user._id),
+      ]);
+    });
+
+    it("lets the linked Admin change anyone else's seat", async () => {
+      const { sa, ic, hr } = await setup();
+      const project = await makeProject(sa.user._id);
+      const res = await put(hr.token, project, { inChargeId: String(ic.user._id) });
+      expect(res.status).toBe(200);
+      expect(res.body.inCharge._id).toBe(String(ic.user._id));
+    });
+
+    it("never stops the Super Admin or an unlinked Admin", async () => {
+      const { sa, own, plain } = await setup();
+      const project = await makeProject(sa.user._id);
+
+      const bySuper = await put(sa.token, project, {
+        inChargeId: String(own.user._id),
+      });
+      expect(bySuper.status).toBe(200);
+      expect(bySuper.body.inCharge._id).toBe(String(own.user._id));
+
+      const byPlain = await put(plain.token, project, { inChargeId: null });
+      expect(byPlain.status).toBe(200);
+      expect(byPlain.body.inCharge).toBeNull();
+    });
+
+    it("lets the linked Admin read the project its employee sits on", async () => {
+      const { sa, own, hr } = await setup();
+      const project = await makeProject(sa.user._id, { inChargeId: own.user._id });
+      const res = await request(app)
+        .get(`/api/logistics/projects/${project._id}`)
+        .set(as(hr.token));
+      expect(res.status).toBe(200);
+      expect(res.body.inCharge._id).toBe(String(own.user._id));
+    });
   });
 });
 

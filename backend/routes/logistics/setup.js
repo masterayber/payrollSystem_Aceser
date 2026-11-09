@@ -5,7 +5,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 const {
-  requireAdmin,
+  requireAdminPage,
   requireAuthenticated,
 } = require("../../middleware/accessMiddleware");
 const {
@@ -36,6 +36,10 @@ const {
   memberMessage,
 } = require("../../utils/logisticsAccess");
 const { counterKeysForProject } = require("../../utils/documentNumbers");
+const {
+  OWN_RECORD_MESSAGE,
+  changesOwnProjectSeat,
+} = require("../../utils/linkedEmployee");
 const { emitToUsers } = require("../../utils/realtime");
 const {
   VISIBLE_ROLE,
@@ -338,6 +342,15 @@ const seedReserved = async () => {
 // Routes
 // ---------------------------------------------------------------------------
 
+// Setup screen writes and pickers: the "logistics-setup" tick (the Super Admin always)
+const requireSetupPage = requireAdminPage("logistics-setup");
+
+// Rule 16: an Admin can't seat, unseat or move its own linked employee on a project
+const OWN_RECORD_REPLY = {
+  message: OWN_RECORD_MESSAGE,
+  code: "OWN_EMPLOYEE_RECORD",
+};
+
 // The caller's logistics context for LogisticsContext
 router.get("/me", [...requireAuthenticated, loadLogistics], async (req, res) => {
   try {
@@ -435,7 +448,7 @@ router.get("/projects", requireAnyLogisticsPage, async (req, res) => {
 });
 
 // Active users holding a reserved position, for the Setup pickers
-router.get("/projects/eligible", requireAdmin, async (req, res) => {
+router.get("/projects/eligible", requireSetupPage, async (req, res) => {
   try {
     const wanted = findIgnoringCase(RESERVED_POSITIONS, req.query.position);
     if (!wanted) {
@@ -525,8 +538,12 @@ router.get("/projects/:id", requireAnyLogisticsPage, async (req, res) => {
   }
 });
 
-router.post("/projects", requireAdmin, async (req, res) => {
+router.post("/projects", requireSetupPage, async (req, res) => {
   try {
+    if (changesOwnProjectSeat(req.currentUser, {}, req.body || {})) {
+      return res.status(403).json(OWN_RECORD_REPLY);
+    }
+
     const checked = validateProjectFields(req.body || {});
     if (checked.error) return res.status(400).json({ message: checked.error });
     const { fields } = checked;
@@ -561,7 +578,7 @@ router.post("/projects", requireAdmin, async (req, res) => {
   }
 });
 
-router.put("/projects/:id", requireAdmin, async (req, res) => {
+router.put("/projects/:id", requireSetupPage, async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {
       return res.status(400).json({ message: "Invalid project ID." });
@@ -573,6 +590,18 @@ router.put("/projects/:id", requireAdmin, async (req, res) => {
 
     // Fields left out of the body keep their stored value
     const body = req.body || {};
+    const proposedMembers = {
+      inChargeId:
+        body.inChargeId === undefined ? project.inChargeId : body.inChargeId,
+      documentControllerIds:
+        body.documentControllerIds === undefined
+          ? project.documentControllerIds
+          : body.documentControllerIds,
+    };
+    if (changesOwnProjectSeat(req.currentUser, project, proposedMembers)) {
+      return res.status(403).json(OWN_RECORD_REPLY);
+    }
+
     const merged = {
       code: project.code,
       name: project.name,
@@ -606,10 +635,8 @@ router.put("/projects/:id", requireAdmin, async (req, res) => {
     }
 
     const members = await checkMembers(
-      body.inChargeId === undefined ? project.inChargeId : body.inChargeId,
-      body.documentControllerIds === undefined
-        ? project.documentControllerIds
-        : body.documentControllerIds,
+      proposedMembers.inChargeId,
+      proposedMembers.documentControllerIds,
     );
     if (members.error) return res.status(400).json({ message: members.error });
 
@@ -645,7 +672,7 @@ router.put("/projects/:id", requireAdmin, async (req, res) => {
 });
 
 // Which reserved values are missing from the dropdown lists (warning banner)
-router.get("/setup/health", requireAdmin, async (req, res) => {
+router.get("/setup/health", requireSetupPage, async (req, res) => {
   try {
     const dropdown = await Dropdown.findOne().lean();
     res.json(healthOf(dropdown));
@@ -654,7 +681,7 @@ router.get("/setup/health", requireAdmin, async (req, res) => {
   }
 });
 
-router.post("/setup/seed-reserved", requireAdmin, async (req, res) => {
+router.post("/setup/seed-reserved", requireSetupPage, async (req, res) => {
   try {
     res.json(await seedReserved());
   } catch (err) {

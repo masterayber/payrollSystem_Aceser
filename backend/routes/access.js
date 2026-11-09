@@ -7,10 +7,17 @@ const {
   getAllowedPages,
   normalizePageAccess,
 } = require("../utils/pageAccess");
-const { requireAdmin } = require("../middleware/accessMiddleware");
+const {
+  requireAdminPage,
+  refuseOwnLinkedEmployee,
+} = require("../middleware/accessMiddleware");
 const { isAdminRole, roleLabel } = require("../config/roles");
 
 const router = express.Router();
+
+// Manage Access for employees: the "employee-access" tick (the Super Admin always).
+// An Admin can't change its own linked employee's access.
+const requireEmployeeAccess = requireAdminPage("employee-access");
 
 const describeAccess = (user) => ({
   userId: user._id,
@@ -30,86 +37,97 @@ const validUserId = (req, res, next) => {
 };
 
 // Every page that exists
-router.get("/pages", requireAdmin, (req, res) => {
+router.get("/pages", requireEmployeeAccess, (req, res) => {
   res.json(PAGES);
 });
 
 // What one user can currently open
-router.get("/users/:userId", requireAdmin, validUserId, async (req, res) => {
-  try {
-    // Super Admin and Admin accounts are hidden: answered as missing
-    const user = await User.findById(req.params.userId)
-      .select("role pageAccess")
-      .lean();
-    if (!user || isAdminRole(user.role)) {
-      return res.status(404).json({ message: "User not found" });
-    }
+router.get(
+  "/users/:userId",
+  requireEmployeeAccess,
+  validUserId,
+  async (req, res) => {
+    try {
+      // Super Admin and Admin accounts are hidden: answered as missing
+      const user = await User.findById(req.params.userId)
+        .select("role pageAccess")
+        .lean();
+      if (!user || isAdminRole(user.role)) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
-    res.json(describeAccess(user));
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
+      res.json(describeAccess(user));
+    } catch (err) {
+      res.status(500).json({ message: "Server error", error: err.message });
+    }
+  },
+);
 
 // Set a user's pages: { pages: ["payroll", "filing"] }
 // or return them to the role default: { reset: true }
-router.put("/users/:userId", requireAdmin, validUserId, async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { pages, reset } = req.body || {};
+router.put(
+  "/users/:userId",
+  requireEmployeeAccess,
+  validUserId,
+  refuseOwnLinkedEmployee((req) => req.params.userId),
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { pages, reset } = req.body || {};
 
-    if (String(req.user.userId) === userId) {
-      return res
-        .status(403)
-        .json({ message: "You cannot change your own page access" });
-    }
-
-    // Super Admin and Admin accounts are hidden (and never restricted): answered as missing
-    const target = await User.findById(userId).select("role").lean();
-    if (!target || isAdminRole(target.role)) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    let update;
-    if (reset === true) {
-      update = { $unset: { pageAccess: 1 }, $set: { updatedAt: new Date() } };
-    } else {
-      if (
-        !Array.isArray(pages) ||
-        pages.some((key) => typeof key !== "string")
-      ) {
+      if (String(req.user.userId) === userId) {
         return res
-          .status(400)
-          .json({ message: "`pages` must be an array of page keys" });
+          .status(403)
+          .json({ message: "You cannot change your own page access" });
       }
 
-      const rolePages = pagesForRole(target.role);
-      const validKeys = new Set(rolePages.map((page) => page.key));
-      const invalid = [...new Set(pages)].filter((key) => !validKeys.has(key));
-      if (invalid.length > 0) {
-        return res.status(400).json({
-          message: `Not a page for the ${roleLabel(target.role)} role: ${invalid.join(", ")}`,
-        });
+      // Super Admin and Admin accounts are hidden (and never restricted): answered as missing
+      const target = await User.findById(userId).select("role").lean();
+      if (!target || isAdminRole(target.role)) {
+        return res.status(404).json({ message: "User not found" });
       }
 
-      update = {
-        $set: {
-          pageAccess: normalizePageAccess(target.role, pages),
-          updatedAt: new Date(),
-        },
-      };
+      let update;
+      if (reset === true) {
+        update = { $unset: { pageAccess: 1 }, $set: { updatedAt: new Date() } };
+      } else {
+        if (
+          !Array.isArray(pages) ||
+          pages.some((key) => typeof key !== "string")
+        ) {
+          return res
+            .status(400)
+            .json({ message: "`pages` must be an array of page keys" });
+        }
+
+        const rolePages = pagesForRole(target.role);
+        const validKeys = new Set(rolePages.map((page) => page.key));
+        const invalid = [...new Set(pages)].filter((key) => !validKeys.has(key));
+        if (invalid.length > 0) {
+          return res.status(400).json({
+            message: `Not a page for the ${roleLabel(target.role)} role: ${invalid.join(", ")}`,
+          });
+        }
+
+        update = {
+          $set: {
+            pageAccess: normalizePageAccess(target.role, pages),
+            updatedAt: new Date(),
+          },
+        };
+      }
+
+      const updated = await User.findByIdAndUpdate(userId, update, {
+        new: true,
+      })
+        .select("role pageAccess")
+        .lean();
+
+      res.json(describeAccess(updated));
+    } catch (err) {
+      res.status(500).json({ message: "Server error", error: err.message });
     }
-
-    const updated = await User.findByIdAndUpdate(userId, update, {
-      new: true,
-    })
-      .select("role pageAccess")
-      .lean();
-
-    res.json(describeAccess(updated));
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
+  },
+);
 
 module.exports = router;

@@ -20,6 +20,9 @@ const {
   hiddenUserIdSet,
   withoutHiddenMembers,
 } = require("../utils/hiddenAccounts");
+const { pagesForRole } = require("../config/pages");
+
+const ADMIN_PAGE_KEYS = pagesForRole("Admin").map((page) => page.key);
 
 let mongo;
 
@@ -103,8 +106,14 @@ const missingId = () => String(new mongoose.Types.ObjectId());
 
 const superAdmin = (job) =>
   person("admin", { role: "Super Admin", employeeId: "ADM-001", job });
+// An Admin with every admin page and action ticked
 const plainAdmin = (job) =>
-  person("hr", { role: "Admin", employeeId: "ADM-002", job });
+  person("hr", {
+    role: "Admin",
+    employeeId: "ADM-002",
+    job,
+    pageAccess: ADMIN_PAGE_KEYS,
+  });
 const employee = (username = "ana", job) =>
   person(username, { employeeId: "AC-001", job });
 
@@ -378,15 +387,23 @@ describe.each(CASES)(
       const { employeeId } = await Employee.findOne({
         userId: target.user._id,
       }).lean();
-      await expectSameAsMissing(
-        "delete",
-        {
-          hidden: `/api/employee/delete-employee/${employeeId}`,
-          missing: "/api/employee/delete-employee/AC-999",
-        },
-        token,
-        { message: "Employee not found" },
-      );
+      const urls = {
+        hidden: `/api/employee/delete-employee/${employeeId}`,
+        missing: "/api/employee/delete-employee/AC-999",
+      };
+      if (roleName === "Super Admin") {
+        // The caller is an Admin: delete is Super Admin only, so it is refused
+        // before any record is looked up
+        for (const url of [urls.hidden, urls.missing]) {
+          const res = await send("delete", url, token);
+          expect(res.status).toBe(403);
+          expect(res.body.code).toBe("PAGE_ACCESS_DENIED");
+        }
+      } else {
+        await expectSameAsMissing("delete", urls, token, {
+          message: "Employee not found",
+        });
+      }
 
       expect(await User.exists({ _id: target.user._id })).toBeTruthy();
       expect(await Employee.exists({ userId: target.user._id })).toBeTruthy();
@@ -408,8 +425,11 @@ describe.each(CASES)(
         { pages: ["dashboard"] },
       );
 
+      // Untouched: no ticks stored on the Super Admin, the Admin keeps its own
       const saved = await User.findById(target.user._id).lean();
-      expect(saved.pageAccess).toBeUndefined();
+      expect(saved.pageAccess).toEqual(
+        roleName === "Admin" ? ADMIN_PAGE_KEYS : undefined,
+      );
     });
 
     it("on another account's settings and profile photo", async () => {

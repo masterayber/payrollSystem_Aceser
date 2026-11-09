@@ -4,7 +4,8 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 
 const {
-  requireAdmin,
+  requireAdminPage,
+  refuseOwnLinkedEmployee,
   requireAuthenticatedBeforePasswordChange,
 } = require("../middleware/accessMiddleware");
 const { toClientAttendance } = require("../utils/clientAttendance");
@@ -75,6 +76,13 @@ router.post("/login", async (req, res) => {
 
     // A pending password change does not stop the login: the token is issued and
     // every route but /me and change-password answers PASSWORD_CHANGE_REQUIRED.
+
+    // Recorded for the Super Admin's Admins list ("last login")
+    user.lastLogin = new Date();
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { lastLogin: user.lastLogin } },
+    );
 
     const token = jwt.sign(
       { userId: user._id, role: user.role },
@@ -429,35 +437,45 @@ router.get("/me", requireAuthenticatedBeforePasswordChange, async (req, res) => 
   }
 });
 
-// Route for approving an account by changing its auth status
-router.put("/users/:id/status", requireAdmin, async (req, res) => {
-  const { id } = req.params;
+// Route for approving an account by changing its auth status (the "employees" tick).
+// The reply never carries the password hash or a reset token.
+router.put(
+  "/users/:id/status",
+  requireAdminPage("employees"),
+  refuseOwnLinkedEmployee((req) => req.params.id),
+  async (req, res) => {
+    const { id } = req.params;
 
-  if (!mongoose.isValidObjectId(id)) {
-    return res.status(400).json({ error: "Invalid user id" });
-  }
-
-  try {
-    // Approves pending accounts only; a resigned employee is reinstated from their profile
-    // A Super Admin or Admin account is hidden: answered as missing
-    const result = await User.findOneAndUpdate(
-      { _id: id, status: "Pending", role: VISIBLE_ROLE },
-      { status: "Active" },
-      { new: true },
-    );
-
-    if (!result) {
-      return res.status(404).json({ error: "No pending account with that id" });
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: "Invalid user id" });
     }
 
-    res.json({ message: "User approved successfully", user: result });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to approve user" });
-  }
-});
+    try {
+      // Approves pending accounts only; a resigned employee is reinstated from their
+      // profile. A Super Admin or Admin account is hidden: answered as missing
+      const result = await User.findOneAndUpdate(
+        { _id: id, status: "Pending", role: VISIBLE_ROLE },
+        { status: "Active" },
+        { new: true },
+      )
+        .select("-password -resetToken")
+        .lean();
+
+      if (!result) {
+        return res
+          .status(404)
+          .json({ error: "No pending account with that id" });
+      }
+
+      res.json({ message: "User approved successfully", user: result });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to approve user" });
+    }
+  },
+);
 
 // List route for pending accounts for the admin approval workflow
-router.get("/pending-users", requireAdmin, async (req, res) => {
+router.get("/pending-users", requireAdminPage("employees"), async (req, res) => {
   try {
     const pendingUsers = await User.find({
       status: "Pending",

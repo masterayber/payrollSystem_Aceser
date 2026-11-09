@@ -12,6 +12,7 @@ const accessRoutes = require("./routes/access");
 const settingsRoutes = require("./routes/settings");
 const logisticsRoutes = require("./routes/logistics");
 const thirteenthMonthRoutes = require("./routes/thirteenthMonth");
+const adminRoutes = require("./routes/admins");
 
 const { requireAuthenticated } = require("./middleware/accessMiddleware");
 
@@ -32,6 +33,7 @@ app.use("/api/access", accessRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/logistics", logisticsRoutes);
 app.use("/api/thirteenth-month", thirteenthMonthRoutes);
+app.use("/api/admins", adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running...");

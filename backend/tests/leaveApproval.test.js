@@ -79,7 +79,7 @@ const setup = async () => {
   await createUser({
     username: "admin1",
     email: "admin1@example.com",
-    role: "Admin",
+    role: "Super Admin",
   });
   return { employeeUser, adminToken: await loginAs("admin1") };
 };

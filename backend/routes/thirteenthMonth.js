@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
-const { requireAdmin } = require("../middleware/accessMiddleware");
+const { requireAdminPage } = require("../middleware/accessMiddleware");
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
@@ -95,7 +95,8 @@ const byEmployeeId = (a, b) => {
 };
 
 // GET /api/thirteenth-month?year=2026: every listed employee's 13th month for the year
-router.get("/", requireAdmin, async (req, res) => {
+// (Reports: the "reports" tick; the Super Admin always)
+router.get("/", requireAdminPage("reports"), async (req, res) => {
   try {
     const todayKey = manilaToday();
     const checked = checkYear(req.query.year, Number(todayKey.slice(0, 4)));
@@ -164,8 +165,9 @@ router.get("/", requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/thirteenth-month/:userId?year=2026: one employee's row
-router.get("/:userId", requireAdmin, async (req, res) => {
+// GET /api/thirteenth-month/:userId?year=2026: one employee's row (the profile card:
+// the "employees" tick)
+router.get("/:userId", requireAdminPage("employees"), async (req, res) => {
   try {
     const { userId } = req.params;
     if (!mongoose.isValidObjectId(userId)) {

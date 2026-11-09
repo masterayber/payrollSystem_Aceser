@@ -7,10 +7,13 @@ const authMiddleware = require("./authMiddleware");
 const { requireAuthenticated } = require("./accessMiddleware");
 const Settings = require("../models/settings");
 const Project = require("../models/project");
-const { getAllowedPages } = require("../utils/pageAccess");
+const {
+  getAllowedPages,
+  hasLogisticsAdminPower,
+} = require("../utils/pageAccess");
 const { isLogisticsPage } = require("../config/pages");
 const { SITE_ROLES } = require("../config/logistics");
-const { isAdminRole } = require("../config/roles");
+const { isSuperAdmin } = require("../config/roles");
 const {
   headOfficeRoles,
   siteRole,
@@ -29,6 +32,9 @@ const serverError = (res, err) =>
 
 // req.logistics = { userId, isAdmin, jobDescription, position, department,
 //                   headOfficeRoles: [], siteRole, roles: [] }
+// isAdmin is the power to act at every step: the Super Admin always, an Admin only
+// when at least one Logistics page is ticked for it (it reaches only the routes of
+// the pages it can open).
 const loadLogistics = async (req, res, next) => {
   try {
     const userId = req.user.userId;
@@ -46,7 +52,7 @@ const loadLogistics = async (req, res, next) => {
 
     req.logistics = {
       userId,
-      isAdmin: isAdminRole(req.currentUser?.role),
+      isAdmin: hasLogisticsAdminPower(req.currentUser),
       jobDescription,
       position,
       department,
@@ -126,13 +132,14 @@ const requireLogisticsRole = (roles, { project } = {}) => {
   return [authMiddleware, loadCurrentUser, loadLogistics, check];
 };
 
-// Any signed-in user with at least one logistics page ticked (Admin always).
+// Any signed-in user with at least one logistics page ticked (an Admin as well as an
+// Employee; the Super Admin always).
 const requireAnyLogisticsPage = [
   authMiddleware,
   loadCurrentUser,
   loadLogistics,
   (req, res, next) => {
-    if (isAdminRole(req.currentUser.role)) return next();
+    if (isSuperAdmin(req.currentUser.role)) return next();
 
     const allowed = getAllowedPages(req.currentUser);
     if (!allowed.some((key) => isLogisticsPage(key))) {

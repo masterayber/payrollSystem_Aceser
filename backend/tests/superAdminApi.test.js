@@ -44,7 +44,12 @@ const loginAs = async (username) => {
 // Creates Auth + Employee + Settings for one person and signs them in
 const person = async (
   username,
-  { role = "Employee", employeeId = `EMP-${username}`, job = {} } = {},
+  {
+    role = "Employee",
+    employeeId = `EMP-${username}`,
+    job = {},
+    pageAccess,
+  } = {},
 ) => {
   const user = await User.create({
     username,
@@ -52,6 +57,7 @@ const person = async (
     email: `${username}@example.com`,
     role,
     status: "Active",
+    ...(pageAccess ? { pageAccess } : {}),
   });
   await Employee.create({
     userId: user._id,
@@ -75,7 +81,13 @@ const superAdmin = () =>
     employeeId: "ADM-001",
     job: { basicPay: 90000, startDate: "2025-01-06" },
   });
-const plainAdmin = () => person("hr", { role: "Admin", employeeId: "ADM-002" });
+// An Admin with every admin page and action ticked
+const plainAdmin = () =>
+  person("hr", {
+    role: "Admin",
+    employeeId: "ADM-002",
+    pageAccess: ADMIN_PAGE_KEYS,
+  });
 const employee = (username = "ana") =>
   person(username, {
     employeeId: "AC-001",
@@ -230,11 +242,19 @@ describe("nobody can change the Super Admin account: it answers as missing", () 
     const boss = await superAdmin();
     const hr = await plainAdmin();
 
+    // Delete is Super Admin only: an Admin is refused outright
     const res = await request(app)
       .delete("/api/employee/delete-employee/ADM-001")
       .set(as(hr.token));
-    expect(res.status).toBe(404);
-    expect(res.body.message).toBe("Employee not found");
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe("PAGE_ACCESS_DENIED");
+
+    // and the Super Admin's own record answers as missing
+    const own = await request(app)
+      .delete("/api/employee/delete-employee/ADM-001")
+      .set(as(boss.token));
+    expect(own.status).toBe(404);
+    expect(own.body.message).toBe("Employee not found");
     expect(await User.exists({ _id: boss.user._id })).toBeTruthy();
     expect(await Employee.exists({ userId: boss.user._id })).toBeTruthy();
     expect(await Settings.exists({ userId: boss.user._id })).toBeTruthy();

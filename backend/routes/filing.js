@@ -5,8 +5,15 @@ const LeaveApplication = require("../models/leaveApplication");
 const OvertimeApplication = require("../models/overtimeApplication");
 const Attendance = require("../models/attendance");
 const Settings = require("../models/settings");
-const { requirePage, requireAdmin } = require("../middleware/accessMiddleware");
+const {
+  requirePage,
+  requireAdminPage,
+} = require("../middleware/accessMiddleware");
 const { isAdminRole } = require("../config/roles");
+const {
+  OWN_RECORD_MESSAGE,
+  isOwnLinkedEmployee,
+} = require("../utils/linkedEmployee");
 const {
   findVisibleUser,
   isHiddenAccount,
@@ -92,9 +99,21 @@ const checkOvertimeDay = async (attendanceId, userId, keepAttendanceId) => {
   return null;
 };
 
-// The role is read from the database (requireAdmin loads it), not from the token,
+// Admin Filing screen (the lists, leave credits on the profile, and the leave and
+// overtime decisions): the "admin-filing" tick; the Super Admin always passes.
+// Employee self-service routes keep requirePage("filing").
+const requireFilingPage = requireAdminPage("admin-filing");
+
+// An Admin deciding a request filed by its own linked employee: refused in this file's
+// { error } shape, which the Filing screen shows
+const ownRecordRefusal = (res) =>
+  res
+    .status(403)
+    .json({ error: OWN_RECORD_MESSAGE, code: "OWN_EMPLOYEE_RECORD" });
+
+// The role is read from the database (the guard loads it), not from the token,
 // so a token issued before a role change still works
-router.get("/", requireAdmin, async (req, res) => {
+router.get("/", requireFilingPage, async (req, res) => {
   if (!isAdminRole(req.currentUser.role))
     return res.status(400).json({ msg: "Access Denied" });
 
@@ -160,7 +179,7 @@ router.get("/leave-credits", requirePage("filing"), async (req, res) => {
 });
 
 // An employee's VL and SL balance, for the admin profile page
-router.get("/leave-credits/:userId", requireAdmin, async (req, res) => {
+router.get("/leave-credits/:userId", requireFilingPage, async (req, res) => {
   const { userId } = req.params;
   if (!mongoose.isValidObjectId(userId)) {
     return res.status(400).json({ error: "Invalid user ID." });
@@ -362,7 +381,7 @@ const markLeaveDays = async (leave) => {
 // Route for approving leave requests of user by admin
 const LEAVE_DECISIONS = ["Approved", "Disapproved"];
 
-router.patch("/leave/:id/status", requireAdmin, async (req, res) => {
+router.patch("/leave/:id/status", requireFilingPage, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -382,6 +401,10 @@ router.patch("/leave/:id/status", requireAdmin, async (req, res) => {
     const owner = await LeaveApplication.findById(id).select("userId").lean();
     if (owner && (await isHiddenAccount(owner.userId))) {
       return res.status(404).json({ error: "Leave application not found." });
+    }
+    // Checked before anything is saved: no leave days are marked
+    if (owner && isOwnLinkedEmployee(req.currentUser, owner.userId)) {
+      return ownRecordRefusal(res);
     }
 
     // VL and SL are checked again: the credits may have changed since it was filed
@@ -517,7 +540,7 @@ router.patch("/leave/:id/status", requireAdmin, async (req, res) => {
 // Route for approving or disapproving an overtime request (admin only)
 const OVERTIME_DECISIONS = ["Approved", "Disapproved"];
 
-router.patch("/overtime/:id/status", requireAdmin, async (req, res) => {
+router.patch("/overtime/:id/status", requireFilingPage, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -537,6 +560,9 @@ router.patch("/overtime/:id/status", requireAdmin, async (req, res) => {
     const owner = await OvertimeApplication.findById(id).select("userId").lean();
     if (owner && (await isHiddenAccount(owner.userId))) {
       return res.status(404).json({ error: "Overtime request not found." });
+    }
+    if (owner && isOwnLinkedEmployee(req.currentUser, owner.userId)) {
+      return ownRecordRefusal(res);
     }
 
     // The Pending filter is part of the update itself, so two admins acting on the same
@@ -773,7 +799,7 @@ router.delete("/overtime/:id", requirePage("filing"), async (req, res) => {
 });
 
 // Route for getting the overtime of all users
-router.get("/overtime", requireAdmin, async (req, res) => {
+router.get("/overtime", requireFilingPage, async (req, res) => {
   if (!isAdminRole(req.currentUser.role))
     return res.status(400).json({ msg: "Access Denied" });
 

@@ -4,6 +4,9 @@ const {
   MIN_PASSWORD_LENGTH,
   checkNewPassword,
   forcesPasswordChange,
+  TEMPORARY_PASSWORD_LENGTH,
+  TEMPORARY_PASSWORD_CHARACTERS,
+  generateTemporaryPassword,
 } = require("../utils/password");
 
 const SAME = "New password must be different from the current one.";
@@ -110,5 +113,51 @@ describe("forcesPasswordChange, the forced-change rule", () => {
       false,
     );
     expect(forcesPasswordChange({ setBy: admin, account: null })).toBe(false);
+  });
+});
+
+// The temporary password generator (moved from the sample reset script in PR B): a new
+// Admin account and the Super Admin's Reset password use it
+describe("generateTemporaryPassword", () => {
+  const LOOK_ALIKES = ["0", "O", "o", "1", "l", "I"];
+  const many = Array.from({ length: 200 }, () => generateTemporaryPassword());
+
+  it("is 12 characters by default", () => {
+    expect(TEMPORARY_PASSWORD_LENGTH).toBe(12);
+    for (const password of many) expect(password).toHaveLength(12);
+  });
+
+  it("always meets the password rule", () => {
+    for (const password of many) {
+      expect(checkNewPassword({ next: password })).toBeNull();
+      expect(checkNewPassword({ next: password, wording: "plain" })).toBeNull();
+    }
+  });
+
+  it("uses letters and digits only, without look-alikes", () => {
+    for (const ch of LOOK_ALIKES) {
+      expect(TEMPORARY_PASSWORD_CHARACTERS).not.toContain(ch);
+    }
+    for (const password of many) {
+      expect(password).toMatch(/^[A-Za-z2-9]+$/);
+      for (const ch of LOOK_ALIKES) expect(password).not.toContain(ch);
+    }
+  });
+
+  it("has a lower-case letter, a capital and a digit every time", () => {
+    for (const password of many) {
+      expect(password).toMatch(/[a-z]/);
+      expect(password).toMatch(/[A-Z]/);
+      expect(password).toMatch(/[2-9]/);
+    }
+  });
+
+  it("gives a different password each time", () => {
+    expect(new Set(many).size).toBe(many.length);
+  });
+
+  it("takes another length, never below the minimum", () => {
+    expect(generateTemporaryPassword(16)).toHaveLength(16);
+    expect(generateTemporaryPassword(4)).toHaveLength(MIN_PASSWORD_LENGTH);
   });
 });

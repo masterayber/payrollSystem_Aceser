@@ -641,7 +641,7 @@ describe("Self sign-up (POST /api/auth/signup)", () => {
 
 describe("Add Employee (POST /api/employee/add-employee-via-admin)", () => {
   it("refuses 7 characters from an Admin and a Super Admin; nothing created", async () => {
-    const hr = await person("hr", { role: "Admin" });
+    const hr = await person("hr", { role: "Admin", pageAccess: ["employees"] });
     const boss = await person("boss", { role: "Super Admin" });
 
     for (const token of [hr.token, boss.token]) {
@@ -654,7 +654,7 @@ describe("Add Employee (POST /api/employee/add-employee-via-admin)", () => {
   });
 
   it("refuses a blank, spaces-only or missing password as required", async () => {
-    const { token } = await person("hr", { role: "Admin" });
+    const { token } = await person("hr", { role: "Admin", pageAccess: ["employees"] });
     for (const password of ["", "        ", undefined]) {
       const res = await addEmployee(token, newEmployeeBody({ password }));
       expect(res.status).toBe(400);
@@ -664,7 +664,7 @@ describe("Add Employee (POST /api/employee/add-employee-via-admin)", () => {
   });
 
   it("accepts 8 characters from an Admin and from a Super Admin", async () => {
-    const hr = await person("hr", { role: "Admin" });
+    const hr = await person("hr", { role: "Admin", pageAccess: ["employees"] });
     const boss = await person("boss", { role: "Super Admin" });
 
     const fromAdmin = await addEmployee(
@@ -688,7 +688,7 @@ describe("Add Employee (POST /api/employee/add-employee-via-admin)", () => {
   });
 
   it("sets mustChangePassword true on the new account, from an Admin and a Super Admin", async () => {
-    const hr = await person("hr", { role: "Admin" });
+    const hr = await person("hr", { role: "Admin", pageAccess: ["employees"] });
     const boss = await person("boss", { role: "Super Admin" });
 
     expect((await addEmployee(hr.token, newEmployeeBody())).status).toBe(201);
@@ -712,7 +712,7 @@ describe("Add Employee (POST /api/employee/add-employee-via-admin)", () => {
   });
 
   it("forces the change at first sign-in until the employee sets their own", async () => {
-    const { token } = await person("hr", { role: "Admin" });
+    const { token } = await person("hr", { role: "Admin", pageAccess: ["employees"] });
     const res = await addEmployee(token, newEmployeeBody());
     expect(res.status).toBe(201);
     expect(res.body.user.mustChangePassword).toBe(true);
@@ -767,7 +767,7 @@ describe("A password reset through Edit Employee", () => {
 
   it("refuses 7 characters, whoever edits; nothing saved", async () => {
     const boss = await person("boss", { role: "Super Admin" });
-    const hr = await person("hr", { role: "Admin" });
+    const hr = await person("hr", { role: "Admin", pageAccess: ["employees"] });
     const { user } = await person("rhea", { password: "Temp1234" });
 
     for (const token of [boss.token, hr.token]) {
@@ -788,7 +788,7 @@ describe("A password reset through Edit Employee", () => {
   });
 
   it("accepts 8 characters and sets the flag, from an Admin and a Super Admin", async () => {
-    const hr = await person("hr", { role: "Admin" });
+    const hr = await person("hr", { role: "Admin", pageAccess: ["employees"] });
     const boss = await person("boss", { role: "Super Admin" });
     const rhea = await person("rhea", { password: "Temp1234" });
     const ana = await person("ana");
@@ -813,7 +813,7 @@ describe("A password reset through Edit Employee", () => {
   });
 
   it("keeps the flag true on an account that already had it", async () => {
-    const hr = await person("hr", { role: "Admin" });
+    const hr = await person("hr", { role: "Admin", pageAccess: ["employees"] });
     const { user } = await person("rhea", {
       password: "Temp1234",
       mustChangePassword: true,
@@ -827,7 +827,7 @@ describe("A password reset through Edit Employee", () => {
   });
 
   it("takes no mustChangePassword from the body, with or without a password", async () => {
-    const hr = await person("hr", { role: "Admin" });
+    const hr = await person("hr", { role: "Admin", pageAccess: ["employees"] });
     const ana = await person("ana");
     const rhea = await person("rhea", { mustChangePassword: true });
 
@@ -888,7 +888,7 @@ describe("A password reset through Edit Employee", () => {
   it("cannot reach an admin's own account, so an admin never forces themselves", async () => {
     // Edit Employee answers 404 for every admin account, the editor's own included;
     // an admin changes their own password through change-password (flag false)
-    const hr = await person("hr", { role: "Admin" });
+    const hr = await person("hr", { role: "Admin", pageAccess: ["employees"] });
     const boss = await person("boss", { role: "Super Admin" });
 
     for (const self of [hr, boss]) {

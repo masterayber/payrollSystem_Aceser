@@ -8,6 +8,11 @@ const { pageRole } = require("./roles");
 //              landing pages, and admin-settings stops an admin from losing the screens
 //              needed to repair access.
 // defaultOff - hidden from employees until an admin grants it in Manage Access
+// adminDefault - ticked for a new Admin account (the "HR set"); the Super Admin can
+//              change the ticks before saving
+// action     - an Admin tick that opens no page of its own: it allows one kind of
+//              action on a page the Admin already has (Manage Access on employees,
+//              Settings > Company, Settings > Manage). The Super Admin always has them.
 
 // Logistics pages. Each key is a sub-page under /logistics/*, listed once for
 // Employee (off until ticked in Manage Access) and once for Admin (a normal admin
@@ -55,19 +60,56 @@ const PAGES = [
 
   // Admin pages
   { key: "admin-dashboard", label: "Dashboard", role: "Admin", locked: true },
-  { key: "employees", label: "Employees", role: "Admin" },
+  { key: "employees", label: "Employees", role: "Admin", adminDefault: true },
   { key: "deductions", label: "Deductions", role: "Admin" },
   { key: "admin-payslips", label: "Pay Slips", role: "Admin" },
-  { key: "admin-attendance", label: "Attendance", role: "Admin" },
+  {
+    key: "admin-attendance",
+    label: "Attendance",
+    role: "Admin",
+    adminDefault: true,
+  },
   ...adminLogisticsPages,
-  { key: "admin-calendar", label: "Calendar", role: "Admin" },
-  { key: "admin-filing", label: "Filing", role: "Admin" },
+  { key: "admin-calendar", label: "Calendar", role: "Admin", adminDefault: true },
+  { key: "admin-filing", label: "Filing", role: "Admin", adminDefault: true },
   { key: "reports", label: "Reports", role: "Admin" },
   { key: "admin-settings", label: "Settings", role: "Admin", locked: true },
+
+  // Admin actions (ticks on an Admin account; "pay-changes" comes with the pay
+  // change PRs)
+  {
+    key: "employee-access",
+    label: "Employee access",
+    role: "Admin",
+    action: true,
+  },
+  {
+    key: "settings-company",
+    label: "Settings: Company",
+    role: "Admin",
+    action: true,
+  },
+  {
+    key: "settings-manage",
+    label: "Settings: Manage",
+    role: "Admin",
+    action: true,
+  },
 ];
 
 // Both admin roles (Admin, Super Admin) get the Admin pages
 const pagesForRole = (role) =>
   PAGES.filter((page) => page.role === pageRole(role));
 
-module.exports = { PAGES, pagesForRole, LOGISTICS_PAGE_KEYS, isLogisticsPage };
+// The keys ticked for a new Admin account (the HR set), plus the locked ones
+const ADMIN_DEFAULT_PAGE_KEYS = pagesForRole("Admin")
+  .filter((page) => page.locked || page.adminDefault)
+  .map((page) => page.key);
+
+module.exports = {
+  PAGES,
+  pagesForRole,
+  LOGISTICS_PAGE_KEYS,
+  isLogisticsPage,
+  ADMIN_DEFAULT_PAGE_KEYS,
+};
