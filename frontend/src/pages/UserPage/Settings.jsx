@@ -8,14 +8,14 @@ import "../../styles/UserCSS/Settings.css";
 
 const settingsOptions = [
   { name: "General", key: "general" },
-  { name: "Manage", key: "manage" },
+  { name: "Privacy & Policy", key: "privacy" },
   { name: "Accessibility", key: "accessibility" },
   { name: "About", key: "about" },
 ];
 
 const settingsContent = {
   general: <GeneralSettings />,
-  manage: <ManageSettings />,
+  privacy: <ManageSettings />,
   accessibility: <AccessibilittySettings />,
   about: <AboutSettings />,
 };

@@ -10,6 +10,7 @@ import OTP from "./pages/OTP";
 import ResetPassword from "./pages/ResetPassword";
 import AdditionalInfo from "./pages/AdditionalInfo";
 import CreatedAccount from "./pages/CreatedAccount";
+import ChangePassword from "./pages/ChangePassword";
 
 // Admin Pages
 import AdminDashboard from "./pages/AdminPage/AdminDashboard";
@@ -137,6 +138,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                     <Route
                       path="created-account/:id"
                       element={<CreatedAccount />}
+                    />
+                    {/* Signed in with a temporary password; guards itself */}
+                    <Route
+                      path="change-password"
+                      element={<ChangePassword />}
                     />
   
                     {/* Admin Routes */}

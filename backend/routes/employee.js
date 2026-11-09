@@ -20,6 +20,10 @@ const {
 } = require("../utils/employeeAccount");
 const { isAdminRole } = require("../config/roles");
 const { isHiddenAccount } = require("../utils/hiddenAccounts");
+const {
+  checkNewPassword,
+  forcesPasswordChange,
+} = require("../utils/password");
 
 const router = express.Router();
 
@@ -412,20 +416,37 @@ router.patch("/employees/:userId/reinstate", requireAdmin, async (req, res) => {
 // Route for adding employee via admin manually
 router.post("/add-employee-via-admin", requireAdmin, async (req, res) => {
   try {
+    // The password rule, whoever adds the employee; checked before anything is created
+    const passwordRefusal = checkNewPassword({
+      next: req.body.password,
+      wording: "plain",
+    });
+    if (passwordRefusal) {
+      return res.status(400).json({ message: passwordRefusal });
+    }
+
     const job = checkJobDetails(req.body);
     if (job.error) {
       return res.status(400).json({ message: job.error });
     }
 
-    // Always an Employee-role account; a role sent in the body is ignored
+    // Always an Employee-role account; a role or mustChangePassword sent in the body
+    // is ignored. The admin chose this password, so the new account must change it
+    // at first sign-in.
     const { user, employee, settings } = await createEmployeeAccount(
       req.body,
       job.fields,
+      { mustChangePassword: true },
     );
+
+    // Never send the password hash or a reset token back
+    const userReply = user.toObject();
+    delete userReply.password;
+    delete userReply.resetToken;
 
     res.status(201).json({
       message: "Employee account created successfully",
-      user,
+      user: userReply,
       employee,
       settings,
     });
@@ -469,12 +490,32 @@ router.put("/edit-employee-via-admin/:id", requireAdmin, async (req, res) => {
       return res.status(400).json({ message: job.error });
     }
 
+    // A non-empty password is a reset and follows the password rule, whoever is
+    // editing; refused before anything is saved. Blank means "no change".
+    const resetsPassword = typeof password === "string" && password.trim() !== "";
+    if (resetsPassword) {
+      const passwordRefusal = checkNewPassword({
+        next: password,
+        wording: "plain",
+      });
+      if (passwordRefusal) {
+        return res.status(400).json({ message: passwordRefusal });
+      }
+    }
+
     if (username !== undefined) user.username = username;
     if (email !== undefined) user.email = email;
-    // A non-empty password is a reset. save() runs the pre-save hook that hashes
-    // it; findByIdAndUpdate would skip the hook and store it in plain text.
-    if (typeof password === "string" && password.trim() !== "") {
+    // save() runs the pre-save hook that hashes the password; findByIdAndUpdate would
+    // skip the hook and store it in plain text. A password set for someone else must
+    // be changed at their next sign-in; one set for the editor's own account does not
+    // (the forced-change rule in utils/password.js). Without a password the flag is
+    // left as it is.
+    if (resetsPassword) {
       user.password = password;
+      user.mustChangePassword = forcesPasswordChange({
+        setBy: req.user.userId,
+        account: user._id,
+      });
     }
     await user.save();
 

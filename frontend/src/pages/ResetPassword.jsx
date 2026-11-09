@@ -3,6 +3,7 @@ import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Reset.css";
 import { feedbackFromError } from "../utils/feedback";
+import { checkNewPassword, PASSWORD_HINT } from "../utils/password";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -24,6 +25,11 @@ const ResetPassword = () => {
 
     if (password !== confirmPassword) {
       setMessage({ type: "warning", text: "Passwords do not match" });
+      return;
+    }
+    const passwordProblem = checkNewPassword(password);
+    if (passwordProblem) {
+      setMessage({ type: "warning", text: passwordProblem });
       return;
     }
 
@@ -75,6 +81,8 @@ const ResetPassword = () => {
             />
           </div>
         </div>
+
+        <p className="password-rule">{PASSWORD_HINT}</p>
 
         {message && (
           <p className={`feedback-message ${message.type}`}>{message.text}</p>

@@ -169,7 +169,10 @@ describe("Status is checked before the role", () => {
 
     const res = await request(app).get(ME).set(as(token));
     expect(res.status).toBe(401);
-    expect(res.body).toEqual({ message: "Account is not active" });
+    expect(res.body).toEqual({
+      message: "Account is not active",
+      code: "ACCOUNT_INACTIVE",
+    });
   });
 });
 

@@ -104,6 +104,11 @@
   border-radius: 10px;
 }
 
+/* "At least 8 characters" under the Password field of Add and Edit Employee */
+.modal .password-rule {
+  margin-top: 6px;
+}
+
 .modal-button:disabled,
 .modal-button.disabled {
   background-color: var(--gray-200);

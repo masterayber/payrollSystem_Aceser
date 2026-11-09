@@ -464,3 +464,25 @@
   font-weight: 600;
   color: var(--neutral-color-100);
 }
+
+/* Password card: employee Settings > Manage, admin Settings > Security & Privacy */
+.settings-content .password-settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-content .password-settings .feedback-message {
+  margin: 0;
+}
+
+.settings-content .password-settings .settings-button-option-container {
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  .settings-content .password-settings .input-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}

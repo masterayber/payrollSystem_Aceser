@@ -458,6 +458,23 @@ input[type="date"] {
   margin: 0 0 20px;
 }
 
+/* The password hint ("At least 8 characters"; .password-rule in index.css), kept
+   left-aligned and small against .auth-page p; on the Reset Password and Set your
+   password cards it sits under the fields */
+.auth-page p.password-rule {
+  margin: 0;
+  font-size: 13px;
+  text-align: left;
+}
+
+.auth-page.reset-password-container .reset-form > p.password-rule {
+  margin: 10px 0 0;
+}
+
+.signup-container .input-section .feedback-message {
+  margin: 0;
+}
+
 .forgotPassword-container .input-container {
   width: 100%;
 }

@@ -758,6 +758,19 @@ input:checked + .slider:before {
   color: var(--neutral-color-100);
 }
 
+/* Hint under a field that sets a password ("At least 8 characters") */
+.password-rule {
+  margin: 0;
+  font-size: 13px;
+  text-align: left;
+  color: var(--neutral-color-80);
+}
+
+/* Keep the fields of a row level when one of them has the hint under it */
+.input-row:has(.password-rule) > .input-container {
+  justify-content: flex-start;
+}
+
 .feedback-message {
   margin: 10px 0 0;
   padding: 10px 12px;
