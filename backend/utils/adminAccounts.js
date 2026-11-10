@@ -4,8 +4,6 @@
 // An Admin is not an employee: no Employee or Settings record, never paid, hidden like
 // the Super Admin. Its name is on the Auth record; its ticks reuse `pageAccess`; its
 // pay list is `payAccess`; `linkedEmployeeId` is the same person's Employee account.
-const mongoose = require("mongoose");
-
 const { pagesForRole, ADMIN_DEFAULT_PAGE_KEYS } = require("../config/pages");
 const { normalizePageAccess } = require("./pageAccess");
 
@@ -39,10 +37,12 @@ const has = (body, key) => Object.prototype.hasOwnProperty.call(body, key);
 //   with the HR set when `pages` is not sent and an empty pay list when `payAccess`
 //   is not sent). `linkedEmployeeId` null means "no linked employee".
 // - employeeIds: ids the route must confirm are Employee-role accounts (Active or
-//   Resigned) before saving: the pay list first, then the linked employee.
+//   Resigned) before saving: the pay list first, then the linked employee. Malformed
+//   ids are included: the route refuses them with the others ("Not an employee: <id>"),
+//   after its username and email checks, so every id refusal comes at the same step.
 // Order: a `role` key, the names (and username and email on create), the page keys,
-// the pay list and the linked employee. Username, status, password and the password
-// flag are never taken from the body (an edit ignores a `username`).
+// the pay list's shape. Username, status, password and the password flag are never
+// taken from the body (an edit ignores a `username`).
 const checkAdminDetails = (body, { creating = false } = {}) => {
   const input = body && typeof body === "object" ? body : {};
 
@@ -74,8 +74,6 @@ const checkAdminDetails = (body, { creating = false } = {}) => {
     const list = has(input, "payAccess") ? input.payAccess : [];
     if (!Array.isArray(list)) return { error: MESSAGES.payAccessNotList };
     const ids = [...new Set(list.map((id) => String(id)))];
-    const bad = ids.find((id) => !mongoose.isValidObjectId(id));
-    if (bad !== undefined) return { error: notEmployee(bad) };
     fields.payAccess = ids;
     employeeIds.push(...ids);
   }
@@ -86,7 +84,6 @@ const checkAdminDetails = (body, { creating = false } = {}) => {
       fields.linkedEmployeeId = null;
     } else {
       const id = String(linked);
-      if (!mongoose.isValidObjectId(id)) return { error: notEmployee(id) };
       fields.linkedEmployeeId = id;
       if (!employeeIds.includes(id)) employeeIds.push(id);
     }
@@ -96,7 +93,8 @@ const checkAdminDetails = (body, { creating = false } = {}) => {
 };
 
 // The first of `ids` (in order) that is not in `found` (the Employee-role account ids
-// that exist with status Active or Resigned), or null when all are
+// that exist with status Active or Resigned), or null when all are. A malformed id is
+// never in `found`, so it is refused in its place in the list.
 const firstMissingEmployee = (ids, found) => {
   const known = new Set([...found].map(String));
   return ids.find((id) => !known.has(String(id))) ?? null;

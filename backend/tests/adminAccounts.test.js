@@ -129,19 +129,15 @@ describe("checkAdminDetails, creating an Admin", () => {
     expect(result.employeeIds).toEqual([a, b]);
   });
 
-  it("refuses an id that is not valid, naming it", () => {
-    expect(
-      checkAdminDetails(
-        { ...NEW_ADMIN, payAccess: [id(), "abc"] },
-        { creating: true },
-      ),
-    ).toEqual({ error: "Not an employee: abc" });
-    expect(
-      checkAdminDetails(
-        { ...NEW_ADMIN, linkedEmployeeId: "xyz" },
-        { creating: true },
-      ),
-    ).toEqual({ error: "Not an employee: xyz" });
+  it("leaves a malformed id to the route, which refuses it with the other ids", () => {
+    const a = id();
+    const result = checkAdminDetails(
+      { ...NEW_ADMIN, payAccess: [a, "abc"], linkedEmployeeId: "xyz" },
+      { creating: true },
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.employeeIds).toEqual([a, "abc", "xyz"]);
+    expect(firstMissingEmployee(result.employeeIds, [a])).toBe("abc");
   });
 
   it("refuses a pay list that is not a list", () => {

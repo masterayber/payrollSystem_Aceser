@@ -22,6 +22,7 @@ const sendEmail = require("../utils/nodemailer");
 const { getAllowedPages } = require("../utils/pageAccess");
 const { VISIBLE_ROLE } = require("../utils/hiddenAccounts");
 const { checkNewPassword } = require("../utils/password");
+const { takenRefusal } = require("../utils/takenIdentifiers");
 
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
 
@@ -134,11 +135,12 @@ router.post("/signup", async (req, res) => {
     return res.status(400).json({ message: passwordRefusal });
   }
 
-  // Check if email is already registered to the database
+  // A username or email another account already uses, in any case, is refused before
+  // anything is created
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email is already registered" });
+    const taken = await takenRefusal({ username, email });
+    if (taken) {
+      return res.status(400).json({ message: taken });
     }
 
     const defaultStatus = "Probationary";

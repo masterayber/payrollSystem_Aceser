@@ -312,6 +312,70 @@ describe("POST /api/admins (rule 7)", () => {
     expect(await User.countDocuments({ role: "Admin" })).toBe(0);
   });
 
+  it("refuses a username or email used in another case", async () => {
+    const sa = await superAdmin();
+    await employee("ana");
+
+    const byUsername = await createAdmin(sa.token, { username: "ANA" });
+    expect(byUsername.status).toBe(400);
+    expect(byUsername.body.message).toBe("Username is already taken.");
+
+    const byEmail = await createAdmin(sa.token, { email: "Ana@Example.COM" });
+    expect(byEmail.status).toBe(400);
+    expect(byEmail.body.message).toBe("Email is already registered.");
+
+    expect(await User.countDocuments({ role: "Admin" })).toBe(0);
+  });
+
+  it("checks the username and email before any pay-list or linked id", async () => {
+    const sa = await superAdmin();
+    await employee("ana");
+
+    for (const ids of [
+      { payAccess: ["abc"] },
+      { payAccess: [missingId()] },
+      { linkedEmployeeId: "xyz" },
+      { linkedEmployeeId: String(sa.user._id) },
+    ]) {
+      const byUsername = await createAdmin(sa.token, {
+        username: "ana",
+        ...ids,
+      });
+      expect(byUsername.body.message).toBe("Username is already taken.");
+      const byEmail = await createAdmin(sa.token, {
+        email: "ana@example.com",
+        ...ids,
+      });
+      expect(byEmail.body.message).toBe("Email is already registered.");
+    }
+    expect(await User.countDocuments({ role: "Admin" })).toBe(0);
+  });
+
+  it("refuses the first bad id in list order, malformed or not an employee", async () => {
+    const sa = await superAdmin();
+    const ana = await employee("ana");
+    const missing = missingId();
+
+    const malformedFirst = await createAdmin(sa.token, {
+      payAccess: [String(ana.user._id), "abc", missing],
+    });
+    expect(malformedFirst.body.message).toBe("Not an employee: abc");
+
+    const missingFirst = await createAdmin(sa.token, {
+      payAccess: [missing, "abc"],
+    });
+    expect(missingFirst.body.message).toBe(`Not an employee: ${missing}`);
+
+    const linked = await createAdmin(sa.token, {
+      payAccess: [String(ana.user._id)],
+      linkedEmployeeId: "xyz",
+    });
+    expect(linked.status).toBe(400);
+    expect(linked.body.message).toBe("Not an employee: xyz");
+
+    expect(await User.countDocuments({ role: "Admin" })).toBe(0);
+  });
+
   it("refuses anyone on the pay list who is not an Employee account (rule 21)", async () => {
     const sa = await superAdmin();
     const ana = await employee("ana");
@@ -572,6 +636,30 @@ describe("PATCH /api/admins/:id", () => {
       .set(as(sa.token))
       .send({ email: "rhea@example.com" });
     expect(res.status).toBe(200);
+  });
+
+  it("refuses another account's email in another case, keeps its own in a new case", async () => {
+    const sa = await superAdmin();
+    await employee("ana");
+    const created = await createAdmin(sa.token);
+    const url = `/api/admins/${created.body.admin.id}`;
+
+    const other = await request(app)
+      .patch(url)
+      .set(as(sa.token))
+      .send({ email: "ANA@example.com" });
+    expect(other.status).toBe(400);
+    expect(other.body.message).toBe("Email is already registered.");
+    expect((await User.findById(created.body.admin.id)).email).toBe(
+      "rhea@example.com",
+    );
+
+    const own = await request(app)
+      .patch(url)
+      .set(as(sa.token))
+      .send({ email: "Rhea@Example.com" });
+    expect(own.status).toBe(200);
+    expect(own.body.email).toBe("Rhea@Example.com");
   });
 
   it("answers 404 for the Super Admin, an employee, a missing and a bad id", async () => {

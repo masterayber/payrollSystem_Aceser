@@ -412,6 +412,82 @@ describe("PUT /api/settings/updateGeneralSettings/:id", () => {
     const saved = await Settings.findOne({ userId: user._id });
     expect(saved.general.jobDescription.position).toBe("Staff");
   });
+
+  describe("an email another account uses", () => {
+    const setupTwo = async () => {
+      const user = await createUser();
+      await Employee.create({
+        userId: user._id,
+        firstName: "Juan",
+        lastName: "Dela Cruz",
+        email: "employee1@example.com",
+      });
+      await createUser({ username: "employee2", email: "employee2@example.com" });
+      const token = await loginAs("employee1");
+      const save = (body) =>
+        request(app)
+          .put(`/api/settings/updateGeneralSettings/${user._id}`)
+          .set("Authorization", `Bearer ${token}`)
+          .send(body);
+      return { user, save };
+    };
+
+    it.each([
+      [
+        "as the account email",
+        { email: "Employee2@Example.com", employee: { firstName: "Pedro" } },
+      ],
+      [
+        "as the employee record's email",
+        { employee: { firstName: "Pedro", email: "EMPLOYEE2@example.com" } },
+      ],
+    ])("is refused %s, in another case, and nothing is saved", async (_label, body) => {
+      const { user, save } = await setupTwo();
+
+      const res = await save(body);
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toBe("Email is already registered.");
+      expect((await User.findById(user._id)).email).toBe("employee1@example.com");
+      const employee = await Employee.findOne({ userId: user._id });
+      expect(employee.email).toBe("employee1@example.com");
+      expect(employee.firstName).toBe("Juan");
+    });
+
+    it("is refused when an admin edits someone else's settings too", async () => {
+      const { user } = await setupTwo();
+      await createUser({
+        username: "admin1",
+        email: "admin1@example.com",
+        role: "Super Admin",
+      });
+      const token = await loginAs("admin1");
+
+      const res = await request(app)
+        .put(`/api/settings/updateGeneralSettings/${user._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ email: "ADMIN1@example.com", employee: { email: "ADMIN1@example.com" } });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toBe("Email is already registered.");
+      expect((await User.findById(user._id)).email).toBe("employee1@example.com");
+    });
+
+    it("lets the account keep its own email in a new case", async () => {
+      const { user, save } = await setupTwo();
+
+      const res = await save({
+        email: "Employee1@Example.com",
+        employee: { email: "Employee1@Example.com" },
+      });
+
+      expect(res.status).toBe(200);
+      expect((await User.findById(user._id)).email).toBe("Employee1@Example.com");
+      expect((await Employee.findOne({ userId: user._id })).email).toBe(
+        "Employee1@Example.com",
+      );
+    });
+  });
 });
 
 describe("POST /api/auth/signup", () => {
@@ -430,6 +506,67 @@ describe("POST /api/auth/signup", () => {
     const user = await User.findOne({ email: "eve@example.com" });
     expect(user.role).toBe("Employee");
     expect(user.status).toBe("Pending");
+  });
+
+  it("refuses an email already registered in another case and creates nothing", async () => {
+    await createUser({ email: "test.admin@aceserph.com" });
+
+    const res = await request(app).post("/api/auth/signup").send({
+      firstName: "Tess",
+      lastName: "Admin",
+      email: "Test.Admin@aceserph.com",
+      username: "tess",
+      password: "Password123!",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("Email is already registered.");
+    expect(await User.countDocuments()).toBe(1);
+    expect(await Employee.countDocuments()).toBe(0);
+  });
+
+  it.each([
+    ["the same case", "employee1"],
+    ["another case", "Employee1"],
+  ])(
+    "refuses a username already taken in %s with a 400 and creates nothing",
+    async (_label, username) => {
+      await createUser();
+
+      const res = await request(app).post("/api/auth/signup").send({
+        firstName: "Emma",
+        lastName: "Ployee",
+        email: "emma@example.com",
+        username,
+        password: "Password123!",
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toBe("Username is already taken.");
+      expect(await User.countDocuments()).toBe(1);
+      expect(await Employee.countDocuments()).toBe(0);
+      expect(await Settings.countDocuments()).toBe(0);
+    },
+  );
+
+  it("refuses an email only an employee record still uses, in another case", async () => {
+    await Employee.create({
+      firstName: "Old",
+      lastName: "Record",
+      email: "old.record@example.com",
+    });
+
+    const res = await request(app).post("/api/auth/signup").send({
+      firstName: "New",
+      lastName: "Person",
+      email: "Old.Record@example.com",
+      username: "newperson",
+      password: "Password123!",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("Email is already registered.");
+    expect(await User.countDocuments()).toBe(0);
   });
 });
 
@@ -464,6 +601,211 @@ describe("Admin employee profile routes", () => {
     expect(res.body.password).toBeUndefined();
     expect(res.body.employee.employeeId).toBe("EMP-001");
     expect(res.body.jobDescription.schedule).toBeDefined();
+  });
+
+  it("carries the account's createdAt", async () => {
+    const { employeeUser, token } = await setup();
+
+    const res = await request(app)
+      .get(`/api/employee/employees/${employeeUser._id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).not.toHaveProperty("createAt");
+    expect(new Date(res.body.createdAt).getTime()).toBe(
+      employeeUser.createdAt.getTime(),
+    );
+  });
+
+  it("finds a username or email taken in another case (check-user-exists)", async () => {
+    const { employeeUser, token } = await setup();
+    const check = (body) =>
+      request(app)
+        .post("/api/employee/check-user-exists")
+        .set("Authorization", `Bearer ${token}`)
+        .send(body);
+
+    const taken = await check({
+      username: "EMPLOYEE1",
+      email: "Employee1@Example.com",
+    });
+    expect(taken.status).toBe(200);
+    expect(taken.body).toEqual({ email: true, username: true });
+
+    // The same person's own values, in any case, are not taken
+    const own = await check({
+      username: "Employee1",
+      email: "EMPLOYEE1@example.com",
+      excludeId: String(employeeUser._id),
+    });
+    expect(own.body).toEqual({});
+
+    // Whole values only, with dots taken literally
+    const partial = await check({
+      username: "employee",
+      email: "employee1@exampleXcom",
+    });
+    expect(partial.body).toEqual({});
+  });
+
+  it("finds an Employee ID taken in another case (check-user-exists)", async () => {
+    const { employeeUser, token } = await setup();
+    const check = (body) =>
+      request(app)
+        .post("/api/employee/check-user-exists")
+        .set("Authorization", `Bearer ${token}`)
+        .send(body);
+
+    expect((await check({ employeeId: "emp-001" })).body).toEqual({
+      employeeId: true,
+    });
+    expect(
+      (await check({ employeeId: "emp-001", excludeId: String(employeeUser._id) }))
+        .body,
+    ).toEqual({});
+  });
+
+  describe("username, email and Employee ID used by someone else", () => {
+    // A second employee whose values the first one's edit tries to take
+    const setupTwo = async () => {
+      const { employeeUser, token } = await setup();
+      const other = await createUser({
+        username: "employee2",
+        email: "employee2@example.com",
+      });
+      await Employee.create({
+        userId: other._id,
+        firstName: "Ana",
+        lastName: "Santos",
+        email: "employee2@example.com",
+        employeeId: "EMP-002",
+      });
+      const edit = (body) =>
+        request(app)
+          .put(`/api/employee/edit-employee-via-admin/${employeeUser._id}`)
+          .set("Authorization", `Bearer ${token}`)
+          .send({ contactNumber: "09170000000", ...body });
+      return { employeeUser, token, edit };
+    };
+
+    const expectNothingSaved = async (employeeUser) => {
+      const user = await User.findById(employeeUser._id);
+      expect(user.username).toBe("employee1");
+      expect(user.email).toBe("employee1@example.com");
+      const employee = await Employee.findOne({ userId: employeeUser._id });
+      expect(employee.email).toBe("employee1@example.com");
+      expect(employee.employeeId).toBe("EMP-001");
+      expect(employee.contactNumber).toBeUndefined();
+    };
+
+    it.each([
+      [{ username: "EMPLOYEE2" }, "Username is already taken."],
+      [{ email: "Employee2@Example.com" }, "Email is already registered."],
+      [{ employeeId: "emp-002" }, "Employee ID already exists."],
+    ])(
+      "Edit Employee refuses %j and saves nothing",
+      async (body, message) => {
+        const { employeeUser, edit } = await setupTwo();
+
+        const res = await edit(body);
+
+        expect(res.status).toBe(400);
+        expect(res.body.message).toBe(message);
+        await expectNothingSaved(employeeUser);
+      },
+    );
+
+    it("Edit Employee refuses another account's username even when it is an admin's", async () => {
+      const { employeeUser, edit } = await setupTwo();
+
+      const res = await edit({ username: "Admin1" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toBe("Username is already taken.");
+      await expectNothingSaved(employeeUser);
+    });
+
+    it("Edit Employee lets the employee keep their own values in a new case", async () => {
+      const { employeeUser, edit } = await setupTwo();
+
+      const res = await edit({
+        username: "Employee1",
+        email: "Employee1@Example.com",
+        employeeId: "emp-001",
+      });
+
+      expect(res.status).toBe(200);
+      const user = await User.findById(employeeUser._id);
+      expect(user.username).toBe("Employee1");
+      expect(user.email).toBe("Employee1@Example.com");
+      const employee = await Employee.findOne({ userId: employeeUser._id });
+      expect(employee.email).toBe("Employee1@Example.com");
+      expect(employee.employeeId).toBe("emp-001");
+      expect(employee.contactNumber).toBe("09170000000");
+    });
+
+    it("Edit Employee stays closed to an employee", async () => {
+      const { employeeUser } = await setupTwo();
+      const token = await loginAs("employee2");
+
+      const res = await request(app)
+        .put(`/api/employee/edit-employee-via-admin/${employeeUser._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ username: "employee1" });
+
+      expect(res.status).toBe(403);
+    });
+
+    it.each([
+      [{ username: "EMPLOYEE1" }, "Username is already taken."],
+      [{ email: "Employee1@Example.com" }, "Email is already registered."],
+      [{ employeeId: "emp-001" }, "Employee ID already exists."],
+    ])(
+      "Add Employee refuses %j and creates nothing",
+      async (body, message) => {
+        const { token } = await setup();
+
+        const res = await request(app)
+          .post("/api/employee/add-employee-via-admin")
+          .set("Authorization", `Bearer ${token}`)
+          .send({
+            firstName: "Ana",
+            lastName: "Santos",
+            employeeId: "EMP-002",
+            email: "ana@example.com",
+            username: "ana",
+            password: "Password123!",
+            employmentType: "Probationary",
+            ...body,
+          });
+
+        expect(res.status).toBe(400);
+        expect(res.body.message).toBe(message);
+        expect(await User.countDocuments()).toBe(2);
+        expect(await Employee.countDocuments()).toBe(1);
+        expect(await Settings.countDocuments()).toBe(0);
+      },
+    );
+
+    it("Add Employee creates an account whose values are all free", async () => {
+      const { token } = await setup();
+
+      const res = await request(app)
+        .post("/api/employee/add-employee-via-admin")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          firstName: "Ana",
+          lastName: "Santos",
+          employeeId: "EMP-002",
+          email: "ana@example.com",
+          username: "ana",
+          password: "Password123!",
+          employmentType: "Probationary",
+        });
+
+      expect(res.status).toBe(201);
+      expect(await User.exists({ username: "ana" })).toBeTruthy();
+    });
   });
 
   it("returns 404 for an unknown user", async () => {

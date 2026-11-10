@@ -23,6 +23,8 @@ const {
 } = require("../utils/employeeAccount");
 const { isAdminRole } = require("../config/roles");
 const { isHiddenAccount } = require("../utils/hiddenAccounts");
+const { ignoreCase } = require("../utils/ignoreCase");
+const { takenRefusal } = require("../utils/takenIdentifiers");
 const {
   checkNewPassword,
   forcesPasswordChange,
@@ -125,7 +127,7 @@ router.get("/employees/:userId", requireEmployeesPage, async (req, res) => {
 
     const [user, employee, settings] = await Promise.all([
       User.findById(userId)
-        .select("username email role status profilePhoto createAt lastLogin")
+        .select("username email role status profilePhoto createdAt lastLogin")
         .lean(),
       Employee.findOne({ userId }).lean(),
       Settings.findOne({ userId }).select("general.jobDescription").lean(),
@@ -245,19 +247,23 @@ router.get("/created-account/:id", requireSignupToken, async (req, res) => {
   }
 });
 
-// Route for duplicate user identifiers
+// Route for duplicate user identifiers. Username, email and Employee ID are compared
+// ignoring case.
 router.post("/check-user-exists", requireEmployeesPage, async (req, res) => {
   const { email, username, employeeId, excludeId } = req.body;
   const result = {};
 
   if (email) {
-    const emailExists = await User.findOne({ email, _id: { $ne: excludeId } });
+    const emailExists = await User.findOne({
+      email: ignoreCase(email),
+      _id: { $ne: excludeId },
+    });
     if (emailExists) result.email = true;
   }
 
   if (username) {
     const usernameExists = await User.findOne({
-      username,
+      username: ignoreCase(username),
       _id: { $ne: excludeId },
     });
     if (usernameExists) result.username = true;
@@ -265,7 +271,7 @@ router.post("/check-user-exists", requireEmployeesPage, async (req, res) => {
 
   if (employeeId) {
     const employeeIdExists = await Employee.findOne({
-      employeeId,
+      employeeId: ignoreCase(employeeId),
       userId: { $ne: excludeId },
     });
     if (employeeIdExists) result.employeeId = true;
@@ -460,6 +466,13 @@ router.post("/add-employee-via-admin", requireEmployeesPage, async (req, res) =>
       return res.status(400).json({ message: job.error });
     }
 
+    // A username, email or Employee ID someone else uses, in any case
+    const { username, email, employeeId } = req.body;
+    const taken = await takenRefusal({ username, email, employeeId });
+    if (taken) {
+      return res.status(400).json({ message: taken });
+    }
+
     // Always an Employee-role account; a role or mustChangePassword sent in the body
     // is ignored. The admin chose this password, so the new account must change it
     // at first sign-in.
@@ -535,6 +548,16 @@ router.put(
         if (passwordRefusal) {
           return res.status(400).json({ message: passwordRefusal });
         }
+      }
+
+      // A username, email or Employee ID another account uses, in any case; the
+      // employee keeping their own (even in a new case) is fine
+      const taken = await takenRefusal(
+        { username, email, employeeId: req.body.employeeId },
+        userId,
+      );
+      if (taken) {
+        return res.status(400).json({ message: taken });
       }
 
       if (username !== undefined) user.username = username;

@@ -13,6 +13,7 @@ const Employee = require("../models/employees");
 const { requireSuperAdmin } = require("../middleware/accessMiddleware");
 const { ADMIN } = require("../config/roles");
 const { generateTemporaryPassword } = require("../utils/password");
+const { ignoreCase } = require("../utils/ignoreCase");
 const {
   MESSAGES,
   notEmployee,
@@ -70,11 +71,12 @@ const describe = async (admin) =>
   );
 
 // The refusal for the first id in `ids` that is not an Employee-role account (Active
-// or Resigned), or null
+// or Resigned), a malformed id included, or null
 const employeeRefusal = async (ids) => {
   if (ids.length === 0) return null;
+  const valid = ids.filter((id) => mongoose.isValidObjectId(id));
   const found = await User.find({
-    _id: { $in: ids },
+    _id: { $in: valid },
     role: "Employee",
     status: { $in: LISTABLE_STATUSES },
   }).distinct("_id");
@@ -82,13 +84,20 @@ const employeeRefusal = async (ids) => {
   return missing ? notEmployee(missing) : null;
 };
 
-// The refusal for a username or email another account already uses, or null
+// The refusal for a username or email another account already uses, in any case, or
+// null
 const takenRefusal = async ({ username, email }, exceptId) => {
   const others = exceptId ? { _id: { $ne: exceptId } } : {};
-  if (username !== undefined && (await User.exists({ username, ...others }))) {
+  if (
+    username !== undefined &&
+    (await User.exists({ username: ignoreCase(username), ...others }))
+  ) {
     return MESSAGES.usernameTaken;
   }
-  if (email !== undefined && (await User.exists({ email, ...others }))) {
+  if (
+    email !== undefined &&
+    (await User.exists({ email: ignoreCase(email), ...others }))
+  ) {
     return MESSAGES.emailTaken;
   }
   return null;
@@ -106,8 +115,8 @@ const findAdmin = (id) =>
     ? User.findOne({ _id: id, role: ADMIN })
     : Promise.resolve(null);
 
-// Validates the body, then the ids and the username and email against the database.
-// Returns { error } or { fields }.
+// Validates the body, then the username and email, then every pay-list and linked id
+// (malformed or not an employee) against the database. Returns { error } or { fields }.
 const checkRequest = async (body, { creating, exceptId }) => {
   const checked = checkAdminDetails(body, { creating });
   if (checked.error) return checked;

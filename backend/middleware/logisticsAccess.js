@@ -33,8 +33,8 @@ const serverError = (res, err) =>
 // req.logistics = { userId, isAdmin, jobDescription, position, department,
 //                   headOfficeRoles: [], siteRole, roles: [] }
 // isAdmin is the power to act at every step: the Super Admin always, an Admin only
-// when at least one Logistics page is ticked for it (it reaches only the routes of
-// the pages it can open).
+// when at least one Logistics page is ticked for it; one tick opens every Logistics
+// route except Setup's, which needs `logistics-setup`.
 const loadLogistics = async (req, res, next) => {
   try {
     const userId = req.user.userId;
