@@ -60,6 +60,8 @@ const GeneralSettings = ({ showEmployment = true }) => {
       setTimeout(() => setIsSavedOpen(true), 300);
     } catch (error) {
       console.error("Error editing profile:", error);
+      setIsConfirmOpen(false);
+      alert(error.response?.data?.message || "Could not save the changes.");
     }
   };
 

@@ -15,6 +15,7 @@ const {
 const { isAdminRole } = require("../config/roles");
 const { isHiddenAccount } = require("../utils/hiddenAccounts");
 const { canUseAdminPage } = require("../utils/pageAccess");
+const { takenRefusal } = require("../utils/takenIdentifiers");
 const {
   OWN_RECORD_MESSAGE,
   isOwnLinkedEmployee,
@@ -139,6 +140,17 @@ router.put(
     try {
       const userId = req.params.id;
       const { employee, email } = req.body;
+
+      // An email another account uses, in any case (the account email and the
+      // employee record's email); keeping one's own, even in a new case, is fine.
+      // Refused before anything is saved.
+      const taken = await takenRefusal(
+        { email: [email, employee?.email] },
+        userId,
+      );
+      if (taken) {
+        return res.status(400).json({ message: taken });
+      }
 
       // Only whitelisted fields reach the Auth record. Role, status, password and
       // page access are changed through their own admin routes, never from here.
