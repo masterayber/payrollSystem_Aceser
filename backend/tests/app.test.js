@@ -154,7 +154,7 @@ describe("Admin-only route guard (GET /api/employee/emloyees)", () => {
     await createUser({
       username: "admin1",
       email: "admin1@example.com",
-      role: "Admin",
+      role: "Super Admin",
     });
     const token = await loginAs("admin1");
 
@@ -446,7 +446,7 @@ describe("Admin employee profile routes", () => {
     await createUser({
       username: "admin1",
       email: "admin1@example.com",
-      role: "Admin",
+      role: "Super Admin",
     });
     const token = await loginAs("admin1");
     return { employeeUser, token };
@@ -584,7 +584,7 @@ describe("Company settings (/api/settings/company)", () => {
     createUser({
       username: "admin1",
       email: "admin1@example.com",
-      role: "Admin",
+      role: "Super Admin",
     });
 
   // Smallest valid PNG header; multer only checks the declared type
@@ -1023,7 +1023,7 @@ describe("Resign and reinstate (/api/employee/employees/:userId)", () => {
     const admin = await createUser({
       username: "admin1",
       email: "admin1@example.com",
-      role: "Admin",
+      role: "Super Admin",
     });
     const token = await loginAs("admin1");
     return { employeeUser, admin, token };
@@ -1161,7 +1161,7 @@ describe("Leave credits (VL and SL)", () => {
     const admin = await createUser({
       username: "admin1",
       email: "admin1@example.com",
-      role: "Admin",
+      role: "Super Admin",
     });
     return {
       employeeUser,

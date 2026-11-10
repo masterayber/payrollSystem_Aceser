@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const Dropdown = require("../models/dropdownOption");
-const { requireAdmin } = require("../middleware/accessMiddleware");
+const {
+  requireAdmin,
+  requireAdminPage,
+} = require("../middleware/accessMiddleware");
 const {
   isReservedDropdownValue,
   normalize,
@@ -19,6 +22,18 @@ const allowedFields = [
 function isValidField(field) {
   return allowedFields.includes(field);
 }
+
+// Who may change a list. Reading stays open to any Admin (the Add and Edit Employee
+// forms need it). The Logistics lists are edited from Logistics > Setup
+// ("logistics-setup" tick); the others and the positions from Settings > Manage
+// ("settings-manage" tick). The Super Admin always passes.
+const LOGISTICS_LIST_FIELDS = ["itemCategories", "unitsOfMeasure"];
+const requireListEditor = requireAdminPage((req) =>
+  LOGISTICS_LIST_FIELDS.includes(req.params.field)
+    ? "logistics-setup"
+    : "settings-manage",
+);
+const requireManageSettings = requireAdminPage("settings-manage");
 
 // Plain-English names for the dropdown fields, for messages shown on screen
 const fieldLabels = {
@@ -69,7 +84,7 @@ router.get("/", requireAdmin, async (req, res) => {
 });
 
 // ADD Option Route
-router.post("/:field/add", requireAdmin, async (req, res) => {
+router.post("/:field/add", requireListEditor, async (req, res) => {
   const { field } = req.params;
   const option = String(req.body.option ?? "").trim();
 
@@ -137,7 +152,7 @@ router.post("/:field/add", requireAdmin, async (req, res) => {
 });
 
 // EDIT Option Route
-router.put("/:field/edit", requireAdmin, async (req, res) => {
+router.put("/:field/edit", requireListEditor, async (req, res) => {
   const { field } = req.params;
   const { oldOption } = req.body;
   const newOption = String(req.body.newOption ?? "").trim();
@@ -201,7 +216,7 @@ router.put("/:field/edit", requireAdmin, async (req, res) => {
 });
 
 // DELETE Option Route
-router.delete("/:field/delete", requireAdmin, async (req, res) => {
+router.delete("/:field/delete", requireListEditor, async (req, res) => {
   const { field } = req.params;
   const { option } = req.body;
 
@@ -273,118 +288,126 @@ router.get("/positions/:department", requireAdmin, async (req, res) => {
 });
 
 // Route to ADD position at department
-router.post("/positions/:department/add", requireAdmin, async (req, res) => {
-  const { department } = req.params;
-  const option = String(req.body.option ?? "").trim();
+router.post(
+  "/positions/:department/add",
+  requireManageSettings,
+  async (req, res) => {
+    const { department } = req.params;
+    const option = String(req.body.option ?? "").trim();
 
-  console.log("Adding position:", option, "to department:", department);
+    console.log("Adding position:", option, "to department:", department);
 
-  if (!option || !department) {
-    return res
-      .status(400)
-      .json({ message: "Option and department are required" });
-  }
-
-  try {
-    const current = await Dropdown.findOne().lean();
-    if (!current) {
-      return res.status(404).json({ message: "Dropdown document not found" });
-    }
-
-    // Only this department's positions count; another department may hold
-    // the same title
-    const existing = findDuplicate(positionsIn(current, department), option);
-    if (existing !== null) {
+    if (!option || !department) {
       return res
-        .status(409)
-        .json({ message: duplicateMessage(existing, "positions") });
+        .status(400)
+        .json({ message: "Option and department are required" });
     }
 
-    const update = {
-      $addToSet: { [`positions.${department}`]: option },
-    };
-    const updated = await Dropdown.findOneAndUpdate({}, update, { new: true });
+    try {
+      const current = await Dropdown.findOne().lean();
+      if (!current) {
+        return res.status(404).json({ message: "Dropdown document not found" });
+      }
 
-    if (!updated) {
-      return res.status(404).json({ message: "Dropdown document not found" });
+      // Only this department's positions count; another department may hold
+      // the same title
+      const existing = findDuplicate(positionsIn(current, department), option);
+      if (existing !== null) {
+        return res
+          .status(409)
+          .json({ message: duplicateMessage(existing, "positions") });
+      }
+
+      const update = {
+        $addToSet: { [`positions.${department}`]: option },
+      };
+      const updated = await Dropdown.findOneAndUpdate({}, update, { new: true });
+
+      if (!updated) {
+        return res.status(404).json({ message: "Dropdown document not found" });
+      }
+
+      res.json({
+        message: `Position '${option}' added to department '${department}'`,
+        positions: positionsIn(updated, department),
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error adding position" });
     }
-
-    res.json({
-      message: `Position '${option}' added to department '${department}'`,
-      positions: positionsIn(updated, department),
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Error adding position" });
-  }
-});
+  },
+);
 
 // Route to EDIT position at department
-router.put("/positions/:department/edit", requireAdmin, async (req, res) => {
-  const { department } = req.params;
-  const { oldOption } = req.body;
-  const newOption = String(req.body.newOption ?? "").trim();
+router.put(
+  "/positions/:department/edit",
+  requireManageSettings,
+  async (req, res) => {
+    const { department } = req.params;
+    const { oldOption } = req.body;
+    const newOption = String(req.body.newOption ?? "").trim();
 
-  console.log(
-    `Editing position in '${department}': '${oldOption}' => '${newOption}'`,
-  );
+    console.log(
+      `Editing position in '${department}': '${oldOption}' => '${newOption}'`,
+    );
 
-  // Basic Validation
-  if (!oldOption || !newOption) {
-    return res.status(400).json({
-      message: "Old option and new option are required",
-    });
-  }
-
-  if (isReservedRename("positions", oldOption, newOption)) {
-    return res.status(409).json({ message: reservedMessage(oldOption) });
-  }
-
-  try {
-    // fetch current doc
-    const dropdown = await Dropdown.findOne().lean();
-    if (!dropdown) {
-      return res.status(404).json({ message: "Dropdown document not found" });
-    }
-
-    if (!dropdown.positions || !dropdown.positions[department]) {
-      return res
-        .status(404)
-        .json({ message: `Department '${department}' not found` });
-    }
-
-    const index = dropdown.positions[department].indexOf(oldOption);
-    if (index === -1) {
-      return res.status(404).json({
-        message: `Old position '${oldOption}' not found in '${department}'`,
+    // Basic Validation
+    if (!oldOption || !newOption) {
+      return res.status(400).json({
+        message: "Old option and new option are required",
       });
     }
 
-    const clash = findDuplicate(dropdown.positions[department], newOption, index);
-    if (clash !== null) {
-      return res
-        .status(409)
-        .json({ message: duplicateMessage(clash, "positions") });
+    if (isReservedRename("positions", oldOption, newOption)) {
+      return res.status(409).json({ message: reservedMessage(oldOption) });
     }
 
-    const update = {
-      $set: { [`positions.${department}.${index}`]: newOption },
-    };
-    const updated = await Dropdown.findOneAndUpdate({}, update, { new: true });
+    try {
+      // fetch current doc
+      const dropdown = await Dropdown.findOne().lean();
+      if (!dropdown) {
+        return res.status(404).json({ message: "Dropdown document not found" });
+      }
 
-    res.json({
-      message: `Position updated from '${oldOption}' to '${newOption}' in '${department}'`,
-      positions: positionsIn(updated, department),
-    });
-  } catch (error) {
-    console.error("Error editing position:", error);
-    res.status(500).json({ message: "Error editing position" });
-  }
-});
+      if (!dropdown.positions || !dropdown.positions[department]) {
+        return res
+          .status(404)
+          .json({ message: `Department '${department}' not found` });
+      }
+
+      const index = dropdown.positions[department].indexOf(oldOption);
+      if (index === -1) {
+        return res.status(404).json({
+          message: `Old position '${oldOption}' not found in '${department}'`,
+        });
+      }
+
+      const clash = findDuplicate(dropdown.positions[department], newOption, index);
+      if (clash !== null) {
+        return res
+          .status(409)
+          .json({ message: duplicateMessage(clash, "positions") });
+      }
+
+      const update = {
+        $set: { [`positions.${department}.${index}`]: newOption },
+      };
+      const updated = await Dropdown.findOneAndUpdate({}, update, { new: true });
+
+      res.json({
+        message: `Position updated from '${oldOption}' to '${newOption}' in '${department}'`,
+        positions: positionsIn(updated, department),
+      });
+    } catch (error) {
+      console.error("Error editing position:", error);
+      res.status(500).json({ message: "Error editing position" });
+    }
+  },
+);
 
 // Route to DELETE positions on department
 router.delete(
   "/positions/:department/delete",
-  requireAdmin,
+  requireManageSettings,
   async (req, res) => {
     const { department } = req.params;
     const { option } = req.body;

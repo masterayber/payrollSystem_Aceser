@@ -160,7 +160,10 @@ const AdminDashboard = () => {
           <div className="greetings-message">
             <span>Good Day, </span>
             <span className="user-highlight">
-              {userData?.employee.firstName}
+              {/* An Admin account has no employee record; its name is on the account */}
+              {userData?.employee?.firstName ||
+                userData?.firstName ||
+                userData?.username}
             </span>
             <span>!</span>
           </div>

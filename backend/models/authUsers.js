@@ -52,13 +52,31 @@ const AuthSchema = new mongoose.Schema({
     default: undefined,
   },
   // True while the account must set its own password before using the app. Set true
-  // only when an admin or the Super Admin sets the password (Add Employee, Edit
-  // Employee with a password); cleared by POST /api/auth/change-password or a Forgot
+  // only when someone else sets the password (Add Employee, Edit Employee with a
+  // password, a new Admin account or the Super Admin's Reset password with a
+  // temporary password); cleared by POST /api/auth/change-password or a Forgot
   // password reset. The default stays false, so existing accounts are not forced.
   mustChangePassword: {
     type: Boolean,
     default: false,
   },
+
+  // Admin accounts only (role "Admin", created by the Super Admin with POST
+  // /api/admins). An Admin is not an employee: it has no Employee or Settings record,
+  // so its name is stored here. Its ticks reuse `pageAccess` above.
+  firstName: { type: String, trim: true },
+  lastName: { type: String, trim: true },
+  // Who created the account (the Super Admin), for the audit
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Auth" },
+  // The Employee-role accounts whose pay this Admin may see, chosen person by person
+  // by the Super Admin. Empty or missing means no pay at all (enforced from PR C).
+  payAccess: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Auth" }],
+    default: undefined,
+  },
+  // The same person's Employee-role account, when the Admin is also an employee.
+  // The Admin can't act on that record (utils/linkedEmployee.js).
+  linkedEmployeeId: { type: mongoose.Schema.Types.ObjectId, ref: "Auth" },
 });
 
 // Format createdAt date

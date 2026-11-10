@@ -57,11 +57,25 @@ describe("getAllowedPages", () => {
     }
   });
 
-  it("always includes all eleven logistics pages for an admin", () => {
-    const allowed = getAllowedPages({ role: "Admin" });
+  it("always includes all eleven logistics pages for the Super Admin", () => {
+    const allowed = getAllowedPages({ role: "Super Admin" });
     for (const key of LOGISTICS_PAGE_KEYS) {
       expect(allowed).toContain(key);
     }
+  });
+
+  it("gives an Admin only the logistics pages ticked for it", () => {
+    expect(
+      getAllowedPages({ role: "Admin" }).filter((key) => isLogisticsPage(key)),
+    ).toEqual([]);
+    const allowed = getAllowedPages({
+      role: "Admin",
+      pageAccess: ["logistics-setup", "logistics-dashboard"],
+    });
+    expect(allowed.filter((key) => isLogisticsPage(key))).toEqual([
+      "logistics-dashboard",
+      "logistics-setup",
+    ]);
   });
 
   it("never grants logistics-setup to an employee, even when ticked", () => {

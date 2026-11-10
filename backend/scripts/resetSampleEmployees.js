@@ -29,7 +29,6 @@
 
 const path = require("path");
 const fs = require("fs");
-const crypto = require("crypto");
 const mongoose = require("mongoose");
 require("dotenv").config({ path: path.join(__dirname, "..", "..", ".env") });
 
@@ -56,6 +55,7 @@ const { normalizePageAccess } = require("../utils/pageAccess");
 const { headOfficeRoles, siteRole } = require("../utils/logisticsAccess");
 const { findDuplicate, positionsIn } = require("../utils/dropdownValues");
 const { manilaToday } = require("../utils/leaveCredits");
+const { generateTemporaryPassword } = require("../utils/password");
 
 const apply = process.argv.slice(2).includes("--apply");
 
@@ -435,22 +435,6 @@ const peso = (amount) =>
   amount == null ? "" : amount.toLocaleString("en-US", { minimumFractionDigits: 0 });
 const statusOf = (person) => (person.resignation ? "Resigned" : "Active");
 const fullName = (person) => `${person.firstName} ${person.lastName}`;
-
-// About 12 characters, letters and digits without look-alikes, at least one of each
-const randomPassword = () => {
-  const lower = "abcdefghijkmnpqrstuvwxyz";
-  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-  const digits = "23456789";
-  const all = lower + upper + digits;
-  const pick = (set) => set[crypto.randomInt(set.length)];
-  const chars = [pick(lower), pick(upper), pick(digits)];
-  while (chars.length < 12) chars.push(pick(all));
-  for (let i = chars.length - 1; i > 0; i -= 1) {
-    const j = crypto.randomInt(i + 1);
-    [chars[i], chars[j]] = [chars[j], chars[i]];
-  }
-  return chars.join("");
-};
 
 const formatTable = (headers, rows) => {
   const widths = headers.map((header, i) =>
@@ -926,7 +910,7 @@ async function run() {
         `expected ${person.employeeId} for ${fullName(person)} but the next ID is ${employeeId}. Stopped; the people before this one were created.`,
       );
     }
-    const password = randomPassword();
+    const password = generateTemporaryPassword();
     const body = { ...jobBody(person), employeeId, password };
 
     // As POST /api/employee/add-employee-via-admin

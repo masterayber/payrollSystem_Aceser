@@ -84,7 +84,7 @@ const person = async (
 };
 
 const as = (token) => ({ Authorization: `Bearer ${token}` });
-const admin = () => person("admin", { role: "Admin" });
+const admin = () => person("admin", { role: "Super Admin" });
 const longServing = (username, extra = {}) =>
   person(username, {
     job: { basicPay: 25000, startDate: "2023-03-01" },

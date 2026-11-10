@@ -178,7 +178,7 @@ describe("Status is checked before the role", () => {
 
 describe("Logistics guards", () => {
   it("end the session after a role change", async () => {
-    const { user, token } = await person("hr", "Admin");
+    const { user, token } = await person("admin", "Super Admin");
     expect(
       (await request(app).get(LOGISTICS_ROUTE).set(as(token))).status,
     ).toBe(200);

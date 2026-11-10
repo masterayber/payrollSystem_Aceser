@@ -7,7 +7,12 @@ const router = express.Router();
 const Attendance = require("../models/attendance");
 const Employee = require("../models/employees");
 const User = require("../models/authUsers");
-const { requireAdmin, requirePage } = require("../middleware/accessMiddleware");
+const {
+  requireAdmin,
+  requireAdminPage,
+  refuseOwnLinkedEmployee,
+  requirePage,
+} = require("../middleware/accessMiddleware");
 const { isAdminRole } = require("../config/roles");
 const {
   findVisibleUser,
@@ -325,8 +330,12 @@ router.post("/iclock/cdata", requireZktecoCallbackAuth, async (req, res) => {
   }
 });
 
+// Admin Attendance screen: the "admin-attendance" tick (the Super Admin always). The
+// attendance list stays open to any Admin: the fixed Dashboard and Reports count it.
+const requireAttendancePage = requireAdminPage("admin-attendance");
+
 // Post route to import biometric data from ZKTeco device
-router.post("/import-biometric", requireAdmin, async (req, res) => {
+router.post("/import-biometric", requireAttendancePage, async (req, res) => {
   try {
     const { deviceIp, devicePort } = req.body;
 
@@ -420,7 +429,7 @@ router.post("/import-biometric", requireAdmin, async (req, res) => {
   }
 });
 
-// Route Record for Admin
+// Route Record for Admin (any Admin: the Dashboard, Attendance and Reports read it)
 router.get("/attendance", requireAdmin, async (req, res) => {
   try {
     const { date } = req.query;
@@ -505,67 +514,73 @@ router.get(
   },
 );
 
-router.put("/edit-attendance/:id", requireAdmin, async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const { date, timeIn = "", timeOut = "" } = req.body;
+// An Admin can't edit its own linked employee's attendance
+router.put(
+  "/edit-attendance/:id",
+  requireAttendancePage,
+  refuseOwnLinkedEmployee((req) => req.params.id),
+  async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const { date, timeIn = "", timeOut = "" } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid user ID" });
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      // A missing account and a hidden one (Super Admin or Admin) get no attendance
+      if (!(await findVisibleUser(userId))) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) {
+        return res
+          .status(400)
+          .json({ message: "A valid date (YYYY-MM-DD) is required" });
+      }
+      if (!HHMMSS_REGEX.test(timeIn)) {
+        return res
+          .status(400)
+          .json({ message: "Time in must be in HH:MM:SS format" });
+      }
+      if (timeOut && !HHMMSS_REGEX.test(timeOut)) {
+        return res
+          .status(400)
+          .json({ message: "Time out must be in HH:MM:SS format" });
+      }
+      if (timeOut && timeOut <= timeIn) {
+        return res
+          .status(400)
+          .json({ message: "Time out must be later than Time in" });
+      }
+
+      const dayStart = new Date(`${date}T00:00:00.000Z`);
+      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+
+      let attendance = await Attendance.findOne({
+        userId,
+        date: { $gte: dayStart, $lt: dayEnd },
+      });
+
+      const isNew = !attendance;
+      if (isNew) {
+        attendance = new Attendance({ userId, date: dayStart });
+      }
+
+      attendance.timeIn = createDateTime(date, timeIn);
+      attendance.timeOut = timeOut ? createDateTime(date, timeOut) : null;
+
+      await attendance.save();
+
+      res
+        .status(isNew ? 201 : 200)
+        .json({ success: true, created: isNew, record: attendance });
+    } catch (error) {
+      console.error("Error updating attendance record:", error);
+      res.status(500).json({ message: "Server error", error: error.message });
     }
-    // A missing account and a hidden one (Super Admin or Admin) get no attendance
-    if (!(await findVisibleUser(userId))) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) {
-      return res
-        .status(400)
-        .json({ message: "A valid date (YYYY-MM-DD) is required" });
-    }
-    if (!HHMMSS_REGEX.test(timeIn)) {
-      return res
-        .status(400)
-        .json({ message: "Time in must be in HH:MM:SS format" });
-    }
-    if (timeOut && !HHMMSS_REGEX.test(timeOut)) {
-      return res
-        .status(400)
-        .json({ message: "Time out must be in HH:MM:SS format" });
-    }
-    if (timeOut && timeOut <= timeIn) {
-      return res
-        .status(400)
-        .json({ message: "Time out must be later than Time in" });
-    }
+  },
+);
 
-    const dayStart = new Date(`${date}T00:00:00.000Z`);
-    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
-
-    let attendance = await Attendance.findOne({
-      userId,
-      date: { $gte: dayStart, $lt: dayEnd },
-    });
-
-    const isNew = !attendance;
-    if (isNew) {
-      attendance = new Attendance({ userId, date: dayStart });
-    }
-
-    attendance.timeIn = createDateTime(date, timeIn);
-    attendance.timeOut = timeOut ? createDateTime(date, timeOut) : null;
-
-    await attendance.save();
-
-    res
-      .status(isNew ? 201 : 200)
-      .json({ success: true, created: isNew, record: attendance });
-  } catch (error) {
-    console.error("Error updating attendance record:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-});
-
-router.post("/create-blank.today", requireAdmin, async (req, res) => {
+router.post("/create-blank.today", requireAttendancePage, async (req, res) => {
   try {
     const employees = await Employee.find();
     const today = new Date().toISOString().split("T")[0];

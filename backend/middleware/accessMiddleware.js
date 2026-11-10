@@ -1,8 +1,12 @@
 const authMiddleware = require("./authMiddleware");
 const jwt = require("jsonwebtoken");
 const User = require("../models/authUsers");
-const { getAllowedPages } = require("../utils/pageAccess");
-const { isAdminRole } = require("../config/roles");
+const { getAllowedPages, canUseAdminPage } = require("../utils/pageAccess");
+const { isAdminRole, isSuperAdmin } = require("../config/roles");
+const {
+  OWN_RECORD_MESSAGE,
+  isOwnLinkedEmployee,
+} = require("../utils/linkedEmployee");
 
 // The JWT only proves who the caller was when the token was issued. Role, status,
 // page access and the password flags can change afterwards, so they are re-read from
@@ -17,10 +21,15 @@ const { isAdminRole } = require("../config/roles");
 //    PASSWORD_CHANGE_REQUIRED, except the ones marked with allowBeforePasswordChange
 //    (GET /api/auth/me and POST /api/auth/change-password). Blocked by default, so a
 //    new route can't forget the check.
+// An Admin's ticks (`pageAccess`), pay list (`payAccess`) and linked employee are read
+// here too, so a change the Super Admin makes applies on the Admin's next request
+// without ending its session (they don't change the role).
 const loadCurrentUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.userId)
-      .select("role status pageAccess mustChangePassword")
+      .select(
+        "role status pageAccess mustChangePassword payAccess linkedEmployeeId",
+      )
       .lean();
 
     if (!user || user.status !== "Active") {
@@ -51,6 +60,10 @@ const loadCurrentUser = async (req, res, next) => {
   }
 };
 
+// Any admin role, whatever its ticks. Only for the read-only lists that forms and
+// pickers on many pages need (the employee list, departments and positions, the
+// attendance list the Dashboard counts); every other admin route uses
+// requireAdminPage or requireSuperAdmin.
 const requireAdmin = [
   authMiddleware,
   loadCurrentUser,
@@ -61,6 +74,56 @@ const requireAdmin = [
     next();
   },
 ];
+
+const PAGE_ACCESS_DENIED = {
+  message: "You do not have access to this page",
+  code: "PAGE_ACCESS_DENIED",
+};
+
+// Guards an admin API route with its screen's page (or action) key, not only the role.
+// The Super Admin always passes; an Admin passes only when the key is ticked for it
+// (403 PAGE_ACCESS_DENIED otherwise); an Employee gets "Admin access required", as on
+// requireAdmin. `pageKey` may be a function of the request, for a route whose key
+// depends on its parameters.
+const requireAdminPage = (pageKey) => [
+  authMiddleware,
+  loadCurrentUser,
+  (req, res, next) => {
+    if (!isAdminRole(req.currentUser.role)) {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    const key = typeof pageKey === "function" ? pageKey(req) : pageKey;
+    if (!canUseAdminPage(req.currentUser, key)) {
+      return res.status(403).json(PAGE_ACCESS_DENIED);
+    }
+    next();
+  },
+];
+
+// Super Admin only. Everyone else, Admins included, gets the same 403 as a page they
+// can't open, with no hint that the screen exists.
+const requireSuperAdmin = [
+  authMiddleware,
+  loadCurrentUser,
+  (req, res, next) => {
+    if (!isSuperAdmin(req.currentUser.role)) {
+      return res.status(403).json(PAGE_ACCESS_DENIED);
+    }
+    next();
+  },
+];
+
+// Refuses an Admin acting on its own linked employee: 403 "You can't act on your own
+// employee record." `pickUserId(req)` gives the target employee's account id. Goes
+// after a guard that ran loadCurrentUser.
+const refuseOwnLinkedEmployee = (pickUserId) => (req, res, next) => {
+  if (isOwnLinkedEmployee(req.currentUser, pickUserId(req))) {
+    return res
+      .status(403)
+      .json({ message: OWN_RECORD_MESSAGE, code: "OWN_EMPLOYEE_RECORD" });
+  }
+  next();
+};
 
 // Guards an Employee API route so it follows the same page permissions as the UI.
 // Admins (both admin roles) are never restricted by page access, so they always pass.
@@ -136,7 +199,11 @@ const requireSignupToken = async (req, res, next) => {
 };
 
 module.exports = {
+  PAGE_ACCESS_DENIED,
   requireAdmin,
+  requireAdminPage,
+  requireSuperAdmin,
+  refuseOwnLinkedEmployee,
   requirePage,
   requireAuthenticated,
   requireAuthenticatedBeforePasswordChange,

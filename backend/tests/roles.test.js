@@ -1,15 +1,19 @@
 const {
   SUPER_ADMIN,
+  ADMIN,
   ROLES,
   ADMIN_ROLES,
   isAdminRole,
   isSuperAdmin,
+  isPlainAdmin,
   pageRole,
   roleLabel,
 } = require("../config/roles");
-const { pagesForRole } = require("../config/pages");
+const { pagesForRole, ADMIN_DEFAULT_PAGE_KEYS } = require("../config/pages");
 const {
   getAllowedPages,
+  canUseAdminPage,
+  hasLogisticsAdminPower,
   normalizePageAccess,
 } = require("../utils/pageAccess");
 
@@ -18,6 +22,7 @@ const adminPageKeys = () => pagesForRole("Admin").map((page) => page.key);
 describe("role names", () => {
   it("has the three roles, two of them admin roles", () => {
     expect(SUPER_ADMIN).toBe("Super Admin");
+    expect(ADMIN).toBe("Admin");
     expect(ROLES).toEqual(["Super Admin", "Admin", "Employee"]);
     expect(ADMIN_ROLES).toEqual(["Super Admin", "Admin"]);
   });
@@ -44,6 +49,15 @@ describe("isSuperAdmin", () => {
     expect(isSuperAdmin("Admin")).toBe(false);
     expect(isSuperAdmin("Employee")).toBe(false);
     expect(isSuperAdmin(undefined)).toBe(false);
+  });
+});
+
+describe("isPlainAdmin", () => {
+  it("is true only for an Admin account, not the Super Admin", () => {
+    expect(isPlainAdmin("Admin")).toBe(true);
+    expect(isPlainAdmin("Super Admin")).toBe(false);
+    expect(isPlainAdmin("Employee")).toBe(false);
+    expect(isPlainAdmin(undefined)).toBe(false);
   });
 });
 
@@ -107,5 +121,125 @@ describe("normalizePageAccess", () => {
     expect(
       normalizePageAccess("Employee", ["payroll", "employees", "logistics-setup"]),
     ).toEqual(["dashboard", "payroll", "settings"]);
+  });
+});
+
+// Rule 4: an Admin's pages are Dashboard and Settings (fixed) plus the admin keys stored
+// in its pageAccess; nothing stored means only the fixed pages. Rule 3: the Super Admin
+// can't be limited.
+describe("pages for an Admin account", () => {
+  it("has only Dashboard and Settings with nothing stored", () => {
+    expect(getAllowedPages({ role: "Admin" })).toEqual([
+      "admin-dashboard",
+      "admin-settings",
+    ]);
+    expect(getAllowedPages({ role: "Admin", pageAccess: [] })).toEqual([
+      "admin-dashboard",
+      "admin-settings",
+    ]);
+  });
+
+  it("adds the ticked admin keys and ignores employee or unknown keys", () => {
+    expect(
+      getAllowedPages({
+        role: "Admin",
+        pageAccess: ["reports", "employees", "payroll", "nope", "settings-manage"],
+      }),
+    ).toEqual([
+      "admin-dashboard",
+      "employees",
+      "reports",
+      "admin-settings",
+      "settings-manage",
+    ]);
+  });
+
+  it("can't lose Dashboard or Settings", () => {
+    expect(getAllowedPages({ role: "Admin", pageAccess: ["reports"] })).toEqual(
+      ["admin-dashboard", "reports", "admin-settings"],
+    );
+  });
+
+  it("gives the Super Admin every admin page and action", () => {
+    const all = getAllowedPages({ role: "Super Admin", pageAccess: [] });
+    expect(all).toEqual(adminPageKeys());
+    for (const key of ["employee-access", "settings-company", "settings-manage"]) {
+      expect(all).toContain(key);
+    }
+  });
+});
+
+describe("admin page keys", () => {
+  it("has the three action ticks as Admin keys", () => {
+    const actions = pagesForRole("Admin").filter((page) => page.action);
+    expect(actions.map((page) => page.key)).toEqual([
+      "employee-access",
+      "settings-company",
+      "settings-manage",
+    ]);
+  });
+
+  it("pre-ticks the HR set for a new Admin, with the fixed pages", () => {
+    expect(ADMIN_DEFAULT_PAGE_KEYS).toEqual([
+      "admin-dashboard",
+      "employees",
+      "admin-attendance",
+      "admin-calendar",
+      "admin-filing",
+      "admin-settings",
+    ]);
+  });
+});
+
+describe("canUseAdminPage", () => {
+  it("lets the Super Admin use every key, whatever is stored", () => {
+    for (const key of adminPageKeys()) {
+      expect(canUseAdminPage({ role: "Super Admin", pageAccess: [] }, key)).toBe(
+        true,
+      );
+    }
+  });
+
+  it("lets an Admin use only its ticked and fixed keys", () => {
+    const hr = { role: "Admin", pageAccess: ["employees"] };
+    expect(canUseAdminPage(hr, "employees")).toBe(true);
+    expect(canUseAdminPage(hr, "admin-dashboard")).toBe(true);
+    expect(canUseAdminPage(hr, "reports")).toBe(false);
+    expect(canUseAdminPage(hr, "employee-access")).toBe(false);
+  });
+
+  it("is false for an Employee, even one with the key stored, and for no user", () => {
+    expect(
+      canUseAdminPage({ role: "Employee", pageAccess: ["employees"] }, "employees"),
+    ).toBe(false);
+    expect(canUseAdminPage(null, "employees")).toBe(false);
+  });
+});
+
+describe("hasLogisticsAdminPower", () => {
+  it("is true for the Super Admin", () => {
+    expect(hasLogisticsAdminPower({ role: "Super Admin" })).toBe(true);
+  });
+
+  it("is true for an Admin only with a Logistics page ticked", () => {
+    expect(hasLogisticsAdminPower({ role: "Admin" })).toBe(false);
+    expect(
+      hasLogisticsAdminPower({ role: "Admin", pageAccess: ["employees"] }),
+    ).toBe(false);
+    expect(
+      hasLogisticsAdminPower({
+        role: "Admin",
+        pageAccess: ["logistics-deliveries"],
+      }),
+    ).toBe(true);
+  });
+
+  it("is false for an Employee, whatever is ticked", () => {
+    expect(
+      hasLogisticsAdminPower({
+        role: "Employee",
+        pageAccess: ["logistics-dashboard"],
+      }),
+    ).toBe(false);
   });
 });

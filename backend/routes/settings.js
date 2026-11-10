@@ -8,11 +8,17 @@ const Employee = require("../models/employees");
 const Settings = require("../models/settings");
 const CompanySettings = require("../models/companySettings");
 const {
-  requireAdmin,
+  requireAdminPage,
   requireAuthenticated,
+  PAGE_ACCESS_DENIED,
 } = require("../middleware/accessMiddleware");
 const { isAdminRole } = require("../config/roles");
 const { isHiddenAccount } = require("../utils/hiddenAccounts");
+const { canUseAdminPage } = require("../utils/pageAccess");
+const {
+  OWN_RECORD_MESSAGE,
+  isOwnLinkedEmployee,
+} = require("../utils/linkedEmployee");
 
 const router = express.Router();
 
@@ -83,6 +89,19 @@ const requireSelfOrAdmin = async (req, res, next) => {
 
   if (!isAdmin && !isOwner) {
     return res.status(403).json({ message: "Access denied" });
+  }
+
+  // Another account's details are part of the Employees screen: an Admin needs the
+  // "employees" tick, and can't edit its own linked employee
+  if (!isOwner) {
+    if (!canUseAdminPage(req.currentUser, "employees")) {
+      return res.status(403).json(PAGE_ACCESS_DENIED);
+    }
+    if (isOwnLinkedEmployee(req.currentUser, req.params.id)) {
+      return res
+        .status(403)
+        .json({ message: OWN_RECORD_MESSAGE, code: "OWN_EMPLOYEE_RECORD" });
+    }
   }
 
   // Super Admin and Admin accounts are hidden from other accounts: answered as missing.
@@ -270,8 +289,11 @@ router.get("/company", requireAuthenticated, async (req, res) => {
   }
 });
 
+// Settings > Company writes: the "settings-company" tick (the Super Admin always)
+const requireCompanySettings = requireAdminPage("settings-company");
+
 // Admin: { name, contact, dateFormat, timeFormat }; any other field is ignored
-router.put("/company", requireAdmin, async (req, res) => {
+router.put("/company", requireCompanySettings, async (req, res) => {
   try {
     const update = { updatedBy: req.user.userId };
     for (const field of COMPANY_FIELDS) {
@@ -295,9 +317,9 @@ router.put("/company", requireAdmin, async (req, res) => {
   }
 });
 
-// Admin: multipart form with a "logo" image. requireAdmin runs first, so a
-// non-admin's upload is never written to disk.
-router.put("/company/logo", requireAdmin, uploadLogo, async (req, res) => {
+// Admin: multipart form with a "logo" image. The guard runs first, so an upload
+// from anyone without the tick is never written to disk.
+router.put("/company/logo", requireCompanySettings, uploadLogo, async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
@@ -313,7 +335,7 @@ router.put("/company/logo", requireAdmin, uploadLogo, async (req, res) => {
   }
 });
 
-router.delete("/company/logo", requireAdmin, async (req, res) => {
+router.delete("/company/logo", requireCompanySettings, async (req, res) => {
   try {
     const company = await getCompany();
     removeUpload(company.logo);
