@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { IconPlus, IconSearch, IconProgressCheck } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import AddEmployeeModal from "../../components/Modals/AddEmployee/AddEmployeeModal";
@@ -9,6 +9,11 @@ import Pagination from "../../components/Pagination/Pagination";
 import API from "../../api";
 import { activeFirst } from "../../utils/employees";
 import { manilaToday } from "../../utils/cutoff";
+import {
+  isPayNotSet,
+  PAY_NOT_SET_FILTER,
+} from "../../utils/payVisibility";
+import PayNotSetBadge from "../../components/Restricted/PayNotSetBadge";
 
 const PROBATION_MONTHS = 6;
 
@@ -29,6 +34,15 @@ const Employees = () => {
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
 
   const navigate = useNavigate();
+  // `?filter=pay-not-set` (the Dashboard's link): only active employees whose
+  // pay needs an update
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isPayNotSetFilter = searchParams.get("filter") === PAY_NOT_SET_FILTER;
+
+  const clearFilter = () => {
+    setSearchParams({});
+    setCurrentPage(1);
+  };
 
   // Fresh list each time the page opens, so edits made on a profile show up
   const loadEmployees = useCallback(async () => {
@@ -65,11 +79,16 @@ const Employees = () => {
     (employee) => employee.jobDescription.employmentType === "Regular",
   ).length;
 
-  const filteredEmployees = [...activeEmployees, ...resignedEmployees].filter(
-    (employee) =>
-      Object.values(employee).some((value) =>
-        value.toString().toLowerCase().includes(searchQuery.toLowerCase()),
-      ),
+  const listedEmployees = isPayNotSetFilter
+    ? activeEmployees.filter((employee) =>
+        isPayNotSet(employee.jobDescription),
+      )
+    : [...activeEmployees, ...resignedEmployees];
+
+  const filteredEmployees = listedEmployees.filter((employee) =>
+    Object.values(employee).some((value) =>
+      value.toString().toLowerCase().includes(searchQuery.toLowerCase()),
+    ),
   );
 
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
@@ -153,6 +172,18 @@ const Employees = () => {
         </div>
       </div>
 
+      {isPayNotSetFilter && (
+        <div className="feedback-message warning employee-filter-notice">
+          <span>
+            Showing only active employees whose pay needs an update (
+            {listedEmployees.length}).
+          </span>
+          <button type="button" className="btn" onClick={clearFilter}>
+            Show all employees
+          </button>
+        </div>
+      )}
+
       <div className="table employee-table">
         <div className="table-header">
           <article className="table-header-container">
@@ -234,6 +265,7 @@ const Employees = () => {
                       Due for regularization
                     </span>
                   )}
+                {isPayNotSet(employee.jobDescription) && <PayNotSetBadge />}
               </p>
             </article>
             <article className="table-content-container">

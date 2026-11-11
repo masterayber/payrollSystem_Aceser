@@ -197,6 +197,8 @@ router.post("/signup", async (req, res) => {
     };
 
     if (user.role === "Employee") {
+      // A self sign-up starts on a basic pay of 0, marked "Pay not set" until someone
+      // who can see the pay enters the real amount
       settingsData.general = {
         jobDescription: {
           designation: "",
@@ -204,6 +206,8 @@ router.post("/signup", async (req, res) => {
           position: "",
           employmentType: defaultStatus,
           startDate: new Date(),
+          basicPay: 0,
+          payNotSet: true,
           schedule: {
             timeIn: "",
             timeOut: "",

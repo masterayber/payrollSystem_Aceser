@@ -12,7 +12,8 @@ const { pageRole } = require("./roles");
 //              change the ticks before saving
 // action     - an Admin tick that opens no page of its own: it allows one kind of
 //              action on a page the Admin already has (Manage Access on employees,
-//              Settings > Company, Settings > Manage). The Super Admin always has them.
+//              Settings > Company, Settings > Manage, the 13th month figures on Reports
+//              and the profile). The Super Admin always has them.
 
 // Logistics pages. Each key is a sub-page under /logistics/*, listed once for
 // Employee (off until ticked in Manage Access) and once for Admin (a normal admin
@@ -92,6 +93,14 @@ const PAGES = [
   {
     key: "settings-manage",
     label: "Settings: Manage",
+    role: "Admin",
+    action: true,
+  },
+  // The 13th month report (with "reports") and the profile's 13th month card (with
+  // "employees"), each still limited to the Admin's pay list. Not in the HR set.
+  {
+    key: "thirteenth-month",
+    label: "13th month",
     role: "Admin",
     action: true,
   },

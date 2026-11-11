@@ -84,7 +84,8 @@ const PAGE_ACCESS_DENIED = {
 // The Super Admin always passes; an Admin passes only when the key is ticked for it
 // (403 PAGE_ACCESS_DENIED otherwise); an Employee gets "Admin access required", as on
 // requireAdmin. `pageKey` may be a function of the request, for a route whose key
-// depends on its parameters.
+// depends on its parameters, or a list of keys that must all be ticked (the 13th month
+// report needs "reports" and "thirteenth-month").
 const requireAdminPage = (pageKey) => [
   authMiddleware,
   loadCurrentUser,
@@ -93,7 +94,8 @@ const requireAdminPage = (pageKey) => [
       return res.status(403).json({ message: "Admin access required" });
     }
     const key = typeof pageKey === "function" ? pageKey(req) : pageKey;
-    if (!canUseAdminPage(req.currentUser, key)) {
+    const keys = Array.isArray(key) ? key : [key];
+    if (!keys.every((one) => canUseAdminPage(req.currentUser, one))) {
       return res.status(403).json(PAGE_ACCESS_DENIED);
     }
     next();

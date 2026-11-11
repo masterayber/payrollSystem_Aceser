@@ -86,6 +86,21 @@ const checkJobDetails = (body, current = {}) => {
   return { fields };
 };
 
+const BASIC_PAY_REQUIRED = "Basic pay is required.";
+
+// Missing, null, "" and spaces only: no basic pay entered
+const isBlankPay = (value) =>
+  value === undefined ||
+  value === null ||
+  (typeof value === "string" && value.trim() === "");
+
+// Add Employee: the basic pay must be entered (0 counts as entered), whoever adds the
+// employee; then the usual job checks. Returns { error } or { fields } as checkJobDetails.
+const checkNewEmployeeJob = (body) => {
+  if (isBlankPay(body?.basicPay)) return { error: BASIC_PAY_REQUIRED };
+  return checkJobDetails(body);
+};
+
 // Checks the last working day and reason an admin sends when an employee resigns.
 // `job` is the saved job description. Returns { error } or { fields } to save.
 const checkResignation = (body, job = {}) => {
@@ -112,4 +127,9 @@ const checkResignation = (body, job = {}) => {
   };
 };
 
-module.exports = { checkJobDetails, checkResignation };
+module.exports = {
+  BASIC_PAY_REQUIRED,
+  checkJobDetails,
+  checkNewEmployeeJob,
+  checkResignation,
+};

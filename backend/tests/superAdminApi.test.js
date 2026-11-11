@@ -371,6 +371,7 @@ describe("nobody can change the Super Admin account: it answers as missing", () 
         role: "Super Admin",
         employmentType: "Probationary",
         startDate: "2026-11-02",
+        basicPay: 20000,
       });
     expect(add.status).toBe(201);
 

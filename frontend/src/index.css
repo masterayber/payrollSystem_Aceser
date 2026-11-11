@@ -772,7 +772,7 @@ input:checked + .slider:before {
 }
 
 .feedback-message {
-  margin: 10px 0 0;
+  margin: 10px 0;
   padding: 10px 12px;
   border: 1px solid var(--gray-200);
   border-radius: var(--border-radius);

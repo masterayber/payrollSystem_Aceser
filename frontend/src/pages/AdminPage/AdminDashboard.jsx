@@ -8,9 +8,15 @@ import Calendar from "../../components/CalendarComponent/CalendarComponent";
 import AttendanceChart from "../../components/AttendanceChart/AttendanceChart";
 import { IconDotsVertical } from "@tabler/icons-react";
 import { format } from "date-fns";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import API from "../../api";
 import { activeOnly } from "../../utils/employees";
+import {
+  isPayNotSet,
+  PAY_NOT_SET_PATH,
+  payNotSetCountText,
+} from "../../utils/payVisibility";
+import { hasPage } from "../../utils/pageAccess";
 
 const AdminDashboard = () => {
   const { userData } = useContext(UserContext);
@@ -146,6 +152,12 @@ const AdminDashboard = () => {
     };
   }, [openDropdown]);
 
+  // Active employees whose basic pay is not set. The server marks only people
+  // whose pay this caller can see, so the count is already scoped.
+  const payNotSetCount = activeOnly(employeeData).filter((employee) =>
+    isPayNotSet(employee.jobDescription),
+  ).length;
+
   const todayAttendanceData = {
     onTime: onTimeCount,
     late: lateCount,
@@ -172,6 +184,15 @@ const AdminDashboard = () => {
 
         <TimeDate />
       </div>
+
+      {payNotSetCount > 0 && (
+        <p className="feedback-message warning dashboard-pay-notice">
+          <span>{payNotSetCountText(payNotSetCount)}</span>
+          {hasPage(userData, "employees") && (
+            <Link to={PAY_NOT_SET_PATH}>Show them</Link>
+          )}
+        </p>
+      )}
 
       <div className="data-card-container dashboard-summary-grid">
         <div className="data-card dashboard-stat-card">

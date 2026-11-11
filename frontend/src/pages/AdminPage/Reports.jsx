@@ -1,6 +1,8 @@
 import { useState, useEffect, useContext } from "react";
 import XLSX from "xlsx-js-style";
 import { EmployeeContext } from "../../context/EmployeeContext";
+import { UserContext } from "../../context/UserContext";
+import { canSeeThirteenthMonth } from "../../utils/pageAccess";
 import { activeOnly, isPastLastWorkingDay } from "../../utils/employees";
 import Dropdown from "../../components/Dropdown/Dropdown";
 import ThirteenthMonthReport from "../../components/ThirteenthMonth/ThirteenthMonthReport";
@@ -20,6 +22,7 @@ import { RemarksSheet } from "../../utils/reports/remarks";
 
 const Reports = () => {
   const { employeeData } = useContext(EmployeeContext);
+  const { userData } = useContext(UserContext);
 
   // Both lists start at the current period
   const cutoffOptions = getCutoffOptions();
@@ -192,7 +195,9 @@ const Reports = () => {
         </div>
       </div>
 
-      <ThirteenthMonthReport />
+      {/* The page needs the Reports tick (PrivateRoute); the 13th month also needs
+          its own tick, the Super Admin always. Without it nothing is drawn or fetched. */}
+      {canSeeThirteenthMonth(userData) && <ThirteenthMonthReport />}
     </div>
   );
 };

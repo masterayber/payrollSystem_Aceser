@@ -19,6 +19,33 @@
   color: var(--main-color-1);
 }
 
+/* A card title with a button on its right (the 13th month card's Show/Hide) */
+.profile-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.profile-card-header .profile-card-title {
+  margin-bottom: 0;
+}
+
+.profile-card-header .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+/* While a card is collapsed only its header shows */
+.profile-card-header:last-child {
+  margin-bottom: 0;
+}
+
 .profile-card-message {
   font-size: 14px;
   color: var(--neutral-color-70);
@@ -61,6 +88,7 @@
 
 .profile-secret {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }

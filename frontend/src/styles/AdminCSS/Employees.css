@@ -426,3 +426,18 @@
     justify-content: center;
   }
 }
+
+/* "Showing only ... basic pay is not set" with its Show all button */
+.employees-page .employee-filter-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.employees-page .employee-filter-notice .btn {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+}

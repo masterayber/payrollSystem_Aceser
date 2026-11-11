@@ -35,6 +35,13 @@ const settingsSchema = new mongoose.Schema({
         min: 0,
         default: null,
       },
+      // "Pay not set": true for a self sign-up, which starts on a basic pay of 0,
+      // until someone who can see the pay saves one through Edit Employee. Replies also
+      // show the flag when basicPay is null (utils/payVisibility.js withPayFlag).
+      payNotSet: {
+        type: Boolean,
+        default: false,
+      },
       vacationLeaveOpening: {
         type: Number,
         min: 0,

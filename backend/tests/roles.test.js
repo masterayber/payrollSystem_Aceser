@@ -9,7 +9,11 @@ const {
   pageRole,
   roleLabel,
 } = require("../config/roles");
-const { pagesForRole, ADMIN_DEFAULT_PAGE_KEYS } = require("../config/pages");
+const {
+  PAGES,
+  pagesForRole,
+  ADMIN_DEFAULT_PAGE_KEYS,
+} = require("../config/pages");
 const {
   getAllowedPages,
   canUseAdminPage,
@@ -170,13 +174,31 @@ describe("pages for an Admin account", () => {
 });
 
 describe("admin page keys", () => {
-  it("has the three action ticks as Admin keys", () => {
+  it("has the four action ticks as Admin keys", () => {
     const actions = pagesForRole("Admin").filter((page) => page.action);
     expect(actions.map((page) => page.key)).toEqual([
       "employee-access",
       "settings-company",
       "settings-manage",
+      "thirteenth-month",
     ]);
+  });
+
+  it("has the 13th month tick as an Admin action, off for a new Admin", () => {
+    expect(PAGES.find((page) => page.key === "thirteenth-month")).toEqual({
+      key: "thirteenth-month",
+      label: "13th month",
+      role: "Admin",
+      action: true,
+    });
+    expect(ADMIN_DEFAULT_PAGE_KEYS).not.toContain("thirteenth-month");
+    expect(getAllowedPages({ role: "Super Admin" })).toContain("thirteenth-month");
+    expect(
+      getAllowedPages({ role: "Admin", pageAccess: ["thirteenth-month"] }),
+    ).toContain("thirteenth-month");
+    expect(canUseAdminPage({ role: "Admin", pageAccess: ["reports"] }, "thirteenth-month")).toBe(
+      false,
+    );
   });
 
   it("pre-ticks the HR set for a new Admin, with the fixed pages", () => {

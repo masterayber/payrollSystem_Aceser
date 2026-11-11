@@ -544,6 +544,21 @@ describe("Basic pay history (admin edit route)", () => {
     expect(await BasicPayChange.countDocuments()).toBe(0);
   });
 
+  it("still records the old pay from the start date for someone whose pay was set", async () => {
+    const { token } = await admin();
+    const { user } = await person("gio", {
+      job: { basicPay: 20000, payNotSet: false, startDate: "2026-11-09" },
+    });
+    manilaToday.mockReturnValue("2026-11-18");
+
+    expect((await editPay(token, user._id, { basicPay: 22000 })).status).toBe(200);
+
+    expect(await history(user._id)).toEqual([
+      { amount: 20000, effectiveFrom: "2026-11-09" },
+      { amount: 22000, effectiveFrom: "2026-11-18" },
+    ]);
+  });
+
   it("the 13th month row then uses the pay in force each day", async () => {
     const { token } = await admin();
     const { user } = await eva();
@@ -569,5 +584,126 @@ describe("Basic pay history (admin edit route)", () => {
       total: 20242.42,
       flags: [],
     });
+  });
+});
+
+describe("A self sign-up on its starting 0 (Pay needs an update)", () => {
+  const EDIT = "/api/employee/edit-employee-via-admin";
+  const editPay = (token, userId, body) =>
+    request(app).put(`${EDIT}/${userId}`).set(as(token)).send(body);
+  const history = async (userId) =>
+    (await BasicPayChange.find({ userId }).sort({ effectiveFrom: 1 }).lean()).map(
+      (change) => ({
+        amount: change.amount,
+        effectiveFrom: toDateKey(change.effectiveFrom),
+      }),
+    );
+  // Sol signed up and started on Tue Nov 3, 2026, still on the starting 0
+  const sol = () =>
+    person("sol", {
+      firstName: "Sol",
+      lastName: "Reyes",
+      job: { basicPay: 0, payNotSet: true, startDate: "2026-11-03" },
+    });
+  const amountsOf = (row) => row.cutoffs.map((cutoff) => cutoff.amount);
+
+  it("is flagged with no figures, left out of the totals and counted as incomplete", async () => {
+    const { token } = await admin();
+    await longServing("ana", { firstName: "Ana", lastName: "Cruz" });
+    const { user } = await sol();
+
+    const res = await request(app).get(`${BASE}?year=2026`).set(as(token));
+
+    expect(res.status).toBe(200);
+    expect(res.body.rows.map((row) => row.name)).toEqual(["Ana Cruz", "Sol Reyes"]);
+    const [anaRow, solRow] = res.body.rows;
+    expect(solRow).toMatchObject({
+      userId: String(user._id),
+      startDate: "2026-11-03",
+      monthlyBasic: 0,
+      computed: null,
+      projected: null,
+      total: null,
+      flags: ["NO_BASIC_PAY"],
+    });
+    expect(amountsOf(solRow).every((amount) => amount === null)).toBe(true);
+    expect(res.body.incomplete).toBe(1);
+    // The totals are Ana's alone
+    expect(res.body.totals).toMatchObject({
+      employees: 1,
+      computed: anaRow.computed,
+      projected: anaRow.projected,
+      total: 25000,
+    });
+    expect(res.body.totals.byCutoff).toEqual(amountsOf(anaRow));
+
+    // The one-employee route answers the same row
+    const one = await request(app)
+      .get(`${BASE}/${user._id}?year=2026`)
+      .set(as(token));
+    expect(one.status).toBe(200);
+    expect(one.body.row).toEqual(solRow);
+  });
+
+  it("records only its first real pay, which then covers the whole employment", async () => {
+    const { token } = await admin();
+    await longServing("ana", { firstName: "Ana", lastName: "Cruz" });
+    const { user } = await sol();
+    manilaToday.mockReturnValue("2026-11-18");
+
+    const saved = await editPay(token, user._id, { basicPay: 18000 });
+    expect(saved.status).toBe(200);
+
+    expect(await history(user._id)).toEqual([
+      { amount: 18000, effectiveFrom: "2026-11-18" },
+    ]);
+    const job = (await Settings.findOne({ userId: user._id }).lean()).general
+      .jobDescription;
+    expect(job).toMatchObject({ basicPay: 18000, payNotSet: false });
+
+    const res = await request(app).get(`${BASE}?year=2026`).set(as(token));
+    expect(res.status).toBe(200);
+    const solRow = res.body.rows.find((row) => row.name === "Sol Reyes");
+    // Oct 26 to Nov 10: Nov 3-6 and 9-10, 6 of 12 weekdays x 750 = 375 (not 0); Nov 11
+    // to 25: the full 750 (not 6/11 of it, as the 0 recorded until Nov 17 would give)
+    expect(amountsOf(solRow).slice(20)).toEqual([375, 750, 750, 750, 272.73]);
+    expect(solRow).toMatchObject({
+      monthlyBasic: 18000,
+      computed: 375,
+      projected: 2522.73,
+      total: 2897.73,
+      flags: [],
+    });
+    // Now counted like everyone else
+    expect(res.body.incomplete).toBe(0);
+    expect(res.body.totals).toMatchObject({ employees: 2, total: 27897.73 });
+
+    const one = await request(app)
+      .get(`${BASE}/${user._id}?year=2026`)
+      .set(as(token));
+    expect(one.body.row).toEqual(solRow);
+
+    // A later raise is an ordinary change: the history already has the real pay
+    manilaToday.mockReturnValue("2026-12-01");
+    expect((await editPay(token, user._id, { basicPay: 20000 })).status).toBe(200);
+    expect(await history(user._id)).toEqual([
+      { amount: 18000, effectiveFrom: "2026-11-18" },
+      { amount: 20000, effectiveFrom: "2026-12-01" },
+    ]);
+  });
+
+  it("records nothing for an edit without a pay, and stays flagged", async () => {
+    const { token } = await admin();
+    const { user } = await sol();
+
+    expect((await editPay(token, user._id, { designation: "Engineer" })).status).toBe(
+      200,
+    );
+
+    expect(await BasicPayChange.countDocuments()).toBe(0);
+    const one = await request(app)
+      .get(`${BASE}/${user._id}?year=2026`)
+      .set(as(token));
+    expect(one.body.row).toMatchObject({ total: null, flags: ["NO_BASIC_PAY"] });
   });
 });

@@ -33,7 +33,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
     timeOut: "",
   });
   const [hasChanges, setHasChanges] = useState(false);
-  // In-form { type, text } message (the password check before saving)
+  // In-form { type, text } message (the password and basic pay checks before saving)
   const [message, setMessage] = useState(null);
 
   const [dropdownOptions, setDropdownOptions] = useState({
@@ -114,6 +114,20 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
       setMessage({ type: "warning", text: passwordProblem });
       return;
     }
+
+    // Required for every admin; the server gives the same message for a blank
+    const basicPay = String(addEmployee.basicPay).trim();
+    if (!basicPay) {
+      setMessage({ type: "warning", text: "Basic pay is required." });
+      return;
+    }
+    if (!Number.isFinite(Number(basicPay)) || Number(basicPay) < 0) {
+      setMessage({
+        type: "warning",
+        text: "Basic pay must be an amount of 0 or more.",
+      });
+      return;
+    }
     setMessage(null);
 
     try {
@@ -148,6 +162,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
     e.preventDefault();
 
     try {
+      // Always with basicPay; an Admin who adds someone gets them on its pay list
       await API.post("/api/employee/add-employee-via-admin", addEmployee);
 
       setIsConfirmModalOpen(false);
@@ -158,6 +173,14 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
     } catch (error) {
       console.error("Failed adding employee:", error);
       setIsConfirmModalOpen(false);
+      // A refusal (no access to add employees) stays in the form
+      if (error.response?.status === 403) {
+        setMessage({
+          type: "error",
+          text: error.response.data?.message || "Could not add the employee.",
+        });
+        return;
+      }
       alert(error.response?.data?.message || "Could not add the employee.");
     }
   };
@@ -381,7 +404,8 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
 
             <div className="input-container">
               <div className="label-container">
-                <label>Basic Pay (monthly, PHP)</label>
+                <label>Basic Pay (monthly, PHP)</label>{" "}
+                <span className="required">*</span>
               </div>
               <div className="input-group-signup">
                 <input
@@ -392,6 +416,7 @@ const AddEmployeeModal = ({ onClose, onUpdateEmployee }) => {
                   placeholder="0.00"
                   value={addEmployee.basicPay}
                   onChange={handleChange}
+                  required
                 />
               </div>
             </div>
