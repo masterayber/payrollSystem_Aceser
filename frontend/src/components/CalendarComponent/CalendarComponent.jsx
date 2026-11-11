@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { isWeekendKey } from "../../utils/dateFormatter";
 import "./CalendarComponent.css";
 
 const CalendarComponent = ({
@@ -53,6 +54,10 @@ const CalendarComponent = ({
       currentDate.getMonth() + 1,
     ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
+    // Saturdays and Sundays get no mark, even when a row exists (an approved
+    // leave writes an On-Leave row for every day in its range)
+    if (isWeekendKey(dateStr)) return null;
+
     const dateObj = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
@@ -75,13 +80,7 @@ const CalendarComponent = ({
 
     if (attendance) return attendance.behavior;
 
-    if (
-      dateObj < todayObj &&
-      dateObj.getDay() !== 0 &&
-      dateObj.getDay() !== 6
-    ) {
-      return "Absent";
-    }
+    if (dateObj < todayObj) return "Absent";
 
     return null;
   };

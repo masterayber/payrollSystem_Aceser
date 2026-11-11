@@ -55,3 +55,12 @@ export const formatTime = (time) => {
 
   return `${displayHours}:${minutes}:${seconds} ${period}`;
 };
+
+// True for a Saturday or Sunday. Takes a "YYYY-MM-DD" key (an API date with a
+// time part is cut at the "T") and reads the weekday from the local date.
+export const isWeekendKey = (dateKey) => {
+  if (!dateKey) return false;
+  const [y, m, d] = String(dateKey).split("T")[0].split("-").map(Number);
+  const day = new Date(y, m - 1, d).getDay();
+  return day === 0 || day === 6;
+};

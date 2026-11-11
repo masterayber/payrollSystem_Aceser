@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import "../../styles/UserCSS/Calendar.css";
 import CalendarComponent from "../../components/CalendarComponent/CalendarComponent";
 import { UserContext } from "../../context/UserContext";
+import { isWeekendKey } from "../../utils/dateFormatter";
 
 const Calendar = () => {
   const { userData } = useContext(UserContext);
@@ -17,7 +18,10 @@ const Calendar = () => {
       .toISOString()
       .split("T")[0];
 
+  // Weekend rows (e.g. the On-Leave rows an approved leave writes for Sat and
+  // Sun) are left out, so the totals match the calendar's weekday-only marks
   const currentMonthAttendance = attendanceData.filter((record) => {
+    if (isWeekendKey(record.date)) return false;
     const recordDate = new Date(record.date + "T00:00:00");
     const recordUserId = record.userId?._id || record.userId;
 
