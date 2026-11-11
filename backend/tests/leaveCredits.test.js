@@ -3,6 +3,8 @@ const {
   vacationEarned,
   leaveBalance,
   checkLeaveDates,
+  leaveTypeError,
+  workingDaysError,
   checkLeaveCredits,
 } = require("../utils/leaveCredits");
 
@@ -91,6 +93,43 @@ describe("checkLeaveDates", () => {
   });
 });
 
+describe("leaveTypeError", () => {
+  it("passes a type on the list and refuses anything else", () => {
+    expect(leaveTypeError("Vacation Leave")).toBeNull();
+    expect(leaveTypeError("Leave Without Pay (LWOP)")).toBeNull();
+    for (const value of ["Emergency Leave", "vacation leave", "", undefined]) {
+      expect(leaveTypeError(value)).toBe("Choose a leave type from the list.");
+    }
+  });
+});
+
+describe("workingDaysError", () => {
+  const NO_WORKING_DAYS = "This leave has no working days (Monday to Friday).";
+
+  it("refuses dates with no Monday-to-Friday day, whatever the leave type", () => {
+    // Sat Oct 31 to Sun Nov 1, and a single Saturday
+    expect(
+      workingDaysError({ startKey: "2026-10-31", endKey: "2026-11-01" }),
+    ).toBe(NO_WORKING_DAYS);
+    expect(
+      workingDaysError({ startKey: "2026-11-14", endKey: "2026-11-14" }),
+    ).toBe(NO_WORKING_DAYS);
+  });
+
+  it("passes dates with at least one working day", () => {
+    // Fri Nov 13 to Mon Nov 16, Sun Nov 15 to Mon Nov 16, and a single Monday
+    expect(
+      workingDaysError({ startKey: "2026-11-13", endKey: "2026-11-16" }),
+    ).toBeNull();
+    expect(
+      workingDaysError({ startKey: "2026-11-15", endKey: "2026-11-16" }),
+    ).toBeNull();
+    expect(
+      workingDaysError({ startKey: "2026-11-16", endKey: "2026-11-16" }),
+    ).toBeNull();
+  });
+});
+
 describe("checkLeaveCredits", () => {
   it("lets other leave types through", () => {
     expect(
@@ -119,7 +158,8 @@ describe("checkLeaveCredits", () => {
     ).toMatch(/date of regularization/);
   });
 
-  it("refuses a request with no working days", () => {
+  // Kept for approval, which checks a VL or SL request again (filing uses workingDaysError)
+  it("refuses a VL or SL request with no working days", () => {
     expect(
       checkLeaveCredits(
         job,

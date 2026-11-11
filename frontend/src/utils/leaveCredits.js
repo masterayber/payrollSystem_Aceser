@@ -1,6 +1,7 @@
 // Helpers for the VL and SL balance the server sends (/api/filing/leave-credits)
 
-export const CREDIT_LEAVE_TYPES = ["Vacation Leave", "Sick Leave"];
+// The types that draw on a balance, from the shared leave-type list
+export { CREDIT_LEAVE_TYPES } from "./leaveTypes";
 
 export const daysText = (n) => `${n} day${n === 1 ? "" : "s"}`;
 

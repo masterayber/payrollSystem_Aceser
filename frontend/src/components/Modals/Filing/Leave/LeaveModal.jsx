@@ -14,6 +14,7 @@ import {
   daysText,
   monthName,
 } from "../../../../utils/leaveCredits";
+import { LEAVE_TYPE_NAMES } from "../../../../utils/leaveTypes";
 
 const LeaveModal = ({
   mode,
@@ -22,19 +23,6 @@ const LeaveModal = ({
   onClose,
   onUpdateLeaveRequests,
 }) => {
-  const leaveTypeOptions = [
-    "Vacation Leave",
-    "Sick Leave",
-    "Maternity Leave",
-    "Paternity Leave",
-    "Solo Parent Leave",
-    "Study Leave",
-    "10-Day VAWC Leave",
-    "Special Leave Benefits for Women",
-    "Adoption Leave",
-    "Leave Without Pay (LWOP)",
-  ];
-
   const isEdit = mode === "edit";
   const initialFormData =
     isEdit && request
@@ -217,7 +205,7 @@ const LeaveModal = ({
               <span className="required">*</span>
             </div>
             <Dropdown
-              options={leaveTypeOptions}
+              options={LEAVE_TYPE_NAMES}
               value={formData.leaveType}
               onSelect={handleLeaveTypeChange}
               placeholder="Select Leave Type"
