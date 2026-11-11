@@ -1,6 +1,7 @@
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
 const Settings = require("../models/settings");
+const { iconFor } = require("./profileIcon");
 
 // The next free Employee ID: one after the highest "AC-<number>" on an Employee
 // record (numbers compared as numbers, so AC-010 follows AC-009), or "AC-001" when
@@ -23,6 +24,7 @@ const nextEmployeeId = async () => {
 // The role is always "Employee". The Auth pre-save hook hashes the password.
 // `mustChangePassword` comes only from the caller's options (Add Employee passes true),
 // never from `details`; it defaults to false.
+// The profile photo is the icon for `gender` (male, female, or the plain icon).
 const createEmployeeAccount = async (
   details,
   jobFields = {},
@@ -52,6 +54,8 @@ const createEmployeeAccount = async (
     role: "Employee",
     status: "Active",
     mustChangePassword: mustChangePassword === true,
+    // The default icon for the gender (utils/profileIcon.js)
+    profilePhoto: iconFor("Employee", gender),
     createdAt: new Date(),
   });
   await user.save();
