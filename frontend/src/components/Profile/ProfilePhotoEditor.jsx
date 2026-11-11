@@ -57,18 +57,32 @@ const ProfilePhotoEditor = () => {
     setTimeout(() => setIsSavedOpen(true), 300);
   };
 
+  // The server replies with the default icon path it set ({ message, profilePhoto })
   const handleRemovePhoto = async () => {
+    setIsRemoveConfirmOpen(false);
     try {
       const { data } = await API.delete(
         `/api/settings/remove-profile-photo/${userData._id}`,
       );
-      updateUserProfilePhoto(data?.user?.profilePhoto);
+      if (!data?.profilePhoto) {
+        console.error("Remove profile photo: no photo path in the reply", data);
+        alert("Could not remove the profile photo.");
+        return;
+      }
+      updateUserProfilePhoto(data.profilePhoto);
+      setTimeout(() => setIsSavedOpen(true), 300);
     } catch (error) {
       console.error("Error removing profile photo", error);
+      alert(
+        error.response?.data?.message || "Could not remove the profile photo.",
+      );
     }
-    setIsRemoveConfirmOpen(false);
-    setTimeout(() => setIsSavedOpen(true), 300);
   };
+
+  // A default icon (/assets/...) has nothing to remove
+  const hasOwnPhoto =
+    Boolean(userData?.profilePhoto) &&
+    !userData.profilePhoto.startsWith("/assets/");
 
   return (
     <>
@@ -83,7 +97,7 @@ const ProfilePhotoEditor = () => {
             <button className="dropdown-item" onClick={handleUploadClick}>
               Set Profile Photo
             </button>
-            {userData?.profilePhoto && (
+            {hasOwnPhoto && (
               <>
                 <hr />
                 <button

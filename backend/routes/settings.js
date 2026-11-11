@@ -25,6 +25,10 @@ const {
   OWN_RECORD_MESSAGE,
   isOwnLinkedEmployee,
 } = require("../utils/linkedEmployee");
+const {
+  defaultPhotoFor,
+  refreshDefaultIcon,
+} = require("../utils/profileIcon");
 
 const router = express.Router();
 
@@ -179,11 +183,31 @@ router.put(
         }
       }
 
+      // The gender before the save, to tell whether it changed
+      const before =
+        employeeUpdate.gender !== undefined
+          ? await Employee.findOne({ userId }).select("gender").lean()
+          : null;
+
       const updatedEmployee = await Employee.findOneAndUpdate(
         { userId },
         { $set: employeeUpdate },
         { new: true },
       );
+
+      // A changed gender switches a default icon to the new gender's (the plain icon
+      // for an admin role); an uploaded photo stays (utils/profileIcon.js)
+      if (before && updatedEmployee && before.gender !== updatedEmployee.gender) {
+        const icon = await refreshDefaultIcon(updatedUser, {
+          gender: updatedEmployee.gender,
+        });
+        if (icon.changed) {
+          await User.updateOne(
+            { _id: updatedUser._id },
+            { $set: { profilePhoto: icon.profilePhoto } },
+          );
+        }
+      }
 
       // Settings aren't edited here: job details change through the admin employee
       // routes and company details through /company. Read them for the response only.
@@ -193,8 +217,12 @@ router.put(
       const isOwner = String(req.user.userId) === String(userId);
       const settingsReply = currentSettings ? currentSettings.toObject() : {};
 
+      // Only what the screen shows: never the reset token, page or pay access, the
+      // forced-change flag or the admin links
       const combined = {
-        ...updatedUser.toObject(),
+        _id: updatedUser._id,
+        email: updatedUser.email,
+        profilePhoto: updatedUser.profilePhoto,
         employee: updatedEmployee ? updatedEmployee.toObject() : {},
         settings: isOwner
           ? ownSettings(settingsReply)
@@ -240,12 +268,14 @@ router.put(
       });
     } catch (error) {
       console.error("Error updating profile photo:", error);
-      res.status(500).json({ message: "Server error", error });
+      res.status(500).json({ message: "Server error" });
     }
   },
 );
 
-// Route for removing profile photo of user
+// Route for removing profile photo of user. The reply carries only the new icon path,
+// never the account record (it holds the password hash and reset token). The icon
+// follows the gender on the Employee record (utils/profileIcon.js).
 router.delete(
   "/remove-profile-photo/:id",
   requireAuthenticated,
@@ -255,36 +285,23 @@ router.delete(
       const userId = req.params.id;
       const user = await User.findById(userId);
 
-      if (!user || !user.profilePhoto) {
+      if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // Only an upload is deleted; a default icon (or no photo) is just replaced
       removeUpload(user.profilePhoto);
 
-      let defaultPhoto = "/assets/user-circle.svg";
-
-      if (user.role === "Employee") {
-        const employee = await Employee.findOne({ email: user.email });
-
-        if (employee && employee.gender) {
-          const gender = employee.gender;
-
-          if (gender === "Male") {
-            defaultPhoto = "/assets/genderIcons/male.svg";
-          } else if (gender === "Female") {
-            defaultPhoto = "/assets/genderIcons/female.svg";
-          }
-        }
-      }
-
-      user.profilePhoto = defaultPhoto;
+      user.profilePhoto = await defaultPhotoFor(user);
       await user.save();
 
-      return res
-        .status(200)
-        .json({ message: "Profile photo set to default", user });
+      return res.status(200).json({
+        message: "Profile photo set to default",
+        profilePhoto: user.profilePhoto,
+      });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error", error });
+      console.error("Error removing profile photo:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   },
 );

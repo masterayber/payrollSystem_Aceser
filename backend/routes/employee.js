@@ -26,6 +26,7 @@ const {
   createEmployeeAccount,
 } = require("../utils/employeeAccount");
 const { isAdminRole, isPlainAdmin } = require("../config/roles");
+const { refreshDefaultIcon } = require("../utils/profileIcon");
 const {
   PAY_NOT_SHARED,
   payScope,
@@ -220,16 +221,11 @@ router.post("/update-info", requireSignupToken, async (req, res) => {
 
     await employee.save();
 
+    // The default icon follows the chosen gender (utils/profileIcon.js)
     const user = await User.findById(req.signupUserId);
     if (user) {
-      if (gender === "Male") {
-        user.profilePhoto = "/assets/genderIcons/male.svg";
-      } else if (gender === "Female") {
-        user.profilePhoto = "/assets/genderIcons/female.svg";
-      } else {
-        user.profilePhoto = "/assets/user-circle.svg";
-      }
-      await user.save();
+      const icon = await refreshDefaultIcon(user, { gender: employee.gender });
+      if (icon.changed) await user.save();
     }
 
     res.status(200).json({
@@ -643,7 +639,26 @@ router.put(
         if (req.body[field] !== undefined)
           employeeUpdate[field] = req.body[field];
       }
-      await Employee.findOneAndUpdate({ userId }, { $set: employeeUpdate });
+      // findOneAndUpdate answers with the record as it was before the save
+      const before = await Employee.findOneAndUpdate(
+        { userId },
+        { $set: employeeUpdate },
+      );
+
+      // A changed gender switches a default icon to the new gender's; an uploaded
+      // photo stays (utils/profileIcon.js)
+      if (before && employeeUpdate.gender !== undefined) {
+        const after = await Employee.findById(before._id).select("gender").lean();
+        if (after && after.gender !== before.gender) {
+          const icon = await refreshDefaultIcon(user, { gender: after.gender });
+          if (icon.changed) {
+            await User.updateOne(
+              { _id: user._id },
+              { $set: { profilePhoto: icon.profilePhoto } },
+            );
+          }
+        }
+      }
 
       const jobUpdate = {};
       const jobFields = {

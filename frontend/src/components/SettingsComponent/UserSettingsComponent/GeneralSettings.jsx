@@ -52,8 +52,13 @@ const GeneralSettings = ({ showEmployment = true }) => {
         `/api/settings/updateGeneralSettings/${userData._id}`,
         toProfilePayload(form),
       );
-      // Merge, so allowedPages, attendance and the rest of the login data survive
-      updateUserDataLocally({ email: data.email, employee: data.employee });
+      // Merge, so allowedPages, attendance and the rest of the login data survive.
+      // A gender change can switch a default icon, so take the photo the server set.
+      updateUserDataLocally({
+        email: data.email,
+        employee: data.employee,
+        ...(data.profilePhoto ? { profilePhoto: data.profilePhoto } : {}),
+      });
       setIsEditing(false);
       setIsChanged(false);
       setIsConfirmOpen(false);
