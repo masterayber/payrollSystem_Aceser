@@ -6,7 +6,7 @@
     "backend": "nodemon backend/server.js",
     "frontend": "npm run dev --prefix frontend",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "test": "jest"
+    "test": "jest --runInBand --forceExit"
   },
   "keywords": [],
   "author": "",
