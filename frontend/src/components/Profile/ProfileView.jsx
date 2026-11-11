@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import PropTypes from "prop-types";
 import { IconEye, IconEyeClosed } from "@tabler/icons-react";
 import { formatPeso } from "../../utils/money";
+import { UserContext } from "../../context/UserContext";
+import { isPayHidden, showsPayNotSetBadge } from "../../utils/payVisibility";
+import Restricted from "../Restricted/Restricted";
+import PayNotSetBadge from "../Restricted/PayNotSetBadge";
 import "./Profile.css";
 
 export const EMPTY = "—";
@@ -30,8 +34,9 @@ Field.propTypes = {
   value: PropTypes.string,
 };
 
-// A field that stays hidden until the eye button is pressed, like a password
-export const SecretField = ({ label, value }) => {
+// A field that stays hidden until the eye button is pressed, like a password.
+// `badge` (optional) shows after the value, e.g. "Pay needs an update".
+export const SecretField = ({ label, value, badge }) => {
   const [isShown, setIsShown] = useState(false);
   const hasValue = Boolean(value) && value !== EMPTY;
 
@@ -54,6 +59,7 @@ export const SecretField = ({ label, value }) => {
             )}
           </button>
         )}
+        {badge}
       </dd>
     </div>
   );
@@ -62,13 +68,35 @@ export const SecretField = ({ label, value }) => {
 SecretField.propTypes = {
   label: PropTypes.string.isRequired,
   value: PropTypes.string,
+  badge: PropTypes.node,
+};
+
+// A pay field this Admin may not see: "Restricted", with nothing to reveal
+export const RestrictedField = ({ label }) => (
+  <div className="profile-field">
+    <dt>{label}</dt>
+    <dd>
+      <Restricted />
+    </dd>
+  </div>
+);
+
+RestrictedField.propTypes = {
+  label: PropTypes.string.isRequired,
 };
 
 // `message` (optional) is a line shown in place of, or above, the fields (loading,
-// not available, an error)
-export const Card = ({ title, message, children }) => (
+// not available, an error). `action` (optional) is a button on the right of the title.
+export const Card = ({ title, message, action, children }) => (
   <section className="profile-card">
-    <h4 className="profile-card-title">{title}</h4>
+    {action ? (
+      <div className="profile-card-header">
+        <h4 className="profile-card-title">{title}</h4>
+        {action}
+      </div>
+    ) : (
+      <h4 className="profile-card-title">{title}</h4>
+    )}
     {message && <div className="profile-card-message">{message}</div>}
     {children && <dl className="profile-fields">{children}</dl>}
   </section>
@@ -77,12 +105,16 @@ export const Card = ({ title, message, children }) => (
 Card.propTypes = {
   title: PropTypes.string.isRequired,
   message: PropTypes.node,
+  action: PropTypes.node,
   children: PropTypes.node,
 };
 
 // Read-only profile. `profile` has the shape toProfileForm returns; `employment`
-// (optional) is a job description plus employeeId.
-const ProfileView = ({ profile, employment }) => {
+// (optional) is a job description plus employeeId. `ownerId` (optional) is the user
+// id of the person shown; "Pay needs an update" shows only when it is someone
+// other than the signed-in viewer, never on a person's own profile.
+const ProfileView = ({ profile, employment, ownerId }) => {
+  const { userData } = useContext(UserContext);
   const address = profile.address || {};
   const emergency = profile.emergencyDetails || {};
   const emergencyName = [emergency.contactFirstName, emergency.contactLastName]
@@ -116,10 +148,19 @@ const ProfileView = ({ profile, employment }) => {
             label="Date of regularization"
             value={formatDate(employment.regularizationDate)}
           />
-          <SecretField
-            label="Basic pay (monthly)"
-            value={formatPeso(employment.basicPay)}
-          />
+          {isPayHidden(employment) ? (
+            <RestrictedField label="Basic pay (monthly)" />
+          ) : (
+            <SecretField
+              label="Basic pay (monthly)"
+              value={formatPeso(employment.basicPay)}
+              badge={
+                showsPayNotSetBadge(employment, ownerId, userData?._id) ? (
+                  <PayNotSetBadge />
+                ) : null
+              }
+            />
+          )}
           <Field label="Schedule" value={schedule} />
 
           {/* Admin profile only: where the person sits in the Logistics module */}
@@ -167,6 +208,7 @@ const ProfileView = ({ profile, employment }) => {
 ProfileView.propTypes = {
   profile: PropTypes.object.isRequired,
   employment: PropTypes.object,
+  ownerId: PropTypes.string,
 };
 
 export default ProfileView;

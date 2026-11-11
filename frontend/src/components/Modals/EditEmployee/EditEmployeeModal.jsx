@@ -11,8 +11,18 @@ import DeleteModal from "../Delete/DeleteModal";
 import API from "../../../api";
 import { manilaToday, toManilaDate } from "../../../utils/cutoff";
 import { checkPassword, PASSWORD_HINT } from "../../../utils/password";
+import {
+  isPayChanged,
+  isPayHidden,
+  RESTRICTED_LABEL,
+  RESTRICTED_TITLE,
+} from "../../../utils/payVisibility";
+import "../../Restricted/Restricted.css";
 
 const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
+  // Pay the Super Admin has not shared with this Admin: shown as "Restricted" and
+  // never sent, so saving other changes leaves it untouched
+  const payHidden = isPayHidden(employee.jobDescription);
   const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -230,6 +240,15 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Basic pay goes only when the editor changed it: the server clears "Pay not
+    // set" on any sent basic pay, so a schedule-only save must not send it
+    const sendsPay =
+      !payHidden &&
+      isPayChanged(
+        employee.jobDescription.basicPay,
+        editEmployee.jobDescription.basicPay,
+      );
+
     const payload = {
       ...editEmployee,
       designation: editEmployee.jobDescription.designation,
@@ -238,7 +257,7 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
       employmentType: editEmployee.jobDescription.employmentType,
       startDate: editEmployee.jobDescription.startDate,
       regularizationDate: editEmployee.jobDescription.regularizationDate,
-      basicPay: editEmployee.jobDescription.basicPay,
+      ...(sendsPay ? { basicPay: editEmployee.jobDescription.basicPay } : {}),
       vacationLeaveOpening: editEmployee.jobDescription.vacationLeaveOpening,
       timeIn: editEmployee.jobDescription.schedule.timeIn,
       timeOut: editEmployee.jobDescription.schedule.timeOut,
@@ -256,6 +275,15 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
     } catch (error) {
       console.error("Error updating employee:", error);
       setIsConfirmModalOpen(false);
+      // A refusal (e.g. "This employee's pay is not shared with you.") stays in the form
+      if (error.response?.status === 403) {
+        setMessage({
+          type: "error",
+          text:
+            error.response.data?.message || "Could not update the employee.",
+        });
+        return;
+      }
       alert(error.response?.data?.message || "Could not update the employee.");
     }
   };
@@ -514,15 +542,26 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
                 <label>Basic Pay (monthly, PHP)</label>
               </div>
               <div className="input-group-signup">
-                <input
-                  type="number"
-                  name="basicPay"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={editEmployee.jobDescription.basicPay}
-                  onChange={handleChange}
-                />
+                {payHidden ? (
+                  <input
+                    type="text"
+                    className="restricted-input"
+                    value={RESTRICTED_LABEL}
+                    title={RESTRICTED_TITLE}
+                    aria-label="Basic pay (restricted)"
+                    readOnly
+                  />
+                ) : (
+                  <input
+                    type="number"
+                    name="basicPay"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={editEmployee.jobDescription.basicPay}
+                    onChange={handleChange}
+                  />
+                )}
               </div>
             </div>
           </div>

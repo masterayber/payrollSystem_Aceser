@@ -126,10 +126,12 @@ const NEW_EMPLOYEE = {
   startDate: "2026-02-02",
   timeIn: "08:00",
   timeOut: "17:00",
+  basicPay: 20000,
 };
 
-// [page key, method, url for the target employee id, body]. Bodies are chosen so a
-// caller who passes the guard gets a validation reply or a harmless success.
+// [page key, method, url for the target employee id, body, other ticks the route also
+// needs]. Bodies are chosen so a caller who passes the guard gets a validation reply or
+// a harmless success.
 const GUARDED = (id) => [
   ["employees", "get", `/api/employee/employees/${id}`],
   ["employees", "post", "/api/employee/check-user-exists", { username: "x" }],
@@ -148,7 +150,8 @@ const GUARDED = (id) => [
   ["admin-attendance", "post", "/api/attendance/import-biometric", {}],
   ["admin-attendance", "put", `/api/attendance/edit-attendance/${id}`, {}],
   ["admin-attendance", "post", "/api/attendance/create-blank.today"],
-  ["reports", "get", "/api/thirteenth-month?year=2026"],
+  ["reports", "get", "/api/thirteenth-month?year=2026", undefined, ["thirteenth-month"]],
+  ["thirteenth-month", "get", "/api/thirteenth-month?year=2026", undefined, ["reports"]],
   ["admin-filing", "get", "/api/filing"],
   ["admin-filing", "get", "/api/filing/overtime"],
   ["admin-filing", "get", `/api/filing/leave-credits/${id}`],
@@ -173,11 +176,12 @@ const GUARDED = (id) => [
   ["logistics-setup", "post", "/api/logistics/setup/seed-reserved"],
 ];
 
-const guardedCases = GUARDED(":id").map(([key, method, url, body]) => [
+const guardedCases = GUARDED(":id").map(([key, method, url, body, also = []]) => [
   key,
   method.toUpperCase(),
   url,
   body,
+  also,
 ]);
 
 const passed = (res) => {
@@ -189,7 +193,7 @@ const passed = (res) => {
 describe("each admin route checks its page key (rule 5)", () => {
   it.each(guardedCases)(
     "%s: %s %s",
-    async (key, method, urlTemplate, body) => {
+    async (key, method, urlTemplate, body, also) => {
       const sa = await superAdmin();
       // ana makes the Employee request; ben is the employee the route acts on
       const ana = await person("ana", { employeeId: "AC-001" });
@@ -206,8 +210,12 @@ describe("each admin route checks its page key (rule 5)", () => {
       expect(refused.status).toBe(403);
       expect(refused.body).toEqual(DENIED);
 
-      // An Admin with only this tick passes the guard
-      const withKey = await adminAccount("hr.with", [key]);
+      // An Admin with only this tick (and any other the route also needs) passes the
+      // guard. Ben is on its pay list, so the routes that follow the pay list (PR C)
+      // answer as they would for the Super Admin
+      const withKey = await adminAccount("hr.with", [key, ...also], {
+        payAccess: [ben.user._id],
+      });
       passed(await send(verb, url, withKey.token, body));
 
       // The Super Admin always passes

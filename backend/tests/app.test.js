@@ -776,6 +776,7 @@ describe("Admin employee profile routes", () => {
             username: "ana",
             password: "Password123!",
             employmentType: "Probationary",
+            basicPay: 20000,
             ...body,
           });
 
@@ -801,6 +802,7 @@ describe("Admin employee profile routes", () => {
           username: "ana",
           password: "Password123!",
           employmentType: "Probationary",
+          basicPay: 20000,
         });
 
       expect(res.status).toBe(201);

@@ -123,6 +123,7 @@ const GeneralSettings = ({ showEmployment = true }) => {
       ) : (
         <ProfileView
           profile={toProfileForm(userData)}
+          ownerId={userData?._id}
           employment={showEmployment ? employment : undefined}
         />
       )}

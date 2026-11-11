@@ -127,6 +127,7 @@ const newEmployeeBody = (overrides = {}) => ({
   password: "Rico2026x",
   employmentType: "Probationary",
   startDate: "2026-11-02",
+  basicPay: 20000,
   ...overrides,
 });
 const addEmployee = (token, body) =>

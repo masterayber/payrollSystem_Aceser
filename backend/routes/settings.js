@@ -17,6 +17,11 @@ const { isHiddenAccount } = require("../utils/hiddenAccounts");
 const { canUseAdminPage } = require("../utils/pageAccess");
 const { takenRefusal } = require("../utils/takenIdentifiers");
 const {
+  payScope,
+  settingsFor,
+  ownSettings,
+} = require("../utils/payVisibility");
+const {
   OWN_RECORD_MESSAGE,
   isOwnLinkedEmployee,
 } = require("../utils/linkedEmployee");
@@ -182,12 +187,18 @@ router.put(
 
       // Settings aren't edited here: job details change through the admin employee
       // routes and company details through /company. Read them for the response only.
+      // The pay in them follows the caller's pay list; the caller's own record keeps
+      // its pay. Either way a shown pay carries the "Pay not set" flag.
       const currentSettings = await Settings.findOne({ userId });
+      const isOwner = String(req.user.userId) === String(userId);
+      const settingsReply = currentSettings ? currentSettings.toObject() : {};
 
       const combined = {
         ...updatedUser.toObject(),
         employee: updatedEmployee ? updatedEmployee.toObject() : {},
-        settings: currentSettings ? currentSettings.toObject() : {},
+        settings: isOwner
+          ? ownSettings(settingsReply)
+          : settingsFor(payScope(req.currentUser), userId, settingsReply),
       };
 
       res.json(combined);

@@ -1,4 +1,49 @@
-const { checkJobDetails, checkResignation } = require("../utils/jobDetails");
+const {
+  BASIC_PAY_REQUIRED,
+  checkJobDetails,
+  checkNewEmployeeJob,
+  checkResignation,
+} = require("../utils/jobDetails");
+
+// Add Employee: basic pay is required, whoever adds (replaces rule 22)
+describe("checkNewEmployeeJob", () => {
+  it.each([[{}], [{ basicPay: undefined }], [{ basicPay: null }], [{ basicPay: "" }], [{ basicPay: "   " }], [undefined]])(
+    "refuses %p as no basic pay",
+    (body) => {
+      expect(checkNewEmployeeJob(body)).toEqual({ error: BASIC_PAY_REQUIRED });
+      expect(BASIC_PAY_REQUIRED).toBe("Basic pay is required.");
+    },
+  );
+
+  it("checks the basic pay before the other job rules", () => {
+    expect(checkNewEmployeeJob({ employmentType: "Regular" })).toEqual({
+      error: BASIC_PAY_REQUIRED,
+    });
+  });
+
+  it.each([-1, "abc", "-0.01"])("gives the usual message for %p", (basicPay) => {
+    expect(checkNewEmployeeJob({ basicPay }).error).toBe(
+      "Basic pay must be an amount of 0 or more.",
+    );
+  });
+
+  it("then runs the usual job rules", () => {
+    expect(
+      checkNewEmployeeJob({ basicPay: 20000, employmentType: "Regular" }).error,
+    ).toMatch(/date of regularization/);
+  });
+
+  it.each([
+    [20000, 20000],
+    ["15000.555", 15000.56],
+    [0, 0],
+    ["0", 0],
+  ])("accepts %p as %p", (basicPay, stored) => {
+    expect(checkNewEmployeeJob({ basicPay })).toEqual({
+      fields: { basicPay: stored },
+    });
+  });
+});
 
 describe("checkJobDetails", () => {
   it("keeps basic pay as a number rounded to centavos", () => {

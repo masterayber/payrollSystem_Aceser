@@ -1,0 +1,29 @@
+/* A pay amount this Admin may not see */
+.restricted-value {
+  color: var(--neutral-color-70);
+  cursor: help;
+}
+
+/* "Pay not set": amber, like "Due for regularization" on the Employees list */
+.pay-not-set-badge {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 3px 8px;
+  border: 1px solid #fde68a;
+  border-radius: 999px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* The read-only Basic pay box in the Edit Employee form */
+.modal .input-group-signup input.restricted-input {
+  color: var(--neutral-color-70);
+  cursor: help;
+}

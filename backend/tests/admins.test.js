@@ -207,6 +207,61 @@ describe("POST /api/admins (rule 7)", () => {
     expect(await Settings.exists({ userId: admin.id })).toBeNull();
   });
 
+  it("accepts the 13th month tick on create and edit; it is not in the HR set", async () => {
+    const sa = await superAdmin();
+    expect(ADMIN_DEFAULT_PAGE_KEYS).not.toContain("thirteenth-month");
+
+    const res = await createAdmin(sa.token, {
+      pages: ["reports", "thirteenth-month"],
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.admin.pages).toEqual([
+      "admin-dashboard",
+      "reports",
+      "admin-settings",
+      "thirteenth-month",
+    ]);
+    const id = res.body.admin.id;
+    expect((await User.findById(id).lean()).pageAccess).toContain(
+      "thirteenth-month",
+    );
+
+    const off = await request(app)
+      .patch(`/api/admins/${id}`)
+      .set(as(sa.token))
+      .send({ pages: ["reports"] });
+    expect(off.status).toBe(200);
+    expect(off.body.pages).toEqual(["admin-dashboard", "reports", "admin-settings"]);
+    const on = await request(app)
+      .patch(`/api/admins/${id}`)
+      .set(as(sa.token))
+      .send({ pages: ["thirteenth-month"] });
+    expect(on.status).toBe(200);
+    expect(on.body.pages).toEqual([
+      "admin-dashboard",
+      "admin-settings",
+      "thirteenth-month",
+    ]);
+
+    const plain = await createAdmin(sa.token, {
+      username: "hr.two",
+      email: "two@example.com",
+    });
+    expect(plain.body.admin.pages).not.toContain("thirteenth-month");
+  });
+
+  it("shows the 13th month tick in a ticked Admin's allowedPages, and always for the Super Admin", async () => {
+    const sa = await superAdmin();
+    const { token } = await signedInAdmin(sa.token, {
+      pages: ["employees", "thirteenth-month"],
+    });
+    const me = await request(app).get("/api/auth/me").set(as(token));
+    expect(me.body.user.allowedPages).toContain("thirteenth-month");
+
+    const saMe = await request(app).get("/api/auth/me").set(as(sa.token));
+    expect(saMe.body.user.allowedPages).toContain("thirteenth-month");
+  });
+
   it("gives a new password each time", async () => {
     const sa = await superAdmin();
     const one = await createAdmin(sa.token);
@@ -691,7 +746,7 @@ describe("PATCH /api/admins/:id", () => {
     await request(app)
       .patch(`/api/admins/${admin._id}`)
       .set(as(sa.token))
-      .send({ pages: ["reports"] })
+      .send({ pages: ["reports", "thirteenth-month"] })
       .expect(200);
 
     expect((await reports()).status).toBe(200);

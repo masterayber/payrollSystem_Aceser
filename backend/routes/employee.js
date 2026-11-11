@@ -13,7 +13,11 @@ const Employee = require("../models/employees");
 const Settings = require("../models/settings");
 const BasicPayChange = require("../models/basicPayChange");
 
-const { checkJobDetails, checkResignation } = require("../utils/jobDetails");
+const {
+  checkJobDetails,
+  checkNewEmployeeJob,
+  checkResignation,
+} = require("../utils/jobDetails");
 const { payChangesToRecord } = require("../utils/basicPayHistory");
 const { manilaToday } = require("../utils/leaveCredits");
 const { emitToUsers } = require("../utils/realtime");
@@ -21,7 +25,15 @@ const {
   nextEmployeeId,
   createEmployeeAccount,
 } = require("../utils/employeeAccount");
-const { isAdminRole } = require("../config/roles");
+const { isAdminRole, isPlainAdmin } = require("../config/roles");
+const {
+  PAY_NOT_SHARED,
+  payScope,
+  canSeePay,
+  jobFor,
+  settingsFor,
+  sendsBasicPay,
+} = require("../utils/payVisibility");
 const { isHiddenAccount } = require("../utils/hiddenAccounts");
 const { ignoreCase } = require("../utils/ignoreCase");
 const { takenRefusal } = require("../utils/takenIdentifiers");
@@ -38,6 +50,13 @@ const router = express.Router();
 // Guards: the employee list is open to any Admin (pickers on other pages need it);
 // everything else on the Employees screen needs the "employees" tick; delete is Super
 // Admin only. An Admin can't edit, resign or reinstate its own linked employee.
+//
+// Pay (utils/payVisibility.js): an Admin sees basic pay only for the employees on its
+// pay list; for anyone else the list and profile give `basicPay: null` and
+// `payHidden: true`, and an edit carrying `basicPay` is refused. Add Employee needs a
+// basic pay from anyone, and puts the new employee on the adding Admin's pay list. The
+// Super Admin sees and sets all pay. Where the pay is shown, `payNotSet: true` marks
+// a pay not yet set (a self sign-up's starting 0, or none).
 const requireEmployeesPage = requireAdminPage("employees");
 const notOwnRecord = (param) =>
   refuseOwnLinkedEmployee((req) => req.params[param]);
@@ -109,7 +128,13 @@ router.get("/employees", requireAdmin, async (req, res) => {
       },
     ]);
 
-    res.status(200).json(employees);
+    const scope = payScope(req.currentUser);
+    res.status(200).json(
+      employees.map((row) => ({
+        ...row,
+        jobDescription: jobFor(scope, row._id, row.jobDescription),
+      })),
+    );
   } catch (err) {
     res
       .status(500)
@@ -142,7 +167,7 @@ router.get("/employees/:userId", requireEmployeesPage, async (req, res) => {
     res.status(200).json({
       ...user,
       employee: employee || {},
-      jobDescription: {
+      jobDescription: jobFor(payScope(req.currentUser), userId, {
         designation: job.designation || "",
         department: job.department || "",
         position: job.position || "",
@@ -150,6 +175,7 @@ router.get("/employees/:userId", requireEmployeesPage, async (req, res) => {
         startDate: job.startDate || "",
         regularizationDate: job.regularizationDate || "",
         basicPay: job.basicPay ?? null,
+        payNotSet: job.payNotSet === true,
         vacationLeaveOpening: job.vacationLeaveOpening || 0,
         resignationDate: job.resignationDate || "",
         resignationReason: job.resignationReason || "",
@@ -157,7 +183,7 @@ router.get("/employees/:userId", requireEmployeesPage, async (req, res) => {
           timeIn: job.schedule?.timeIn || "",
           timeOut: job.schedule?.timeOut || "",
         },
-      },
+      }),
     });
   } catch (err) {
     res
@@ -449,7 +475,8 @@ router.patch(
   },
 );
 
-// Route for adding employee via admin manually
+// Route for adding employee via admin manually. Refusal order: page tick (guard),
+// password, basic pay required, job details, taken; nothing is created on a refusal.
 router.post("/add-employee-via-admin", requireEmployeesPage, async (req, res) => {
   try {
     // The password rule, whoever adds the employee; checked before anything is created
@@ -461,7 +488,9 @@ router.post("/add-employee-via-admin", requireEmployeesPage, async (req, res) =>
       return res.status(400).json({ message: passwordRefusal });
     }
 
-    const job = checkJobDetails(req.body);
+    // A basic pay must be entered, by the Super Admin or any Admin (0 counts as
+    // entered); then the usual job checks
+    const job = checkNewEmployeeJob(req.body);
     if (job.error) {
       return res.status(400).json({ message: job.error });
     }
@@ -475,12 +504,26 @@ router.post("/add-employee-via-admin", requireEmployeesPage, async (req, res) =>
 
     // Always an Employee-role account; a role or mustChangePassword sent in the body
     // is ignored. The admin chose this password, so the new account must change it
-    // at first sign-in.
+    // at first sign-in. The pay was entered, so it isn't marked "Pay not set".
     const { user, employee, settings } = await createEmployeeAccount(
       req.body,
-      job.fields,
+      { ...job.fields, payNotSet: false },
       { mustChangePassword: true },
     );
+
+    // An Admin who adds an employee goes on to see their pay: the new id joins its own
+    // pay list (the Super Admin sees all pay and keeps no list)
+    let scopeUser = req.currentUser;
+    if (isPlainAdmin(req.currentUser.role)) {
+      await User.updateOne(
+        { _id: req.currentUser._id },
+        { $addToSet: { payAccess: user._id } },
+      );
+      scopeUser = {
+        ...req.currentUser,
+        payAccess: [...(req.currentUser.payAccess || []), user._id],
+      };
+    }
 
     // Never send the password hash or a reset token back
     const userReply = user.toObject();
@@ -491,7 +534,7 @@ router.post("/add-employee-via-admin", requireEmployeesPage, async (req, res) =>
       message: "Employee account created successfully",
       user: userReply,
       employee,
-      settings,
+      settings: settingsFor(payScope(scopeUser), user._id, settings.toObject()),
     });
   } catch (error) {
     res
@@ -529,10 +572,19 @@ router.put(
         return res.status(404).json({ message: "User not found" });
       }
 
+      // Rule 20: an edit carrying a basic pay for someone whose pay the caller can't
+      // see is refused as a whole, before anything is checked or saved. A blank one
+      // counts as not sent and is dropped, so the hidden pay is left as it is.
+      const seesPay = canSeePay(payScope(req.currentUser), userId);
+      if (!seesPay && sendsBasicPay(req.body)) {
+        return res.status(403).json(PAY_NOT_SHARED);
+      }
+      const body = seesPay ? req.body : { ...req.body, basicPay: undefined };
+
       const saved = await Settings.findOne({ userId })
         .select("general.jobDescription")
         .lean();
-      const job = checkJobDetails(req.body, saved?.general?.jobDescription);
+      const job = checkJobDetails(body, saved?.general?.jobDescription);
       if (job.error) {
         return res.status(400).json({ message: job.error });
       }
@@ -609,6 +661,12 @@ router.put(
 
       for (const [field, value] of Object.entries(job.fields)) {
         jobUpdate[`general.jobDescription.${field}`] = value;
+      }
+
+      // A sent, valid basic pay saved by someone who can see it (even the same amount)
+      // clears "Pay not set". Nothing else clears it.
+      if (seesPay && sendsBasicPay(req.body)) {
+        jobUpdate["general.jobDescription.payNotSet"] = false;
       }
 
       if (timeIn !== undefined) {

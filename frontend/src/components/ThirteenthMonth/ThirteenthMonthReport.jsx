@@ -20,6 +20,10 @@ import {
   totalsLabel,
 } from "../../utils/thirteenthMonth";
 import { ThirteenthMonthSheet } from "../../utils/reports/thirteenthMonth";
+import ThirteenthMonthToggle from "./ThirteenthMonthToggle";
+import useThirteenthMonthVisible, {
+  REPORT_VISIBLE_KEY,
+} from "./useThirteenthMonthVisible";
 
 const DASH = "—";
 
@@ -81,7 +85,11 @@ CutoffCell.propTypes = {
 };
 
 // "13th Month Pay" card on the admin Reports page. Every amount comes from the server.
+// Collapsed by default, like the card on the Employee Profile: while hidden only the
+// title and the Show button appear and nothing is fetched.
 const ThirteenthMonthReport = () => {
+  const [isVisible, toggleVisible] =
+    useThirteenthMonthVisible(REPORT_VISIBLE_KEY);
   const yearOptions = getThirteenthMonthYearOptions();
   const [year, setYear] = useState(yearOptions[0].value);
   const [report, setReport] = useState(null);
@@ -89,6 +97,7 @@ const ThirteenthMonthReport = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
+    if (!isVisible) return;
     let ignore = false;
 
     const fetchReport = async () => {
@@ -115,7 +124,7 @@ const ThirteenthMonthReport = () => {
     return () => {
       ignore = true;
     };
-  }, [year]);
+  }, [year, isVisible]);
 
   const handleDownload = () => {
     const { ws } = ThirteenthMonthSheet(report);
@@ -136,14 +145,28 @@ const ThirteenthMonthReport = () => {
     .filter(Boolean)
     .join(" ");
 
+  // The title with the Show/Hide button on its right, as on the profile's card
+  const header = (
+    <div className="user-track-title profile-card-header">
+      <p>13th Month Pay</p>
+      <ThirteenthMonthToggle isVisible={isVisible} onToggle={toggleVisible} />
+    </div>
+  );
+
+  if (!isVisible) {
+    return (
+      <div className="data-card reports-export-card thirteenth-card">
+        {header}
+      </div>
+    );
+  }
+
   return (
     <div
       className="data-card reports-export-card thirteenth-card"
       aria-busy={loading}
     >
-      <div className="user-track-title">
-        <p>13th Month Pay</p>
-      </div>
+      {header}
 
       <div className="user-track-description reports-description">
         <p>{note}</p>

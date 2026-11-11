@@ -609,6 +609,12 @@ describe("lists, pickers and counts leave both admin roles out", () => {
     const boss = await superAdmin({ position: "Project In-charge" });
     const hr = await plainAdmin({ position: "Project In-charge" });
     const ana = await employee("ana", { position: "Project In-charge" });
+    // The Admin's pay list (PR C) names all three, so the 13th month report below shows
+    // that admin accounts are left out even when an id of theirs is on a list
+    await User.updateOne(
+      { _id: hr.user._id },
+      { $set: { payAccess: [boss.user._id, hr.user._id, ana.user._id] } },
+    );
 
     for (const { user } of [boss, hr, ana]) {
       await Attendance.create({

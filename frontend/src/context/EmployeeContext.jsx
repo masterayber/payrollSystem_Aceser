@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import PropTypes from "prop-types";
 import API from "../api";
 import { UserContext } from "./UserContext";
@@ -39,8 +45,24 @@ export const EmployeeProvider = ({ children }) => {
     return () => controller.abort();
   }, [loading, userData?.role]);
 
+  // A fresh list after a change made outside the Employees page (e.g. basic pay
+  // saved on a profile), so the Dashboard's "need basic pay" count stays right
+  const reloadEmployees = useCallback(async () => {
+    if (!isAdminRole(userData?.role)) return;
+    try {
+      const response = await API.get("/api/employee/employees", {
+        params: { includeResigned: true },
+      });
+      setEmployeeData(activeFirst(response.data));
+    } catch (error) {
+      console.error("Error reloading employees:", error);
+    }
+  }, [userData?.role]);
+
   return (
-    <EmployeeContext.Provider value={{ employeeData, setEmployeeData }}>
+    <EmployeeContext.Provider
+      value={{ employeeData, setEmployeeData, reloadEmployees }}
+    >
       {children}
     </EmployeeContext.Provider>
   );

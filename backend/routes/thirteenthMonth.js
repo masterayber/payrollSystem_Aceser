@@ -15,13 +15,23 @@ const {
   reportTotals,
   checkYear,
 } = require("../utils/thirteenthMonth");
+const {
+  EMPLOYEE_NOT_FOUND,
+  THIRTEENTH_MONTH_KEY,
+  payScope,
+  canSeeThirteenthMonth,
+  visibleThirteenthRows,
+} = require("../utils/payVisibility");
 
-// 13th month pay report, worked out for the whole calendar year. Admins only: it shows
-// basic pay.
+// 13th month pay report, worked out for the whole calendar year. Admins only, and an
+// Admin also needs the "thirteenth-month" tick. It shows basic pay, so both routes
+// follow the caller's pay list (utils/payVisibility.js): the report leaves out the rows
+// the caller may not see (its totals and counts cover only the rows shown), and one
+// employee's row the caller may not see answers exactly as a missing employee. The
+// Super Admin sees every row.
 const router = express.Router();
 
 const LISTED_STATUSES = ["Active", "Resigned"];
-const NOT_FOUND = "Employee not found.";
 
 const HISTORY_FIELDS = "userId amount effectiveFrom changedAt";
 
@@ -95,8 +105,11 @@ const byEmployeeId = (a, b) => {
 };
 
 // GET /api/thirteenth-month?year=2026: every listed employee's 13th month for the year
-// (Reports: the "reports" tick; the Super Admin always)
-router.get("/", requireAdminPage("reports"), async (req, res) => {
+// (Reports: the "reports" and "thirteenth-month" ticks; the Super Admin always). Missing
+// either tick gives the usual 403 PAGE_ACCESS_DENIED: no person is involved.
+const requireReport = requireAdminPage(["reports", THIRTEENTH_MONTH_KEY]);
+
+router.get("/", requireReport, async (req, res) => {
   try {
     const todayKey = manilaToday();
     const checked = checkYear(req.query.year, Number(todayKey.slice(0, 4)));
@@ -134,7 +147,7 @@ router.get("/", requireAdminPage("reports"), async (req, res) => {
       historyOf.set(id, [...(historyOf.get(id) || []), change]);
     }
 
-    const rows = accounts
+    const allRows = accounts
       .map((account) => {
         const id = String(account._id);
         const job = settingsOf.get(id)?.general?.jobDescription || {};
@@ -150,6 +163,7 @@ router.get("/", requireAdminPage("reports"), async (req, res) => {
       })
       .filter(Boolean)
       .sort(byEmployeeId);
+    const rows = visibleThirteenthRows(allRows, payScope(req.currentUser));
 
     const header = reportHeader(year, todayKey);
     res.status(200).json({
@@ -181,9 +195,15 @@ router.get("/:userId", requireAdminPage("employees"), async (req, res) => {
     }
     const { year } = checked;
 
+    // No "thirteenth-month" tick or not on the pay list: the same 404 as an employee who
+    // doesn't exist, an admin account (rule 24) or one not listed for the year, so the
+    // reply reveals nothing. Checked before the lookup.
+    if (!canSeeThirteenthMonth(req.currentUser, userId)) {
+      return res.status(404).json(EMPLOYEE_NOT_FOUND);
+    }
     const row = await loadRow(userId, year, todayKey);
     if (!row) {
-      return res.status(404).json({ message: NOT_FOUND });
+      return res.status(404).json(EMPLOYEE_NOT_FOUND);
     }
 
     res.status(200).json({ ...reportHeader(year, todayKey), row });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   IconArrowLeft,
@@ -18,6 +18,10 @@ import ProfileView, {
 } from "../../components/Profile/ProfileView";
 import { daysText, monthName } from "../../utils/leaveCredits";
 import { isAdminRole } from "../../utils/roles";
+import { canSeeThirteenthMonth } from "../../utils/pageAccess";
+import { isPayHidden } from "../../utils/payVisibility";
+import { UserContext } from "../../context/UserContext";
+import { EmployeeContext } from "../../context/EmployeeContext";
 import ProfileHeader from "../../components/Profile/ProfileHeader";
 import ProfileForm from "../../components/Profile/ProfileForm.jsx";
 import {
@@ -41,6 +45,8 @@ const MEMBER_ROLE_LABELS = {
 const EmployeeProfile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { userData } = useContext(UserContext);
+  const { reloadEmployees } = useContext(EmployeeContext);
 
   const [profile, setProfile] = useState(null);
   const [access, setAccess] = useState(null);
@@ -305,6 +311,7 @@ const EmployeeProfile = () => {
       ) : (
         <ProfileView
           profile={toProfileForm(profile)}
+          ownerId={profile._id}
           employment={{
             ...job,
             employeeId: employee.employeeId,
@@ -336,8 +343,15 @@ const EmployeeProfile = () => {
           </Card>
         )}
 
-        {/* Admin only: amounts come from the server, hidden until clicked */}
-        <ThirteenthMonthCard userId={userId} refreshKey={profile} />
+        {/* With the 13th month tick only (the Super Admin always). Amounts come
+            from the server; pay hidden from this Admin stays Restricted. */}
+        {canSeeThirteenthMonth(userData) && (
+          <ThirteenthMonthCard
+            userId={userId}
+            refreshKey={profile}
+            payHidden={isPayHidden(job)}
+          />
+        )}
       </div>
 
       <section className="profile-card access-card">
@@ -402,6 +416,8 @@ const EmployeeProfile = () => {
           onUpdateEmployee={() => {
             loadProfile();
             loadCredits();
+            // Saving a basic pay clears "Pay needs an update" in the shared list too
+            reloadEmployees();
           }}
         />
       )}
