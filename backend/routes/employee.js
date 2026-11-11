@@ -680,12 +680,15 @@ router.put(
       }
 
       // A changed basic pay goes into the pay history (13th month uses the pay in force
-      // each day). The first change also records the old pay, so earlier days keep it.
+      // each day). The first change also records the old pay, so earlier days keep it;
+      // a sign-up's starting 0 ("Pay needs an update" before this save) is not recorded,
+      // so its first real pay covers the whole employment.
       if (job.fields.basicPay !== undefined) {
         const savedJob = saved?.general?.jobDescription || {};
         const todayKey = manilaToday();
         const changes = payChangesToRecord({
           oldPay: savedJob.basicPay,
+          payWasNotSet: savedJob.payNotSet === true,
           newPay: job.fields.basicPay,
           hasHistory: Boolean(await BasicPayChange.exists({ userId })),
           startDate: startDate !== undefined ? startDate : savedJob.startDate,

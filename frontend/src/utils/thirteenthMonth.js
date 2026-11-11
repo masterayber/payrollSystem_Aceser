@@ -6,7 +6,7 @@ import { MONTHS, manilaToday } from "./cutoff";
 export const FIRST_THIRTEENTH_MONTH_YEAR = 2026;
 
 export const FLAG_LABELS = {
-  NO_BASIC_PAY: "Basic pay not set",
+  NO_BASIC_PAY: "Pay needs an update",
   NO_START_DATE: "Start date missing",
   NO_LAST_DAY: "Last working day missing",
 };

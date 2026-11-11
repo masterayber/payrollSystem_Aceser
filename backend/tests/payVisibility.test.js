@@ -21,6 +21,7 @@ const Employee = require("../models/employees");
 const Settings = require("../models/settings");
 const CompanySettings = require("../models/companySettings");
 const BasicPayChange = require("../models/basicPayChange");
+const { toDateKey } = require("../utils/leaveCredits");
 const {
   PAY_NOT_SHARED,
   EMPLOYEE_NOT_FOUND,
@@ -1551,6 +1552,11 @@ describe("Pay not set is cleared only by a saved basic pay", () => {
     return { ...people, fran };
   };
   const flagOf = async (fran) => (await storedJob(fran.user._id)).payNotSet;
+  // The pay history as [amount, "YYYY-MM-DD"], oldest first
+  const payHistory = async (fran) =>
+    (await BasicPayChange.find({ userId: fran.user._id }).sort({ effectiveFrom: 1 }).lean()).map(
+      (change) => [change.amount, toDateKey(change.effectiveFrom)],
+    );
 
   it("clears it when the Super Admin saves the same amount", async () => {
     const { sa, fran } = await flaggedFran();
@@ -1562,6 +1568,8 @@ describe("Pay not set is cleared only by a saved basic pay", () => {
     const shown = (await listOf(sa.token)).get("AC-021");
     expect(shown.basicPay).toBe(0);
     expect(shown).not.toHaveProperty("payNotSet");
+    // The starting 0 is not recorded as an old pay; the saved 0 is, from today
+    expect(await payHistory(fran)).toEqual([[0, "2026-11-06"]]);
   });
 
   it("clears it when an Admin with the person on its list saves a new amount", async () => {
@@ -1572,6 +1580,32 @@ describe("Pay not set is cleared only by a saved basic pay", () => {
     expect(res.status).toBe(200);
     expect(await flagOf(fran)).toBe(false);
     expect(await storedPay(fran.user._id)).toBe(16000);
+    // Only the new pay, from today: no P0 from the Jan 5 start date
+    expect(await payHistory(fran)).toEqual([[16000, "2026-11-06"]]);
+  });
+
+  it("shows the flagged row in the 13th month only to whoever may see the pay", async () => {
+    const { sa, fran, rhea } = await flaggedFran();
+    const REPORT = "/api/thirteenth-month?year=2026";
+    const ONE = `/api/thirteenth-month/${fran.user._id}?year=2026`;
+    const blocked = { total: null, computed: null, projected: null, flags: ["NO_BASIC_PAY"] };
+
+    const bySuper = await get(REPORT, sa.token);
+    expect(bySuper.body.rows.find((row) => row.employeeId === "AC-021")).toMatchObject(
+      blocked,
+    );
+    expect(bySuper.body.incomplete).toBe(1);
+    expect(bySuper.body.totals.employees).toBe(3);
+
+    // Not on Rhea's list: no row, not counted, and the one-employee route finds no one
+    const byRhea = await get(REPORT, rhea.token);
+    expect(byRhea.body.rows.map((row) => row.employeeId)).not.toContain("AC-021");
+    expect(byRhea.body.incomplete).toBe(0);
+    expect((await get(ONE, rhea.token)).status).toBe(404);
+
+    await User.updateOne({ _id: rhea.user._id }, { $push: { payAccess: fran.user._id } });
+    expect((await get(REPORT, rhea.token)).body.incomplete).toBe(1);
+    expect((await get(ONE, rhea.token)).body.row).toMatchObject(blocked);
   });
 
   it.each([
@@ -1603,6 +1637,7 @@ describe("Pay not set is cleared only by a saved basic pay", () => {
     const other = await send("put", EDIT(fran.user._id), rhea.token, { firstName: "F" });
     expect(other.status).toBe(200);
     expect(await flagOf(fran)).toBe(true);
+    expect(await BasicPayChange.countDocuments()).toBe(0);
   });
 
   it("keeps it through a contact edit, a resignation and a reinstatement", async () => {

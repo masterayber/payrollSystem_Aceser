@@ -17,6 +17,8 @@
 //   weekdays.
 // - Days before the first pay history record use that record's amount; with no history,
 //   the current basic pay (utils/basicPayHistory.js payInForce).
+// - No basic pay, or a self sign-up still marked "Pay needs an update" (payNotSet), is
+//   flagged NO_BASIC_PAY: the row has no amounts and stays out of the totals.
 // - No deductions (absences, leave without pay).
 // Only final amounts are rounded to the centavo.
 
@@ -149,7 +151,9 @@ const thirteenthMonth = (
   { year, todayKey, status = "Active", history = [] } = {},
 ) => {
   const { startKey, lastKey } = employment(job, status);
-  const hasBasicPay = isAmount(job.basicPay);
+  // A self sign-up still on its starting 0 ("Pay needs an update": the stored payNotSet
+  // flag) counts as having no basic pay until a real one is saved
+  const hasBasicPay = isAmount(job.basicPay) && job.payNotSet !== true;
 
   const flags = [];
   if (!hasBasicPay) flags.push(FLAGS.NO_BASIC_PAY);

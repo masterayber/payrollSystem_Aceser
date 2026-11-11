@@ -4,6 +4,9 @@
 // - The first change for someone with no history first records the old pay (when there
 //   was one) as in force from the later of the start date and the day pay history began
 //   (PAY_HISTORY_START), so the days before the change keep the pay they were earned at.
+// - A self sign-up's starting pay ("Pay needs an update": the stored payNotSet flag) is
+//   not a pay anyone earned at: its first saved pay is recorded alone, from the save day,
+//   so it covers every earlier day too.
 // - A save that doesn't change the amount, or clears it, records nothing.
 // - Two changes on the same day: the later one wins (one record per day).
 // - Days before the first record use its amount; with no history, the current basic pay.
@@ -18,14 +21,18 @@ const isAmount = (value) =>
 // { amount, effectiveFrom: "YYYY-MM-DD" }. `oldPay` is the saved basic pay before the
 // save (null or undefined when none), `newPay` the one being saved, `hasHistory` whether
 // the employee already has any record, `startDate` the start date after the save.
+// `payWasNotSet` is the stored payNotSet flag before the save: when true the old pay is
+// ignored (as if there were none), even when it equals the new one.
 const payChangesToRecord = ({
-  oldPay,
+  oldPay: savedPay,
   newPay,
   hasHistory,
   startDate,
   todayKey,
   historyStartKey = PAY_HISTORY_START,
+  payWasNotSet = false,
 }) => {
+  const oldPay = payWasNotSet === true ? undefined : savedPay;
   if (!isAmount(newPay)) return [];
   if (isAmount(oldPay) && oldPay === newPay) return [];
 

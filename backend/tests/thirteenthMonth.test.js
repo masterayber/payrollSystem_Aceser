@@ -654,6 +654,55 @@ describe("thirteenthMonth: basic pay history", () => {
     expect(result.cutoffs[21].amount).toBeNull();
   });
 
+  it("a sign-up's first real pay covers the days before it was saved", () => {
+    // Started Tue Nov 3 on the sign-up's 0 ("Pay needs an update"); P18,000 saved Wed
+    // Nov 11. Only the new pay is recorded, so Nov 3 to 10 are at P18,000 too.
+    const history = payChangesToRecord({
+      oldPay: 0,
+      payWasNotSet: true,
+      newPay: 18000,
+      hasHistory: false,
+      startDate: "2026-11-03",
+      todayKey: "2026-11-11",
+    });
+    expect(history).toEqual([{ amount: 18000, effectiveFrom: "2026-11-11" }]);
+
+    const result = thirteenthMonth(
+      { basicPay: 18000, payNotSet: false, startDate: "2026-11-03" },
+      in2026({ todayKey: "2026-11-11", history }),
+    );
+    // Oct 26 to Nov 10: 6 of 12 weekdays (Nov 3-6, 9-10) x 750 = 375 (not 0)
+    expect(byCutoff(result, "2026-10-2nd")).toMatchObject({
+      weekdaysEmployed: 6,
+      amount: 375,
+      kind: "computed",
+    });
+    // Nov 11 to 25: the full share, 18,000 / 24
+    expect(byCutoff(result, "2026-11-1st")).toMatchObject({ share: 1, amount: 750 });
+    // 375 + 3 x 750 + 4/11 x 750
+    expect(result).toMatchObject({
+      computed: 375,
+      projected: 2522.73,
+      total: 2897.73,
+      flags: [],
+    });
+
+    // Recording the 0 (as for an ordinary pay change) would have left Nov 3 to 10 at 0
+    const asChange = payChangesToRecord({
+      oldPay: 0,
+      newPay: 18000,
+      hasHistory: false,
+      startDate: "2026-11-03",
+      todayKey: "2026-11-11",
+    });
+    expect(asChange[0]).toEqual({ amount: 0, effectiveFrom: PAY_HISTORY_START });
+    const wrong = thirteenthMonth(
+      { basicPay: 18000, startDate: "2026-11-03" },
+      in2026({ todayKey: "2026-11-11", history: asChange }),
+    );
+    expect(byCutoff(wrong, "2026-10-2nd").amount).toBe(0);
+  });
+
   it("two changes on the same day: the later one wins", () => {
     const history = [
       {
@@ -731,6 +780,36 @@ describe("thirteenthMonth: edge cases", () => {
       projected: null,
       total: null,
     });
+  });
+
+  it("treats a sign-up still marked Pay needs an update as having no basic pay", () => {
+    const result = thirteenthMonth(
+      { basicPay: 0, payNotSet: true, startDate: "2026-11-03" },
+      in2026(),
+    );
+
+    expect(result.flags).toEqual(["NO_BASIC_PAY"]);
+    expect(result.cutoffs.every((cutoff) => cutoff.amount === null)).toBe(true);
+    expect(byCutoff(result, "2026-11-1st").share).toBe(1);
+    expect(result).toMatchObject({ computed: null, projected: null, total: null });
+
+    // Whatever amount is stored with the flag, and alongside the other flags
+    expect(
+      thirteenthMonth({ basicPay: 18000, payNotSet: true, startDate: "2026-11-03" }, in2026())
+        .flags,
+    ).toEqual(["NO_BASIC_PAY"]);
+    expect(thirteenthMonth({ basicPay: 0, payNotSet: true }, in2026()).flags).toEqual([
+      "NO_BASIC_PAY",
+      "NO_START_DATE",
+    ]);
+  });
+
+  it("counts a saved basic pay of 0 (flag cleared) as a pay", () => {
+    const result = thirteenthMonth(
+      { basicPay: 0, payNotSet: false, startDate: "2026-11-03" },
+      in2026(),
+    );
+    expect(result).toMatchObject({ computed: 0, projected: 0, total: 0, flags: [] });
   });
 
   it("has no amounts or shares without a start date", () => {
@@ -855,6 +934,22 @@ describe("payChangesToRecord", () => {
   it("records nothing for an unchanged or cleared pay", () => {
     expect(change({ newPay: 20000 })).toEqual([]);
     expect(change({ newPay: null })).toEqual([]);
+  });
+
+  it("records only the new pay when the old one was a sign-up's starting pay", () => {
+    const signUp = (extra) =>
+      change({ oldPay: 0, payWasNotSet: true, startDate: "2026-11-09", ...extra });
+    expect(signUp()).toEqual([{ amount: 22000, effectiveFrom: "2026-11-18" }]);
+    // Even the same 0: it is now a saved pay
+    expect(signUp({ newPay: 0 })).toEqual([{ amount: 0, effectiveFrom: "2026-11-18" }]);
+    expect(signUp({ newPay: null })).toEqual([]);
+  });
+
+  it("still seeds the old pay from the start date when the flag is false", () => {
+    expect(change({ startDate: "2026-11-09", payWasNotSet: false })).toEqual([
+      { amount: 20000, effectiveFrom: "2026-11-09" },
+      { amount: 22000, effectiveFrom: "2026-11-18" },
+    ]);
   });
 });
 
