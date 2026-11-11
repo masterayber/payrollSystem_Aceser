@@ -5,11 +5,16 @@
 // - SL: 15 days each calendar month, from the date of regularization on; unused days don't
 //   carry over. A request across two months counts against each month.
 // Only Monday-Friday counts, and pending requests hold their days until they're decided.
+// The leave types, and which of them use credits, are listed in config/leaveTypes.js.
+
+const { CREDIT_LEAVE_TYPES, isLeaveType } = require("../config/leaveTypes");
 
 const VACATION_LEAVE = "Vacation Leave";
 const SICK_LEAVE = "Sick Leave";
-const CREDIT_LEAVE_TYPES = [VACATION_LEAVE, SICK_LEAVE];
 const DAYS_PER_GRANT = 15;
+
+const UNKNOWN_LEAVE_TYPE = "Choose a leave type from the list.";
+const NO_WORKING_DAYS = "This leave has no working days (Monday to Friday).";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -119,6 +124,15 @@ const checkLeaveDates = ({ startDate, endDate }) => {
   return { startKey: startDate, endKey: endDate };
 };
 
+// Why a leave type can't be filed, or null: it has to be one of the names on the list
+const leaveTypeError = (leaveType) =>
+  isLeaveType(leaveType) ? null : UNKNOWN_LEAVE_TYPE;
+
+// Why a leave over these dates can't be filed, whatever its type, or null: it needs at
+// least one Monday-to-Friday day. (Approval still marks its Saturdays and Sundays On-Leave.)
+const workingDaysError = ({ startKey, endKey }) =>
+  weekdaysBetween(startKey, endKey).length === 0 ? NO_WORKING_DAYS : null;
+
 // Checks that a VL or SL request fits the employee's credits. `leaves` are the employee's
 // other requests (not this one). Returns an error message, or null when it fits (or the
 // leave type doesn't use credits).
@@ -126,10 +140,10 @@ const checkLeaveCredits = (job, leaves, request) => {
   const { leaveType, startKey, endKey } = request;
   if (!CREDIT_LEAVE_TYPES.includes(leaveType)) return null;
 
+  // Filing refuses this for every type (workingDaysError). It stays here for approval,
+  // which checks a VL or SL request again and may meet one saved before that rule.
   const days = weekdaysBetween(startKey, endKey);
-  if (days.length === 0) {
-    return "This leave has no working days (Monday to Friday).";
-  }
+  if (days.length === 0) return NO_WORKING_DAYS;
 
   const regularizationKey = toDateKey(job.regularizationDate);
   const opening = job.vacationLeaveOpening || 0;
@@ -178,5 +192,7 @@ module.exports = {
   vacationEarned,
   leaveBalance,
   checkLeaveDates,
+  leaveTypeError,
+  workingDaysError,
   checkLeaveCredits,
 };

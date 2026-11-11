@@ -26,6 +26,8 @@ const {
   manilaToday,
   leaveBalance,
   checkLeaveDates,
+  leaveTypeError,
+  workingDaysError,
   checkLeaveCredits,
 } = require("../utils/leaveCredits");
 
@@ -198,13 +200,19 @@ router.get("/leave-credits/:userId", requireFilingPage, async (req, res) => {
   }
 });
 
-// Route for applying for leave. VL and SL must fit the employee's credits.
+// Route for applying for leave. The type must be on the list (config/leaveTypes.js), the
+// dates need a Monday-to-Friday day, and VL and SL must fit the employee's credits.
 router.post("/apply-leave", requirePage("filing"), async (req, res) => {
   const { leaveType, leaveDetails, startDate, endDate } = req.body;
 
   const dates = checkLeaveDates({ startDate, endDate });
   if (dates.error) {
     return res.status(400).json({ error: dates.error });
+  }
+
+  const refusal = leaveTypeError(leaveType) || workingDaysError(dates);
+  if (refusal) {
+    return res.status(400).json({ error: refusal });
   }
 
   try {
@@ -248,6 +256,15 @@ router.patch("/edit-leave/:id", requirePage("filing"), async (req, res) => {
       });
       if (dates.error) {
         return res.status(400).json({ error: dates.error });
+      }
+
+      // A type sent with the edit must be on the list. A request that keeps the type it
+      // was saved with is not checked, so one filed before the list can still be edited.
+      const refusal =
+        (leaveType !== undefined && leaveTypeError(leaveType)) ||
+        workingDaysError(dates);
+      if (refusal) {
+        return res.status(400).json({ error: refusal });
       }
 
       const error = await creditError(

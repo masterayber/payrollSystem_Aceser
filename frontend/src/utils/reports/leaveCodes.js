@@ -14,26 +14,20 @@ import {
   sleaveFill,
   vleaveFill,
 } from "./excelStyles";
+import { LEAVE_TYPES } from "../leaveTypes";
 
-const LWOP_LEAVE_TYPE = "Leave Without Pay (LWOP)";
+// Excel colors are a report matter, so they stay here: a type with no fill of its own
+// gets the other-leave fill
+const FILL_BY_CODE = { VL: vleaveFill, SL: sleaveFill, LWOP: lwopFill };
 
-// Every type the Leave form offers, as filed, with its code
-export const LEAVE_CODES = [
-  { leaveType: "Vacation Leave", code: "VL", fill: vleaveFill },
-  { leaveType: "Sick Leave", code: "SL", fill: sleaveFill },
-  { leaveType: LWOP_LEAVE_TYPE, code: "LWOP", fill: lwopFill },
-  { leaveType: "Maternity Leave", code: "ML", fill: otherLeaveFill },
-  { leaveType: "Paternity Leave", code: "PL", fill: otherLeaveFill },
-  { leaveType: "Solo Parent Leave", code: "SPL", fill: otherLeaveFill },
-  { leaveType: "Study Leave", code: "STL", fill: otherLeaveFill },
-  { leaveType: "10-Day VAWC Leave", code: "VAWC", fill: otherLeaveFill },
-  {
-    leaveType: "Special Leave Benefits for Women",
-    code: "SLW",
-    fill: otherLeaveFill,
-  },
-  { leaveType: "Adoption Leave", code: "AL", fill: otherLeaveFill },
-];
+// Every type the Leave form offers (the shared list, in its order), as filed, with its code
+export const LEAVE_CODES = LEAVE_TYPES.map(({ name, code }) => ({
+  leaveType: name,
+  code,
+  fill: FILL_BY_CODE[code] || otherLeaveFill,
+}));
+
+const LWOP_LEAVE_TYPE = LEAVE_TYPES.find(({ code }) => code === "LWOP").name;
 
 // An approved leave whose type is missing or not in the list above
 export const OTHER_LEAVE = {
