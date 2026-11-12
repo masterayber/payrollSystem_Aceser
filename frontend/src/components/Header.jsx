@@ -5,6 +5,7 @@ import ProfilePhoto from "./ProfilePhoto/ProfilePhoto";
 import { IconCircleArrowUp, IconCircleArrowDown } from "@tabler/icons-react";
 import PropTypes from "prop-types";
 import { isAdminRole } from "../utils/roles";
+import { accountFirstName, accountName } from "../utils/adminAccounts";
 
 const logisticsTitles = [
   { name: "Logistics Dashboard", path: "/logistics/dashboard" },
@@ -52,7 +53,9 @@ function Header({ role }) {
     window.location.href = "/";
   };
 
-  const fullName = `${userData?.employee?.firstName} ${userData?.employee?.lastName}`;
+  // The employee's name, then the account's own name (an Admin account has no employee
+  // record), then the username
+  const fullName = accountName(userData);
 
   const userMenuTitles = [
     {
@@ -148,7 +151,7 @@ function Header({ role }) {
           </div>
         ))}
       <div className="user-header">
-        <p>{userData?.employee?.firstName}</p>
+        <p>{accountFirstName(userData)}</p>
         <div className="icon-count">
           <button
             type="button"
