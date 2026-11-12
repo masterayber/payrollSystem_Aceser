@@ -19,7 +19,14 @@ import {
 } from "../../../utils/payVisibility";
 import "../../Restricted/Restricted.css";
 
-const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
+// `canDelete`: show Delete Employee (the main account only; the caller decides,
+// so the form needs no user lookup of its own)
+const EditEmployeeModal = ({
+  employee,
+  onClose,
+  onUpdateEmployee,
+  canDelete = false,
+}) => {
   // Pay the Super Admin has not shared with this Admin: shown as "Restricted" and
   // never sent, so saving other changes leaves it untouched
   const payHidden = isPayHidden(employee.jobDescription);
@@ -634,13 +641,15 @@ const EditEmployeeModal = ({ employee, onClose, onUpdateEmployee }) => {
               Cancel
             </button>
 
-            <button
-              type="button"
-              onClick={handleDeleteClick}
-              className="btn modal-button"
-            >
-              Delete Employee
-            </button>
+            {canDelete && (
+              <button
+                type="button"
+                onClick={handleDeleteClick}
+                className="btn modal-button"
+              >
+                Delete Employee
+              </button>
+            )}
 
             <button
               type="button"
@@ -729,4 +738,5 @@ EditEmployeeModal.propTypes = {
   employee: PropTypes.shape().isRequired,
   onClose: PropTypes.func.isRequired,
   onUpdateEmployee: PropTypes.func.isRequired,
+  canDelete: PropTypes.bool,
 };

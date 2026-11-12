@@ -113,8 +113,30 @@ Card.propTypes = {
 // (optional) is a job description plus employeeId. `ownerId` (optional) is the user
 // id of the person shown; "Pay needs an update" shows only when it is someone
 // other than the signed-in viewer, never on a person's own profile.
-const ProfileView = ({ profile, employment, ownerId }) => {
+// `accountOnly` (an Admin account, no employee record): one Personal Information card
+// with the names, `username` (read-only) and the email; nothing else is stored.
+const ProfileView = ({
+  profile,
+  employment,
+  ownerId,
+  accountOnly = false,
+  username,
+}) => {
   const { userData } = useContext(UserContext);
+
+  if (accountOnly) {
+    return (
+      <div className="profile-grid">
+        <Card title="Personal Information">
+          <Field label="First name" value={profile.firstName} />
+          <Field label="Last name" value={profile.lastName} />
+          <Field label="Username" value={username} />
+          <Field label="Email" value={profile.email} />
+        </Card>
+      </div>
+    );
+  }
+
   const address = profile.address || {};
   const emergency = profile.emergencyDetails || {};
   const emergencyName = [emergency.contactFirstName, emergency.contactLastName]
@@ -209,6 +231,8 @@ ProfileView.propTypes = {
   profile: PropTypes.object.isRequired,
   employment: PropTypes.object,
   ownerId: PropTypes.string,
+  accountOnly: PropTypes.bool,
+  username: PropTypes.string,
 };
 
 export default ProfileView;
