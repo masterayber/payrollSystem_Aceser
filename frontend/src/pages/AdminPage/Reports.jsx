@@ -32,6 +32,10 @@ const Reports = () => {
   const [selectedOption, setSelectedOption] = useState(cutoffOptions[0].value);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [loading, setLoading] = useState(false);
+  // null until the holiday list arrives. The sheet shows HOL, not LWOP, on a non-working
+  // holiday, so nothing is exported without the list.
+  const [holidays, setHolidays] = useState(null);
+  const [holidaysFailed, setHolidaysFailed] = useState(false);
 
   const handleReportTypeChange = (type) => {
     setReportType(type);
@@ -53,10 +57,25 @@ const Reports = () => {
       }
     };
 
+    // Every holiday, once: an export range can cross a year
+    const fetchHolidays = async () => {
+      try {
+        const response = await API.get("/api/holidays");
+        if (!Array.isArray(response.data)) throw new Error("Not a list");
+        setHolidays(response.data);
+      } catch (error) {
+        console.error("Error fetching holidays:", error);
+        setHolidaysFailed(true);
+      }
+    };
+
     fetchAttendance();
+    fetchHolidays();
   }, []);
 
   const handleDownload = () => {
+    if (!holidays) return;
+
     const { start, end, label, monthName, cutoff } = getDateRange(
       reportType,
       selectedOption,
@@ -74,6 +93,7 @@ const Reports = () => {
       endDate: new Date(end),
       employeeData: reportEmployees,
       attendanceRecords,
+      holidays,
     });
 
     const { ws2 } = LeaveSheet({
@@ -112,6 +132,7 @@ const Reports = () => {
   };
 
   const reportLabel = reportType === "month" ? "Full Month" : "Cut-off";
+  const preparing = loading || (!holidays && !holidaysFailed);
 
   return (
     <div className="main-content reports-page">
@@ -186,13 +207,24 @@ const Reports = () => {
             <button
               type="button"
               className="btn reports-download-button"
-              disabled={loading || employeeData.length === 0 || !selectedOption}
+              disabled={
+                preparing ||
+                !holidays ||
+                employeeData.length === 0 ||
+                !selectedOption
+              }
               onClick={handleDownload}
             >
-              {loading ? "Preparing..." : `Download ${reportLabel} Attendance`}
+              {preparing ? "Preparing..." : `Download ${reportLabel} Attendance`}
             </button>
           </div>
         </div>
+
+        {holidaysFailed && (
+          <p className="feedback-message error" role="alert">
+            Could not load the holidays. Reload the page.
+          </p>
+        )}
       </div>
 
       {/* The page needs the Reports tick (PrivateRoute); the 13th month also needs

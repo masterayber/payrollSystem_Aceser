@@ -162,6 +162,13 @@ export const otherLeaveFill = {
   fgColor: { rgb: "CCC0DA" },
 };
 
+// HOL: a non-working holiday, on a day cell and on the REG/HOL row above the dates.
+// The same color as the HOL remark on the REMARKS sheet (yellowFill).
+export const holidayFill = {
+  patternType: "solid",
+  fgColor: { rgb: "FFE39C" },
+};
+
 // Day columns are 9 wide, and wider only if a cell's text would not fit
 export const DAY_COLUMN_WIDTH = 9;
 

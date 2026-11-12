@@ -14,6 +14,7 @@ import {
   darkGrayFill,
   labelFill,
   dayFill,
+  holidayFill,
   setCell,
   getDayFill,
   dayColumnWidth,
@@ -21,12 +22,14 @@ import {
 } from "./excelStyles";
 import { formatKey, isNotEmployedOn } from "./reportHelpers";
 import {
+  HOLIDAY,
   NOT_EMPLOYED,
   getLeaveMark,
   isUnfiledAbsence,
   leaveLegendEntries,
   writeLegend,
 } from "./leaveCodes";
+import { holidaysByDate, isNonWorkingHoliday } from "../holidays";
 import { manilaToday } from "../cutoff";
 import { isAdminRole } from "../roles";
 
@@ -42,11 +45,25 @@ const buildAttendanceMap = (attendanceRecords) => {
 };
 
 // The text and fill of one day: an approved leave's code (VL, SL, LWOP, ML, ...), LWOP also
-// for an Absent row or a past weekday with no row, LATE, "/" for a half day, "-" when not employed
-export const getDayCell = ({ record, dateKey, todayKey, isNotEmployed }) => {
+// for an Absent row or a past weekday with no row, HOL instead of LWOP on a non-working
+// holiday (`holiday` is that date's holiday or nothing), LATE, "/" for a half day, "-" when
+// not employed
+export const getDayCell = ({
+  record,
+  dateKey,
+  todayKey,
+  isNotEmployed,
+  holiday,
+}) => {
   if (isNotEmployed) return { text: NOT_EMPLOYED.code };
 
-  const mark = getLeaveMark({ record, dateKey, todayKey, isNotEmployed });
+  const mark = getLeaveMark({
+    record,
+    dateKey,
+    todayKey,
+    isNotEmployed,
+    holiday,
+  });
   if (mark) return { text: mark.code, fill: mark.fill };
 
   if (record?.behavior === "Late") return { text: "LATE", fill: redFill };
@@ -61,12 +78,16 @@ export const AttendanceSheet = ({
   endDate,
   employeeData,
   attendanceRecords,
+  holidays = [],
 }) => {
   const cutoffDates = [];
 
   for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
     cutoffDates.push(new Date(d));
   }
+
+  // The holidays from GET /api/holidays, looked up by each date's "YYYY-MM-DD" key
+  const holidayByDate = holidaysByDate(holidays);
 
   const ws1 = {};
   const totalCols = 5 + cutoffDates.length;
@@ -77,11 +98,12 @@ export const AttendanceSheet = ({
   // Second Row
   for (let c = 0; c <= 4; c++) setCell(ws1, 1, c, "", "s", {});
 
-  // REG/HOL Row
+  // REG/HOL Row: HOL on a non-working holiday, REG on every other day
   cutoffDates.forEach((d, i) => {
-    setCell(ws1, 1, 5 + i, "REG", "s", {
+    const isHoliday = isNonWorkingHoliday(holidayByDate[formatKey(d)]?.type);
+    setCell(ws1, 1, 5 + i, isHoliday ? HOLIDAY.code : "REG", "s", {
       font: { bold: true, sz: 11, color: blackFill },
-      fill: blueFill,
+      fill: isHoliday ? holidayFill : blueFill,
       border: topBottomBorder,
       alignment: centerAlign,
     });
@@ -187,14 +209,29 @@ export const AttendanceSheet = ({
       const dayFill = getDayFill(d);
       const record = employeeAttendance[dateKey];
       const isNotEmployed = isNotEmployedOn(employee, dateKey);
-      const cell = getDayCell({ record, dateKey, todayKey, isNotEmployed });
+      const holiday = holidayByDate[dateKey];
+      const cell = getDayCell({
+        record,
+        dateKey,
+        todayKey,
+        isNotEmployed,
+        holiday,
+      });
 
-      // Every weekday that isn't On-Time, including unfiled absences (LWOP) with no row
+      // Every weekday that isn't On-Time, including unfiled absences (LWOP) with no row.
+      // A day that shows HOL is a paid day off, not an absence, so it is not counted.
       if (
         !isNotEmployed &&
         !isWeekendDay &&
+        cell.text !== HOLIDAY.code &&
         ((record && record.behavior !== "On-Time") ||
-          isUnfiledAbsence({ record, dateKey, todayKey, isNotEmployed }))
+          isUnfiledAbsence({
+            record,
+            dateKey,
+            todayKey,
+            isNotEmployed,
+            holiday,
+          }))
       ) {
         dailyCounts[i] += 1;
       }
@@ -227,6 +264,7 @@ export const AttendanceSheet = ({
     { code: "LATE", meaning: "Late", fill: redFill },
     { code: "/", meaning: "Half day" },
     ...leaveLegendEntries({ includeLwop: true }),
+    HOLIDAY,
     NOT_EMPLOYED,
   ]);
 

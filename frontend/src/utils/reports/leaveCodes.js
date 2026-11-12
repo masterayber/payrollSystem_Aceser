@@ -1,12 +1,14 @@
 // Day codes the Attendance and Leave sheets share: the code of each approved leave type.
 // LWOP means Absent: an approved LWOP and a workday missed without an approved leave are
 // both LWOP. It is an absence, not a leave, so it shows only on the Attendance sheet.
+// A non-working holiday on a Monday-to-Friday day is a paid day off, never LWOP: it shows HOL.
 // Pure functions on "YYYY-MM-DD" keys, so a day never shifts with the time zone.
 
 import {
   allBorders,
   blackFont,
   centerAlign,
+  holidayFill,
   leftAlign,
   lwopFill,
   otherLeaveFill,
@@ -15,6 +17,7 @@ import {
   vleaveFill,
 } from "./excelStyles";
 import { LEAVE_TYPES } from "../leaveTypes";
+import { isNonWorkingHoliday } from "../holidays";
 
 // Excel colors are a report matter, so they stay here: a type with no fill of its own
 // gets the other-leave fill
@@ -38,6 +41,14 @@ export const OTHER_LEAVE = {
 
 // The one LWOP legend line (Attendance sheet): approved LWOP and unfiled absences alike
 export const LWOP_MEANING = "Absent (leave without pay)";
+
+// A non-working holiday (Regular or Special Non-Working) on a Monday-to-Friday day
+// (Attendance sheet)
+export const HOLIDAY = {
+  code: "HOL",
+  meaning: "Holiday (non-working)",
+  fill: holidayFill,
+};
 
 export const NOT_EMPLOYED = { code: "-", meaning: "Not employed on that day" };
 
@@ -71,23 +82,49 @@ export const isWeekdayKey = (dateKey) => {
 
 // Not filed: a weekday (Mon-Fri) with an Absent row, or a weekday before today with no row.
 // Weekends never count, Absent row or not. Days outside the employment (before the start
-// date, after the last working day) never count either.
-export const isUnfiledAbsence = ({ record, dateKey, todayKey, isNotEmployed }) => {
+// date, after the last working day) never count either. `holiday` is that date's holiday
+// ({ type, name }) or nothing: a non-working holiday is a paid day off, never an absence.
+export const isUnfiledAbsence = ({
+  record,
+  dateKey,
+  todayKey,
+  isNotEmployed,
+  holiday,
+}) => {
   if (isNotEmployed || !isWeekdayKey(dateKey)) return false;
+  if (isNonWorkingHoliday(holiday?.type)) return false;
   if (record) return record.behavior === "Absent";
   return dateKey < todayKey;
 };
 
-// The code and fill of an approved leave day, or LWOP for an unfiled absence; null for any other day.
+// The code and fill of an approved leave day, LWOP for an unfiled absence, or HOL for a
+// non-working holiday; null for any other day.
 // LWOP is an absence, so a weekend never shows it: an approved LWOP that spans a weekend is
 // blank on Saturday and Sunday, as it was before.
-export const getLeaveMark = ({ record, dateKey, todayKey, isNotEmployed }) => {
+// HOL takes the place of LWOP only: on a Mon-Fri non-working holiday a day with no row
+// (past, today or future), an Absent row and an approved LWOP all show HOL. Any other
+// approved leave keeps its code, a row with a time in or out is unchanged, and a weekend
+// never shows HOL. "Special Working", or no `holiday`, changes nothing.
+export const getLeaveMark = ({
+  record,
+  dateKey,
+  todayKey,
+  isNotEmployed,
+  holiday,
+}) => {
   if (isNotEmployed) return null;
+
+  const isDayOff =
+    isWeekdayKey(dateKey) && isNonWorkingHoliday(holiday?.type);
+  const holidayMark = { code: HOLIDAY.code, fill: HOLIDAY.fill };
+
   if (isLwopLeaveDay(record)) {
-    return isWeekdayKey(dateKey) ? leaveMarkFor(LWOP_LEAVE_TYPE) : null;
+    if (!isWeekdayKey(dateKey)) return null;
+    return isDayOff ? holidayMark : leaveMarkFor(LWOP_LEAVE_TYPE);
   }
   if (isLeaveDay(record)) return leaveMarkFor(record.leaveType);
-  if (isUnfiledAbsence({ record, dateKey, todayKey, isNotEmployed })) {
+  if (isDayOff && (!record || record.behavior === "Absent")) return holidayMark;
+  if (isUnfiledAbsence({ record, dateKey, todayKey, isNotEmployed, holiday })) {
     return leaveMarkFor(LWOP_LEAVE_TYPE);
   }
   return null;
