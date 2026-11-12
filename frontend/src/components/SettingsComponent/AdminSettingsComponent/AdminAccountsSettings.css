@@ -1,0 +1,271 @@
+/* Settings > Admins: the list of Admin accounts, and the pieces of its Add and Edit
+   form and temporary password box (the modals are drawn from this screen only) */
+.admin-accounts-settings .admin-accounts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-accounts-settings .admin-accounts-add-button {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--default-button-color);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.admin-accounts-settings .admin-accounts-add-button:hover:not(:disabled) {
+  background: var(--hover-button-color);
+}
+
+.admin-accounts-settings .admin-accounts-load-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-accounts-settings .admin-accounts-empty {
+  padding: 20px 14px;
+  border: 1px dashed var(--gray-300);
+  border-radius: var(--border-radius);
+  color: var(--neutral-color-70);
+  font-size: 14px;
+  text-align: center;
+}
+
+.admin-accounts-settings .admin-accounts-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--neutral-color-0);
+}
+
+.admin-accounts-settings .admin-accounts-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+.admin-accounts-settings .admin-accounts-table th,
+.admin-accounts-settings .admin-accounts-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--gray-200);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-accounts-settings .admin-accounts-table th {
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-90);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-accounts-settings .admin-accounts-table td {
+  color: var(--neutral-color-90);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.admin-accounts-settings .admin-accounts-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-accounts-settings .admin-accounts-table tbody tr:hover {
+  background: var(--gray-100);
+}
+
+/* A disabled Admin stays in the list, greyed */
+.admin-accounts-settings .admin-accounts-table tbody tr.disabled td {
+  background: var(--gray-50);
+  color: var(--neutral-color-70);
+}
+
+.admin-accounts-settings .admin-accounts-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-accounts-settings .admin-accounts-badge {
+  display: inline-block;
+  padding: 4px 9px;
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-accounts-settings .admin-accounts-badge.active {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.admin-accounts-settings .admin-accounts-badge.disabled {
+  border-color: var(--gray-300);
+  background: var(--gray-100);
+  color: var(--neutral-color-80);
+}
+
+.admin-accounts-settings .admin-accounts-badge.pending {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.admin-accounts-settings .admin-accounts-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-accounts-settings .admin-accounts-action {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  background: var(--neutral-color-0);
+  color: var(--default-button-color);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-accounts-settings .admin-accounts-action:hover:not(:disabled) {
+  background: var(--gray-100);
+}
+
+.admin-accounts-settings .admin-accounts-action.danger {
+  color: #b91c1c;
+}
+
+.admin-accounts-settings .admin-accounts-action.danger:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.admin-accounts-settings .admin-accounts-action:disabled {
+  color: var(--neutral-color-70);
+  cursor: not-allowed;
+}
+
+.admin-accounts-settings .admin-accounts-action:focus-visible,
+.admin-accounts-settings .admin-accounts-add-button:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: 2px;
+}
+
+/* ---- Add Admin / Edit Admin form ---- */
+.admin-account-modal .admin-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.admin-account-modal .admin-form-section h4 {
+  margin: 0;
+  color: var(--neutral-color-100);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.admin-account-modal .admin-form-hint {
+  margin: 0;
+  color: var(--neutral-color-80);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.admin-account-modal .input-container > .admin-form-hint {
+  margin-top: 6px;
+  padding-left: 3px;
+}
+
+.admin-account-modal .admin-form-section .access-list {
+  margin-top: 4px;
+}
+
+/* A tick's label with its hint line under it */
+.admin-account-modal .admin-tick-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-account-modal .admin-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-account-modal .admin-picker-list {
+  max-height: 264px;
+  margin-top: 0;
+  padding: 8px;
+  overflow-y: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--neutral-color-0);
+}
+
+.admin-account-modal .admin-picker-empty {
+  padding: 12px;
+  color: var(--neutral-color-70);
+  font-size: 14px;
+  text-align: center;
+}
+
+.admin-account-modal .admin-picker-chosen {
+  color: var(--neutral-color-90);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* ---- Temporary password box ---- */
+.admin-password-modal .admin-password-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-password-modal .admin-password-row .input-group-signup {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-password-modal .admin-password-value {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 640px) {
+  .admin-accounts-settings .admin-accounts-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-password-modal .admin-password-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
