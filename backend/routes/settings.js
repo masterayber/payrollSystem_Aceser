@@ -12,7 +12,7 @@ const {
   requireAuthenticated,
   PAGE_ACCESS_DENIED,
 } = require("../middleware/accessMiddleware");
-const { isAdminRole } = require("../config/roles");
+const { isAdminRole, isPlainAdmin } = require("../config/roles");
 const { isHiddenAccount } = require("../utils/hiddenAccounts");
 const { canUseAdminPage } = require("../utils/pageAccess");
 const { takenRefusal } = require("../utils/takenIdentifiers");
@@ -129,6 +129,11 @@ const requireSelfOrAdmin = async (req, res, next) => {
   next();
 };
 
+const ACCOUNT_DETAILS_REQUIRED = "First name, last name and email are required.";
+
+// Trimmed text, or "" for a blank, missing or non-text value
+const trimmedText = (value) => (typeof value === "string" ? value.trim() : "");
+
 const EDITABLE_EMPLOYEE_FIELDS = [
   "firstName",
   "lastName",
@@ -148,7 +153,28 @@ router.put(
   async (req, res) => {
     try {
       const userId = req.params.id;
-      const { employee, email } = req.body;
+      const { employee } = req.body;
+      let { email } = req.body;
+
+      // An Admin account (not the Super Admin) made by Add Admin has no employee
+      // record, so its own name lives on the account: top-level firstName and
+      // lastName, with the email, all three required. Anyone else's top-level names
+      // are ignored, and an older Admin that has an employee record keeps saving
+      // through `employee` as before.
+      const isOwnAdminAccount =
+        isPlainAdmin(req.currentUser.role) &&
+        String(req.user.userId) === String(userId) &&
+        !(await Employee.exists({ userId }));
+      let accountNames = null;
+      if (isOwnAdminAccount) {
+        const firstName = trimmedText(req.body.firstName);
+        const lastName = trimmedText(req.body.lastName);
+        email = trimmedText(email);
+        if (!firstName || !lastName || !email) {
+          return res.status(400).json({ message: ACCOUNT_DETAILS_REQUIRED });
+        }
+        accountNames = { firstName, lastName };
+      }
 
       // An email another account uses, in any case (the account email and the
       // employee record's email); keeping one's own, even in a new case, is fine.
@@ -163,7 +189,7 @@ router.put(
 
       // Only whitelisted fields reach the Auth record. Role, status, password and
       // page access are changed through their own admin routes, never from here.
-      const userUpdate = {};
+      const userUpdate = { ...accountNames };
       if (email !== undefined) userUpdate.email = email;
 
       const updatedUser = await User.findByIdAndUpdate(userId, userUpdate, {
@@ -222,6 +248,9 @@ router.put(
       const combined = {
         _id: updatedUser._id,
         email: updatedUser.email,
+        // The names on the account (Admin accounts); absent for the others
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
         profilePhoto: updatedUser.profilePhoto,
         employee: updatedEmployee ? updatedEmployee.toObject() : {},
         settings: isOwner

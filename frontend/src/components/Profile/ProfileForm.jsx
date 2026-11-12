@@ -62,7 +62,13 @@ const SECTIONS = [
   },
 ];
 
-const ProfileForm = ({ form, onChange, disabled }) => {
+// An Admin account (no employee record) edits only its names and email: the first
+// two rows of Personal Information
+const ACCOUNT_SECTIONS = [
+  { title: SECTIONS[0].title, rows: SECTIONS[0].rows.slice(0, 2) },
+];
+
+const ProfileForm = ({ form, onChange, disabled, accountOnly = false }) => {
   const renderField = ({ name, label, type = "text" }) => (
     <div className="input-container" key={name}>
       <div className="label-container">
@@ -84,7 +90,7 @@ const ProfileForm = ({ form, onChange, disabled }) => {
 
   return (
     <>
-      {SECTIONS.map((section) => (
+      {(accountOnly ? ACCOUNT_SECTIONS : SECTIONS).map((section) => (
         <div className="setting-tab" key={section.title}>
           <div className="setting-tab-title">
             <p>{section.title}</p>
@@ -108,6 +114,7 @@ ProfileForm.propTypes = {
   form: PropTypes.object.isRequired,
   onChange: PropTypes.func.isRequired,
   disabled: PropTypes.bool,
+  accountOnly: PropTypes.bool,
 };
 
 export default ProfileForm;

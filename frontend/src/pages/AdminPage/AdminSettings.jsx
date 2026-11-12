@@ -10,34 +10,18 @@ import AdminSecuritySettings from "../../components/SettingsComponent/AdminSetti
 import AdminAboutSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminAboutSettings";
 import AdminAccountsSettings from "../../components/SettingsComponent/AdminSettingsComponent/AdminAccountsSettings";
 import { UserContext } from "../../context/UserContext";
-import { isSuperAdmin } from "../../utils/roles";
+import { adminSettingsTabs, visibleSettingsTab } from "../../utils/pageAccess";
 
-const settingsOptions = [
-  { name: "General", key: "general" },
-  { name: "Company", key: "company" },
-  { name: "Manage", key: "manage" },
-  { name: "Accessibility", key: "accessibility" },
-  { name: "Employees", key: "employees" },
-  { name: "Security & Privacy", key: "security" },
-  { name: "Payroll & Benefits", key: "payroll" },
-  { name: "Attendance", key: "attendance" },
-  { name: "System Log", key: "systemLog" },
-  { name: "About", key: "about" },
-];
-
-// Shown just before "About", and only to the account that manages the Admin accounts
-const adminsOption = { name: "Admins", key: "admins" };
-
+// The tabs drawn and their order come from adminSettingsTabs (by tick and role).
+// The empty tabs (Employees, Payroll & Benefits, Attendance, System Log) are not
+// listed until they have content.
 const settingsContent = {
-  general: <GeneralSettings showEmployment={false} />,
+  // The signed-in admin's own password sits at the bottom of General
+  general: <GeneralSettings showEmployment={false} showPassword />,
   company: <AdminCompanySettings />,
   manage: <AdminManageSettings />,
   accessibility: <AdminAccessibilitySettings />,
-  // employees: <EmployeesSettings />,
   security: <AdminSecuritySettings />,
-  // payroll: <PayrollSettings />,
-  // attendance: <AttendanceSettings />,
-  // systemLog: <SystemLogSettings />,
   admins: <AdminAccountsSettings />,
   about: <AdminAboutSettings />,
 };
@@ -47,20 +31,11 @@ const AdminSettings = () => {
   const settingsOptionsRef = useRef(null);
   const { userData } = useContext(UserContext);
 
-  const canManageAdmins = isSuperAdmin(userData?.role);
-  const visibleOptions = canManageAdmins
-    ? [
-        ...settingsOptions.filter((option) => option.key !== "about"),
-        adminsOption,
-        ...settingsOptions.filter((option) => option.key === "about"),
-      ]
-    : settingsOptions;
-  // The panel follows the tabs: without the Admins tab its panel is never drawn
-  const visibleKey = visibleOptions.some(
-    (option) => option.key === selectedOption,
-  )
-    ? selectedOption
-    : "general";
+  const visibleOptions = adminSettingsTabs(userData);
+  // The panel follows the tabs: a tab that disappears falls back to General
+  const visibleKey = visibleSettingsTab(visibleOptions, selectedOption);
+  // Redraw the indicator when the set of tabs changes (a tick loaded or changed)
+  const tabsKey = visibleOptions.map((option) => option.key).join();
 
   useLayoutEffect(() => {
     const optionsElement = settingsOptionsRef.current;
@@ -89,7 +64,7 @@ const AdminSettings = () => {
     resizeObserver.observe(optionsElement);
 
     return () => resizeObserver.disconnect();
-  }, [visibleKey, canManageAdmins]);
+  }, [visibleKey, tabsKey]);
 
   return (
     <div className="main-content admin-settings-page">

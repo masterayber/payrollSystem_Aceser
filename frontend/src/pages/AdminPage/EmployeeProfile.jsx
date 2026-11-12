@@ -18,7 +18,11 @@ import ProfileView, {
 } from "../../components/Profile/ProfileView";
 import { daysText, monthName } from "../../utils/leaveCredits";
 import { isAdminRole } from "../../utils/roles";
-import { canSeeThirteenthMonth } from "../../utils/pageAccess";
+import {
+  canDeleteEmployee,
+  canManageEmployeeAccess,
+  canSeeThirteenthMonth,
+} from "../../utils/pageAccess";
 import { isPayHidden } from "../../utils/payVisibility";
 import { UserContext } from "../../context/UserContext";
 import { EmployeeContext } from "../../context/EmployeeContext";
@@ -64,6 +68,11 @@ const EmployeeProfile = () => {
   const [isReinstateOpen, setIsReinstateOpen] = useState(false);
   const [doneMessage, setDoneMessage] = useState("");
 
+  // The Page Access card and its request need the "Employee access" tick (the
+  // server guards the read with it); Delete Employee is the main account's only
+  const showAccess = canManageEmployeeAccess(userData);
+  const canDelete = canDeleteEmployee(userData);
+
   const loadProfile = useCallback(async () => {
     // Not found: back to the Employees list, as for a deleted employee
     const leaveProfile = () => navigate("/employees", { replace: true });
@@ -91,13 +100,17 @@ const EmployeeProfile = () => {
   }, [userId, navigate]);
 
   const loadAccess = useCallback(async () => {
+    if (!showAccess) {
+      setAccess(null);
+      return;
+    }
     try {
       const { data } = await API.get(`/api/access/users/${userId}`);
       setAccess(data);
     } catch {
       setAccess(null);
     }
-  }, [userId]);
+  }, [userId, showAccess]);
 
   const loadCredits = useCallback(async () => {
     try {
@@ -354,44 +367,46 @@ const EmployeeProfile = () => {
         )}
       </div>
 
-      <section className="profile-card access-card">
-        <div className="access-card-header">
-          <h4 className="profile-card-title">Page Access</h4>
-          <button
-            type="button"
-            className="btn"
-            onClick={() => setIsAccessOpen(true)}
-          >
-            <IconShieldLock stroke={2} />
-            Manage access
-          </button>
-        </div>
-        {access ? (
-          <>
-            <p className="access-summary">
-              {access.customized
-                ? "Customized by an admin"
-                : "Default access for employees"}
-            </p>
-            <div className="access-chips">
-              {access.pages.map((page) => {
-                const on = access.allowedPages.includes(page.key);
-                return (
-                  <span
-                    key={page.key}
-                    className={`access-chip ${on ? "on" : "off"}`}
-                  >
-                    {page.label}
-                    {page.locked ? " (always)" : on ? "" : " (off)"}
-                  </span>
-                );
-              })}
-            </div>
-          </>
-        ) : (
-          <p className="access-summary">Could not load page access.</p>
-        )}
-      </section>
+      {showAccess && (
+        <section className="profile-card access-card">
+          <div className="access-card-header">
+            <h4 className="profile-card-title">Page Access</h4>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setIsAccessOpen(true)}
+            >
+              <IconShieldLock stroke={2} />
+              Manage access
+            </button>
+          </div>
+          {access ? (
+            <>
+              <p className="access-summary">
+                {access.customized
+                  ? "Customized by an admin"
+                  : "Default access for employees"}
+              </p>
+              <div className="access-chips">
+                {access.pages.map((page) => {
+                  const on = access.allowedPages.includes(page.key);
+                  return (
+                    <span
+                      key={page.key}
+                      className={`access-chip ${on ? "on" : "off"}`}
+                    >
+                      {page.label}
+                      {page.locked ? " (always)" : on ? "" : " (off)"}
+                    </span>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <p className="access-summary">Could not load page access.</p>
+          )}
+        </section>
+      )}
 
       {isConfirmOpen && (
         <ConfirmModal
@@ -412,6 +427,7 @@ const EmployeeProfile = () => {
       {isEmploymentOpen && (
         <EditEmployeeModal
           employee={modalEmployee}
+          canDelete={canDelete}
           onClose={() => setIsEmploymentOpen(false)}
           onUpdateEmployee={() => {
             loadProfile();
@@ -449,7 +465,7 @@ const EmployeeProfile = () => {
         />
       )}
 
-      {isAccessOpen && (
+      {showAccess && isAccessOpen && (
         <ManageAccessModal
           employee={{ ...employee, _id: userId }}
           onClose={() => {
