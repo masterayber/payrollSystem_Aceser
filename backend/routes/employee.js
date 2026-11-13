@@ -137,9 +137,8 @@ router.get("/employees", requireAdmin, async (req, res) => {
       })),
     );
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error fetching employees", error: err.message });
+    console.error("Error fetching employees:", err);
+    res.status(500).json({ message: "Error fetching employees" });
   }
 });
 
@@ -187,9 +186,8 @@ router.get("/employees/:userId", requireEmployeesPage, async (req, res) => {
       }),
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error fetching employee", error: err.message });
+    console.error("Error fetching employee:", err);
+    res.status(500).json({ message: "Error fetching employee" });
   }
 });
 
@@ -233,10 +231,8 @@ router.post("/update-info", requireSignupToken, async (req, res) => {
       userId: employee._id,
     });
   } catch (err) {
-    res.status(500).json({
-      message: "Server error. Please try again later",
-      error: err.message,
-    });
+    console.error("Additional information error:", err);
+    res.status(500).json({ message: "Server error. Please try again later" });
   }
 });
 
@@ -262,10 +258,8 @@ router.get("/created-account/:id", requireSignupToken, async (req, res) => {
       gender: employee.gender,
     });
   } catch (err) {
-    res.status(500).json({
-      message: "Server error. Please try again later.",
-      error: err.message,
-    });
+    console.error("Account created error:", err);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 });
 
@@ -337,9 +331,8 @@ router.delete(
 
       res.status(200).json({ message: "Employee deleted successfully" });
     } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Internal server error", error: error.message });
+      console.error("Error deleting employee:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   },
 );
@@ -417,9 +410,8 @@ router.patch(
 
       res.status(200).json({ message: "Employee marked as resigned" });
     } catch (err) {
-      res
-        .status(500)
-        .json({ message: "Failed to mark as resigned", error: err.message });
+      console.error("Failed to mark as resigned:", err);
+      res.status(500).json({ message: "Failed to mark as resigned" });
     }
   },
 );
@@ -464,9 +456,8 @@ router.patch(
 
       res.status(200).json({ message: "Employee reinstated" });
     } catch (err) {
-      res
-        .status(500)
-        .json({ message: "Failed to reinstate", error: err.message });
+      console.error("Failed to reinstate:", err);
+      res.status(500).json({ message: "Failed to reinstate" });
     }
   },
 );
@@ -500,7 +491,7 @@ router.post("/add-employee-via-admin", requireEmployeesPage, async (req, res) =>
 
     // Always an Employee-role account; a role or mustChangePassword sent in the body
     // is ignored. The admin chose this password, so the new account must change it
-    // at first sign-in. The pay was entered, so it isn't marked "Pay not set".
+    // at first sign-in. The pay was entered, so it isn't marked "Pay needs an update".
     const { user, employee, settings } = await createEmployeeAccount(
       req.body,
       { ...job.fields, payNotSet: false },
@@ -533,9 +524,8 @@ router.post("/add-employee-via-admin", requireEmployeesPage, async (req, res) =>
       settings: settingsFor(payScope(scopeUser), user._id, settings.toObject()),
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Internal Server Error", error: error.message });
+    console.error("Error adding employee:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
@@ -679,7 +669,7 @@ router.put(
       }
 
       // A sent, valid basic pay saved by someone who can see it (even the same amount)
-      // clears "Pay not set". Nothing else clears it.
+      // clears "Pay needs an update". Nothing else clears it.
       if (seesPay && sendsBasicPay(req.body)) {
         jobUpdate["general.jobDescription.payNotSet"] = false;
       }
@@ -727,9 +717,8 @@ router.put(
 
       res.status(200).json({ message: "Employee updated successfully" });
     } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Failed to update employee", error: error.message });
+      console.error("Failed to update employee:", error);
+      res.status(500).json({ message: "Failed to update employee" });
     }
   },
 );

@@ -23,6 +23,7 @@ const { getAllowedPages } = require("../utils/pageAccess");
 const { VISIBLE_ROLE } = require("../utils/hiddenAccounts");
 const { checkNewPassword } = require("../utils/password");
 const { takenRefusal } = require("../utils/takenIdentifiers");
+const { ownSettings } = require("../utils/payVisibility");
 
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
 
@@ -34,10 +35,11 @@ const passwordFlags = (user) => ({
   mustChangePassword: user.mustChangePassword === true,
 });
 
-// Fields never sent back in the login and /me replies: the password hash, and
-// createdBySuperAdmin, a retired field some older records still carry
+// Fields never sent back in the login and /me replies: the password hash, the reset
+// token, and createdBySuperAdmin, a retired field some older records still carry
 const stripPrivateFields = (user) => {
   delete user.password;
+  delete user.resetToken;
   delete user.createdBySuperAdmin;
   return user;
 };
@@ -109,7 +111,7 @@ router.post("/login", async (req, res) => {
       ...passwordFlags(userObj),
       allowedPages: getAllowedPages(userObj),
       employee: employee || null,
-      settings: settings || null,
+      settings: settings ? ownSettings(settings) : null,
       attendance: (attendance || []).map(toClientAttendance),
       leaveRequests: leaveRequests || [],
       overtimeRequests: overtimeRequests || [],
@@ -121,7 +123,8 @@ router.post("/login", async (req, res) => {
       message: "Login Successful",
     });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -197,8 +200,8 @@ router.post("/signup", async (req, res) => {
     };
 
     if (user.role === "Employee") {
-      // A self sign-up starts on a basic pay of 0, marked "Pay not set" until someone
-      // who can see the pay enters the real amount
+      // A self sign-up starts on a basic pay of 0, marked "Pay needs an update" until
+      // someone who can see the pay enters the real amount
       settingsData.general = {
         jobDescription: {
           designation: "",
@@ -231,7 +234,8 @@ router.post("/signup", async (req, res) => {
       .status(200)
       .json({ message: "User created successfully", email, signupToken });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Signup error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -262,10 +266,8 @@ router.post("/forgot-password", async (req, res) => {
       expiresAt: code.expiresAt,
     });
   } catch (err) {
-    res.status(500).json({
-      message: "Server error. Please try again later",
-      error: err.message,
-    });
+    console.error("Forgot password error:", err);
+    res.status(500).json({ message: "Server error. Please try again later" });
   }
 });
 
@@ -401,7 +403,8 @@ router.post(
         .status(200)
         .json({ message: "Password changed.", mustChangePassword: false });
     } catch (err) {
-      res.status(500).json({ message: "Server error", error: err.message });
+      console.error("Change password error:", err);
+      res.status(500).json({ message: "Server error" });
     }
   },
 );
@@ -432,14 +435,15 @@ router.get("/me", requireAuthenticatedBeforePasswordChange, async (req, res) => 
         ...passwordFlags(user),
         allowedPages: getAllowedPages(user),
         employee: employee || null,
-        settings: settings || null,
+        settings: settings ? ownSettings(settings) : null,
         attendance: (attendance || []).map(toClientAttendance),
         leaveRequests: leaveRequests || [],
         overtimeRequests: overtimeRequests || [],
       },
     });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Signed-in user refresh error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -503,40 +507,9 @@ router.get("/pending-users", requireAdminPage("employees"), async (req, res) => 
 
     res.json(enrichedUsers);
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Pending users error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
-
-// router.post("/add-employee", requireAdmin, async (req, res) => {
-//   const { firstName, lastName, email, username, password, role } = req.body;
-
-//   try {
-//     const existingUser = await User.findOne({ email });
-//     if (existingUser) {
-//       return res.status(400).json({ message: "Email already exists" });
-//     }
-
-//     const user = new User({
-//       email,
-//       username,
-//       password,
-//       role,
-//       status: "Active",
-//     });
-//     await user.save();
-
-//     const employee = new Employee({
-//       firstName,
-//       lastName,
-//       email,
-//       role,
-//     });
-//     await employee.save();
-
-//     res.status(200).json({ message: "Employee added successfully" });
-//   } catch (err) {
-//     res.status(500).json({ message: "Server error", error: err.message });
-//   }
-// });
 
 module.exports = router;
