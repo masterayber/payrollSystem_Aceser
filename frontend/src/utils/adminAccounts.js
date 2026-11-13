@@ -131,7 +131,15 @@ export const FORM_MESSAGES = {
   email: "Enter a valid email address.",
 };
 
-const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// The one email check on the screens: something, an @, something, a dot, something, with
+// no spaces. The same pattern and words as the server (backend/utils/emailShape.js).
+// Used by Settings > Admins (checkAdminForm) and an Admin's own Settings > General
+// (components/Profile/profileForm.js checkAccountForm).
+export const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// True when `value` is text shaped like an email once trimmed
+export const isEmailShape = (value) =>
+  typeof value === "string" && EMAIL_SHAPE.test(value.trim());
 
 // The yellow message to show instead of sending, or "" when the form can be sent
 export const checkAdminForm = (form) => {
@@ -139,7 +147,7 @@ export const checkAdminForm = (form) => {
     (key) => text(form?.[key]) !== "",
   );
   if (!filled) return FORM_MESSAGES.required;
-  if (!EMAIL_SHAPE.test(text(form.email))) return FORM_MESSAGES.email;
+  if (!isEmailShape(form.email)) return FORM_MESSAGES.email;
   return "";
 };
 

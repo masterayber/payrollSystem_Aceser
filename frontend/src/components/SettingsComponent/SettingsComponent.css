@@ -188,6 +188,30 @@
   opacity: 1;
 }
 
+/* A switch for a setting that is not built yet (Security & Privacy, Two-Factor) */
+.settings-content .switch-unavailable {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-content .switch-unavailable .slider {
+  cursor: not-allowed;
+}
+
+/* A profile field that is a list (Gender): the shared Dropdown, sized like the boxes */
+.settings-content .profile-select .dropdown-container {
+  display: block;
+  width: 100%;
+}
+
+.settings-content .profile-select .dropdown-button {
+  min-height: 46px;
+  padding: 10px 12px;
+  border-radius: var(--border-radius);
+  background: var(--gray-50);
+  color: var(--neutral-color-100);
+}
+
 .about-title,
 .tech-stack-title,
 .contact-support-title,

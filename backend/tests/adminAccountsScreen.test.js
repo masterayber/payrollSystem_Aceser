@@ -6,6 +6,7 @@
 // (utils/adminAccounts.js checkAdminDetails).
 import {
   ACTION_HINTS,
+  EMAIL_SHAPE,
   FORM_MESSAGES,
   NOT_AVAILABLE,
   accountFirstName,
@@ -19,6 +20,7 @@ import {
   formChanged,
   formFromAdmin,
   isDisabled,
+  isEmailShape,
   lastLoginText,
   newAdminForm,
   pageGroups,
@@ -33,9 +35,11 @@ import {
   temporaryPasswordNote,
   tickLabel,
 } from "../../frontend/src/utils/adminAccounts";
+import { checkAccountForm } from "../../frontend/src/components/Profile/profileForm";
 
 const { PAGES, ADMIN_DEFAULT_PAGE_KEYS } = require("../config/pages");
 const { MESSAGES, checkAdminDetails } = require("../utils/adminAccounts");
+const serverEmail = require("../utils/emailShape");
 
 const keys = (pages) => pages.map((page) => page.key);
 
@@ -467,6 +471,69 @@ describe("the form checks", () => {
       FORM_MESSAGES.required,
     );
   });
+});
+
+// One exported email check (Friday batch, Group 5): Settings > Admins and an Admin's own
+// Settings > General use it, with the same pattern and words as the server
+// (backend/utils/emailShape.js)
+describe("the one email check", () => {
+  const SHAPED = [
+    "rhea@example.com",
+    "rhea.cruz@example.com.ph",
+    "a+b@c.co",
+    " rhea@example.com ",
+  ];
+  const UNSHAPED = [
+    "rhea",
+    "rhea@",
+    "@example.com",
+    "rhea@example",
+    "rhea cruz@example.com",
+    "rhea@@example.com",
+    "",
+    "   ",
+  ];
+
+  it.each(SHAPED)("accepts %j", (email) => {
+    expect(isEmailShape(email)).toBe(true);
+  });
+
+  it.each(UNSHAPED)("refuses %j", (email) => {
+    expect(isEmailShape(email)).toBe(false);
+  });
+
+  it("refuses a value that is not text", () => {
+    for (const value of [undefined, null, 5, {}, ["a@b.co"]]) {
+      expect(isEmailShape(value)).toBe(false);
+    }
+  });
+
+  it("is the server's pattern and words", () => {
+    expect(EMAIL_SHAPE.source).toBe(serverEmail.EMAIL_SHAPE.source);
+    expect(FORM_MESSAGES.email).toBe(serverEmail.EMAIL_SHAPE_MESSAGE);
+    for (const email of [...SHAPED, ...UNSHAPED]) {
+      expect(isEmailShape(email)).toBe(serverEmail.isEmailShape(email));
+    }
+  });
+
+  it.each([...SHAPED, ...UNSHAPED.filter((email) => email.trim() !== "")])(
+    "gives Settings > Admins and an Admin's own General the same answer for %j",
+    (email) => {
+      const admins = checkAdminForm({
+        firstName: "Rhea",
+        lastName: "Cruz",
+        username: "rhea",
+        email,
+      });
+      const general = checkAccountForm({
+        firstName: "Rhea",
+        lastName: "Cruz",
+        email,
+      });
+      expect(general).toBe(admins);
+      expect(admins).toBe(isEmailShape(email) ? "" : "Enter a valid email address.");
+    },
+  );
 });
 
 describe("messages", () => {

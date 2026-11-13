@@ -10,9 +10,9 @@ const FIELDS = {
 };
 
 // "Password" card for the signed-in account's own password: employee Settings >
-// Manage and admin Settings > Security & Privacy. Drawn as a profile card; shows no
-// role. Same route and checks as the change-password screen; the fields clear when
-// the change is saved.
+// Manage, and at the bottom of admin Settings > General (GeneralSettings
+// `showPassword`, since D2). Drawn as a profile card; shows no role. Same route and
+// checks as the change-password screen; the fields clear when the change is saved.
 const PasswordSettings = () => {
   const { fields, setField, message, saving, submit } = usePasswordChange();
 
