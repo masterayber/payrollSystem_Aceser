@@ -406,6 +406,38 @@ describe("Filing a leave: the type list and the working-days rule", () => {
       expectRefused(res, UNKNOWN_TYPE);
     });
 
+    it("checks the dates before the type: bad dates with an off-list type answer the dates refusal", async () => {
+      const { employeeUser, token } = await setup();
+      const leave = await saveLeave(employeeUser._id);
+      const before = await snapshot(leave._id);
+
+      const backwards = await edit(token, leave._id, {
+        leaveType: "Emergency Leave",
+        startDate: "2026-11-17",
+        endDate: "2026-11-16",
+      });
+      expectRefused(backwards, "The end date can't be before the start date.");
+
+      const notADate = await edit(token, leave._id, {
+        leaveType: "Emergency Leave",
+        startDate: "2026-13-01",
+        endDate: "2026-11-16",
+      });
+      expectRefused(notADate, "Enter the start and end dates as valid dates.");
+
+      // One new date that falls before the saved start date counts as bad dates too
+      const endBeforeSaved = await edit(token, leave._id, {
+        leaveType: "Emergency Leave",
+        endDate: "2026-11-13",
+      });
+      expectRefused(
+        endBeforeSaved,
+        "The end date can't be before the start date.",
+      );
+
+      expect(await snapshot(leave._id)).toEqual(before);
+    });
+
     describe("a request saved with a type that isn't on the list", () => {
       it("can still have its details and its dates changed", async () => {
         const { employeeUser, token } = await setup();

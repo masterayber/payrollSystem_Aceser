@@ -11,6 +11,7 @@ import ConfirmedMessageModal from "../../Confirmed/ConfirmedMessageModal";
 import Pagination from "../../../Pagination/Pagination";
 import "../../Modal.css";
 import API from "../../../../api";
+import { refusalText } from "../../../../utils/feedback";
 
 const OvertimeModal = ({
   mode,
@@ -55,6 +56,7 @@ const OvertimeModal = ({
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isConfirmedModalOpen, setIsConfirmedModalOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     document.documentElement.style.overflow = "hidden";
@@ -91,18 +93,24 @@ const OvertimeModal = ({
     }
   }, [isEdit, request, overtimeList]);
 
+  // Any input change: the form now differs, and an earlier refusal no longer applies
+  const markChanged = () => {
+    setHasChanges(true);
+    setErrorMessage("");
+  };
+
   const handleSelectedOvertime = (att) => {
     setSelectedOvertime(att);
     setIsTableMinimized(true);
     setStart(att.overtime?.start || "");
     setEnd(att.overtime?.end || "");
     setSelectedDate(new Date(att.date).toISOString().slice(0, 10));
-    setHasChanges(true);
+    markChanged();
   };
 
   const handleDetailsChange = (e) => {
     setOvertimeDetails(e.target.value);
-    setHasChanges(true);
+    markChanged();
   };
 
   const isFormValid = () => {
@@ -146,15 +154,25 @@ const OvertimeModal = ({
       }
 
       setIsConfirmModalOpen(false);
+      setErrorMessage("");
       if (onUpdateOvertimeRequests) onUpdateOvertimeRequests();
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (err) {
       console.error(
         `Failed ${isEdit ? "updating" : "applying for"} overtime:`,
-        err.response?.data?.error ||
-          `${isEdit ? "Update" : "Submission"} failed`,
         err,
       );
+      setIsConfirmModalOpen(false);
+      // Server refusal: its own text; a server fault or no reply: a plain message
+      setErrorMessage(
+        refusalText(err, `${isEdit ? "Update" : "Submission"} failed`),
+      );
+      // A refused edit (4xx, e.g. already decided): reload the list behind the
+      // modal so the request loses its buttons; the modal stays open
+      const status = err.response?.status;
+      if (isEdit && status >= 400 && status < 500 && onUpdateOvertimeRequests) {
+        onUpdateOvertimeRequests();
+      }
     }
   };
 
@@ -330,6 +348,10 @@ const OvertimeModal = ({
               />
             </div>
           </div>
+
+          {errorMessage && (
+            <p className="feedback-message error">{errorMessage}</p>
+          )}
 
           <div className="modal-buttons">
             <button
