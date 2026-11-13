@@ -58,14 +58,21 @@
   min-width: 400px;
 }
 
+/* List of Holidays: Date, Day and Action are fixed to their longest text
+   ("11/30/26", "Wednesday", the "Removing..." button); Name and Type share the rest
+   and wrap. The fixed tracks plus the two minimums are 432px, under the ~466px the
+   card gives the table at a 1366px window (~551px at 1536px). Narrower than that the
+   table scrolls sideways, and the Action column scrolls into view with it. */
 .admin-calendar-page .calendar-holidays-table .table-header,
 .admin-calendar-page .calendar-holidays-table .table-content {
   display: grid;
-  grid-template-columns: minmax(92px, 0.8fr) minmax(100px, 0.8fr) minmax(
-      150px,
-      1.3fr
-    ) minmax(180px, 1.4fr);
-  min-width: 560px;
+  grid-template-columns:
+    72px
+    84px
+    minmax(80px, 1.2fr)
+    minmax(84px, 1fr)
+    112px;
+  min-width: 432px;
 }
 
 .admin-calendar-page .calendar-events-table .table-header-container,
@@ -119,6 +126,147 @@
   white-space: nowrap;
 }
 
+/* List of Holidays: 8px side padding (12px elsewhere) so the five columns fit */
+.admin-calendar-page .calendar-holidays-table .table-header-container,
+.admin-calendar-page .calendar-holidays-table .table-content-container {
+  padding: 12px 8px;
+}
+
+/* Name of Holiday and Type wrap onto more lines instead of widening the table */
+.admin-calendar-page
+  .calendar-holidays-table
+  .table-content-container:nth-child(3)
+  p,
+.admin-calendar-page
+  .calendar-holidays-table
+  .table-content-container:nth-child(4)
+  p {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* ---- List of Holidays: the year, the Add form, the Remove button ---- */
+
+/* The type dropdown's list opens over the card's edge */
+.admin-calendar-page .admin-holidays-card {
+  overflow: visible;
+}
+
+.admin-calendar-page .calendar-year-switch {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.admin-calendar-page .calendar-year-switch .calendar-year-label {
+  min-width: 48px;
+  color: var(--neutral-color-100);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.admin-calendar-page .calendar-holiday-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.admin-calendar-page .calendar-holiday-form .label-container {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-calendar-page .calendar-holiday-form .calendar-holiday-name {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--gray-50);
+  color: var(--neutral-color-100);
+  font: inherit;
+}
+
+.admin-calendar-page .calendar-holiday-form input:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: -1px;
+}
+
+.admin-calendar-page .calendar-holiday-form .dropdown-container {
+  display: block;
+  width: 100%;
+}
+
+.admin-calendar-page .calendar-holiday-form .dropdown-button {
+  min-height: 44px;
+  background: var(--gray-50);
+  color: var(--neutral-color-90);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.admin-calendar-page .calendar-holiday-save {
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+}
+
+.admin-calendar-page .calendar-holiday-save:disabled {
+  background: var(--gray-200);
+  color: var(--neutral-color-80);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.admin-calendar-page .admin-holidays-card .feedback-message {
+  margin: 0 0 16px;
+}
+
+.admin-calendar-page .calendar-holiday-remove {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  background: var(--neutral-color-0);
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-calendar-page .calendar-holiday-remove:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.admin-calendar-page .calendar-holiday-remove:disabled {
+  color: var(--neutral-color-70);
+  cursor: not-allowed;
+}
+
+.admin-calendar-page .calendar-holiday-remove:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: 2px;
+}
+
+/* Loading, or no holiday in the year shown: one plain line under the header.
+   Sticky at the left edge, so it stays put when a narrow screen scrolls the table. */
+.admin-calendar-page .calendar-holidays-table .calendar-holidays-empty {
+  position: sticky;
+  left: 0;
+  padding: 16px 12px;
+  background: var(--gray-50);
+  color: var(--neutral-color-80);
+  font-size: 13px;
+}
+
 @media (max-width: 900px) {
   .admin-calendar-page .admin-calendar-lists {
     grid-template-columns: minmax(0, 1fr);
@@ -129,5 +277,9 @@
   .admin-calendar-page .admin-month-card,
   .admin-calendar-page .admin-calendar-list-card {
     padding: 16px;
+  }
+
+  .admin-calendar-page .calendar-holiday-form {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
