@@ -1374,9 +1374,9 @@ describe("self sign-up: starts on a basic pay of 0, marked Pay not set", () => {
     }
   });
 
-  // Present behaviour, pinned: login and /me send the caller's own Settings record as
-  // stored. They do not go through ownSettings / withPayFlag, so `payNotSet` is the
-  // stored flag itself (true or false, never left out, never worked out from the pay).
+  // Login and /me send the caller's own Settings record through ownSettings, like
+  // Settings > General: `payNotSet: true` for the stored flag or no pay, otherwise the
+  // key is left out (Friday batch, Group 1; before, they sent the stored flag as is).
   describe("login and /me for the sign-up's own account", () => {
     const jobAtLoginAndMe = async (username) => {
       const login = await loginAs(username);
@@ -1397,7 +1397,7 @@ describe("self sign-up: starts on a basic pay of 0, marked Pay not set", () => {
       expect(job).not.toHaveProperty("payHidden");
     });
 
-    it("carry the stored payNotSet: false (the key is not left out) once its pay is saved", async () => {
+    it("leave payNotSet out once its pay is saved, like the other replies", async () => {
       const { sa } = await worked();
       await signup();
       const sol = await solId();
@@ -1411,14 +1411,16 @@ describe("self sign-up: starts on a basic pay of 0, marked Pay not set", () => {
       expect(saved.status).toBe(200);
 
       const job = await jobAtLoginAndMe("sol");
-      expect(job).toMatchObject({ basicPay: 18000, payNotSet: false });
+      expect(job.basicPay).toBe(18000);
+      expect(job).not.toHaveProperty("payNotSet");
+      expect((await storedJob(sol)).payNotSet).toBe(false);
 
-      // The other replies leave the key out for a set pay (withPayFlag)
+      // The other replies leave the key out for a set pay too (withPayFlag)
       const { employeeId } = await Employee.findOne({ userId: sol }).lean();
       expect((await listOf(sa.token)).get(employeeId)).not.toHaveProperty("payNotSet");
     });
 
-    it("carry the stored payNotSet: false for an employee with no pay, unlike Settings > General", async () => {
+    it("mark an employee with no pay payNotSet: true, the same as Settings > General", async () => {
       await worked();
       const fay = await person("fay", {
         employeeId: "AC-020",
@@ -1427,8 +1429,10 @@ describe("self sign-up: starts on a basic pay of 0, marked Pay not set", () => {
 
       expect(await jobAtLoginAndMe("fay")).toMatchObject({
         basicPay: null,
-        payNotSet: false,
+        payNotSet: true,
       });
+      // Worked out for the reply; the stored flag stays false
+      expect((await storedJob(fay.user._id)).payNotSet).toBe(false);
 
       // Its own Settings > General reply works the flag out from the missing pay
       const own = await send(

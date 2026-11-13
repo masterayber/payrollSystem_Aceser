@@ -59,7 +59,8 @@ const canSeeThirteenthMonth = (currentUser, userId) =>
   canUseAdminPage(currentUser, THIRTEENTH_MONTH_KEY) &&
   canSeePay(payScope(currentUser), userId);
 
-// The "Pay not set" flag as a reply shows it, for someone whose pay the caller may see:
+// The "Pay needs an update" flag (`payNotSet`) as a reply shows it, for someone whose
+// pay the caller may see:
 // `payNotSet: true` when the stored flag is set (a self sign-up, still on its starting
 // 0) or there is no basic pay; otherwise the key is left out. Returns a copy.
 const withPayFlag = (job) => {
@@ -70,14 +71,15 @@ const withPayFlag = (job) => {
 };
 
 // A copy of a job description with the pay taken out: `basicPay: null` and
-// `payHidden: true`, so a screen shows "Restricted" instead of blank or 0. The "Pay not
-// set" flag goes too: it would tell whether a pay is set.
+// `payHidden: true`, so a screen shows "Restricted" instead of blank or 0. The "Pay
+// needs an update" flag goes too: it would tell whether a pay is set.
 const redactJob = (job) => {
   const { payNotSet, ...rest } = job || {};
   return { ...rest, basicPay: null, payHidden: true };
 };
 
-// The job description as the scope may see it: with its "Pay not set" flag, or redacted
+// The job description as the scope may see it: with its "Pay needs an update" flag, or
+// redacted
 const jobFor = (scope, userId, job) =>
   canSeePay(scope, userId) ? withPayFlag(job) : redactJob(job);
 
@@ -94,12 +96,13 @@ const withJob = (settings, pick) => {
   };
 };
 
-// A Settings record (plain object) as the scope may see it: with its "Pay not set" flag,
-// or with its `general.jobDescription` redacted
+// A Settings record (plain object) as the scope may see it: with its "Pay needs an
+// update" flag, or with its `general.jobDescription` redacted
 const settingsFor = (scope, userId, settings) =>
   withJob(settings, (job) => jobFor(scope, userId, job));
 
-// The caller's own Settings record: its pay kept, with the "Pay not set" flag
+// The caller's own Settings record: its pay kept, with the "Pay needs an update" flag
+// (Settings > General, and the sign-in and /me replies)
 const ownSettings = (settings) => withJob(settings, withPayFlag);
 
 // The 13th month report rows the scope may see; the rest are left out (their totals
