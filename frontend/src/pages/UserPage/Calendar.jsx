@@ -37,9 +37,8 @@ const Calendar = () => {
     const date = new Date(year, month, 1);
 
     while (date.getMonth() === month) {
-      const day = date.getDay();
       const dateISO = formatDateISO(date);
-      if (day !== 0 && day !== 6 && new Date(date) < today) {
+      if (!isWeekendKey(dateISO) && new Date(date) < today) {
         days.push(dateISO);
       }
       date.setDate(date.getDate() + 1);

@@ -64,3 +64,11 @@ export const isWeekendKey = (dateKey) => {
   const day = new Date(y, m - 1, d).getDay();
   return day === 0 || day === 6;
 };
+
+// True for an On-Leave row on a Saturday or Sunday. An approved leave writes an
+// On-Leave row for every day in its range, weekends included; those days are
+// rest days, not leave days, so the screens show "Weekend" (admin) or
+// "Rest Day" (employee) and leave them out of the On-Leave count (the
+// Calendar's rule, PR #56).
+export const isWeekendLeave = (dateKey, behavior) =>
+  behavior === "On-Leave" && isWeekendKey(dateKey);

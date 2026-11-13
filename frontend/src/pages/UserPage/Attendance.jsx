@@ -1,7 +1,11 @@
 import { useState, useContext, useEffect, useRef } from "react";
 import XLSX from "xlsx-js-style";
 import { UserContext } from "../../context/UserContext";
-import { formatFullMonthDate, formatTime } from "../../utils/dateFormatter";
+import {
+  formatFullMonthDate,
+  formatTime,
+  isWeekendLeave,
+} from "../../utils/dateFormatter";
 import "../../styles/UserCSS/Attendance.css";
 import Dropdown from "../../components/Dropdown/Dropdown";
 import Pagination from "../../components/Pagination/Pagination";
@@ -71,7 +75,12 @@ const Attendance = () => {
       const existing = attendanceMap.get(key);
 
       if (existing) {
-        fullData.push(existing);
+        // A weekend On-Leave row is a rest day, not a leave day
+        fullData.push(
+          isWeekendLeave(key, existing.behavior)
+            ? { ...existing, behavior: "Rest Day" }
+            : existing,
+        );
       } else {
         const isFuture = key > todayKey;
         const isToday = key === todayKey;

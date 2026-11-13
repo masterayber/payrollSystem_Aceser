@@ -2,7 +2,11 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconDotsVertical, IconLogin2, IconLogout2 } from "@tabler/icons-react";
 import { UserContext } from "../../context/UserContext";
-import { formatDate, formatTime } from "../../utils/dateFormatter";
+import {
+  formatDate,
+  formatTime,
+  isWeekendLeave,
+} from "../../utils/dateFormatter";
 import { calculateMonthlySummary } from "../../../../backend/utils/attendance/summary";
 import { calculateLeaveSummary } from "../../utils/leave/summary";
 import { calculateWeeklySummary } from "../../../../backend/utils/attendance/weeklySummary";
@@ -327,7 +331,11 @@ const Dashboard = () => {
                   <p>{formatTime(att.timeOut)}</p>
                 </article>
                 <article className="table-content-container">
-                  <p>{att.behavior}</p>
+                  <p>
+                    {isWeekendLeave(att.date, att.behavior)
+                      ? "Rest Day"
+                      : att.behavior}
+                  </p>
                 </article>
               </div>
             ))

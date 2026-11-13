@@ -9,6 +9,7 @@ import EditEmployeeAttendanceModal from "../../components/Modals/EditEmployee/Ed
 import "../../styles/AdminCSS/AdminAttendance.css";
 import Pagination from "../../components/Pagination/Pagination";
 import { hireDateKey, isPastLastWorkingDay } from "../../utils/employees";
+import { isWeekendLeave } from "../../utils/dateFormatter";
 
 const AdminAttendance = () => {
   const { employeeData } = useContext(EmployeeContext);
@@ -82,7 +83,12 @@ const AdminAttendance = () => {
   };
 
   const getDisplayedBehavior = (employee) => {
-    if (employee.attendanceRecord?.behavior === "On-Leave") {
+    // A weekend On-Leave row falls through to "Weekend" and is not counted
+    const leaveBehavior = employee.attendanceRecord?.behavior;
+    if (
+      leaveBehavior === "On-Leave" &&
+      !isWeekendLeave(employee.date, leaveBehavior)
+    ) {
       return "On-Leave";
     }
 
