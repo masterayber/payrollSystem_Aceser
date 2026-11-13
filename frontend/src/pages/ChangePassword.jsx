@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import usePasswordChange from "../components/PasswordChange/usePasswordChange";
+import PageLoading from "../components/PageLoading/PageLoading";
 import { homePath } from "../utils/roles";
 import { PASSWORD_HINT } from "../utils/password";
 import "../styles/ChangePassword.css";
@@ -30,7 +31,7 @@ const ChangePassword = () => {
   }, [isDone, userData?.role]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <PageLoading />;
   }
 
   if (!localStorage.getItem("token") || !userData) {

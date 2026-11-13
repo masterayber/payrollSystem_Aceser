@@ -3,6 +3,7 @@ import axios from "axios";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import { checkPassword, PASSWORD_HINT } from "../utils/password";
+import { feedbackFromError } from "../utils/feedback";
 import "../styles/Signup.css";
 
 const Signup = () => {
@@ -16,7 +17,8 @@ const Signup = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  // In-form { type, text } message (the password check before sending)
+  // In-form { type, text } message: the password checks before sending (yellow) and a
+  // refused sign-up (red)
   const [message, setMessage] = useState(null);
   const navigate = useNavigate();
 
@@ -33,7 +35,7 @@ const Signup = () => {
 
     // Validate passwords before proceeding
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      setMessage({ type: "warning", text: "Passwords do not match" });
       return;
     }
     const passwordProblem = checkPassword(formData.password);
@@ -56,10 +58,10 @@ const Signup = () => {
       // Lets the next two signup pages save and read this new account only
       sessionStorage.setItem("signupToken", response.data.signupToken);
 
-      alert(response.data.message);
+      // The next sign-up page opening is the confirmation
       navigate("/update-info");
     } catch (error) {
-      alert(error.response?.data?.message || "Signup Failed");
+      setMessage(feedbackFromError(error, "Signup Failed"));
     } finally {
       setLoading(false);
     }

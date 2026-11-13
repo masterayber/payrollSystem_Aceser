@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Reset.css";
 import { feedbackFromError } from "../utils/feedback";
 import { checkNewPassword, PASSWORD_HINT } from "../utils/password";
+import { keepSignInNotice } from "../utils/session";
+
+const RESET_DONE_MESSAGE = "Password reset successfully! Please log in.";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -15,9 +18,24 @@ const ResetPassword = () => {
 
   const resetToken = location.state?.resetToken;
 
+  // Opened without a code check (typed address, page reload): back to Forgot Password
+  useEffect(() => {
+    if (resetToken) return undefined;
+    const timer = setTimeout(() => navigate("/forgot-password"), 3000);
+    return () => clearTimeout(timer);
+  }, [resetToken, navigate]);
+
   if (!resetToken) {
-    setTimeout(() => navigate("/forgot-password"), 3000);
-    return alert("Invalid session. Redirecting...");
+    return (
+      <div className="auth-page reset-password-container">
+        <div className="reset-form">
+          <h2 className="reset-title">Reset Password</h2>
+          <p className="feedback-message error">
+            Invalid session. Redirecting...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const handleResetPassword = async (e) => {
@@ -44,8 +62,10 @@ const ResetPassword = () => {
         },
       );
 
-      setMessage(response.data.message);
-      alert("Password reset successfully! Please log in.");
+      // Green on this card, and kept for the sign-in page that opens next
+      const text = response.data?.message || RESET_DONE_MESSAGE;
+      setMessage({ type: "success", text });
+      keepSignInNotice(text, "success");
       navigate("/");
     } catch (error) {
       setMessage(feedbackFromError(error, "Error occurred"));
