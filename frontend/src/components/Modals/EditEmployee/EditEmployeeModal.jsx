@@ -41,6 +41,8 @@ const EditEmployeeModal = ({
   const [message, setMessage] = useState(null);
   const [editEmployee, setEditEmployee] = useState({
     ...employee,
+    // Blank keeps the current password; text from the start keeps the box controlled
+    password: "",
     gender: employee.gender || "",
     jobDescription: {
       designation: employee.jobDescription.designation || "",

@@ -6,6 +6,7 @@ import { IconCircleArrowUp, IconCircleArrowDown } from "@tabler/icons-react";
 import PropTypes from "prop-types";
 import { isAdminRole } from "../utils/roles";
 import { accountFirstName, accountName } from "../utils/adminAccounts";
+import { endSession } from "../utils/session";
 
 const logisticsTitles = [
   { name: "Logistics Dashboard", path: "/logistics/dashboard" },
@@ -28,6 +29,7 @@ function Header({ role }) {
   const { userData } = useContext(UserContext);
   const [showDropDown, setShowDropDown] = useState(false);
   const dropdownRef = useRef(null);
+  const toggleRef = useRef(null);
 
   const toggleDropDown = (event) => {
     event.stopPropagation();
@@ -47,11 +49,26 @@ function Header({ role }) {
     };
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userData");
-    window.location.href = "/";
-  };
+  // Escape closes the open menu and puts the focus back on its button
+  useEffect(() => {
+    if (!showDropDown) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setShowDropDown(false);
+        toggleRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showDropDown]);
+
+  // The one sign-out path (utils/session.js): clears the token, userData and
+  // lastActivity, then goes to the sign-in page
+  const handleLogout = () => endSession();
 
   // The employee's name, then the account's own name (an Admin account has no employee
   // record), then the username
@@ -156,6 +173,7 @@ function Header({ role }) {
           <button
             type="button"
             className="profile-menu-toggle"
+            ref={toggleRef}
             onClick={toggleDropDown}
             aria-expanded={showDropDown}
             aria-haspopup="true"

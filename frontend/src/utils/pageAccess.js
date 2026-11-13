@@ -1,5 +1,7 @@
 import { isSuperAdmin } from "./roles";
 
+const ADMIN = "Admin";
+
 // Action ticks in `userData.allowedPages` (login and /me) that are not pages of
 // their own. Mirrors the keys the server sends.
 export const THIRTEENTH_MONTH = "thirteenth-month";
@@ -65,3 +67,58 @@ export const canDeleteEmployee = (userData) => isSuperAdmin(userData?.role);
 // The Page Access card on a profile and its request
 export const canManageEmployeeAccess = (userData) =>
   hasTick(userData, EMPLOYEE_ACCESS);
+
+// ---- Requests an admin screen makes on load, by tick ----
+
+export const EMPLOYEES_PAGE = "employees";
+export const ADMIN_FILING = "admin-filing";
+export const LOGISTICS_PREFIX = "logistics-";
+
+// A Logistics page key ("logistics-dashboard", ... "logistics-setup")
+export const isLogisticsKey = (key) =>
+  typeof key === "string" && key.startsWith(LOGISTICS_PREFIX);
+
+// At least one Logistics page ticked (the Super Admin always): the server's
+// requireAnyLogisticsPage. An unloaded allowedPages counts as none.
+export const hasAnyLogisticsTick = (userData) =>
+  isSuperAdmin(userData?.role) ||
+  (Array.isArray(userData?.allowedPages) &&
+    userData.allowedPages.some(isLogisticsKey));
+
+// Every request an admin screen sends on load that the server guards with a tick,
+// with the tick test it needs. The screen asks only when the test passes, so an
+// Admin without the tick gets no 403 and no "could not load" text.
+const LOAD_RULES = {
+  // Dashboard, Pending Users: GET /api/auth/pending-users ("employees")
+  pendingUsers: (userData) => hasTick(userData, EMPLOYEES_PAGE),
+  // Employee profile, Leave Credits: GET /api/filing/leave-credits/:userId ("admin-filing")
+  leaveCredits: (userData) => hasTick(userData, ADMIN_FILING),
+  // Employee profile, Logistics projects: GET /api/logistics/projects?memberId= (any Logistics tick)
+  logisticsProjects: hasAnyLogisticsTick,
+  // Employee profile, Page Access card: GET /api/access/users/:userId ("employee-access")
+  pageAccess: canManageEmployeeAccess,
+};
+
+export const ADMIN_LOAD_REQUESTS = Object.keys(LOAD_RULES);
+
+// True when the screen may send the named request (see LOAD_RULES); false for an
+// unknown name
+export const canLoad = (userData, request) =>
+  Object.hasOwn(LOAD_RULES, request) && Boolean(LOAD_RULES[request](userData));
+
+// ---- An Admin's own linked employee ----
+
+export const OWN_RECORD_NOTE =
+  "This is your own record. Another Admin makes changes to it.";
+
+// True when the signed-in Admin is linked to the employee account `userId`. The
+// server refuses every change an Admin makes there (edit, resign or reinstate, page
+// access), so the profile hides those buttons. The Super Admin has no linked employee.
+export const isOwnLinkedEmployee = (userData, userId) =>
+  Boolean(
+    userData &&
+      userData.role === ADMIN &&
+      userData.linkedEmployeeId != null &&
+      userId != null &&
+      String(userData.linkedEmployeeId) === String(userId),
+  );
