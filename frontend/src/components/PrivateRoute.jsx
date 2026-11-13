@@ -3,7 +3,8 @@ import PropTypes from "prop-types";
 import { Navigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { HOME_PAGE, homePath, pageRole } from "../utils/roles";
-import { CHANGE_PASSWORD_PATH } from "../utils/session";
+import { CHANGE_PASSWORD_PATH, endSession } from "../utils/session";
+import PageLoading from "./PageLoading/PageLoading";
 
 const INACTIVITY_LIMIT = 60 * 60 * 1000;
 
@@ -13,17 +14,15 @@ const PrivateRoute = ({ children, allowedRoles, pageKey }) => {
   const lastActivity = Number(localStorage.getItem("lastActivity"));
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <PageLoading />;
   }
 
+  // Idle too long: end the session; the sign-in page shows the inactivity message
   if (token && lastActivity && Date.now() - lastActivity > INACTIVITY_LIMIT) {
     if (typeof clearSession === "function") {
       clearSession("inactive");
     } else {
-      localStorage.removeItem("token");
-      localStorage.removeItem("userData");
-      localStorage.removeItem("lastActivity");
-      window.alert("session ended due to inactivity.");
+      endSession("inactive");
     }
     return <Navigate to="/" replace />;
   }

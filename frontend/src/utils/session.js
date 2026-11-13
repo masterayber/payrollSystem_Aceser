@@ -9,18 +9,64 @@ export const ACCOUNT_INACTIVE_CODE = "ACCOUNT_INACTIVE";
 export const ACCOUNT_INACTIVE_MESSAGE = "Your account is no longer active.";
 export const PASSWORD_CHANGE_REQUIRED_CODE = "PASSWORD_CHANGE_REQUIRED";
 export const CHANGE_PASSWORD_PATH = "/change-password";
-const INACTIVE_MESSAGE = "session ended due to inactivity.";
+export const SESSION_INACTIVE_MESSAGE = "Session ended due to inactivity.";
 
-// Reasons that end the session with an alert. "inactive" is not in this list on
-// purpose: it keeps today's behaviour of alerting each time it is asked to.
+// Reasons that end the session with a message on the sign-in page. "inactive" is not in
+// this list on purpose: it keeps its message each time it is asked to end the session.
 const FORCED_LOGOUT_MESSAGES = {
   roleChanged: ROLE_CHANGED_MESSAGE,
   accountInactive: ACCOUNT_INACTIVE_MESSAGE,
 };
 
+// A message for the sign-in page that has to survive the redirect there (forced
+// sign-out, inactivity, password reset). It is kept in sessionStorage for one page
+// load only: the sign-in page takes it (reads and removes it) when it opens. Storage
+// can be blocked or full, so every read and write is guarded; without storage the
+// sign-in page simply opens without the message.
+export const SIGN_IN_NOTICE_KEY = "signInNotice";
+const NOTICE_TYPES = ["success", "warning", "error"];
+const noticeType = (type) => (NOTICE_TYPES.includes(type) ? type : "warning");
+
+// type: "warning" (yellow, the default), "success" (green) or "error" (red)
+export const keepSignInNotice = (text, type = "warning") => {
+  if (typeof text !== "string" || !text) return;
+  try {
+    sessionStorage.setItem(
+      SIGN_IN_NOTICE_KEY,
+      JSON.stringify({ type: noticeType(type), text }),
+    );
+  } catch {
+    // Storage unavailable: the sign-in page opens without the message
+  }
+};
+
+// The kept { type, text } message, or null when there is none. Removes it, so the next
+// page load does not show it again.
+export const takeSignInNotice = () => {
+  let stored = null;
+  try {
+    stored = sessionStorage.getItem(SIGN_IN_NOTICE_KEY);
+  } catch {
+    return null;
+  }
+  try {
+    sessionStorage.removeItem(SIGN_IN_NOTICE_KEY);
+  } catch {
+    // Could not remove it: still show it this once
+  }
+  if (!stored) return null;
+  try {
+    const notice = JSON.parse(stored);
+    if (!notice || typeof notice.text !== "string" || !notice.text) return null;
+    return { type: noticeType(notice.type), text: notice.text };
+  } catch {
+    return null;
+  }
+};
+
 // Set once a forced logout (role changed, account no longer active) has started.
 // Several requests can fail with the same code at the same moment; only the first one
-// alerts and redirects. The page reloads on "/", which resets this flag.
+// keeps its message and redirects. The page reloads on "/", which resets this flag.
 let forcedLogoutStarted = false;
 
 // True when the server refused a request because the role in the token no longer
@@ -58,10 +104,11 @@ export const endSession = (reason = "") => {
   localStorage.removeItem("userData");
   localStorage.removeItem("lastActivity");
 
+  // Shown in a yellow box on the sign-in page after the reload
   if (reason === "inactive") {
-    window.alert(INACTIVE_MESSAGE);
+    keepSignInNotice(SESSION_INACTIVE_MESSAGE);
   } else if (FORCED_LOGOUT_MESSAGES[reason]) {
-    window.alert(FORCED_LOGOUT_MESSAGES[reason]);
+    keepSignInNotice(FORCED_LOGOUT_MESSAGES[reason]);
   }
   window.location.replace("/");
 };

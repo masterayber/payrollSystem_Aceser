@@ -334,6 +334,48 @@ input[type="date"] {
   margin: 28px 0 0;
 }
 
+.login-container .login-button:disabled {
+  background: var(--gray-200);
+  color: var(--neutral-color-80);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* While signing in, a blue spinning ring takes the place of the two boxes and the
+   Sign Up / Forgot Password links, at about the same height (two 48px boxes and the
+   links row, with 14px gaps), so the card does not jump */
+.login-container .login-signing-in {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 142px;
+  margin-top: 14px;
+}
+
+.login-container .login-signing-in-spinner {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border: 4px solid var(--gray-200);
+  border-top-color: var(--default-button-color);
+  border-radius: 50%;
+  animation: page-loading-spin 0.9s linear infinite;
+}
+
+.login-container .login-signing-in-text {
+  color: var(--neutral-color-80);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-container .login-signing-in-spinner {
+    animation-duration: 2.4s;
+  }
+}
+
 .signup-container,
 .additional-container {
   width: min(calc(100% - 32px), 680px);

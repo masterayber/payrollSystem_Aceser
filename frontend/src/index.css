@@ -799,3 +799,48 @@ input:checked + .slider:before {
   background: #fef2f2;
   color: #991b1b;
 }
+
+/* Full-page wait while the signed-in account loads (the page guard and the Set your
+   password screen): a white spinning ring in the middle of the blue page, with
+   "Loading..." under it */
+.page-loading {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.page-loading-spinner {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--neutral-color-0);
+  border-radius: 50%;
+  animation: page-loading-spin 0.9s linear infinite;
+}
+
+.page-loading-text {
+  color: var(--neutral-color-0);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgba(10, 10, 10, 0.2);
+}
+
+@keyframes page-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Reduced motion: keep the ring turning so the page still looks alive, but slower */
+@media (prefers-reduced-motion: reduce) {
+  .page-loading-spinner {
+    animation-duration: 2.4s;
+  }
+}

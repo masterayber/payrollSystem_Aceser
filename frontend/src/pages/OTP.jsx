@@ -57,14 +57,12 @@ const OTP = () => {
         email,
         otp,
       });
-      setMessage({ type: "success", text: response.data.message });
-      alert(response.data.message);
+      // The Reset Password page opening is the confirmation
       navigate("/reset-password", {
         state: { resetToken: response.data.resetToken },
       });
     } catch (error) {
       setMessage(feedbackFromError(error, "Error occurred"));
-      alert(error.response?.data?.message || "Error Occurred");
     } finally {
       setLoading(false);
     }
