@@ -16,7 +16,7 @@ import {
   PAY_NOT_SET_PATH,
   payNotSetCountText,
 } from "../../utils/payVisibility";
-import { hasPage } from "../../utils/pageAccess";
+import { canLoad, hasPage } from "../../utils/pageAccess";
 
 const AdminDashboard = () => {
   const { userData } = useContext(UserContext);
@@ -112,7 +112,15 @@ const AdminDashboard = () => {
     }
   }, [employeeData]);
 
+  // Pending sign-ups need the "employees" tick (the server guards the list with it)
+  const showPending = canLoad(userData, "pendingUsers");
+
   useEffect(() => {
+    if (!showPending) {
+      setPendingUsers([]);
+      return;
+    }
+
     const fetchPendingUsers = async () => {
       try {
         const response = await API.get("/api/auth/pending-users");
@@ -123,7 +131,7 @@ const AdminDashboard = () => {
     };
 
     fetchPendingUsers();
-  }, []);
+  }, [showPending]);
 
   // Close the open dropdown when clicking outside it (or its toggle icon)
   useEffect(() => {
@@ -430,78 +438,80 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="data-card dashboard-panel dashboard-pending-panel">
-        <div className="user-track-title">
-          <p>Pending Users</p>
-          <div className="dots-button-container">
-            <button
-              type="button"
-              aria-label="Pending users options"
-              aria-expanded={showPendingDropdown}
-              onClick={togglePendingDropdown}
-              ref={pendingSvgRef}
-              className="dots-button dashboard-menu-button"
-            >
-              <IconDotsVertical stroke={2} />
-            </button>
-            {showPendingDropdown && (
-              <div className="dropdown-details" ref={pendingDropdownRef}>
-                <button
-                  className="dropdown-item-details"
-                  onClick={() => navigate("/employees")}
-                >
-                  View Details
-                </button>
-              </div>
+      {showPending && (
+        <div className="data-card dashboard-panel dashboard-pending-panel">
+          <div className="user-track-title">
+            <p>Pending Users</p>
+            <div className="dots-button-container">
+              <button
+                type="button"
+                aria-label="Pending users options"
+                aria-expanded={showPendingDropdown}
+                onClick={togglePendingDropdown}
+                ref={pendingSvgRef}
+                className="dots-button dashboard-menu-button"
+              >
+                <IconDotsVertical stroke={2} />
+              </button>
+              {showPendingDropdown && (
+                <div className="dropdown-details" ref={pendingDropdownRef}>
+                  <button
+                    className="dropdown-item-details"
+                    onClick={() => navigate("/employees")}
+                  >
+                    View Details
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="table dashboard-table dashboard-pending-table">
+            <div className="table-header">
+              <article className="table-header-container">
+                <p>First Name</p>
+              </article>
+              <article className="table-header-container">
+                <p>Last Name</p>
+              </article>
+              <article className="table-header-container">
+                <p>Email</p>
+              </article>
+              <article className="table-header-container">
+                <p>Date Created</p>
+              </article>
+            </div>
+
+            {pendingUsers.length > 0 ? (
+              pendingUsers.map((user) => (
+                <div className="table-content" key={user._id}>
+                  <article className="table-content-container">
+                    <p>{user.firstName}</p>
+                  </article>
+                  <article className="table-content-container">
+                    <p>{user.lastName}</p>
+                  </article>
+                  <article className="table-content-container">
+                    <p>{user.email}</p>
+                  </article>
+                  <article className="table-content-container">
+                    <p>
+                      {user.createdAt
+                        ? format(
+                            new Date(user.createdAt),
+                            "EEE, MMM dd, yyyy hh:mm a",
+                          )
+                        : "N/A"}
+                    </p>
+                  </article>
+                </div>
+              ))
+            ) : (
+              <p className="no-data">No pending users found.</p>
             )}
           </div>
         </div>
-
-        <div className="table dashboard-table dashboard-pending-table">
-          <div className="table-header">
-            <article className="table-header-container">
-              <p>First Name</p>
-            </article>
-            <article className="table-header-container">
-              <p>Last Name</p>
-            </article>
-            <article className="table-header-container">
-              <p>Email</p>
-            </article>
-            <article className="table-header-container">
-              <p>Date Created</p>
-            </article>
-          </div>
-
-          {pendingUsers.length > 0 ? (
-            pendingUsers.map((user) => (
-              <div className="table-content" key={user._id}>
-                <article className="table-content-container">
-                  <p>{user.firstName}</p>
-                </article>
-                <article className="table-content-container">
-                  <p>{user.lastName}</p>
-                </article>
-                <article className="table-content-container">
-                  <p>{user.email}</p>
-                </article>
-                <article className="table-content-container">
-                  <p>
-                    {user.createdAt
-                      ? format(
-                          new Date(user.createdAt),
-                          "EEE, MMM dd, yyyy hh:mm a",
-                        )
-                      : "N/A"}
-                  </p>
-                </article>
-              </div>
-            ))
-          ) : (
-            <p className="no-data">No pending users found.</p>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

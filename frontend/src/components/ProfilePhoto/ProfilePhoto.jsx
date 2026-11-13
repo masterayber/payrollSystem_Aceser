@@ -50,5 +50,6 @@ export default ProfilePhoto;
 
 ProfilePhoto.propTypes = {
   size: PropTypes.string.isRequired,
-  photo: PropTypes.string.isRequired,
+  // Optional: without it, the signed-in user's own photo (the header's menu button)
+  photo: PropTypes.string,
 };

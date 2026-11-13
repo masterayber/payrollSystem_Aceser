@@ -4,14 +4,26 @@
 // and the Admin account's own General form (names, Save body, yellow messages). The
 // route behind the Admin's Save is proved in adminGeneralSettings.test.js; the tick
 // names are checked against the page list the server really sends (config/pages.js).
+// Friday batch, Group 4: the requests an admin screen sends on load only with their
+// tick (canLoad), and the buttons hidden on an Admin's own linked employee
+// (isOwnLinkedEmployee), each checked against the server's own rule function. The
+// routes' guards themselves are proved in adminPageAccess.test.js.
 import {
+  ADMIN_FILING,
+  ADMIN_LOAD_REQUESTS,
   EMPLOYEE_ACCESS,
+  EMPLOYEES_PAGE,
   GENERAL_TAB,
+  OWN_RECORD_NOTE,
   SETTINGS_COMPANY,
   SETTINGS_MANAGE,
   adminSettingsTabs,
   canDeleteEmployee,
+  canLoad,
   canManageEmployeeAccess,
+  hasAnyLogisticsTick,
+  isLogisticsKey,
+  isOwnLinkedEmployee,
   visibleSettingsTab,
 } from "../../frontend/src/utils/pageAccess";
 import {
@@ -24,7 +36,15 @@ import {
   toProfilePayload,
 } from "../../frontend/src/components/Profile/profileForm";
 
-const { PAGES } = require("../config/pages");
+const { PAGES, LOGISTICS_PAGE_KEYS, isLogisticsPage } = require("../config/pages");
+const {
+  getAllowedPages,
+  canUseAdminPage,
+  hasLogisticsAdminPower,
+} = require("../utils/pageAccess");
+const {
+  isOwnLinkedEmployee: serverIsOwnLinkedEmployee,
+} = require("../utils/linkedEmployee");
 
 const MAIN = { role: "Super Admin", allowedPages: [] };
 const admin = (allowedPages) => ({ role: "Admin", allowedPages });
@@ -399,5 +419,190 @@ describe("the Admin account's form check (rule 8)", () => {
 
   test("the form needs no username (the Admin never edits it here)", () => {
     expect(checkAccountForm({ ...good, username: "" })).toBe("");
+  });
+});
+
+// ---- Friday batch, Group 4 ----
+
+// The screen's userData for a stored account: allowedPages as login and /me send it
+const signedIn = (account) => ({
+  ...account,
+  allowedPages: getAllowedPages(account),
+});
+
+const ADMIN_KEYS = PAGES.filter((page) => page.role === "Admin").map(
+  (page) => page.key,
+);
+
+// Stored Admin accounts with only some ticks (pageAccess as the database holds it)
+const STORED_ADMINS = [
+  { role: "Admin" },
+  { role: "Admin", pageAccess: [] },
+  { role: "Admin", pageAccess: ["admin-dashboard", "admin-settings"] },
+  { role: "Admin", pageAccess: ["employees"] },
+  { role: "Admin", pageAccess: ["employees", "admin-attendance"] },
+  { role: "Admin", pageAccess: ["admin-filing"] },
+  { role: "Admin", pageAccess: ["employee-access"] },
+  { role: "Admin", pageAccess: ["logistics-dashboard"] },
+  { role: "Admin", pageAccess: ["logistics-setup"] },
+  { role: "Admin", pageAccess: ["employees", "logistics-deliveries"] },
+  {
+    role: "Admin",
+    pageAccess: ["employees", "admin-attendance", "admin-calendar", "admin-filing"],
+  },
+  { role: "Admin", pageAccess: ADMIN_KEYS },
+  { role: "Super Admin" },
+  { role: "Super Admin", pageAccess: [] },
+];
+
+// The server's guard for each request the screens send on load
+const SERVER_GUARD = {
+  pendingUsers: (user) => canUseAdminPage(user, "employees"),
+  leaveCredits: (user) => canUseAdminPage(user, "admin-filing"),
+  logisticsProjects: (user) => hasLogisticsAdminPower(user),
+  pageAccess: (user) => canUseAdminPage(user, "employee-access"),
+};
+
+describe("requests sent on load only with their tick (Group 4)", () => {
+  test("the four requests, by name", () => {
+    expect([...ADMIN_LOAD_REQUESTS].sort()).toEqual([
+      "leaveCredits",
+      "logisticsProjects",
+      "pageAccess",
+      "pendingUsers",
+    ]);
+  });
+
+  test("the tick names are Admin keys the server sends", () => {
+    for (const key of [EMPLOYEES_PAGE, ADMIN_FILING, EMPLOYEE_ACCESS]) {
+      expect(ADMIN_KEYS).toContain(key);
+    }
+  });
+
+  test("isLogisticsKey matches the server's isLogisticsPage on every key", () => {
+    for (const key of [...PAGES.map((page) => page.key), "logistics", "", null, 7]) {
+      expect(isLogisticsKey(key)).toBe(isLogisticsPage(key));
+    }
+    for (const key of LOGISTICS_PAGE_KEYS) expect(isLogisticsKey(key)).toBe(true);
+  });
+
+  test("each request is asked exactly when the server's guard lets it through", () => {
+    for (const account of STORED_ADMINS) {
+      const userData = signedIn(account);
+      for (const request of ADMIN_LOAD_REQUESTS) {
+        expect({ account, request, ask: canLoad(userData, request) }).toEqual({
+          account,
+          request,
+          ask: SERVER_GUARD[request](account),
+        });
+      }
+    }
+  });
+
+  test("an Admin without Logistics ticks does not ask for Logistics projects", () => {
+    expect(canLoad(admin(["employees", "admin-filing"]), "logisticsProjects")).toBe(
+      false,
+    );
+    expect(hasAnyLogisticsTick(admin(["employees"]))).toBe(false);
+    expect(hasAnyLogisticsTick(admin(["logistics-inventory"]))).toBe(true);
+    expect(hasAnyLogisticsTick(admin(["logistics-setup"]))).toBe(true);
+    expect(hasAnyLogisticsTick(MAIN)).toBe(true);
+  });
+
+  test("an Admin without the Employees tick does not ask for pending sign-ups", () => {
+    expect(canLoad(admin(["admin-attendance"]), "pendingUsers")).toBe(false);
+    expect(canLoad(admin(["employees"]), "pendingUsers")).toBe(true);
+    expect(canLoad(MAIN, "pendingUsers")).toBe(true);
+  });
+
+  test("Leave Credits on a profile only with the Filing tick", () => {
+    expect(canLoad(admin(["employees"]), "leaveCredits")).toBe(false);
+    expect(canLoad(admin(["employees", "admin-filing"]), "leaveCredits")).toBe(true);
+  });
+
+  test("the Page Access read follows canManageEmployeeAccess", () => {
+    for (const account of STORED_ADMINS) {
+      const userData = signedIn(account);
+      expect(canLoad(userData, "pageAccess")).toBe(
+        canManageEmployeeAccess(userData),
+      );
+    }
+  });
+
+  test("an unloaded allowedPages asks for nothing (the Super Admin still asks)", () => {
+    for (const userData of [
+      { role: "Admin" },
+      { role: "Admin", allowedPages: null },
+      null,
+      undefined,
+    ]) {
+      for (const request of ADMIN_LOAD_REQUESTS) {
+        expect(canLoad(userData, request)).toBe(false);
+      }
+    }
+    for (const request of ADMIN_LOAD_REQUESTS) {
+      expect(canLoad({ role: "Super Admin" }, request)).toBe(true);
+    }
+  });
+
+  test("an unknown request name is never asked", () => {
+    for (const name of ["", "toString", "constructor", "attendance", undefined]) {
+      expect(canLoad(MAIN, name)).toBe(false);
+    }
+  });
+});
+
+describe("an Admin's own linked employee (Group 4)", () => {
+  const OWN = "64b000000000000000000001";
+  const OTHER = "64b000000000000000000002";
+
+  test("the line under the profile header is the agreed words", () => {
+    expect(OWN_RECORD_NOTE).toBe(
+      "This is your own record. Another Admin makes changes to it.",
+    );
+  });
+
+  test("true only for an Admin on its own linked employee", () => {
+    const linked = { role: "Admin", linkedEmployeeId: OWN, allowedPages: [] };
+    expect(isOwnLinkedEmployee(linked, OWN)).toBe(true);
+    expect(isOwnLinkedEmployee(linked, OTHER)).toBe(false);
+    expect(isOwnLinkedEmployee({ role: "Admin" }, OWN)).toBe(false);
+    expect(isOwnLinkedEmployee({ ...linked, linkedEmployeeId: null }, OWN)).toBe(
+      false,
+    );
+    expect(isOwnLinkedEmployee(linked, undefined)).toBe(false);
+    expect(isOwnLinkedEmployee(null, OWN)).toBe(false);
+  });
+
+  test("never for the Super Admin or an Employee, even with a stored link", () => {
+    for (const role of ["Super Admin", "Employee"]) {
+      expect(isOwnLinkedEmployee({ role, linkedEmployeeId: OWN }, OWN)).toBe(false);
+    }
+  });
+
+  test("an id sent as text matches the same id as an object (JSON vs ObjectId)", () => {
+    const asObject = { toString: () => OWN };
+    expect(isOwnLinkedEmployee({ role: "Admin", linkedEmployeeId: OWN }, asObject)).toBe(
+      true,
+    );
+  });
+
+  test("agrees with the server's rule (utils/linkedEmployee.js) on every case", () => {
+    const users = [
+      { role: "Admin", linkedEmployeeId: OWN },
+      { role: "Admin", linkedEmployeeId: OTHER },
+      { role: "Admin" },
+      { role: "Admin", linkedEmployeeId: null },
+      { role: "Super Admin", linkedEmployeeId: OWN },
+      { role: "Employee", linkedEmployeeId: OWN },
+      null,
+    ];
+    for (const user of users) {
+      for (const target of [OWN, OTHER, null, undefined]) {
+        expect(isOwnLinkedEmployee(user, target)).toBe(
+          serverIsOwnLinkedEmployee(user, target),
+        );
+      }
+    }
   });
 });

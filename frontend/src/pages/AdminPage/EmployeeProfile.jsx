@@ -20,8 +20,10 @@ import { daysText, monthName } from "../../utils/leaveCredits";
 import { isAdminRole } from "../../utils/roles";
 import {
   canDeleteEmployee,
-  canManageEmployeeAccess,
+  canLoad,
   canSeeThirteenthMonth,
+  isOwnLinkedEmployee,
+  OWN_RECORD_NOTE,
 } from "../../utils/pageAccess";
 import { isPayHidden } from "../../utils/payVisibility";
 import { UserContext } from "../../context/UserContext";
@@ -54,6 +56,9 @@ const EmployeeProfile = () => {
 
   const [profile, setProfile] = useState(null);
   const [access, setAccess] = useState(null);
+  // The server refused the Page Access read (403: the tick was taken away after
+  // this sign-in loaded); the card is hidden instead of reading "Could not load"
+  const [accessRefused, setAccessRefused] = useState(false);
   const [credits, setCredits] = useState(null);
   const [logisticsProjects, setLogisticsProjects] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -68,10 +73,17 @@ const EmployeeProfile = () => {
   const [isReinstateOpen, setIsReinstateOpen] = useState(false);
   const [doneMessage, setDoneMessage] = useState("");
 
-  // The Page Access card and its request need the "Employee access" tick (the
-  // server guards the read with it); Delete Employee is the main account's only
-  const showAccess = canManageEmployeeAccess(userData);
+  // Each request below is sent only with the tick its server route needs
+  // (utils/pageAccess.js, canLoad): Page Access "employee-access", Leave Credits
+  // "admin-filing", Logistics projects any Logistics tick. Delete Employee is the
+  // main account's only.
+  const canLoadAccess = canLoad(userData, "pageAccess");
+  const canLoadCredits = canLoad(userData, "leaveCredits");
+  const canLoadProjects = canLoad(userData, "logisticsProjects");
+  const showAccess = canLoadAccess && !accessRefused;
   const canDelete = canDeleteEmployee(userData);
+  // An Admin's own linked employee: the server refuses every change, so no buttons
+  const isOwnRecord = isOwnLinkedEmployee(userData, userId);
 
   const loadProfile = useCallback(async () => {
     // Not found: back to the Employees list, as for a deleted employee
@@ -100,29 +112,40 @@ const EmployeeProfile = () => {
   }, [userId, navigate]);
 
   const loadAccess = useCallback(async () => {
-    if (!showAccess) {
+    if (!canLoadAccess) {
       setAccess(null);
       return;
     }
     try {
       const { data } = await API.get(`/api/access/users/${userId}`);
       setAccess(data);
-    } catch {
+      setAccessRefused(false);
+    } catch (error) {
       setAccess(null);
+      setAccessRefused(error.response?.status === 403);
     }
-  }, [userId, showAccess]);
+  }, [userId, canLoadAccess]);
 
   const loadCredits = useCallback(async () => {
+    if (!canLoadCredits) {
+      setCredits(null);
+      return;
+    }
     try {
       const { data } = await API.get(`/api/filing/leave-credits/${userId}`);
       setCredits(data);
     } catch {
       setCredits(null);
     }
-  }, [userId]);
+  }, [userId, canLoadCredits]);
 
-  // "ACE01 (In-charge), ACE02 (Document Controller)"; hidden when the request fails
+  // "ACE01 (In-charge), ACE02 (Document Controller)"; hidden without a Logistics
+  // tick or when the request fails
   const loadLogisticsProjects = useCallback(async () => {
+    if (!canLoadProjects) {
+      setLogisticsProjects(null);
+      return;
+    }
     try {
       const { data } = await API.get("/api/logistics/projects", {
         params: { memberId: userId },
@@ -140,7 +163,7 @@ const EmployeeProfile = () => {
     } catch {
       setLogisticsProjects(null);
     }
-  }, [userId]);
+  }, [userId, canLoadProjects]);
 
   useEffect(() => {
     loadProfile();
@@ -258,51 +281,57 @@ const EmployeeProfile = () => {
           },
         ]}
       >
-        <button
-          type="button"
-          className="btn"
-          onClick={isEditing ? stopEditing : startEditing}
-        >
-          {isEditing ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
-          {isEditing ? "Cancel" : "Edit profile"}
-        </button>
+        {!isOwnRecord && (
+          <>
+            <button
+              type="button"
+              className="btn"
+              onClick={isEditing ? stopEditing : startEditing}
+            >
+              {isEditing ? <IconCancel stroke={2} /> : <IconEdit stroke={2} />}
+              {isEditing ? "Cancel" : "Edit profile"}
+            </button>
 
-        <button
-          type="button"
-          className="btn"
-          onClick={() => setIsEmploymentOpen(true)}
-          disabled={isEditing}
-        >
-          <IconBriefcase stroke={2} />
-          Edit employment
-        </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setIsEmploymentOpen(true)}
+              disabled={isEditing}
+            >
+              <IconBriefcase stroke={2} />
+              Edit employment
+            </button>
 
-        {isResigned ? (
-          <button
-            type="button"
-            className="btn"
-            onClick={() => setIsReinstateOpen(true)}
-            disabled={isEditing}
-          >
-            <IconUserCheck stroke={2} />
-            Reinstate
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="btn"
-            onClick={() => setIsResignOpen(true)}
-            disabled={isEditing}
-          >
-            <IconUserOff stroke={2} />
-            Mark as resigned
-          </button>
+            {isResigned ? (
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setIsReinstateOpen(true)}
+                disabled={isEditing}
+              >
+                <IconUserCheck stroke={2} />
+                Reinstate
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setIsResignOpen(true)}
+                disabled={isEditing}
+              >
+                <IconUserOff stroke={2} />
+                Mark as resigned
+              </button>
+            )}
+          </>
         )}
       </ProfileHeader>
 
+      {isOwnRecord && <p className="feedback-message">{OWN_RECORD_NOTE}</p>}
+
       {errorMessage && <p className="feedback-message error">{errorMessage}</p>}
 
-      {isEditing ? (
+      {isEditing && !isOwnRecord ? (
         <div className="settings-content profile-edit">
           <ProfileForm form={form} onChange={handleChange} disabled={false} />
           <div className="settings-button-option-container">
@@ -371,14 +400,16 @@ const EmployeeProfile = () => {
         <section className="profile-card access-card">
           <div className="access-card-header">
             <h4 className="profile-card-title">Page Access</h4>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => setIsAccessOpen(true)}
-            >
-              <IconShieldLock stroke={2} />
-              Manage access
-            </button>
+            {!isOwnRecord && (
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setIsAccessOpen(true)}
+              >
+                <IconShieldLock stroke={2} />
+                Manage access
+              </button>
+            )}
           </div>
           {access ? (
             <>
@@ -424,7 +455,7 @@ const EmployeeProfile = () => {
         />
       )}
 
-      {isEmploymentOpen && (
+      {isEmploymentOpen && !isOwnRecord && (
         <EditEmployeeModal
           employee={modalEmployee}
           canDelete={canDelete}
@@ -438,7 +469,7 @@ const EmployeeProfile = () => {
         />
       )}
 
-      {isResignOpen && (
+      {isResignOpen && !isOwnRecord && (
         <ResignEmployeeModal
           userId={userId}
           name={fullName}
@@ -447,7 +478,7 @@ const EmployeeProfile = () => {
         />
       )}
 
-      {isReinstateOpen && (
+      {isReinstateOpen && !isOwnRecord && (
         <ConfirmModal
           title="Reinstate Employee"
           message={`Reinstate ${fullName}? They will be able to log in again, and the resignation date and reason are cleared.`}
@@ -465,7 +496,7 @@ const EmployeeProfile = () => {
         />
       )}
 
-      {showAccess && isAccessOpen && (
+      {showAccess && !isOwnRecord && isAccessOpen && (
         <ManageAccessModal
           employee={{ ...employee, _id: userId }}
           onClose={() => {
