@@ -407,3 +407,64 @@ describe("PUT /api/settings/users/:id/profile-photo: the reply", () => {
     expect(res.body).toEqual({ message: "Server error" });
   });
 });
+
+// Friday batch, Group 2: the guard (requireSelfOrAdmin) runs before multer, so an
+// Employee's upload to another account is refused and never written to disk
+describe("PUT /api/settings/users/:id/profile-photo: who may", () => {
+  const png = Buffer.from("89504e470d0a1a0a", "hex");
+  const upload = (id, token) =>
+    request(app)
+      .put(`/api/settings/users/${id}/profile-photo`)
+      .set(as(token))
+      .attach("profilePhoto", png, {
+        filename: "photo.png",
+        contentType: "image/png",
+      });
+
+  const uploadNames = () =>
+    new Set(fs.existsSync(UPLOAD_DIR) ? fs.readdirSync(UPLOAD_DIR) : []);
+
+  it("refuses an Employee uploading to another employee with 403; nothing saved or written", async () => {
+    const { urlPath } = uploadedPhoto();
+    const ana = await account("ana", {
+      profilePhoto: urlPath,
+      employee: { gender: "Female" },
+    });
+    const ben = await account("ben", { employee: { gender: "Male" } });
+    const before = uploadNames();
+
+    const res = await upload(ana.user._id, ben.token);
+
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({ message: "Access denied" });
+    expect(await storedPhoto(ana.user._id)).toBe(urlPath);
+    expect(uploadNames()).toEqual(before);
+  });
+
+  it("refuses an Employee uploading to an Admin's account the same way", async () => {
+    const hr = await account("hr", { role: "Admin", pageAccess: ADMIN_PAGE_KEYS });
+    const ben = await account("ben", { employee: { gender: "Male" } });
+    const photoBefore = await storedPhoto(hr.user._id);
+    const before = uploadNames();
+
+    const res = await upload(hr.user._id, ben.token);
+
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({ message: "Access denied" });
+    expect(await storedPhoto(hr.user._id)).toBe(photoBefore);
+    expect(uploadNames()).toEqual(before);
+  });
+
+  it("still lets the Employee upload its own photo", async () => {
+    const ben = await account("ben", { employee: { gender: "Male" } });
+    const before = uploadNames();
+
+    const res = await upload(ben.user._id, ben.token);
+    for (const name of uploadNames()) {
+      if (!before.has(name)) tempFiles.push(path.join(UPLOAD_DIR, name));
+    }
+
+    expect(res.status).toBe(200);
+    expect(await storedPhoto(ben.user._id)).toBe(res.body.profilePhoto);
+  });
+});

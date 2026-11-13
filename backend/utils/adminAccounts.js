@@ -6,9 +6,11 @@
 // pay list is `payAccess`; `linkedEmployeeId` is the same person's Employee account.
 const { pagesForRole, ADMIN_DEFAULT_PAGE_KEYS } = require("../config/pages");
 const { normalizePageAccess } = require("./pageAccess");
+const { EMAIL_SHAPE_MESSAGE, isEmailShape } = require("./emailShape");
 
 const MESSAGES = {
   required: "First name, last name, username and email are required.",
+  emailShape: EMAIL_SHAPE_MESSAGE,
   role: "Role can't be changed.",
   usernameTaken: "Username is already taken.",
   emailTaken: "Email is already registered.",
@@ -40,9 +42,10 @@ const has = (body, key) => Object.prototype.hasOwnProperty.call(body, key);
 //   Resigned) before saving: the pay list first, then the linked employee. Malformed
 //   ids are included: the route refuses them with the others ("Not an employee: <id>"),
 //   after its username and email checks, so every id refusal comes at the same step.
-// Order: a `role` key, the names (and username and email on create), the page keys,
-// the pay list's shape. Username, status, password and the password flag are never
-// taken from the body (an edit ignores a `username`).
+// Order: a `role` key, the names (and username and email on create), the email's shape
+// (only once nothing is blank, as on the screen), the page keys, the pay list's shape.
+// Username, status, password and the password flag are never taken from the body (an
+// edit ignores a `username`).
 const checkAdminDetails = (body, { creating = false } = {}) => {
   const input = body && typeof body === "object" ? body : {};
 
@@ -56,6 +59,9 @@ const checkAdminDetails = (body, { creating = false } = {}) => {
     if (!creating && !has(input, key)) continue;
     if (!isFilledString(input[key])) return { error: MESSAGES.required };
     fields[key] = input[key].trim();
+  }
+  if (fields.email !== undefined && !isEmailShape(fields.email)) {
+    return { error: MESSAGES.emailShape };
   }
 
   if (has(input, "pages") || creating) {

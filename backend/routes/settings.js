@@ -16,6 +16,7 @@ const { isAdminRole, isPlainAdmin } = require("../config/roles");
 const { isHiddenAccount } = require("../utils/hiddenAccounts");
 const { canUseAdminPage } = require("../utils/pageAccess");
 const { takenRefusal } = require("../utils/takenIdentifiers");
+const { EMAIL_SHAPE_MESSAGE, isEmailShape } = require("../utils/emailShape");
 const {
   payScope,
   settingsFor,
@@ -122,7 +123,8 @@ const requireSelfOrAdmin = async (req, res, next) => {
         return res.status(404).json({ message: "User not found" });
       }
     } catch (err) {
-      return res.status(500).json({ message: "Server error", error: err.message });
+      console.error("Hidden account check error:", err);
+      return res.status(500).json({ message: "Server error" });
     }
   }
 
@@ -172,6 +174,10 @@ router.put(
         email = trimmedText(email);
         if (!firstName || !lastName || !email) {
           return res.status(400).json({ message: ACCOUNT_DETAILS_REQUIRED });
+        }
+        // Same shape check as Settings > Admins (utils/emailShape.js)
+        if (!isEmailShape(email)) {
+          return res.status(400).json({ message: EMAIL_SHAPE_MESSAGE });
         }
         accountNames = { firstName, lastName };
       }
@@ -238,7 +244,7 @@ router.put(
       // Settings aren't edited here: job details change through the admin employee
       // routes and company details through /company. Read them for the response only.
       // The pay in them follows the caller's pay list; the caller's own record keeps
-      // its pay. Either way a shown pay carries the "Pay not set" flag.
+      // its pay. Either way a shown pay carries the "Pay needs an update" flag.
       const currentSettings = await Settings.findOne({ userId });
       const isOwner = String(req.user.userId) === String(userId);
       const settingsReply = currentSettings ? currentSettings.toObject() : {};
@@ -354,7 +360,8 @@ router.get("/company", requireAuthenticated, async (req, res) => {
   try {
     res.json(await getCompany());
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Company settings read error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -382,7 +389,8 @@ router.put("/company", requireCompanySettings, async (req, res) => {
     res.json(company);
   } catch (err) {
     if (isBadInput(err)) return res.status(400).json({ message: err.message });
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Company settings update error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -400,7 +408,8 @@ router.put("/company/logo", requireCompanySettings, uploadLogo, async (req, res)
 
     res.json(company);
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Company logo upload error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -414,7 +423,8 @@ router.delete("/company/logo", requireCompanySettings, async (req, res) => {
 
     res.json(company);
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Company logo removal error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

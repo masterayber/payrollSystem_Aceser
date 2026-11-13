@@ -56,7 +56,8 @@ const loadCurrentUser = async (req, res, next) => {
     req.currentUser = user;
     next();
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Load current user error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -196,7 +197,8 @@ const requireSignupToken = async (req, res, next) => {
     req.signupUserId = decoded.userId;
     next();
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Signup token check error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 

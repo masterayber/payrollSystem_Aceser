@@ -28,8 +28,11 @@ const router = express.Router();
 // Every route on this router is Super Admin only
 router.use(requireSuperAdmin);
 
-const serverError = (res, err) =>
-  res.status(500).json({ message: "Server error", error: err.message });
+// A 500 with the plain message only; the error itself is logged on the server
+const serverError = (res, err) => {
+  console.error("Admin accounts error:", err);
+  res.status(500).json({ message: "Server error" });
+};
 
 // Statuses an Employee account may have to be on a pay list or linked (Pending
 // sign-ups are not offered; resigned people stay, for their 13th month and final pay)
