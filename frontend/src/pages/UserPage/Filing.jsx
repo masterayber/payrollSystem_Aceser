@@ -9,6 +9,7 @@ import API from "../../api";
 import { FilingContext } from "../../context/FilingContext";
 import ConfirmedMessageModal from "../../components/Modals/Confirmed/ConfirmedMessageModal";
 import { daysText, monthName } from "../../utils/leaveCredits";
+import { refusalText } from "../../utils/feedback";
 
 const Filing = () => {
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
@@ -25,6 +26,8 @@ const Filing = () => {
     type: null,
     request: null,
   });
+  // A refused delete: its text, shown in the red box of that table's card
+  const [deleteError, setDeleteError] = useState({ type: null, text: "" });
   const {
     leaveRequests: userLeaveRequests,
     overtimeRequests: userOvertimeRequests,
@@ -63,6 +66,7 @@ const Filing = () => {
 
   const handleDeleteTarget = (request, type) => {
     setDeleteTarget({ type, request });
+    setDeleteError({ type: null, text: "" });
     setIsDeleteModalOpen(true);
   };
 
@@ -87,11 +91,14 @@ const Filing = () => {
 
       setTimeout(() => setIsConfirmedModalOpen(true), 300);
     } catch (err) {
-      console.error(
-        "Failed deleting request:",
-        err.response?.data?.error || "Delete failed",
-        err,
-      );
+      console.error("Failed deleting request:", err);
+      setIsDeleteModalOpen(false);
+      setDeleteError({
+        type: deleteTarget.type,
+        text: refusalText(err, "Delete failed"),
+      });
+      // A request an admin already decided loses its buttons once the list reloads
+      if (err.response) refreshFilingData();
     }
   };
 
@@ -208,6 +215,9 @@ const Filing = () => {
         <div className="table-title">
           <p>Leave Requests</p>
         </div>
+        {deleteError.type === "leave" && (
+          <p className="feedback-message error">{deleteError.text}</p>
+        )}
         <div className="table filing-table filing-leave-table">
           <div className="table-header">
             <article className="table-header-container">
@@ -291,6 +301,9 @@ const Filing = () => {
         <div className="table-title">
           <p>Overtime Application</p>
         </div>
+        {deleteError.type === "overtime" && (
+          <p className="feedback-message error">{deleteError.text}</p>
+        )}
         <div className="table filing-table filing-overtime-table">
           <div className="table-header">
             <article className="table-header-container">

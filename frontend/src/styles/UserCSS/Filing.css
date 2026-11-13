@@ -90,6 +90,11 @@
   margin: 0;
 }
 
+/* A refused delete's red box: the card's gap already spaces it */
+.employee-filing-page .filing-table-card > .feedback-message {
+  margin: 0;
+}
+
 .employee-filing-page .table-title > p,
 .admin-filing-page .user-track-title > p {
   color: var(--neutral-color-100);

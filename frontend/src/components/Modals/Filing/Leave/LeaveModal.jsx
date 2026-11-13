@@ -15,6 +15,7 @@ import {
   monthName,
 } from "../../../../utils/leaveCredits";
 import { LEAVE_TYPE_NAMES } from "../../../../utils/leaveTypes";
+import { refusalText } from "../../../../utils/feedback";
 
 const LeaveModal = ({
   mode,
@@ -60,15 +61,21 @@ const LeaveModal = ({
     };
   }, []);
 
+  // Any input change: the form now differs, and an earlier refusal no longer applies
+  const markChanged = () => {
+    setHasChanges(true);
+    setErrorMessage("");
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setHasChanges(true);
+    markChanged();
   };
 
   const handleLeaveTypeChange = (selectedType) => {
     setFormData((prev) => ({ ...prev, leaveType: selectedType }));
-    setHasChanges(true);
+    markChanged();
   };
 
   const handleStartDateChange = (e) => {
@@ -78,13 +85,13 @@ const LeaveModal = ({
       startDate: value,
       endDate: isSingleDayLeave ? value : prev.endDate,
     }));
-    setHasChanges(true);
+    markChanged();
   };
 
   const handleEndDateChange = (e) => {
     const { value } = e.target;
     setFormData((prev) => ({ ...prev, endDate: value }));
-    setHasChanges(true);
+    markChanged();
   };
 
   const handleSingleDayToggle = (e) => {
@@ -93,7 +100,7 @@ const LeaveModal = ({
     if (checked && formData.startDate) {
       setFormData((prev) => ({ ...prev, endDate: prev.startDate }));
     }
-    setHasChanges(true);
+    markChanged();
   };
 
   const isFormValid = () => {
@@ -113,7 +120,7 @@ const LeaveModal = ({
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("No authentication token found. Pleave log in again.");
+        alert("No authentication token found. Please log in again.");
         return;
       }
 
@@ -134,14 +141,16 @@ const LeaveModal = ({
         err,
       );
       setIsConfirmModalOpen(false);
-      // Server refusal: its { error } text, else the generic message; no reply at all
-      // (server down): the network error's own message
+      // Server refusal: its own text; a server fault or no reply: a plain message
       setErrorMessage(
-        err.response
-          ? err.response.data?.error ||
-              `${isEdit ? "Update" : "Submission"} failed`
-          : err.message,
+        refusalText(err, `${isEdit ? "Update" : "Submission"} failed`),
       );
+      // A refused edit (4xx, e.g. already decided): reload the list behind the
+      // modal so the request loses its buttons; the modal stays open
+      const status = err.response?.status;
+      if (isEdit && status >= 400 && status < 500 && onUpdateLeaveRequests) {
+        onUpdateLeaveRequests();
+      }
     }
   };
 
@@ -324,7 +333,7 @@ const LeaveModal = ({
           }
           onClose={() => setIsConfirmModalOpen(false)}
           onConfirm={handleSubmit}
-          confirmtext={isEdit ? "Save" : "Yes"}
+          confirmText={isEdit ? "Save" : "Yes"}
           cancelText={isEdit ? "Cancel" : "No"}
         />
       )}
