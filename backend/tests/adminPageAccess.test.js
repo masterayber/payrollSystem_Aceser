@@ -487,6 +487,67 @@ describe("an Admin can't act on its own linked employee (rule 16)", () => {
     expect(res.status).toBe(200);
   });
 
+  // Friday batch, Group 2: reading is not acting. Each read needs its own tick only.
+  it("lets the Admin read its linked employee's page access with the Manage Access tick", async () => {
+    await superAdmin();
+    const own = await person("ana", { employeeId: "AC-001" });
+    const hr = await adminAccount("hr", ["employee-access"], {
+      linkedEmployeeId: own.user._id,
+    });
+
+    const res = await send("get", `/api/access/users/${own.user._id}`, hr.token);
+
+    expect(res.status).toBe(200);
+    expect(String(res.body.userId)).toBe(String(own.user._id));
+    expect(res.body.role).toBe("Employee");
+    expect(Array.isArray(res.body.allowedPages)).toBe(true);
+  });
+
+  it("lets the Admin read its linked employee's leave credits with the Filing tick", async () => {
+    await superAdmin();
+    const own = await person("ana", { employeeId: "AC-001" });
+    const hr = await adminAccount("hr", ["admin-filing"], {
+      linkedEmployeeId: own.user._id,
+    });
+
+    const res = await send("get", `/api/filing/leave-credits/${own.user._id}`, hr.token);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("vacation");
+    expect(res.body).toHaveProperty("sick");
+  });
+
+  it("refuses both reads to an Admin without the tick, linked or not", async () => {
+    await superAdmin();
+    const own = await person("ana", { employeeId: "AC-001" });
+    const hr = await adminAccount("hr", ["employees"], {
+      linkedEmployeeId: own.user._id,
+    });
+
+    for (const url of [
+      `/api/access/users/${own.user._id}`,
+      `/api/filing/leave-credits/${own.user._id}`,
+    ]) {
+      const res = await send("get", url, hr.token);
+      expect(res.status).toBe(403);
+      expect(res.body).toEqual(DENIED);
+    }
+  });
+
+  it("refuses both reads to the employee itself (admin routes)", async () => {
+    await superAdmin();
+    const own = await person("ana", { employeeId: "AC-001" });
+
+    for (const url of [
+      `/api/access/users/${own.user._id}`,
+      `/api/filing/leave-credits/${own.user._id}`,
+    ]) {
+      const res = await send("get", url, own.token);
+      expect(res.status).toBe(403);
+      expect(res.body).toEqual({ message: "Admin access required" });
+    }
+  });
+
   it("never stops the Super Admin", async () => {
     const { sa, own } = await setup();
     const res = await send(

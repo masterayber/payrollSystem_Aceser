@@ -335,6 +335,9 @@ describe("POST /api/admins (rule 7)", () => {
     ["a missing last name", { lastName: undefined }, "First name, last name, username and email are required."],
     ["a blank username", { username: "  " }, "First name, last name, username and email are required."],
     ["a missing email", { email: undefined }, "First name, last name, username and email are required."],
+    ["an email with no dot after the @", { email: "rhea@example" }, "Enter a valid email address."],
+    ["an email with no @", { email: "rhea.example.com" }, "Enter a valid email address."],
+    ["an email with a space", { email: "rhea cruz@example.com" }, "Enter a valid email address."],
     ["a role key (rule 2)", { role: "Admin" }, "Role can't be changed."],
     ["a role of Super Admin", { role: "Super Admin" }, "Role can't be changed."],
     ["an employee page key", { pages: ["employees", "payroll"] }, "Not an admin page: payroll"],
@@ -681,6 +684,51 @@ describe("PATCH /api/admins/:id", () => {
     expect(stored.email).toBe("rhea@example.com");
     expect(stored.pageAccess).toEqual(ADMIN_DEFAULT_PAGE_KEYS);
     expect(stored.payAccess).toEqual([]);
+  });
+
+  it("refuses a badly shaped email and changes nothing", async () => {
+    const sa = await superAdmin();
+    const created = await createAdmin(sa.token);
+    const before = await User.findById(created.body.admin.id).lean();
+
+    for (const email of ["rhea@example", "rhea", " @example.com"]) {
+      const res = await request(app)
+        .patch(`/api/admins/${created.body.admin.id}`)
+        .set(as(sa.token))
+        .send({ lastName: "Ruiz", email });
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ message: "Enter a valid email address." });
+    }
+
+    expect(await User.findById(created.body.admin.id).lean()).toEqual(before);
+  });
+
+  it("accepts a well-shaped new email, trimmed", async () => {
+    const sa = await superAdmin();
+    const created = await createAdmin(sa.token);
+    const res = await request(app)
+      .patch(`/api/admins/${created.body.admin.id}`)
+      .set(as(sa.token))
+      .send({ email: " rhea.cruz@example.com.ph " });
+    expect(res.status).toBe(200);
+    expect(res.body.email).toBe("rhea.cruz@example.com.ph");
+  });
+
+  it("refuses an Admin (not the Super Admin) before it looks at the email", async () => {
+    const sa = await superAdmin();
+    const created = await createAdmin(sa.token);
+    const other = await signedInAdmin(sa.token, {
+      username: "hr.mark",
+      email: "mark@example.com",
+      pages: ADMIN_PAGE_KEYS,
+    });
+
+    const res = await request(app)
+      .patch(`/api/admins/${created.body.admin.id}`)
+      .set(as(other.token))
+      .send({ email: "bad" });
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual(DENIED);
   });
 
   it("keeps the Admin's own email (not a duplicate of itself)", async () => {

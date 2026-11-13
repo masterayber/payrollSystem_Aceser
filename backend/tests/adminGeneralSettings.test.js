@@ -183,6 +183,78 @@ describe("rule 10: an Admin's name and email are required", () => {
   });
 });
 
+// Friday batch, Group 2 (decision 3): the screen's own shape check, on the server
+describe("an Admin's own email must look like an email", () => {
+  const SHAPE = { message: "Enter a valid email address." };
+
+  it.each(["rhea", "rhea@", "@example.com", "rhea@example", "rhea cruz@example.com"])(
+    "refuses %j with 400 and saves nothing",
+    async (email) => {
+      const rhea = await plainAdmin();
+      const before = await stored(rhea.user._id);
+
+      const res = await save(rhea.token, rhea.user._id, { ...GOOD, email });
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual(SHAPE);
+      expect(await stored(rhea.user._id)).toEqual(before);
+    },
+  );
+
+  it("asks for a blank name before the email's shape", async () => {
+    const rhea = await plainAdmin();
+    const res = await save(rhea.token, rhea.user._id, {
+      ...GOOD,
+      firstName: " ",
+      email: "bad",
+    });
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual(REQUIRED);
+  });
+
+  it("checks the shape before the taken-email check", async () => {
+    await employee("ana");
+    const rhea = await plainAdmin();
+    const res = await save(rhea.token, rhea.user._id, {
+      ...GOOD,
+      email: "ana@example",
+    });
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual(SHAPE);
+  });
+
+  it("saves a well-shaped email, trimmed", async () => {
+    const rhea = await plainAdmin();
+    const res = await save(rhea.token, rhea.user._id, {
+      ...GOOD,
+      email: " rhea.cruz@example.com.ph ",
+    });
+    expect(res.status).toBe(200);
+    expect((await stored(rhea.user._id)).email).toBe("rhea.cruz@example.com.ph");
+  });
+
+  // Decision 3: only Admin accounts and an Admin's own General for now; an Employee's
+  // General, the main account and an older Admin with an employee record follow on
+  // Nov 20, after a count of the odd emails already stored
+  it("leaves the other accounts' General as it was (Nov 20)", async () => {
+    const ana = await employee("ana");
+    const res = await save(ana.token, ana.user._id, {
+      email: "ana@example",
+      employee: { email: "ana@example" },
+    });
+    expect(res.status).toBe(200);
+    expect((await stored(ana.user._id)).email).toBe("ana@example");
+  });
+
+  it("still refuses an Employee calling for an Admin's account, whatever the email", async () => {
+    const rhea = await plainAdmin();
+    const ana = await employee("ana");
+    const res = await save(ana.token, rhea.user._id, { ...GOOD, email: "bad" });
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({ message: "Access denied" });
+  });
+});
+
 describe("rule 11: an email another account uses", () => {
   it("refuses another account's email, in any case, and saves nothing", async () => {
     await employee("ana");
