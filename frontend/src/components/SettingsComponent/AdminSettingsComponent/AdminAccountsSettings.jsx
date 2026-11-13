@@ -216,9 +216,13 @@ const AdminAccountsSettings = () => {
 
                   return (
                     <tr key={admin.id} className={disabled ? "disabled" : ""}>
-                      <td>{adminName(admin)}</td>
-                      <td>{admin.username}</td>
-                      <td>{admin.email}</td>
+                      <td className="admin-accounts-name">
+                        {adminName(admin)}
+                      </td>
+                      <td className="admin-accounts-username">
+                        {admin.username}
+                      </td>
+                      <td className="admin-accounts-email">{admin.email}</td>
                       <td>
                         <div className="admin-accounts-status">
                           <span
@@ -235,7 +239,9 @@ const AdminAccountsSettings = () => {
                           )}
                         </div>
                       </td>
-                      <td>{lastLoginText(admin.lastLogin)}</td>
+                      <td className="admin-accounts-last-login">
+                        {lastLoginText(admin.lastLogin)}
+                      </td>
                       <td>{payListText(admin.payAccess)}</td>
                       <td>
                         <div className="admin-accounts-actions">

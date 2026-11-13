@@ -1,7 +1,13 @@
+import { useState } from "react";
 import PropTypes from "prop-types";
+import Dropdown from "../Dropdown/Dropdown";
 import { getField } from "./profileForm";
 
-// One field per entry. A row with one field spans the full width.
+// The genders the default icons know (backend/utils/profileIcon.js GENDER_ICONS)
+const GENDERS = ["Male", "Female"];
+
+// One field per entry. A row with one field spans the full width. A field with
+// `options` is a list instead of a text box.
 const SECTIONS = [
   {
     title: "Personal Information",
@@ -13,7 +19,7 @@ const SECTIONS = [
       [{ name: "email", label: "Email", type: "email" }],
       [
         { name: "birthday", label: "Birthday", type: "date" },
-        { name: "gender", label: "Gender" },
+        { name: "gender", label: "Gender", options: GENDERS },
       ],
     ],
   },
@@ -69,24 +75,46 @@ const ACCOUNT_SECTIONS = [
 ];
 
 const ProfileForm = ({ form, onChange, disabled, accountOnly = false }) => {
-  const renderField = ({ name, label, type = "text" }) => (
-    <div className="input-container" key={name}>
-      <div className="label-container">
-        <label htmlFor={`profile-${name}`}>{label}</label>
-      </div>
-      <div className="input-group-signup">
-        <input
-          id={`profile-${name}`}
-          type={type}
-          name={name}
-          placeholder={disabled ? "" : `Enter ${label}`}
+  // The form as it opened: a stored value off a list (an older typed "male") stays
+  // in that list, so it can be picked again after trying another
+  const [opened] = useState(form);
+
+  const listOptions = (name, options) => {
+    const stored = getField(opened, name);
+    return stored && !options.includes(stored) ? [...options, stored] : options;
+  };
+
+  const renderField = ({ name, label, type = "text", options }) =>
+    options && !disabled ? (
+      <div className="input-container profile-select" key={name}>
+        <div className="label-container">
+          <label>{label}</label>
+        </div>
+        <Dropdown
+          options={listOptions(name, options)}
+          placeholder={`Select ${label}`}
           value={getField(form, name)}
-          onChange={(event) => onChange(name, event.target.value)}
-          disabled={disabled}
+          onSelect={(value) => onChange(name, value)}
         />
       </div>
-    </div>
-  );
+    ) : (
+      <div className="input-container" key={name}>
+        <div className="label-container">
+          <label htmlFor={`profile-${name}`}>{label}</label>
+        </div>
+        <div className="input-group-signup">
+          <input
+            id={`profile-${name}`}
+            type={type}
+            name={name}
+            placeholder={disabled ? "" : `Enter ${label}`}
+            value={getField(form, name)}
+            onChange={(event) => onChange(name, event.target.value)}
+            disabled={disabled}
+          />
+        </div>
+      </div>
+    );
 
   return (
     <>

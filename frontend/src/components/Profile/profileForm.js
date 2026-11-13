@@ -1,7 +1,7 @@
 // Helpers for the profile form shared by the Settings pages and the admin profile page.
 // No React here, so Jest can test it (backend/tests/settingsByTick.test.js).
 import { isAdminRole, isSuperAdmin } from "../../utils/roles";
-import { checkAdminForm, FORM_MESSAGES } from "../../utils/adminAccounts";
+import { FORM_MESSAGES, isEmailShape } from "../../utils/adminAccounts";
 
 export const emptyAddress = {
   country: "",
@@ -112,14 +112,12 @@ export const ACCOUNT_FORM_MESSAGES = {
 };
 
 // The yellow message to show instead of sending, or "" when the form can be sent.
-// The email shape is the Settings > Admins check (checkAdminForm); that form also
-// needs a username, which this form never edits, so a stand-in fills it.
+// The email shape is the one check Settings > Admins uses (utils/adminAccounts.js
+// isEmailShape), with the server's words.
 export const checkAccountForm = (form) => {
   const body = toAccountPayload(form);
   if (!body.firstName || !body.lastName || !body.email) {
     return ACCOUNT_FORM_MESSAGES.required;
   }
-  return checkAdminForm({ ...body, username: "account" })
-    ? ACCOUNT_FORM_MESSAGES.email
-    : "";
+  return isEmailShape(body.email) ? "" : ACCOUNT_FORM_MESSAGES.email;
 };

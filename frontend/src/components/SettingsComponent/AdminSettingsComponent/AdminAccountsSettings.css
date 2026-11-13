@@ -81,6 +81,20 @@
   overflow-wrap: anywhere;
 }
 
+/* The name, the username and the last login stay on one line; the email is never
+   split inside a word. A list wider than the card scrolls sideways instead (the
+   wrap above). */
+.admin-accounts-settings .admin-accounts-table td.admin-accounts-name,
+.admin-accounts-settings .admin-accounts-table td.admin-accounts-username,
+.admin-accounts-settings .admin-accounts-table td.admin-accounts-last-login {
+  white-space: nowrap;
+}
+
+.admin-accounts-settings .admin-accounts-table td.admin-accounts-email {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
 .admin-accounts-settings .admin-accounts-table tbody tr:last-child td {
   border-bottom: 0;
 }
