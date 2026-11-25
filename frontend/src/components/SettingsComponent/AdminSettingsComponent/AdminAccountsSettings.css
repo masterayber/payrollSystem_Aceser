@@ -272,10 +272,194 @@
   letter-spacing: 0.04em;
 }
 
+/* ---- The Accounts | Activity log switch ---- */
+.admin-accounts-settings .admin-accounts-switch {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 3px;
+  border: 1px solid var(--gray-300);
+  border-radius: 10px;
+  background: var(--neutral-color-0);
+}
+
+.admin-accounts-settings .admin-accounts-switch-button {
+  padding: 7px 16px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--neutral-color-80);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.admin-accounts-settings .admin-accounts-switch-button:hover:not(.active) {
+  background: var(--gray-100);
+}
+
+.admin-accounts-settings .admin-accounts-switch-button.active {
+  background: var(--default-button-color);
+  color: #ffffff;
+}
+
+.admin-accounts-settings .admin-accounts-switch-button:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: 2px;
+}
+
+/* ---- Activity log ---- */
+.admin-accounts-settings .activity-log {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 14px;
+}
+
+.admin-accounts-settings .activity-log .feedback-message {
+  margin: 0;
+}
+
+/* The filters wrap onto more lines on a narrow screen */
+.admin-accounts-settings .activity-log-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 12px;
+}
+
+.admin-accounts-settings .activity-log-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-accounts-settings .activity-log-field > span {
+  color: var(--neutral-color-80);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-accounts-settings .activity-log-field select,
+.admin-accounts-settings .activity-log-field input {
+  box-sizing: border-box;
+  height: 36px;
+  /* The app-wide date box rule (Auth.css) sets min-height 44px; keep every filter at 36px. */
+  min-height: 0;
+  min-width: 0;
+  padding: 0 10px;
+  font-family: inherit;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  background: var(--neutral-color-0);
+  color: var(--neutral-color-90);
+  font-size: 14px;
+}
+
+.admin-accounts-settings .activity-log-field select {
+  max-width: 220px;
+}
+
+.admin-accounts-settings .activity-log-search {
+  flex: 1 1 180px;
+}
+
+.admin-accounts-settings .activity-log-field select:focus-visible,
+.admin-accounts-settings .activity-log-field input:focus-visible,
+.admin-accounts-settings .activity-log-link:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: 1px;
+}
+
+.admin-accounts-settings .activity-log-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+}
+
+.admin-accounts-settings .activity-log-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--main-color-1);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-accounts-settings .activity-log-link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.admin-accounts-settings .activity-log-link:disabled {
+  color: var(--neutral-color-60);
+  cursor: default;
+}
+
+.admin-accounts-settings .activity-log-refresh {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 36px;
+  gap: 5px;
+}
+
+/* The table scrolls sideways inside its own box (admin-accounts-table-wrap) */
+.admin-accounts-settings .activity-log-table {
+  min-width: 900px;
+}
+
+.admin-accounts-settings .activity-log-table td {
+  vertical-align: top;
+}
+
+.admin-accounts-settings .activity-log-table td.activity-log-when,
+.admin-accounts-settings .activity-log-table td.activity-log-who,
+.admin-accounts-settings .activity-log-table td.activity-log-what {
+  white-space: nowrap;
+}
+
+.admin-accounts-settings .activity-log-details {
+  color: var(--neutral-color-80);
+}
+
+.admin-accounts-settings .activity-log-details span {
+  display: block;
+}
+
+/* While a page loads, the list it replaces is dimmed */
+.admin-accounts-settings .activity-log-busy {
+  opacity: 0.6;
+}
+
+.admin-accounts-settings .activity-log-paging {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--neutral-color-80);
+  font-size: 14px;
+}
+
 @media (max-width: 640px) {
   .admin-accounts-settings .admin-accounts-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .admin-accounts-settings .activity-log-field {
+    flex: 1 1 140px;
+  }
+
+  .admin-accounts-settings .activity-log-field select,
+  .admin-accounts-settings .activity-log-field input {
+    width: 100%;
+    max-width: none;
   }
 
   .admin-password-modal .admin-password-row {
