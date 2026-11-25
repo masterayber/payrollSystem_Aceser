@@ -10,6 +10,7 @@ const {
   normalize,
 } = require("../utils/logisticsAccess");
 const { findDuplicate, positionsIn } = require("../utils/dropdownValues");
+const { logActivity } = require("../middleware/activityLog");
 
 const allowedFields = [
   "designations",
@@ -34,6 +35,9 @@ const requireListEditor = requireAdminPage((req) =>
     : "settings-manage",
 );
 const requireManageSettings = requireAdminPage("settings-manage");
+
+// A change to a list: who may make it, then an entry in the activity log
+const changesList = (action) => [requireListEditor, logActivity(action)];
 
 // Plain-English names for the dropdown fields, for messages shown on screen
 const fieldLabels = {
@@ -84,7 +88,7 @@ router.get("/", requireAdmin, async (req, res) => {
 });
 
 // ADD Option Route
-router.post("/:field/add", requireListEditor, async (req, res) => {
+router.post("/:field/add", changesList("list.add"), async (req, res) => {
   const { field } = req.params;
   const option = String(req.body.option ?? "").trim();
 
@@ -152,7 +156,7 @@ router.post("/:field/add", requireListEditor, async (req, res) => {
 });
 
 // EDIT Option Route
-router.put("/:field/edit", requireListEditor, async (req, res) => {
+router.put("/:field/edit", changesList("list.rename"), async (req, res) => {
   const { field } = req.params;
   const { oldOption } = req.body;
   const newOption = String(req.body.newOption ?? "").trim();
@@ -216,7 +220,7 @@ router.put("/:field/edit", requireListEditor, async (req, res) => {
 });
 
 // DELETE Option Route
-router.delete("/:field/delete", requireListEditor, async (req, res) => {
+router.delete("/:field/delete", changesList("list.remove"), async (req, res) => {
   const { field } = req.params;
   const { option } = req.body;
 
@@ -291,6 +295,7 @@ router.get("/positions/:department", requireAdmin, async (req, res) => {
 router.post(
   "/positions/:department/add",
   requireManageSettings,
+  logActivity("list.add"),
   async (req, res) => {
     const { department } = req.params;
     const option = String(req.body.option ?? "").trim();
@@ -341,6 +346,7 @@ router.post(
 router.put(
   "/positions/:department/edit",
   requireManageSettings,
+  logActivity("list.rename"),
   async (req, res) => {
     const { department } = req.params;
     const { oldOption } = req.body;
@@ -408,6 +414,7 @@ router.put(
 router.delete(
   "/positions/:department/delete",
   requireManageSettings,
+  logActivity("list.remove"),
   async (req, res) => {
     const { department } = req.params;
     const { option } = req.body;

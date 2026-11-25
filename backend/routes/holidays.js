@@ -16,6 +16,8 @@ const {
   checkImport,
   importMessage,
 } = require("../utils/holidayImport");
+const { logActivity } = require("../middleware/activityLog");
+const { holidayName, holidayImportNote } = require("../utils/activityLog");
 
 // The company holiday list. Everyone signed in reads it (the Calendar screens, the
 // attendance sheet, and later the pay computation); only an admin with the Calendar tick
@@ -26,6 +28,9 @@ const {
 const router = express.Router();
 
 const requireCalendar = requireAdminPage("admin-calendar");
+
+// A change to the list: the Calendar tick, then an entry in the activity log
+const changesHolidays = (action) => [requireCalendar, logActivity(action)];
 
 const YEAR_PATTERN = /^\d{4}$/;
 
@@ -120,7 +125,7 @@ router.get("/import-preview", requireCalendar, async (req, res) => {
 // has a holiday is skipped and named in the message, also one taken at the same moment
 // by another request (the unique index on the date); when every date is taken nothing is
 // saved. Does not ask Nager.Date again: the Admin's rows are trusted as the Add form's.
-router.post("/import", requireCalendar, async (req, res) => {
+router.post("/import", changesHolidays("holiday.import"), async (req, res) => {
   try {
     const checked = checkImport(req.body);
     if (checked.error) {
@@ -160,6 +165,10 @@ router.post("/import", requireCalendar, async (req, res) => {
     if (saved.length === 0) {
       return res.status(409).json({ message: ALL_TAKEN });
     }
+    res.locals.activity = {
+      targetName: `Holidays ${year}`,
+      note: holidayImportNote(saved.length, skipped.length),
+    };
     res.status(201).json({
       message: importMessage(year, saved.length, skipped),
       saved: saved.map(toReply),
@@ -172,7 +181,7 @@ router.post("/import", requireCalendar, async (req, res) => {
 });
 
 // POST /api/holidays { date: "YYYY-MM-DD", name, type }: adds a holiday
-router.post("/", requireCalendar, async (req, res) => {
+router.post("/", changesHolidays("holiday.add"), async (req, res) => {
   try {
     const checked = checkHoliday(req.body);
     if (checked.error) {
@@ -188,6 +197,10 @@ router.post("/", requireCalendar, async (req, res) => {
       source: HOLIDAY_SOURCES.MANUAL,
       createdBy: req.user.userId,
     });
+    res.locals.activity = {
+      targetId: holiday._id,
+      targetName: holidayName(holiday),
+    };
     res
       .status(201)
       .json({ message: "Holiday saved.", holiday: toReply(holiday) });
@@ -203,7 +216,7 @@ router.post("/", requireCalendar, async (req, res) => {
 
 // DELETE /api/holidays/:id: removes a holiday. Keep the "/import..." routes above any
 // "/:id" route, so their names are never read as an id.
-router.delete("/:id", requireCalendar, async (req, res) => {
+router.delete("/:id", changesHolidays("holiday.remove"), async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
@@ -215,6 +228,10 @@ router.delete("/:id", requireCalendar, async (req, res) => {
       return res.status(404).json({ message: NOT_FOUND });
     }
 
+    res.locals.activity = {
+      targetId: removed._id,
+      targetName: holidayName(removed),
+    };
     res.status(200).json({ message: "Holiday removed." });
   } catch (err) {
     res

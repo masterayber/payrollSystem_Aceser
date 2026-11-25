@@ -30,6 +30,8 @@ const {
   defaultPhotoFor,
   refreshDefaultIcon,
 } = require("../utils/profileIcon");
+const { logActivity } = require("../middleware/activityLog");
+const { detailsAction } = require("../utils/activityLog");
 
 const router = express.Router();
 
@@ -131,6 +133,12 @@ const requireSelfOrAdmin = async (req, res, next) => {
   next();
 };
 
+// Activity log: an admin saving its own details, or another person's contact details
+// (an Employee's own save is never logged)
+const logDetails = logActivity((req) =>
+  detailsAction(req.user.userId, req.params.id),
+);
+
 const ACCOUNT_DETAILS_REQUIRED = "First name, last name and email are required.";
 
 // Trimmed text, or "" for a blank, missing or non-text value
@@ -152,6 +160,7 @@ router.put(
   "/updateGeneralSettings/:id",
   requireAuthenticated,
   requireSelfOrAdmin,
+  logDetails,
   async (req, res) => {
     try {
       const userId = req.params.id;
@@ -277,6 +286,7 @@ router.put(
   "/users/:id/profile-photo",
   requireAuthenticated,
   requireSelfOrAdmin,
+  logActivity("photo.set"),
   uploadProfilePhoto,
   async (req, res) => {
     try {
@@ -315,6 +325,7 @@ router.delete(
   "/remove-profile-photo/:id",
   requireAuthenticated,
   requireSelfOrAdmin,
+  logActivity("photo.remove"),
   async (req, res) => {
     try {
       const userId = req.params.id;
@@ -368,8 +379,17 @@ router.get("/company", requireAuthenticated, async (req, res) => {
 // Settings > Company writes: the "settings-company" tick (the Super Admin always)
 const requireCompanySettings = requireAdminPage("settings-company");
 
+// Each company write: the tick first, then an entry in the activity log
+const editCompany = [requireCompanySettings, logActivity("company.edit")];
+const setLogo = [
+  requireCompanySettings,
+  logActivity("company.logo"),
+  uploadLogo,
+];
+const removeLogo = [requireCompanySettings, logActivity("company.logoRemove")];
+
 // Admin: { name, contact, dateFormat, timeFormat }; any other field is ignored
-router.put("/company", requireCompanySettings, async (req, res) => {
+router.put("/company", editCompany, async (req, res) => {
   try {
     const update = { updatedBy: req.user.userId };
     for (const field of COMPANY_FIELDS) {
@@ -396,7 +416,7 @@ router.put("/company", requireCompanySettings, async (req, res) => {
 
 // Admin: multipart form with a "logo" image. The guard runs first, so an upload
 // from anyone without the tick is never written to disk.
-router.put("/company/logo", requireCompanySettings, uploadLogo, async (req, res) => {
+router.put("/company/logo", setLogo, async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
@@ -413,7 +433,7 @@ router.put("/company/logo", requireCompanySettings, uploadLogo, async (req, res)
   }
 });
 
-router.delete("/company/logo", requireCompanySettings, async (req, res) => {
+router.delete("/company/logo", removeLogo, async (req, res) => {
   try {
     const company = await getCompany();
     removeUpload(company.logo);

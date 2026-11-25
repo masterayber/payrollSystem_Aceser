@@ -10,7 +10,9 @@ const mongoose = require("mongoose");
 
 const User = require("../models/authUsers");
 const Employee = require("../models/employees");
+const ActivityLog = require("../models/activityLog");
 const { requireSuperAdmin } = require("../middleware/accessMiddleware");
+const { logActivity } = require("../middleware/activityLog");
 const { ADMIN } = require("../config/roles");
 const { generateTemporaryPassword } = require("../utils/password");
 const { ignoreCase } = require("../utils/ignoreCase");
@@ -22,6 +24,13 @@ const {
   fullName,
   describeAdmin,
 } = require("../utils/adminAccounts");
+const {
+  PAGE_SIZE,
+  MESSAGES: ACTIVITY_MESSAGES,
+  checkActivityQuery,
+  activityFilter,
+  toReplyEntry,
+} = require("../utils/activityLog");
 
 const router = express.Router();
 
@@ -149,11 +158,53 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET /api/admins/activity?by=&group=&from=&to=&q=&page=: the activity log, newest
+// first, 50 entries a page. `by` is "me" or an Admin account's id; `group` a kind of
+// action; `from` and `to` Manila days (YYYY-MM-DD, both included); `q` part of the
+// record's name, in any case. The filters combine. A missing or bad `page` reads as 1; a
+// page past the end is an empty list with the total. The log is read-only: no route
+// edits or deletes an entry.
+router.get("/activity", async (req, res) => {
+  try {
+    const checked = checkActivityQuery(req.query);
+    if (checked.error) return res.status(400).json({ message: checked.error });
+    if (
+      checked.by !== undefined &&
+      checked.by !== "me" &&
+      !(await findAdmin(checked.by))
+    ) {
+      return res.status(400).json({ message: ACTIVITY_MESSAGES.notAdmin });
+    }
+
+    const filter = activityFilter(checked, req.user.userId);
+    const [total, entries] = await Promise.all([
+      ActivityLog.countDocuments(filter),
+      ActivityLog.find(filter)
+        .sort({ at: -1, _id: -1 })
+        .skip((checked.page - 1) * PAGE_SIZE)
+        .limit(PAGE_SIZE)
+        .lean(),
+    ]);
+
+    res.json({
+      entries: entries.map((entry) => toReplyEntry(entry, req.user.userId)),
+      total,
+      page: checked.page,
+      pageSize: PAGE_SIZE,
+    });
+  } catch (err) {
+    serverError(res, err);
+  }
+});
+
+// Every write below leaves an entry in the activity log (middleware/activityLog.js);
+// no entry ever holds a temporary password.
+
 // POST /api/admins { firstName, lastName, username, email, pages?, payAccess?,
 // linkedEmployeeId? }: a new Active Admin account with a generated temporary password
 // that must be changed at first sign-in. Only the hash is stored; the reply carries the
 // password once.
-router.post("/", async (req, res) => {
+router.post("/", logActivity("admin.create"), async (req, res) => {
   try {
     const checked = await checkRequest(req.body, { creating: true });
     if (checked.error) return res.status(400).json({ message: checked.error });
@@ -172,6 +223,7 @@ router.post("/", async (req, res) => {
     });
     await admin.save();
 
+    res.locals.activity = { targetId: admin._id };
     res.status(201).json({
       message: MESSAGES.created,
       admin: await describe(admin.toObject()),
@@ -187,7 +239,7 @@ router.post("/", async (req, res) => {
 // PATCH /api/admins/:id { firstName?, lastName?, email?, pages?, payAccess?,
 // linkedEmployeeId? }: the Admin as GET lists it. The role is not touched, so the
 // Admin's session goes on; the change applies on its next request.
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", logActivity("admin.edit"), async (req, res) => {
   try {
     const admin = await findAdmin(req.params.id);
     if (!admin) return res.status(404).json({ message: MESSAGES.notFound });
@@ -231,12 +283,22 @@ const setStatus = (status, message) => async (req, res) => {
   }
 };
 
-router.post("/:id/disable", setStatus("Inactive", MESSAGES.disabled));
-router.post("/:id/enable", setStatus("Active", MESSAGES.enabled));
+router.post(
+  "/:id/disable",
+  logActivity("admin.disable"),
+  setStatus("Inactive", MESSAGES.disabled),
+);
+router.post(
+  "/:id/enable",
+  logActivity("admin.enable"),
+  setStatus("Active", MESSAGES.enabled),
+);
+
+const logReset = logActivity("admin.resetPassword");
 
 // POST /api/admins/:id/reset-password: a new temporary password, shown once, that
 // must be changed at the next sign-in. The old password stops working at once.
-router.post("/:id/reset-password", async (req, res) => {
+router.post("/:id/reset-password", logReset, async (req, res) => {
   try {
     const admin = await findAdmin(req.params.id);
     if (!admin) return res.status(404).json({ message: MESSAGES.notFound });

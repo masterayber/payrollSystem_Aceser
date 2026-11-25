@@ -24,6 +24,7 @@ const { VISIBLE_ROLE } = require("../utils/hiddenAccounts");
 const { checkNewPassword } = require("../utils/password");
 const { takenRefusal } = require("../utils/takenIdentifiers");
 const { ownSettings } = require("../utils/payVisibility");
+const { logActivity } = require("../middleware/activityLog");
 
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
 
@@ -487,6 +488,7 @@ router.put(
   "/users/:id/status",
   requireAdminPage("employees"),
   refuseOwnLinkedEmployee((req) => req.params.id),
+  logActivity("signup.approve"),
   async (req, res) => {
     const { id } = req.params;
 

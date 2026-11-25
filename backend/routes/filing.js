@@ -30,6 +30,8 @@ const {
   workingDaysError,
   checkLeaveCredits,
 } = require("../utils/leaveCredits");
+const { logActivity } = require("../middleware/activityLog");
+const { decisionAction, leaveNote } = require("../utils/activityLog");
 
 const router = express.Router();
 
@@ -105,6 +107,13 @@ const checkOvertimeDay = async (attendanceId, userId, keepAttendanceId) => {
 // overtime decisions): the "admin-filing" tick; the Super Admin always passes.
 // Employee self-service routes keep requirePage("filing").
 const requireFilingPage = requireAdminPage("admin-filing");
+
+// A decision on a "leave" or "overtime" request: the tick first, then an entry in the
+// activity log (approved or disapproved, by the status sent)
+const decides = (kind) => [
+  requireFilingPage,
+  logActivity((req) => decisionAction(kind, req.body?.status)),
+];
 
 // An Admin deciding a request filed by its own linked employee: refused in this file's
 // { error } shape, which the Filing screen shows
@@ -398,7 +407,7 @@ const markLeaveDays = async (leave) => {
 // Route for approving leave requests of user by admin
 const LEAVE_DECISIONS = ["Approved", "Disapproved"];
 
-router.patch("/leave/:id/status", requireFilingPage, async (req, res) => {
+router.patch("/leave/:id/status", decides("leave"), async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -547,6 +556,7 @@ router.patch("/leave/:id/status", requireFilingPage, async (req, res) => {
       );
     }
 
+    res.locals.activity = { targetId: app.userId, note: leaveNote(app) };
     res.json(app);
   } catch (err) {
     console.error("Error updating leave requests:", err);
@@ -557,7 +567,7 @@ router.patch("/leave/:id/status", requireFilingPage, async (req, res) => {
 // Route for approving or disapproving an overtime request (admin only)
 const OVERTIME_DECISIONS = ["Approved", "Disapproved"];
 
-router.patch("/overtime/:id/status", requireFilingPage, async (req, res) => {
+router.patch("/overtime/:id/status", decides("overtime"), async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -617,6 +627,10 @@ router.patch("/overtime/:id/status", requireFilingPage, async (req, res) => {
       }
     }
 
+    res.locals.activity = {
+      targetId: app.userId,
+      note: toDateKey(app.selectedOvertime),
+    };
     res.json(app);
   } catch (err) {
     console.error("Error updating overtime request:", err);

@@ -12,6 +12,7 @@ const {
   refuseOwnLinkedEmployee,
 } = require("../middleware/accessMiddleware");
 const { isAdminRole, roleLabel } = require("../config/roles");
+const { logActivity } = require("../middleware/activityLog");
 
 const router = express.Router();
 
@@ -70,6 +71,7 @@ router.put(
   requireEmployeeAccess,
   validUserId,
   refuseOwnLinkedEmployee((req) => req.params.userId),
+  logActivity("access.set"),
   async (req, res) => {
     try {
       const { userId } = req.params;
