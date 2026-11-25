@@ -5,6 +5,7 @@ import AdminAccountModal from "../../Modals/AdminAccount/AdminAccountModal";
 import TemporaryPasswordModal from "../../Modals/AdminAccount/TemporaryPasswordModal";
 import ConfirmModal from "../../Modals/Confirm/ConfirmModal";
 import ConfirmedMessageModal from "../../Modals/Confirmed/ConfirmedMessageModal";
+import ActivityLogPanel from "./ActivityLogPanel";
 import {
   adminName,
   isDisabled,
@@ -13,6 +14,7 @@ import {
   refusalText,
   statusLabel,
 } from "../../../utils/adminAccounts";
+import { EMPTY_FILTERS } from "../../../utils/activityLog";
 import "./AdminAccountsSettings.css";
 
 // The confirm box before an action that hits a signed-in person at once. Enable has
@@ -32,10 +34,20 @@ const CONFIRMS = {
   },
 };
 
-// Settings > Admins: the Admin accounts, with Add, Edit, Disable or Enable, and Reset
-// password. The tab is offered only to the account that may manage Admins, and every
-// route here refuses anyone else (shown in the red box).
+// The two views of the tab, in the switch at the top
+const VIEWS = [
+  { key: "accounts", label: "Accounts" },
+  { key: "activity", label: "Activity log" },
+];
+
+// Settings > Admins: the Admin accounts, with Add, Edit, Disable or Enable, Reset
+// password and Activity, and the Activity log (ActivityLogPanel). The tab is offered
+// only to the account that may manage Admins, and every route here refuses anyone else
+// (shown in the red box).
 const AdminAccountsSettings = () => {
+  const [view, setView] = useState("accounts");
+  // The Activity log's filters, kept here so the row button can set Person
+  const [activityFilters, setActivityFilters] = useState(EMPTY_FILTERS);
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -148,148 +160,197 @@ const AdminAccountsSettings = () => {
     setFormAdmin(admin);
   };
 
+  // The Activity button: the log with Person set to that Admin, other filters cleared
+  const openActivity = (admin) => {
+    setActionError("");
+    setActivityFilters({ ...EMPTY_FILTERS, by: String(admin.id) });
+    setView("activity");
+  };
+
   return (
     <div className="settings-content admin-accounts-settings">
       <div className="setting-tab">
-        <div className="admin-accounts-header">
-          <div className="setting-tab-title">
-            <p>Admin accounts</p>
-          </div>
-          <button
-            type="button"
-            className="admin-accounts-add-button"
-            onClick={() => openForm(null)}
-          >
-            <IconPlus size={16} stroke={2.5} />
-            Add Admin
-          </button>
+        <div
+          className="admin-accounts-switch"
+          role="group"
+          aria-label="Admins views"
+        >
+          {VIEWS.map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              aria-pressed={view === option.key}
+              className={`admin-accounts-switch-button ${
+                view === option.key ? "active" : ""
+              }`}
+              onClick={() => setView(option.key)}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
 
-        {loadError && (
-          <div className="feedback-message error admin-accounts-load-error">
-            <span>{loadError}</span>
+        <div className="admin-accounts-header">
+          <div className="setting-tab-title">
+            <p>{view === "activity" ? "Activity log" : "Admin accounts"}</p>
+          </div>
+          {view === "accounts" && (
             <button
               type="button"
-              className="admin-accounts-action"
-              onClick={loadAdmins}
-              disabled={loading}
+              className="admin-accounts-add-button"
+              onClick={() => openForm(null)}
             >
-              Retry
+              <IconPlus size={16} stroke={2.5} />
+              Add Admin
             </button>
-          </div>
+          )}
+        </div>
+
+        {view === "activity" && (
+          <ActivityLogPanel
+            admins={admins}
+            filters={activityFilters}
+            onFiltersChange={setActivityFilters}
+          />
         )}
 
-        {actionError && (
-          <p className="feedback-message error" role="alert">
-            {actionError}
-          </p>
-        )}
+        {view === "accounts" && (
+          <>
+            {loadError && (
+              <div className="feedback-message error admin-accounts-load-error">
+                <span>{loadError}</span>
+                <button
+                  type="button"
+                  className="admin-accounts-action"
+                  onClick={loadAdmins}
+                  disabled={loading}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
 
-        {loading && admins.length === 0 && (
-          <p className="admin-accounts-empty">Loading...</p>
-        )}
+            {actionError && (
+              <p className="feedback-message error" role="alert">
+                {actionError}
+              </p>
+            )}
 
-        {!loading && !loadError && admins.length === 0 && (
-          <p className="admin-accounts-empty">
-            No Admin accounts yet. Use Add Admin to create one.
-          </p>
-        )}
+            {loading && admins.length === 0 && (
+              <p className="admin-accounts-empty">Loading...</p>
+            )}
 
-        {admins.length > 0 && (
-          <div className="admin-accounts-table-wrap">
-            <table className="admin-accounts-table">
-              <thead>
-                <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Username</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Last login</th>
-                  <th scope="col">Pay list</th>
-                  <th scope="col">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {admins.map((admin) => {
-                  const disabled = isDisabled(admin);
-                  const busy = busyId === admin.id;
+            {!loading && !loadError && admins.length === 0 && (
+              <p className="admin-accounts-empty">
+                No Admin accounts yet. Use Add Admin to create one.
+              </p>
+            )}
 
-                  return (
-                    <tr key={admin.id} className={disabled ? "disabled" : ""}>
-                      <td className="admin-accounts-name">
-                        {adminName(admin)}
-                      </td>
-                      <td className="admin-accounts-username">
-                        {admin.username}
-                      </td>
-                      <td className="admin-accounts-email">{admin.email}</td>
-                      <td>
-                        <div className="admin-accounts-status">
-                          <span
-                            className={`admin-accounts-badge ${
-                              disabled ? "disabled" : "active"
-                            }`}
-                          >
-                            {statusLabel(admin.status)}
-                          </span>
-                          {admin.mustChangePassword && (
-                            <span className="admin-accounts-badge pending">
-                              Must change password
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="admin-accounts-last-login">
-                        {lastLoginText(admin.lastLogin)}
-                      </td>
-                      <td>{payListText(admin.payAccess)}</td>
-                      <td>
-                        <div className="admin-accounts-actions">
-                          <button
-                            type="button"
-                            className="admin-accounts-action"
-                            onClick={() => openForm(admin)}
-                            disabled={busy}
-                          >
-                            Edit
-                          </button>
-                          {disabled ? (
-                            <button
-                              type="button"
-                              className="admin-accounts-action"
-                              onClick={() => handleEnable(admin)}
-                              disabled={busy}
-                            >
-                              Enable
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className="admin-accounts-action danger"
-                              onClick={() =>
-                                setConfirm({ kind: "disable", admin })
-                              }
-                              disabled={busy}
-                            >
-                              Disable
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className="admin-accounts-action"
-                            onClick={() => setConfirm({ kind: "reset", admin })}
-                            disabled={busy}
-                          >
-                            Reset password
-                          </button>
-                        </div>
-                      </td>
+            {admins.length > 0 && (
+              <div className="admin-accounts-table-wrap">
+                <table className="admin-accounts-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Name</th>
+                      <th scope="col">Username</th>
+                      <th scope="col">Email</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Last login</th>
+                      <th scope="col">Pay list</th>
+                      <th scope="col">Actions</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {admins.map((admin) => {
+                      const disabled = isDisabled(admin);
+                      const busy = busyId === admin.id;
+
+                      return (
+                        <tr key={admin.id} className={disabled ? "disabled" : ""}>
+                          <td className="admin-accounts-name">
+                            {adminName(admin)}
+                          </td>
+                          <td className="admin-accounts-username">
+                            {admin.username}
+                          </td>
+                          <td className="admin-accounts-email">{admin.email}</td>
+                          <td>
+                            <div className="admin-accounts-status">
+                              <span
+                                className={`admin-accounts-badge ${
+                                  disabled ? "disabled" : "active"
+                                }`}
+                              >
+                                {statusLabel(admin.status)}
+                              </span>
+                              {admin.mustChangePassword && (
+                                <span className="admin-accounts-badge pending">
+                                  Must change password
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="admin-accounts-last-login">
+                            {lastLoginText(admin.lastLogin)}
+                          </td>
+                          <td>{payListText(admin.payAccess)}</td>
+                          <td>
+                            <div className="admin-accounts-actions">
+                              <button
+                                type="button"
+                                className="admin-accounts-action"
+                                onClick={() => openForm(admin)}
+                                disabled={busy}
+                              >
+                                Edit
+                              </button>
+                              {disabled ? (
+                                <button
+                                  type="button"
+                                  className="admin-accounts-action"
+                                  onClick={() => handleEnable(admin)}
+                                  disabled={busy}
+                                >
+                                  Enable
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="admin-accounts-action danger"
+                                  onClick={() =>
+                                    setConfirm({ kind: "disable", admin })
+                                  }
+                                  disabled={busy}
+                                >
+                                  Disable
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="admin-accounts-action"
+                                onClick={() => setConfirm({ kind: "reset", admin })}
+                                disabled={busy}
+                              >
+                                Reset password
+                              </button>
+                              <button
+                                type="button"
+                                className="admin-accounts-action"
+                                onClick={() => openActivity(admin)}
+                                disabled={busy}
+                              >
+                                Activity
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
         )}
       </div>
 
