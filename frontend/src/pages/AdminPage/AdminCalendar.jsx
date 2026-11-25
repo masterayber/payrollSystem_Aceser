@@ -8,7 +8,7 @@ import API from "../../api";
 import CalendarComponent from "../../components/CalendarComponent/CalendarComponent";
 import Dropdown from "../../components/Dropdown/Dropdown";
 import ConfirmModal from "../../components/Modals/Confirm/ConfirmModal";
-import { manilaToday } from "../../utils/cutoff";
+import ImportHolidaysModal from "../../components/Modals/ImportHolidays/ImportHolidaysModal";
 import {
   HOLIDAY_TYPE_OPTIONS,
   formatHolidayDate,
@@ -16,9 +16,14 @@ import {
   holidayDayName,
   holidayTypeLabel,
 } from "../../utils/holidays";
+import { currentManilaYear } from "../../utils/thirteenthMonth";
 import "../../styles/AdminCSS/AdminCalendar.css";
 
 const EMPTY_HOLIDAY_FORM = { date: "", name: "", type: "" };
+
+const IMPORTED_SOURCE = "Imported";
+const IMPORTED_HINT =
+  "Imported from Nager.Date. Check against the proclamation.";
 
 // The server's own words for a refusal, or `fallback` when it sent none
 const refusalText = (error, fallback) => {
@@ -32,7 +37,7 @@ const AdminCalendar = () => {
   // The company holiday list (GET /api/holidays), one year at a time, from the current
   // Manila year. The page is behind the Calendar tick, and so are Save and Remove on the
   // server; the server does every check and its message is shown as it is.
-  const [year, setYear] = useState(() => Number(manilaToday().slice(0, 4)));
+  const [year, setYear] = useState(currentManilaYear);
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -46,6 +51,13 @@ const AdminCalendar = () => {
   // The holiday the confirm box is asking about, and the id being removed
   const [holidayToRemove, setHolidayToRemove] = useState(null);
   const [removingId, setRemovingId] = useState("");
+  // The year the import's preview is open for, or null while it is closed
+  const [importYear, setImportYear] = useState(null);
+
+  // The import is offered for this Manila year and the next one only (Manila's year,
+  // whatever the PC's time zone); the server refuses any other year
+  const thisYear = currentManilaYear();
+  const canImport = year === thisYear || year === thisYear + 1;
 
   useEffect(() => {
     let cancelled = false;
@@ -150,6 +162,20 @@ const AdminCalendar = () => {
       // Also after a refusal: "Holiday not found." means the list on screen is out of date
       setReloadKey((key) => key + 1);
     }
+  };
+
+  const openImport = () => {
+    setFormMessage(null);
+    setListMessage(null);
+    setImportYear(year);
+  };
+
+  // The import saved something: the server's message above the list, and the list again
+  const handleImported = (message) => {
+    setImportYear(null);
+    setFormMessage(null);
+    setListMessage({ type: "success", text: message });
+    setReloadKey((key) => key + 1);
   };
 
   return (
@@ -292,6 +318,18 @@ const AdminCalendar = () => {
             </button>
           </form>
 
+          {canImport && (
+            <div className="calendar-holiday-import-row">
+              <button
+                type="button"
+                className="calendar-holiday-import"
+                onClick={openImport}
+              >
+                {`Import holidays for ${year}`}
+              </button>
+            </div>
+          )}
+
           {formMessage && (
             <p
               className={`feedback-message ${formMessage.type}`}
@@ -347,7 +385,20 @@ const AdminCalendar = () => {
                     <p>{holidayDayName(dateKey)}</p>
                   </article>
                   <article className="table-content-container">
-                    <p title={holiday.name}>{holiday.name}</p>
+                    <p title={holiday.name}>
+                      {holiday.name}
+                      {holiday.source === IMPORTED_SOURCE && (
+                        <>
+                          {" "}
+                          <span
+                            className="calendar-holiday-tag"
+                            title={IMPORTED_HINT}
+                          >
+                            Imported
+                          </span>
+                        </>
+                      )}
+                    </p>
                   </article>
                   <article className="table-content-container">
                     <p>{holidayTypeLabel(holiday.type)}</p>
@@ -388,6 +439,15 @@ const AdminCalendar = () => {
           onClose={() => setHolidayToRemove(null)}
           onConfirm={handleConfirmRemove}
           confirmText="Yes, Remove"
+        />
+      )}
+
+      {importYear !== null && (
+        <ImportHolidaysModal
+          key={importYear}
+          year={importYear}
+          onClose={() => setImportYear(null)}
+          onSaved={handleImported}
         />
       )}
     </div>
