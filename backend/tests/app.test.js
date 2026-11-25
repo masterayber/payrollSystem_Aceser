@@ -175,12 +175,17 @@ describe("POST /api/auth/forgot-password", () => {
     expect(res.status).toBe(200);
     expect(res.body.otp).toBeUndefined();
   });
-  it("says an unregistered email isn't registered, and sends nothing", async () => {
+  // The full comparison with a registered email is in forgotPassword.test.js
+  it("does not say an unregistered email isn't registered, and sends nothing", async () => {
     const res = await request(app)
       .post("/api/auth/forgot-password")
       .send({ email: "nobody@example.com" });
 
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      message: "If that email is registered, a 6-digit code has been sent to it.",
+      expiresAt: expect.any(Number),
+    });
     expect(sendEmail).not.toHaveBeenCalled();
   });
 

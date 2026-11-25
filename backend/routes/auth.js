@@ -30,6 +30,23 @@ const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10);
 const isFilledString = (value) =>
   typeof value === "string" && value.trim() !== "";
 
+// Why an account that is not Active is refused (sign-in and Forgot password reset use
+// the same words), or null for an Active account
+const statusRefusal = (user) => {
+  if (user.status === "Active") return null;
+  if (user.status === "Resigned") return "This account is no longer active.";
+  if (user.status === "Inactive") return "This account is disabled.";
+  return "Account is pending approval.";
+};
+
+// Forgot password answers the same for every email, registered or not, so a code is
+// kept for any email typed. The longest address an email can have: anything longer is
+// turned away before it is stored.
+const MAX_EMAIL_LENGTH = 254;
+const FORGOT_PASSWORD_REPLY =
+  "If that email is registered, a 6-digit code has been sent to it.";
+const INVALID_RESET_TOKEN = "Invalid or expired token";
+
 // The password flag as a boolean (false on accounts created before it existed)
 const passwordFlags = (user) => ({
   mustChangePassword: user.mustChangePassword === true,
@@ -67,14 +84,9 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    if (user.status !== "Active") {
-      const message =
-        user.status === "Resigned"
-          ? "This account is no longer active."
-          : user.status === "Inactive"
-            ? "This account is disabled."
-            : "Account is pending approval.";
-      return res.status(403).json({ message });
+    const refusal = statusRefusal(user);
+    if (refusal) {
+      return res.status(403).json({ message: refusal });
     }
 
     // A pending password change does not stop the login: the token is issued and
@@ -239,19 +251,23 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// Forgot Password route
+// Forgot Password route. The reply never tells whether an account has the email: the
+// status, the message, the keys and the one-minute wait are the same either way. Only
+// the email itself differs: it goes out when an account has the address.
 router.post("/forgot-password", async (req, res) => {
   if (!isFilledString(req.body.email)) {
     return res.status(400).json({ message: "Email is required" });
   }
   const email = req.body.email.trim();
+  if (email.length > MAX_EMAIL_LENGTH) {
+    return res.status(400).json({ message: "Enter a valid email address." });
+  }
 
   try {
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "Email is not registered" });
-    }
 
+    // A code for every email, so the wait and `expiresAt` do not depend on the lookup.
+    // One for an email nobody has is never sent and expires unused.
     const code = issueCode(email);
     if (code.retryAfterMs) {
       return res.status(429).json({
@@ -259,10 +275,16 @@ router.post("/forgot-password", async (req, res) => {
       });
     }
 
-    await sendEmail(email, code.otp);
+    // Not waited for: a registered email is neither slower to answer nor able to show
+    // a mail fault. A failed send is logged here on the server.
+    if (user) {
+      Promise.resolve()
+        .then(() => sendEmail(email, code.otp))
+        .catch((err) => console.error("Forgot password email error:", err));
+    }
 
     res.status(200).json({
-      message: "Password reset has been sent to your email",
+      message: FORGOT_PASSWORD_REPLY,
       expiresAt: code.expiresAt,
     });
   } catch (err) {
@@ -324,20 +346,32 @@ router.post("/reset-password", async (req, res) => {
     return res.status(400).json({ message: refusal });
   }
 
+  // Only a token that fails this check is "invalid or expired"; a fault further down
+  // is a server error, answered as one
+  let email;
   try {
-    // Verify JWT token
     const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
-
-    if (decoded.purpose !== "reset") {
-      return res.status(400).json({ message: "Invalid or expired token" });
+    if (decoded.purpose !== "reset" || !isFilledString(decoded.email)) {
+      return res.status(400).json({ message: INVALID_RESET_TOKEN });
     }
+    email = decoded.email;
+  } catch (error) {
+    console.error("Token verification error:", error.message);
+    return res.status(400).json({ message: INVALID_RESET_TOKEN });
+  }
 
-    const email = decoded.email;
-
-    // Find user by email
+  try {
+    // No account for the token's email answers like a bad token, so this step does
+    // not tell whether an email is registered either
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(400).json({ message: INVALID_RESET_TOKEN });
+    }
+
+    // An account that may not sign in may not set a new password; nothing is saved
+    const statusProblem = statusRefusal(user);
+    if (statusProblem) {
+      return res.status(403).json({ message: statusProblem });
     }
 
     // Hash the new password
@@ -345,7 +379,7 @@ router.post("/reset-password", async (req, res) => {
 
     // The person chose their own password, so a pending forced change is done too
     await User.updateOne(
-      { email },
+      { _id: user._id },
       { $set: { password: hashedPassword, mustChangePassword: false } },
     );
 
@@ -353,9 +387,9 @@ router.post("/reset-password", async (req, res) => {
       message:
         "Password has been reset successfully. Please log in with your new password.",
     });
-  } catch (error) {
-    console.error("Token verification error:", error.message);
-    res.status(400).json({ message: "Invalid or expired token" });
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).json({ message: "Server error. Please try again later" });
   }
 });
 
