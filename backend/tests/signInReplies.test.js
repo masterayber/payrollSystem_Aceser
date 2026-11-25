@@ -293,6 +293,24 @@ describe("routes/auth.js: no error details in a 500 reply", () => {
     expectPlainServerError(res, "Server error. Please try again later", log);
   });
 
+  // Before the Forgot password fix this fault was answered 400 "Invalid or expired token"
+  it("POST /reset-password", async () => {
+    await account("ana");
+    const resetToken = jwt.sign(
+      { email: "ana@example.com", purpose: "reset" },
+      process.env.JWT_SECRET,
+      { expiresIn: "5m" },
+    );
+    const log = quietLog();
+    breakCall(User, "findOne");
+
+    const res = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ resetToken, password: "Another123!" });
+
+    expectPlainServerError(res, "Server error. Please try again later", log);
+  });
+
   it("POST /change-password", async () => {
     await account("ana");
     const token = await loginAs("ana");

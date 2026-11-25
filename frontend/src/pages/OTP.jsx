@@ -100,12 +100,22 @@ const OTP = () => {
     <div className="auth-page otp-container">
       <form className="otp-form" onSubmit={handleOtp}>
         <h2 className="otp-title">OTP</h2>
-        <p className="otp-sub">Please enter your OTP sent to your email</p>
+        {/* This page also opens for an email that is not registered (the server
+            answers the same either way), so the wording does not say a code
+            was sent for certain */}
+        <p className="otp-sub">
+          If your email is registered, a 6-digit code has been sent to it. Enter
+          the code below.
+        </p>
         <div className="email-container">
           <p>
             Your email is: <b>{email}</b>
           </p>
         </div>
+        <p className="otp-help">
+          No email after a few minutes? Check the address above and your spam
+          folder, or ask an Admin.
+        </p>
 
         <div className="otp-input-row">
           <div className="input-group-otp">

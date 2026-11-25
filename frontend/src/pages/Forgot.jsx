@@ -57,10 +57,12 @@ const ForgotPassword = () => {
           <IconArrowLeft stroke={2} />
         </button>
 
-        <h2 className="forgot-title">Find your account</h2>
+        {/* The server answers the same for a registered and an unregistered
+            email, so the wording promises no lookup result */}
+        <h2 className="forgot-title">Reset your password</h2>
         <p className="forgot-sub">
-          Please enter your email to search for your account and reset your
-          password
+          Enter your email. If it is registered, we will send a 6-digit code to
+          it.
         </p>
         <div className="input-container">
           <div className="input-group-forgot">
