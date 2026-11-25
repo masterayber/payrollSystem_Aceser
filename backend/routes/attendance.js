@@ -20,6 +20,12 @@ const {
 } = require("../utils/hiddenAccounts");
 
 const ZKTecoService = require("../utils/zktecoService");
+const { logActivity } = require("../middleware/activityLog");
+const {
+  CHANGE_LABELS,
+  changedFields,
+  countOf,
+} = require("../utils/activityLog");
 
 const requireZktecoCallbackAuth = (req, res, next) => {
   const expected = process.env.ZKTECO_CALLBACK_SECRET;
@@ -334,8 +340,15 @@ router.post("/iclock/cdata", requireZktecoCallbackAuth, async (req, res) => {
 // attendance list stays open to any Admin: the fixed Dashboard and Reports count it.
 const requireAttendancePage = requireAdminPage("admin-attendance");
 
+// The import and the blank day: the tick first, then an entry in the activity log
+const importGuard = [requireAttendancePage, logActivity("attendance.import")];
+const blankDayGuard = [
+  requireAttendancePage,
+  logActivity("attendance.blankDay"),
+];
+
 // Post route to import biometric data from ZKTeco device
-router.post("/import-biometric", requireAttendancePage, async (req, res) => {
+router.post("/import-biometric", importGuard, async (req, res) => {
   try {
     const { deviceIp, devicePort } = req.body;
 
@@ -416,6 +429,9 @@ router.post("/import-biometric", requireAttendancePage, async (req, res) => {
 
     await zkService.disconnect();
 
+    res.locals.activity = {
+      note: countOf(processedRecords.length, "record", "imported"),
+    };
     res.json({
       success: true,
       processed: processedRecords.length,
@@ -519,6 +535,7 @@ router.put(
   "/edit-attendance/:id",
   requireAttendancePage,
   refuseOwnLinkedEmployee((req) => req.params.id),
+  logActivity("attendance.edit"),
   async (req, res) => {
     try {
       const userId = req.params.id;
@@ -565,10 +582,20 @@ router.put(
         attendance = new Attendance({ userId, date: dayStart });
       }
 
+      // The times before the save, to tell the activity log which of them changed
+      const previous = {
+        timeIn: attendance.timeIn,
+        timeOut: attendance.timeOut,
+      };
+
       attendance.timeIn = createDateTime(date, timeIn);
       attendance.timeOut = timeOut ? createDateTime(date, timeOut) : null;
 
       await attendance.save();
+
+      res.locals.activity = {
+        changed: changedFields(previous, attendance, CHANGE_LABELS.attendance),
+      };
 
       res
         .status(isNew ? 201 : 200)
@@ -580,7 +607,7 @@ router.put(
   },
 );
 
-router.post("/create-blank.today", requireAttendancePage, async (req, res) => {
+router.post("/create-blank.today", blankDayGuard, async (req, res) => {
   try {
     const employees = await Employee.find();
     const today = new Date().toISOString().split("T")[0];
@@ -628,6 +655,10 @@ router.post("/create-blank.today", requireAttendancePage, async (req, res) => {
       }
     }
 
+    res.locals.activity = {
+      targetName: today,
+      note: countOf(createdRecords.length, "record", "added"),
+    };
     res.json({
       success: true,
       created: createdRecords.length,

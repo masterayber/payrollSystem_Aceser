@@ -42,6 +42,8 @@ const {
   checkNewPassword,
   forcesPasswordChange,
 } = require("../utils/password");
+const { logActivity } = require("../middleware/activityLog");
+const { PASSWORD_RESET, personName } = require("../utils/activityLog");
 
 const router = express.Router();
 
@@ -301,6 +303,7 @@ router.post("/check-user-exists", requireEmployeesPage, async (req, res) => {
 router.delete(
   "/delete-employee/:employeeId",
   requireSuperAdmin,
+  logActivity("employee.delete"),
   async (req, res) => {
     try {
       const { employeeId } = req.params;
@@ -313,6 +316,12 @@ router.delete(
       ) {
         return res.status(404).json({ message: "Employee not found" });
       }
+
+      // The activity log keeps the name and Employee ID the person had
+      res.locals.activity = {
+        targetId: employee.userId,
+        targetName: personName(employee),
+      };
 
       await User.deleteOne({ _id: employee.userId });
 
@@ -355,6 +364,7 @@ router.patch(
   "/employees/:userId/resign",
   requireEmployeesPage,
   notOwnRecord("userId"),
+  logActivity("employee.resign"),
   async (req, res) => {
     try {
       const { userId } = req.params;
@@ -421,6 +431,7 @@ router.patch(
   "/employees/:userId/reinstate",
   requireEmployeesPage,
   notOwnRecord("userId"),
+  logActivity("employee.reinstate"),
   async (req, res) => {
     try {
       const { userId } = req.params;
@@ -462,9 +473,12 @@ router.patch(
   },
 );
 
+// Add Employee: the "employees" tick, then an entry in the activity log
+const addEmployeeGuard = [requireEmployeesPage, logActivity("employee.add")];
+
 // Route for adding employee via admin manually. Refusal order: page tick (guard),
 // password, basic pay required, job details, taken; nothing is created on a refusal.
-router.post("/add-employee-via-admin", requireEmployeesPage, async (req, res) => {
+router.post("/add-employee-via-admin", addEmployeeGuard, async (req, res) => {
   try {
     // The password rule, whoever adds the employee; checked before anything is created
     const passwordRefusal = checkNewPassword({
@@ -497,6 +511,7 @@ router.post("/add-employee-via-admin", requireEmployeesPage, async (req, res) =>
       { ...job.fields, payNotSet: false },
       { mustChangePassword: true },
     );
+    res.locals.activity = { targetId: user._id };
 
     // An Admin who adds an employee goes on to see their pay: the new id joins its own
     // pay list (the Super Admin sees all pay and keeps no list)
@@ -533,6 +548,7 @@ router.put(
   "/edit-employee-via-admin/:id",
   requireEmployeesPage,
   notOwnRecord("id"),
+  logActivity("employee.edit"),
   async (req, res) => {
     try {
       const userId = req.params.id;
@@ -611,6 +627,8 @@ router.put(
           setBy: req.user.userId,
           account: user._id,
         });
+        // The activity log says only that a password was set, never the password
+        res.locals.activity = { changed: [PASSWORD_RESET] };
       }
       await user.save();
 
