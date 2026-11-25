@@ -197,6 +197,7 @@ describe("/api/holidays", () => {
           date: "2026-12-25",
           name: "Christmas Day",
           type: "Regular",
+          source: "Manual",
         },
       ];
 
@@ -241,7 +242,7 @@ describe("/api/holidays", () => {
       expect(res.body).toStrictEqual([]);
     });
 
-    it("gives each holiday as id, date (YYYY-MM-DD), name and type only, oldest first", async () => {
+    it("gives each holiday as id, date (YYYY-MM-DD), name, type and source only, oldest first", async () => {
       // Saved out of order
       await saveHoliday("2026-12-25", "Christmas Day", "Regular");
       await saveHoliday("2026-01-01", "New Year's Day", "Regular");
@@ -269,8 +270,10 @@ describe("/api/holidays", () => {
           "date",
           "id",
           "name",
+          "source",
           "type",
         ]);
+        expect(holiday.source).toBe("Manual");
         expect(mongoose.isValidObjectId(holiday.id)).toBe(true);
       }
     });
@@ -355,7 +358,7 @@ describe("/api/holidays", () => {
       const saved = await Holiday.findOne().lean();
       expect(res.body).toStrictEqual({
         message: "Holiday saved.",
-        holiday: { id: String(saved._id), ...CHRISTMAS },
+        holiday: { id: String(saved._id), ...CHRISTMAS, source: "Manual" },
       });
       expect(saved.date.toISOString()).toBe("2026-12-25T00:00:00.000Z");
       expect(saved.name).toBe("Christmas Day");
