@@ -385,18 +385,23 @@ const AdminCalendar = () => {
                     <p>{holidayDayName(dateKey)}</p>
                   </article>
                   <article className="table-content-container">
-                    <p title={holiday.name}>
-                      {holiday.name}
+                    {/* The Imported tag sits beside the name; in a narrow cell it
+                        drops under the name instead of squeezing it
+                        (AdminCalendar.css) */}
+                    <p
+                      className="calendar-holiday-name-cell"
+                      title={holiday.name}
+                    >
+                      <span className="calendar-holiday-name-text">
+                        {holiday.name}
+                      </span>
                       {holiday.source === IMPORTED_SOURCE && (
-                        <>
-                          {" "}
-                          <span
-                            className="calendar-holiday-tag"
-                            title={IMPORTED_HINT}
-                          >
-                            Imported
-                          </span>
-                        </>
+                        <span
+                          className="calendar-holiday-tag"
+                          title={IMPORTED_HINT}
+                        >
+                          Imported
+                        </span>
                       )}
                     </p>
                   </article>

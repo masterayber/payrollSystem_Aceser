@@ -25,6 +25,29 @@ const SEARCH_DELAY_MS = 400;
 
 const KIND_OPTIONS = kindOptions();
 
+// The bars fixed at the top of the window (the header, and on a narrow window the menu
+// row under it): how far down they cover the page. The side menu of a wide window runs
+// the full height and covers nothing above the log.
+const fixedTopCover = () =>
+  [".header", ".sidebar"].reduce((cover, selector) => {
+    const bar = document.querySelector(selector);
+    if (!bar) return cover;
+    const rect = bar.getBoundingClientRect();
+    return rect.height < window.innerHeight / 2
+      ? Math.max(cover, rect.bottom)
+      : cover;
+  }, 0);
+
+// Scrolls the window up (or down) so `element` sits just under the fixed bars, unless
+// it is already in view
+const bringIntoView = (element) => {
+  if (!element) return;
+  const cover = fixedTopCover();
+  const rect = element.getBoundingClientRect();
+  if (rect.top >= cover && rect.bottom <= window.innerHeight) return;
+  window.scrollTo(0, Math.max(0, rect.top + window.scrollY - cover - 16));
+};
+
 // Settings > Admins > Activity log: who changed what, on which record and when, newest
 // first, 50 a page. Read-only: an entry has no buttons. The filters live in
 // AdminAccountsSettings, so the Activity button on an Admin row can set Person and they
@@ -41,11 +64,18 @@ const ActivityLogPanel = ({ admins, filters, onFiltersChange }) => {
   const [searchText, setSearchText] = useState(filters.q);
   // Only the newest request's reply is shown
   const requestRef = useRef(0);
+  // The filter row: Older and Newer bring it back into view
+  const filtersRef = useRef(null);
+  // Counts the Older and Newer replies; each one scrolls the filter row into view
+  const [pageArrived, setPageArrived] = useState(0);
 
   const dateWarning = checkDates(filters);
 
+  // `bringTop`: Older and Newer, which are clicked at the bottom of the list. Once the
+  // reply is in (the new page, or the red box under the filters) the top of the log
+  // comes back into view.
   const load = useCallback(
-    async (wantedPage) => {
+    async (wantedPage, { bringTop = false } = {}) => {
       const request = requestRef.current + 1;
       requestRef.current = request;
       setLoading(true);
@@ -60,15 +90,22 @@ const ActivityLogPanel = ({ admins, filters, onFiltersChange }) => {
         setPage(Number(data?.page) || wantedPage);
         setPageSize(Number(data?.pageSize) || 50);
         setLoaded(true);
+        if (bringTop) setPageArrived((count) => count + 1);
       } catch (error) {
         if (requestRef.current !== request) return;
         setLoadError(refusalText(error, MESSAGES.loadFailed));
+        if (bringTop) setPageArrived((count) => count + 1);
       } finally {
         if (requestRef.current === request) setLoading(false);
       }
     },
     [filters],
   );
+
+  // After the page (or the refusal) is drawn
+  useEffect(() => {
+    if (pageArrived > 0) bringIntoView(filtersRef.current);
+  }, [pageArrived]);
 
   // New filters start again at the newest entries. A From after To is not sent: the
   // yellow box says why and the last list stays.
@@ -103,7 +140,7 @@ const ActivityLogPanel = ({ admins, filters, onFiltersChange }) => {
 
   return (
     <div className="activity-log">
-      <div className="activity-log-filters">
+      <div className="activity-log-filters" ref={filtersRef}>
         <label className="activity-log-field">
           <span>Person</span>
           <select
@@ -255,7 +292,7 @@ const ActivityLogPanel = ({ admins, filters, onFiltersChange }) => {
             <button
               type="button"
               className="admin-accounts-action"
-              onClick={() => load(page - 1)}
+              onClick={() => load(page - 1, { bringTop: true })}
               disabled={blocked || !hasNewer(page)}
             >
               Newer
@@ -263,7 +300,7 @@ const ActivityLogPanel = ({ admins, filters, onFiltersChange }) => {
             <button
               type="button"
               className="admin-accounts-action"
-              onClick={() => load(page + 1)}
+              onClick={() => load(page + 1, { bringTop: true })}
               disabled={blocked || !hasOlder({ page, pageSize, total })}
             >
               Older

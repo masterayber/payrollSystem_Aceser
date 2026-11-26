@@ -241,6 +241,13 @@ input[type="date"] {
   margin-top: 18px;
 }
 
+/* VERIFY (OTP) and RESET PASSWORD in capitals like SEND and LOG IN, which take theirs
+   from .btn. The Set your password page shares .reset-button and keeps its own case. */
+.auth-page.otp-container .verify-button,
+.auth-page.reset-password-container:not(.change-password-container) .reset-button {
+  text-transform: uppercase;
+}
+
 .auth-page .cancel-button:hover:not(:disabled),
 .auth-page .send-button:hover:not(:disabled),
 .auth-page .reset-button:hover:not(:disabled),

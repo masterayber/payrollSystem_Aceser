@@ -2,6 +2,22 @@
   align-items: stretch;
 }
 
+/* The page scrolls on the window itself (html, index.css). The Remove and Import boxes
+   hide the window's scroll bar while open (overflow: hidden on html), which widens the
+   page and moves the table sideways behind the box. On this page only, the scroll bar's
+   space is kept whether the bar shows or not. */
+html:has(.admin-calendar-page) {
+  scrollbar-gutter: stable;
+}
+
+/* While a box is open that kept space is empty, and the box's dimming (fixed to the
+   window) stops short of it, so it showed as a light strip at the window's right edge.
+   The strip is painted with the page's own colour: the dimmed colour of the page
+   (--gray-50 under the box's 50% black) for as long as the box is open. */
+html:has(.admin-calendar-page):has(> body > .modal) {
+  background-color: #7d7d7d;
+}
+
 .admin-calendar-page .admin-month-card {
   padding: 24px;
 }
@@ -58,21 +74,28 @@
   min-width: 400px;
 }
 
-/* List of Holidays: Date, Day and Action are fixed to their longest text
-   ("11/30/26", "Wednesday", the "Removing..." button); Name and Type share the rest
-   and wrap. The fixed tracks plus the two minimums are 432px, under the ~466px the
-   card gives the table at a 1366px window (~551px at 1536px). Narrower than that the
-   table scrolls sideways, and the Action column scrolls into view with it. */
+/* List of Holidays: the Name column gets the room first.
+   - Date, Day and Action are fixed to their longest text plus the 6px side padding
+     ("11/30/26" 55px, "Wednesday" 67px, the 76px Remove button): 68 + 80 + 88 = 236px.
+   - Type is 34.5% of what those three leave (~109px at a 1536px window, where the
+     longest type fits on two lines; ~175px at 1920px), but never under 88px ("Special
+     Non-" on one line, so the longest type is three lines, not four) and never over
+     180px (its longest text on one line). Each row is its own grid, so the width is
+     worked out from the table's width (the same in every row), not from the row's text.
+   - Name takes all the rest: ~142px of the ~466px the card gives the table at a 1366px
+     window (Type at its 88px), ~332px of ~743px at 1920px.
+   The fixed tracks plus the two minimums are 420px; narrower than that the table
+   scrolls sideways, and the Action column scrolls into view with it. */
 .admin-calendar-page .calendar-holidays-table .table-header,
 .admin-calendar-page .calendar-holidays-table .table-content {
   display: grid;
   grid-template-columns:
-    72px
-    84px
-    minmax(80px, 1.2fr)
-    minmax(84px, 1fr)
-    112px;
-  min-width: 432px;
+    68px
+    80px
+    minmax(96px, 1fr)
+    clamp(88px, calc((100% - 236px) * 0.345), 180px)
+    88px;
+  min-width: 420px;
 }
 
 .admin-calendar-page .calendar-events-table .table-header-container,
@@ -126,13 +149,16 @@
   white-space: nowrap;
 }
 
-/* List of Holidays: 8px side padding (12px elsewhere) so the five columns fit */
+/* List of Holidays: 6px side padding (12px elsewhere) so the five columns fit and the
+   name keeps its room at a 1366px window */
 .admin-calendar-page .calendar-holidays-table .table-header-container,
 .admin-calendar-page .calendar-holidays-table .table-content-container {
-  padding: 12px 8px;
+  padding: 12px 6px;
 }
 
-/* Name of Holiday and Type wrap onto more lines instead of widening the table */
+/* Name of Holiday and Type wrap onto more lines instead of widening the table, at
+   spaces and hyphens only: a word is never cut in the middle. One word wider than the
+   whole cell is cut off with "..." instead (the name's tooltip has it in full). */
 .admin-calendar-page
   .calendar-holidays-table
   .table-content-container:nth-child(3)
@@ -142,7 +168,15 @@
   .table-content-container:nth-child(4)
   p {
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+}
+
+/* The Name cell's own width decides where the Imported tag goes (the @container rule
+   under "the Imported tag" below) */
+.admin-calendar-page
+  .calendar-holidays-table
+  .table-content-container:nth-child(3) {
+  container: holiday-name / inline-size;
 }
 
 /* ---- List of Holidays: the year, the Add form, the Remove button ---- */
@@ -229,15 +263,19 @@
   margin: 0 0 16px;
 }
 
+/* As wide as the Action column allows (76px), so "Remove" and "Removing..." are the
+   same button and the column needs no more than that */
 .admin-calendar-page .calendar-holiday-remove {
   flex-shrink: 0;
-  padding: 6px 10px;
+  width: 100%;
+  padding: 6px 2px;
   border: 1px solid var(--gray-300);
   border-radius: 8px;
   background: var(--neutral-color-0);
   color: #b91c1c;
   font-size: 13px;
   font-weight: 600;
+  text-align: center;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -296,9 +334,36 @@
   outline-offset: 2px;
 }
 
-/* After the name of a holiday the import saved; it moves to the next line as one piece
-   when the name fills the column */
+/* Name of Holiday: the name and, for a holiday the import saved, the Imported tag.
+   - A narrow cell (under 175px of text room, e.g. a 1366px window): the tag is beside
+     the name only when the whole name fits on that line with it; otherwise the name
+     keeps the full width and the tag drops to its own line under it.
+   - A cell with 175px or more (the @container rule): the tag always stays beside the
+     name, level with its first line, and a long name wraps in its own box.
+   A browser without container queries keeps the first behaviour at every width. */
+.admin-calendar-page .calendar-holidays-table .calendar-holiday-name-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 6px;
+  min-width: 0;
+}
+
+@container holiday-name (min-width: 175px) {
+  .admin-calendar-page .calendar-holidays-table .calendar-holiday-name-cell {
+    flex-wrap: nowrap;
+  }
+}
+
+.admin-calendar-page .calendar-holidays-table .calendar-holiday-name-text {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .admin-calendar-page .calendar-holidays-table .calendar-holiday-tag {
+  flex: 0 0 auto;
   display: inline-block;
   padding: 1px 6px;
   border: 1px solid var(--gray-300);
@@ -503,6 +568,16 @@
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid var(--gray-200);
+}
+
+/* A greyed button ("Save 0 holidays", or both while saving): dark grey letters on the
+   grey, as the page's own greyed Save. The same white-on-grey in the other boxes
+   (Modal.css) is left for later. */
+.import-holidays-modal .modal-buttons .modal-button:disabled {
+  background: var(--gray-200);
+  color: var(--neutral-color-80);
+  box-shadow: none;
+  transform: none;
 }
 
 @media (max-width: 900px) {

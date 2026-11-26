@@ -122,16 +122,22 @@ const ImportHolidaysModal = ({ year, onClose, onSaved }) => {
   const tickedRows = newRows.filter((row) => row.ticked);
   const listedCount = rows.length - newRows.length;
 
-  const changeRow = (date, changes) =>
+  // Any change to a row (name, type, tick, Select all, Select none) clears the red box
+  // of the last refused Save: it may no longer be true, and the next Save checks again
+  const changeRow = (date, changes) => {
+    setSaveError("");
     setRows((prev) =>
       prev.map((row) => (row.date === date ? { ...row, ...changes } : row)),
     );
+  };
 
   // Select all and Select none: the new rows only
-  const tickAll = (ticked) =>
+  const tickAll = (ticked) => {
+    setSaveError("");
     setRows((prev) =>
       prev.map((row) => (row.listed ? row : { ...row, ticked })),
     );
+  };
 
   const handleSave = async () => {
     if (saving || tickedRows.length === 0) return;
