@@ -3,11 +3,12 @@
 // table of logged actions and the pure rules; middleware/activityLog.js writes the
 // entries and GET /api/admins/activity (Super Admin only) reads them.
 //
-// What an entry never holds: an amount of money, a password or a temporary password,
-// or a role. An edit lists the names of the fields whose saved value changed
-// ("basic pay"), never the values. Nothing here reads the database.
+// What an entry never holds: an amount of money, a rate, a password or a temporary
+// password, or a role. An edit lists the names of the fields whose saved value changed
+// ("basic pay", "rows"), never the values. Nothing here reads the database.
 const { toDateKey } = require("./leaveCredits");
 const { escapeRegex } = require("./ignoreCase");
+const { kindLabel, kindsIn } = require("./deductionTables");
 
 const PAGE_SIZE = 50;
 
@@ -22,6 +23,7 @@ const GROUPS = [
   { key: "lists", label: "Lists" },
   { key: "admins", label: "Admin accounts" },
   { key: "holidays", label: "Holidays" },
+  { key: "deductions", label: "Deductions" },
 ];
 const GROUP_KEYS = GROUPS.map((group) => group.key);
 
@@ -73,6 +75,24 @@ const holidayName = (holiday) =>
 const holidayImportNote = (savedCount, skippedCount = 0) =>
   countOf(savedCount, "holiday", "imported") +
   (skippedCount > 0 ? `, ${skippedCount} skipped` : "");
+
+// "SSS table from 2027-01-01": a statutory deduction table by its kind and the day it
+// takes effect, never by a figure in it
+const tableName = (table) => {
+  const label = kindLabel(table?.kind);
+  const from = toDateKey(table?.effectiveFrom);
+  return [label && `${label} table`, from && `from ${from}`]
+    .filter(Boolean)
+    .join(" ");
+};
+
+// "Switched off: SSS, Withholding tax", or "None switched off"
+const statutoryOffNote = (kinds) => {
+  const labels = kindsIn(kinds).map(kindLabel);
+  return labels.length > 0
+    ? `Switched off: ${labels.join(", ")}`
+    : "None switched off";
+};
 
 // Every logged action. The key is stored on the entry; `label` is how the screen names
 // it; `group` is its filter group.
@@ -213,6 +233,19 @@ const ACTIONS = {
   "holiday.add": { label: "Added holiday", group: "holidays" },
   "holiday.remove": { label: "Removed holiday", group: "holidays" },
   "holiday.import": { label: "Imported holidays", group: "holidays" },
+
+  // The statutory deduction tables (routes/deductions.js). The route names the table
+  // (tableName) and, for an edit, lists the changed fields (CHANGE_LABELS.table).
+  "table.add": { label: "Added deduction table", group: "deductions" },
+  "table.edit": { label: "Edited draft table", group: "deductions" },
+  "table.delete": { label: "Deleted draft table", group: "deductions" },
+  "table.confirm": { label: "Confirmed deduction table", group: "deductions" },
+  "table.checked": { label: "Marked table as checked", group: "deductions" },
+  "statutory.off": {
+    label: "Changed switched-off deductions",
+    group: "deductions",
+    targetName: "Statutory deductions",
+  },
 };
 
 // The key for a leave or overtime decision ("leave" or "overtime", and the status sent)
@@ -286,6 +319,16 @@ const CHANGE_LABELS = {
   attendance: [
     { label: "time in", paths: ["timeIn"] },
     { label: "time out", paths: ["timeOut"] },
+  ],
+  // A statutory deduction table (a draft). "rows" stands for every bracket figure: the
+  // entry says the rows changed, never an amount or a rate.
+  table: [
+    { label: "kind", paths: ["kind"] },
+    { label: "effective date", paths: ["effectiveFrom"], as: "day" },
+    { label: "source", paths: ["source"] },
+    { label: "base", paths: ["base"] },
+    { label: "cut-off taken on", paths: ["deductOn"] },
+    { label: "rows", paths: ["rows"] },
   ],
 };
 
@@ -478,6 +521,8 @@ module.exports = {
   leaveNote,
   holidayName,
   holidayImportNote,
+  tableName,
+  statutoryOffNote,
   changedFields,
   personName,
   dayRange,
