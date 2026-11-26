@@ -26,6 +26,7 @@ const {
   changedFields,
   countOf,
 } = require("../utils/activityLog");
+const { toDateKey, manilaToday } = require("../utils/leaveCredits");
 
 const requireZktecoCallbackAuth = (req, res, next) => {
   const expected = process.env.ZKTECO_CALLBACK_SECRET;
@@ -70,9 +71,8 @@ const requireSelfOrAdmin = async (req, res, next) => {
         return res.status(404).json({ message: "User not found" });
       }
     } catch (err) {
-      return res
-        .status(500)
-        .json({ message: "Server error", error: err.message });
+      console.error("Attendance account check error:", err);
+      return res.status(500).json({ message: "Server error" });
     }
   }
 
@@ -332,7 +332,7 @@ router.post("/iclock/cdata", requireZktecoCallbackAuth, async (req, res) => {
     });
   } catch (error) {
     console.error("Error saving ZKTeco payload:", error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
@@ -387,30 +387,44 @@ router.post("/import-biometric", importGuard, async (req, res) => {
           continue;
         }
 
+        // Attendance belongs to the sign-in account, as in every other writer
+        const account = await User.findOne({ email: employee.email });
+        if (!account) {
+          errors.push({
+            zkUserId: zkRecord.userId,
+            reason: "No sign-in account",
+          });
+          continue;
+        }
+
         const recordDate = new Date(zkRecord.timestamp);
         const dateStr = recordDate.toISOString().split("T")[0];
 
         let attendanceRecord = await Attendance.findOne({
-          userId: employee._id,
+          userId: account._id,
           date: dateStr,
         });
 
         if (!attendanceRecord) {
           attendanceRecord = new Attendance({
-            user: employee._id,
+            userId: account._id,
             date: dateStr,
           });
         }
 
-        if (!attendanceRecord.timeIn) {
-          attendanceRecord.timeIn = new Date(
-            `${dateStr}T${zkRecord.time.substring(0, 8)}`,
-          );
-        } else {
-          attendanceRecord.timeOut = new Date(
-            `${dateStr}T${zkRecord.time.substring(0, 8)}`,
-          );
-        }
+        // The day's earliest punch is the time in, its latest the time out, so the
+        // same punches imported again change nothing
+        const punchTimes = [
+          attendanceRecord.timeIn,
+          attendanceRecord.timeOut,
+          createDateTime(dateStr, zkRecord.time.substring(0, 8)),
+        ]
+          .filter(Boolean)
+          .map((value) => new Date(value).getTime());
+        const first = Math.min(...punchTimes);
+        const last = Math.max(...punchTimes);
+        attendanceRecord.timeIn = new Date(first);
+        attendanceRecord.timeOut = last > first ? new Date(last) : null;
 
         await attendanceRecord.save();
         processedRecords.push({
@@ -420,9 +434,10 @@ router.post("/import-biometric", importGuard, async (req, res) => {
           timeOut: attendanceRecord.timeOut,
         });
       } catch (error) {
+        console.error("Error saving an imported attendance record:", error);
         errors.push({
           zkRecord,
-          error: error.message,
+          error: "Could not save this record.",
         });
       }
     }
@@ -441,7 +456,7 @@ router.post("/import-biometric", importGuard, async (req, res) => {
     });
   } catch (error) {
     console.error("Error importing biometric data:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -458,7 +473,8 @@ router.get("/attendance", requireAdmin, async (req, res) => {
 
     res.json(attendance);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Error fetching the attendance list:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -471,7 +487,8 @@ router.get(
     try {
       const { userId } = req.params;
 
-      const today = new Date().toISOString().slice(0, 10);
+      // Today in Manila: before 8 AM there, UTC is still on the day before
+      const today = manilaToday();
 
       const attendance = await Attendance.findOne({
         userId,
@@ -502,7 +519,8 @@ router.get(
       const attendance = await Attendance.find({ userId });
       res.json(attendance);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error("Error fetching attendance records:", error);
+      res.status(500).json({ message: "Server error" });
     }
   },
 );
@@ -548,7 +566,13 @@ router.put(
       if (!(await findVisibleUser(userId))) {
         return res.status(404).json({ message: "User not found" });
       }
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) {
+      // A real calendar day: "2026-02-30" read as a date rolls over to March 2, so its
+      // key has to come back unchanged
+      if (
+        typeof date !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+        toDateKey(`${date}T00:00:00Z`) !== date
+      ) {
         return res
           .status(400)
           .json({ message: "A valid date (YYYY-MM-DD) is required" });
@@ -602,7 +626,7 @@ router.put(
         .json({ success: true, created: isNew, record: attendance });
     } catch (error) {
       console.error("Error updating attendance record:", error);
-      res.status(500).json({ message: "Server error", error: error.message });
+      res.status(500).json({ message: "Server error" });
     }
   },
 );
@@ -610,7 +634,8 @@ router.put(
 router.post("/create-blank.today", blankDayGuard, async (req, res) => {
   try {
     const employees = await Employee.find();
-    const today = new Date().toISOString().split("T")[0];
+    // Today in Manila: before 8 AM there, UTC is still on the day before
+    const today = manilaToday();
     const createdRecords = [];
     const skippedRecords = [];
 
@@ -669,7 +694,7 @@ router.post("/create-blank.today", blankDayGuard, async (req, res) => {
     });
   } catch (err) {
     console.error("Error creating blank attendance:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "Server error" });
   }
 });
 

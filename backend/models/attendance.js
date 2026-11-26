@@ -4,7 +4,7 @@ const { calculateBehavior } = require("../utils/attendance/behavior");
 const attendanceSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "Auth",
     default: null,
   },
   date: {
@@ -29,6 +29,11 @@ const attendanceSchema = new mongoose.Schema({
       "No Time-In",
       "No Time-Out",
       "Pending",
+      // What utils/attendance/behavior.js writes in the save hook below; without them a
+      // saved row that holds one of these can't be saved again
+      "No Time In",
+      "No Time Out",
+      "Weekend",
     ],
   },
   // The type of the approved leave that covers this day. It is copied from the leave
