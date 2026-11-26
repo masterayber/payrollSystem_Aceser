@@ -40,3 +40,6 @@ CLAUDE.md
 
 # Claude Code project setup (agents, skills, settings): local only
 .claude/
+
+# Presenter agent: tools, raw recordings and demo videos (the guides in docs/presenter/*.md are tracked)
+docs/presenter/video/
