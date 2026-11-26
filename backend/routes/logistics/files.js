@@ -96,7 +96,8 @@ router.get(
       res.set("Content-Disposition", `inline; filename="${name}"`);
       fs.createReadStream(filePath).pipe(res);
     } catch (err) {
-      res.status(500).json({ message: "Server error", error: err.message });
+      console.error("Logistics attachment error:", err);
+      res.status(500).json({ message: "Server error" });
     }
   },
 );

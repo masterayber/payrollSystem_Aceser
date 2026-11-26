@@ -59,7 +59,8 @@ router.get(
 
       res.json(describeAccess(user));
     } catch (err) {
-      res.status(500).json({ message: "Server error", error: err.message });
+      console.error("Error reading page access:", err);
+      res.status(500).json({ message: "Server error" });
     }
   },
 );
@@ -127,7 +128,8 @@ router.put(
 
       res.json(describeAccess(updated));
     } catch (err) {
-      res.status(500).json({ message: "Server error", error: err.message });
+      console.error("Error setting page access:", err);
+      res.status(500).json({ message: "Server error" });
     }
   },
 );

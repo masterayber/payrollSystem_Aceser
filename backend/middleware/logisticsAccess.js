@@ -27,8 +27,12 @@ const {
 // step of requireAuthenticated ([authMiddleware, loadCurrentUser]).
 const loadCurrentUser = requireAuthenticated[1];
 
-const serverError = (res, err) =>
-  res.status(500).json({ message: "Server error", error: err.message });
+// A server fault answers with the plain message only; the raw detail goes to the
+// server log
+const serverError = (res, err) => {
+  console.error("Logistics access check error:", err);
+  return res.status(500).json({ message: "Server error" });
+};
 
 // req.logistics = { userId, isAdmin, jobDescription, position, department,
 //                   headOfficeRoles: [], siteRole, roles: [] }

@@ -13,8 +13,12 @@ const { SUPPLIER_STATUSES, VAT_TYPES } = require("../../config/logistics");
 
 const router = express.Router();
 
-const serverError = (res, err) =>
-  res.status(500).json({ message: "Server error", error: err.message });
+// A server fault answers with the plain message only; the raw detail goes to the
+// server log
+const serverError = (res, err) => {
+  console.error("Suppliers error:", err);
+  return res.status(500).json({ message: "Server error" });
+};
 
 const readSuppliers = guard(
   requireAnyLogisticsPage,
