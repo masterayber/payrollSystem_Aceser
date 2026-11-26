@@ -1,8 +1,8 @@
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useContext } from "react";
 import { IconSearch, IconDotsVertical } from "@tabler/icons-react";
 import { EmployeeContext } from "../../context/EmployeeContext";
 import { activeOnly } from "../../utils/employees";
-import AddModal from "../../components/Modals/DropdownOption/AddOption/AddOption";
+import GovernmentDeductionsCard from "../../components/Deductions/GovernmentDeductionsCard";
 import Pagination from "../../components/Pagination/Pagination";
 import "../../styles/AdminCSS/Deductions.css";
 
@@ -10,56 +10,9 @@ const Deductions = () => {
   const { employeeData: allEmployees } = useContext(EmployeeContext);
   // Resigned employees are left out until final pay is part of the payroll design
   const employeeData = activeOnly(allEmployees);
-  const [deductionsData] = useState({});
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [showDeductionDropdown, setShowDeductionDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
-
-  const deductionDropdownRef = useRef(null);
-  const deductionSvgRef = useRef(null);
-
-  const toggleDeductionDropdown = (event) => {
-    event.stopPropagation();
-    setShowDeductionDropdown((prev) => !prev);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        showDeductionDropdown &&
-        deductionDropdownRef.current &&
-        !deductionDropdownRef.current.contains(event.target) &&
-        deductionSvgRef.current &&
-        !deductionSvgRef.current.contains(event.target)
-      ) {
-        setShowDeductionDropdown(false);
-      }
-    };
-
-    if (showDeductionDropdown) {
-      document.addEventListener("click", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  });
-
-  // useEffect(() => {
-  //   async function fetchDeductions() {
-  //     try {
-  //       const res = await fetch("http://localhost:5000/api/deductions");
-  //       const data = await res.json();
-  //       setDeductionsData(data.governmentDeductions || {});
-  //     } catch (error) {
-  //       console.error("Error:", error);
-  //       setDeductionsData({});
-  //     }
-  //   }
-  //   fetchDeductions();
-  // }, []);
 
   const filteredEmployees = employeeData.filter((employee) =>
     Object.values(employee).some((value) =>
@@ -76,67 +29,7 @@ const Deductions = () => {
 
   return (
     <div className="main-content admin-deductions-page">
-      <div className="table-container deduction-config-card">
-        <div className="table-title">
-          <p>Government-Mandated Deductions</p>
-          <div className="dots-button-container">
-            <button
-              type="button"
-              aria-label="Deduction options"
-              aria-expanded={showDeductionDropdown}
-              onClick={toggleDeductionDropdown}
-              ref={deductionSvgRef}
-              className="dots-button deduction-menu-button"
-            >
-              <IconDotsVertical stroke={2} />
-            </button>
-            {showDeductionDropdown && (
-              <div className="dropdown-details" ref={deductionDropdownRef}>
-                <button
-                  className="dropdown-item-details"
-                  // onClick={() => handleAddClick()}
-                >
-                  Add Option
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="table deduction-options-table">
-          <div className="table-header">
-            <article className="table-header-container">
-              <p>Type</p>
-            </article>
-            <article className="table-header-container">
-              <p>Amount</p>
-            </article>
-            <article className="table-header-container">
-              <p>Manage</p>
-            </article>
-          </div>
-          {Object.entries(deductionsData).map(([type, amount]) => (
-            <div className="table-content" key={type}>
-              <article className="table-content-container">
-                <p>{type}</p>
-              </article>
-              <article className="table-content-container">
-                <p>{amount}</p>
-              </article>
-              <article className="table-content-container">
-                <button type="button" className="action-button">
-                  Edit
-                </button>
-                <button type="button" className="action-button">
-                  Delete
-                </button>
-              </article>
-            </div>
-          ))}
-          {Object.keys(deductionsData).length === 0 && (
-            <p className="no-data">No Deductions.</p>
-          )}
-        </div>
-      </div>
+      <GovernmentDeductionsCard />
 
       <div className="deduction-toolbar">
         <div className="search-container deduction-search">
@@ -217,16 +110,6 @@ const Deductions = () => {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
-
-      {isAddModalOpen && (
-        <AddModal
-          title={`Add Deduction`}
-          message={`Add a new Deduction`}
-          onClose={() => setIsAddModalOpen(false)}
-          // onAddOption={handleConfirmAdd}
-          confirmText="Next"
-        />
-      )}
     </div>
   );
 };
