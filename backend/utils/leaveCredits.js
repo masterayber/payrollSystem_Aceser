@@ -112,9 +112,13 @@ const leaveBalance = (job, leaves, todayKey) => {
 };
 
 // Checks the dates of a leave request (any type). Returns { error } or { startKey, endKey }.
+// Each date must be a real calendar day: "2026-02-30" read as a date rolls over to March 2,
+// so its key has to come back exactly as typed.
 const checkLeaveDates = ({ startDate, endDate }) => {
   const isDate = (value) =>
-    typeof value === "string" && DATE_PATTERN.test(value) && toDateKey(value);
+    typeof value === "string" &&
+    DATE_PATTERN.test(value) &&
+    toDateKey(`${value}T00:00:00Z`) === value;
   if (!isDate(startDate) || !isDate(endDate)) {
     return { error: "Enter the start and end dates as valid dates." };
   }

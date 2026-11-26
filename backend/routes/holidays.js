@@ -83,9 +83,8 @@ router.get("/", requireAuthenticated, async (req, res) => {
       .lean();
     res.status(200).json(holidays.map(toReply));
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error fetching holidays", error: err.message });
+    console.error("Error fetching holidays:", err);
+    res.status(500).json({ message: "Error fetching holidays" });
   }
 });
 
@@ -208,9 +207,8 @@ router.post("/", changesHolidays("holiday.add"), async (req, res) => {
     if (isDuplicateKey(err)) {
       return res.status(409).json({ message: ALREADY_A_HOLIDAY });
     }
-    res
-      .status(500)
-      .json({ message: "Error saving the holiday", error: err.message });
+    console.error("Error saving the holiday:", err);
+    res.status(500).json({ message: "Error saving the holiday" });
   }
 });
 
@@ -234,9 +232,8 @@ router.delete("/:id", changesHolidays("holiday.remove"), async (req, res) => {
     };
     res.status(200).json({ message: "Holiday removed." });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error removing the holiday", error: err.message });
+    console.error("Error removing the holiday:", err);
+    res.status(500).json({ message: "Error removing the holiday" });
   }
 });
 

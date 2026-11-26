@@ -52,7 +52,9 @@ const checkJobDetails = (body, current = {}) => {
     } else if (
       typeof body.regularizationDate !== "string" ||
       !DATE_PATTERN.test(body.regularizationDate) ||
-      !toDateKey(body.regularizationDate)
+      // A real calendar day: "2026-02-30" would roll over to March 2
+      toDateKey(`${body.regularizationDate}T00:00:00Z`) !==
+        body.regularizationDate
     ) {
       return { error: "Date of regularization must be a valid date." };
     } else {
@@ -109,7 +111,8 @@ const checkResignation = (body, job = {}) => {
   if (
     typeof resignationDate !== "string" ||
     !DATE_PATTERN.test(resignationDate) ||
-    !toDateKey(resignationDate)
+    // A real calendar day: "2026-02-30" would roll over to March 2
+    toDateKey(`${resignationDate}T00:00:00Z`) !== resignationDate
   ) {
     return { error: "Enter the last working day as a valid date." };
   }

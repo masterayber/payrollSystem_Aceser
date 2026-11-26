@@ -12,8 +12,12 @@ const Item = require("../../models/item");
 
 const router = express.Router();
 
-const serverError = (res, err) =>
-  res.status(500).json({ message: "Server error", error: err.message });
+// A server fault answers with the plain message only; the raw detail goes to the
+// server log
+const serverError = (res, err) => {
+  console.error("Item Master error:", err);
+  return res.status(500).json({ message: "Server error" });
+};
 
 const escapeRegExp = (value) =>
   String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

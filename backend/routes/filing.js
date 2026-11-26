@@ -51,6 +51,14 @@ const respondNotPending = async (res, Model, id, userId, label) => {
   });
 };
 
+// A server fault answers with a fixed sentence under `error` (the key the Filing forms
+// read); the raw detail goes to the server log only.
+const SERVER_ERROR_MESSAGE = "Something went wrong. Please try again.";
+const replyServerError = (res, logLabel, err) => {
+  console.error(logLabel, err);
+  return res.status(500).json({ error: SERVER_ERROR_MESSAGE });
+};
+
 // The job description and VL/SL requests an employee's leave credits are worked out from.
 // `excludeId` leaves out the request being edited or approved.
 const loadCreditData = async (userId, excludeId) => {
@@ -175,7 +183,7 @@ router.get("/user-leave-requests", requirePage("filing"), async (req, res) => {
 
     res.json(leaveRequests);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    replyServerError(res, "Error fetching the leave requests:", error);
   }
 });
 
@@ -185,7 +193,7 @@ router.get("/leave-credits", requirePage("filing"), async (req, res) => {
     const { job, leaves } = await loadCreditData(req.user.userId);
     res.json(leaveBalance(job, leaves, manilaToday()));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    replyServerError(res, "Error reading the leave credits:", err);
   }
 });
 
@@ -205,7 +213,7 @@ router.get("/leave-credits/:userId", requireFilingPage, async (req, res) => {
     const { job, leaves } = await loadCreditData(userId);
     res.json(leaveBalance(job, leaves, manilaToday()));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    replyServerError(res, "Error reading an employee's leave credits:", err);
   }
 });
 
@@ -240,7 +248,7 @@ router.post("/apply-leave", requirePage("filing"), async (req, res) => {
     await app.save();
     res.status(201).json(app);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    replyServerError(res, "Error applying for leave:", err);
   }
 });
 
@@ -309,8 +317,7 @@ router.patch("/edit-leave/:id", requirePage("filing"), async (req, res) => {
 
     res.json(updatedLeave);
   } catch (err) {
-    console.error({ error: err.message });
-    res.status(500).json({ error: err.message });
+    replyServerError(res, "Error editing a leave request:", err);
   }
 });
 
@@ -335,7 +342,7 @@ router.delete("/leave/:id", requirePage("filing"), async (req, res) => {
 
     res.json({ message: "Leave request deleted successfully" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    replyServerError(res, "Error deleting a leave request:", err);
   }
 });
 
@@ -559,8 +566,7 @@ router.patch("/leave/:id/status", decides("leave"), async (req, res) => {
     res.locals.activity = { targetId: app.userId, note: leaveNote(app) };
     res.json(app);
   } catch (err) {
-    console.error("Error updating leave requests:", err);
-    res.status(500).json({ error: err.message });
+    replyServerError(res, "Error updating leave requests:", err);
   }
 });
 
@@ -633,8 +639,7 @@ router.patch("/overtime/:id/status", decides("overtime"), async (req, res) => {
     };
     res.json(app);
   } catch (err) {
-    console.error("Error updating overtime request:", err);
-    res.status(500).json({ error: err.message });
+    replyServerError(res, "Error updating overtime request:", err);
   }
 });
 
@@ -680,7 +685,7 @@ router.get(
 
       res.json(overtimeRequests);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      replyServerError(res, "Error fetching the overtime requests:", error);
     }
   },
 );
@@ -716,7 +721,7 @@ router.post("/apply-overtime", requirePage("filing"), async (req, res) => {
 
     res.status(201).json(app);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    replyServerError(res, "Error applying for overtime:", err);
   }
 });
 
@@ -791,7 +796,7 @@ router.patch("/edit-overtime/:id", requirePage("filing"), async (req, res) => {
 
     res.json(updatedApp);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    replyServerError(res, "Error editing an overtime request:", err);
   }
 });
 
@@ -825,7 +830,7 @@ router.delete("/overtime/:id", requirePage("filing"), async (req, res) => {
 
     res.json({ message: "Overtime request deleted successfully" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    replyServerError(res, "Error deleting an overtime request:", err);
   }
 });
 

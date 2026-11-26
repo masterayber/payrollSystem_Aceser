@@ -173,9 +173,8 @@ router.get("/", requireReport, async (req, res) => {
       incomplete: rows.filter((row) => row.total === null).length,
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error fetching 13th month pay", error: err.message });
+    console.error("Error fetching 13th month pay:", err);
+    res.status(500).json({ message: "Error fetching 13th month pay" });
   }
 });
 
@@ -208,9 +207,8 @@ router.get("/:userId", requireAdminPage("employees"), async (req, res) => {
 
     res.status(200).json({ ...reportHeader(year, todayKey), row });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error fetching 13th month pay", error: err.message });
+    console.error("Error fetching one employee's 13th month pay:", err);
+    res.status(500).json({ message: "Error fetching 13th month pay" });
   }
 });
 
