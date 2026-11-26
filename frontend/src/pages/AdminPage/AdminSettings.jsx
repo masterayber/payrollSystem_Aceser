@@ -57,11 +57,21 @@ const AdminSettings = () => {
         "--setting-indicator-width",
         `${buttonRect.width}px`,
       );
+      // On a narrow window the row wraps: the line goes under the tab's own line
+      optionsElement.style.setProperty(
+        "--setting-indicator-top",
+        `${buttonRect.bottom - optionsRect.top}px`,
+      );
     };
 
     updateIndicator();
+    // The row's size changes on a window resize and when it wraps; a late font can
+    // change a tab's size without changing the row's
     const resizeObserver = new ResizeObserver(updateIndicator);
     resizeObserver.observe(optionsElement);
+    optionsElement
+      .querySelectorAll(".setting-button")
+      .forEach((button) => resizeObserver.observe(button));
 
     return () => resizeObserver.disconnect();
   }, [visibleKey, tabsKey]);
@@ -70,7 +80,7 @@ const AdminSettings = () => {
     <div className="main-content admin-settings-page">
       <div className="data-card settings-shell">
         <div
-          className="setting-options"
+          className="setting-options admin-settings-tabs"
           role="group"
           aria-label="Settings sections"
           ref={settingsOptionsRef}

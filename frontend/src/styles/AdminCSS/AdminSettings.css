@@ -27,15 +27,24 @@
   border-radius: 0;
 }
 
+/* Admin Settings only (not Logistics Setup): on a narrow window the seven tabs wrap
+   onto a second line instead of being cut off */
+.admin-settings-page .setting-options.admin-settings-tabs {
+  flex-wrap: wrap;
+}
+
+/* The sliding blue line. Its top is the selected tab's bottom (set from JS, so it
+   follows the tab onto either line); unset, it sits on the row's bottom border. */
 .admin-settings-page .setting-options::after {
   content: "";
   position: absolute;
-  bottom: -1px;
+  top: calc(var(--setting-indicator-top, 100%) - 1.5px);
   left: var(--setting-indicator-left, 0);
   width: var(--setting-indicator-width, 0);
   height: 2.5px;
   background-color: var(--main-color-1);
   transition:
+    top 0.3s ease-in-out,
     left 0.3s ease-in-out,
     width 0.3s ease-in-out;
   pointer-events: none;
@@ -86,6 +95,7 @@
 }
 
 .admin-settings-page .setting-options::after {
+  top: calc(var(--setting-indicator-top, 100%) - 2px);
   height: 3px;
   border-radius: 3px 3px 0 0;
 }

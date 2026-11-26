@@ -160,11 +160,13 @@ const AdminAccountsSettings = () => {
     setFormAdmin(admin);
   };
 
-  // The Activity button: the log with Person set to that Admin, other filters cleared
+  // The Activity button: the log with Person set to that Admin, other filters cleared,
+  // from the top of the page (the row may be far down the list)
   const openActivity = (admin) => {
     setActionError("");
     setActivityFilters({ ...EMPTY_FILTERS, by: String(admin.id) });
     setView("activity");
+    window.scrollTo(0, 0);
   };
 
   return (
