@@ -42,6 +42,7 @@ const OvertimeApplication = require("../models/overtimeApplication");
 const BasicPayChange = require("../models/basicPayChange");
 const Dropdown = require("../models/dropdownOption");
 const Holiday = require("../models/holiday");
+const DeductionTable = require("../models/deductionTable");
 const ActivityLog = require("../models/activityLog");
 const { pagesForRole } = require("../config/pages");
 const { manilaToday } = require("../utils/leaveCredits");
@@ -147,6 +148,8 @@ beforeAll(async () => {
   await mongoose.connect(mongo.getUri());
   // The unique index on a holiday's date has to exist for the "already a holiday" tests
   await Holiday.init();
+  // And the one on a deduction table's kind and date
+  await DeductionTable.init();
 });
 
 beforeEach(async () => {
@@ -188,6 +191,7 @@ afterEach(async () => {
       BasicPayChange,
       Dropdown,
       Holiday,
+      DeductionTable,
       ActivityLog,
     ].map((Model) => Model.deleteMany({})),
   );
@@ -1363,6 +1367,254 @@ describe("Holidays", () => {
   });
 });
 
+// The statutory deduction tables (DED-3): only the Super Admin writes them. EVERY FIGURE
+// HERE IS MADE UP FOR THE TEST (not an official rate or bracket), and chosen so that none
+// of them can be mistaken for part of a date: no entry may hold one.
+describe("Deductions", () => {
+  const TABLES = "/api/deductions/tables";
+  const OFF = "/api/deductions/statutory-off";
+  const ROWS = [
+    { over: 0, upTo: 5300, employeeFixed: 412.35, employerFixed: 837.65 },
+    {
+      over: 5300,
+      employeeFixed: 412.35,
+      employeeRate: 7.25,
+      employerFixed: 837.65,
+      employerRate: 9.75,
+      excessOver: 5300,
+    },
+  ];
+  const NEW_ROWS = [
+    { over: 0, upTo: 6400, employeeFixed: 433.85, employerFixed: 866.15 },
+    { over: 6400, employeeFixed: 433.85, employeeRate: 8.45, employerFixed: 866.15 },
+  ];
+  // Every figure a table of these tests holds, as it could be written in an entry
+  const FIGURES =
+    /5300|5,300|6400|6,400|412|837|433|866|7\.25|9\.75|8\.45/;
+  const table = (extra = {}) => ({
+    kind: "sss",
+    effectiveFrom: "2027-01-01",
+    source: "Test issuance A",
+    rows: ROWS,
+    ...extra,
+  });
+  const expectNoFigures = async () => {
+    for (const entry of await allEntries()) {
+      expect(wordsOf(entry)).not.toMatch(FIGURES);
+    }
+  };
+
+  it("adding, editing, confirming and marking a table as checked each write one entry, named by kind and date, with no amount and no rate", async () => {
+    const added = await call("post", TABLES, boss, table());
+    expect(added.status).toBe(201);
+    const { id } = added.body.table;
+    await expectOneEntry({
+      by: boss,
+      action: "table.add",
+      record: "SSS table from 2027-01-01",
+      recordId: id,
+    });
+
+    // New figures and a new source: the field names only
+    const edited = await call(
+      "put",
+      `${TABLES}/${id}`,
+      boss,
+      table({ source: "Test issuance B", rows: NEW_ROWS }),
+    );
+    expect(edited.status).toBe(200);
+    await expectLatestEntry(2, {
+      by: boss,
+      action: "table.edit",
+      record: "SSS table from 2027-01-01",
+      recordId: id,
+      changed: ["source", "rows"],
+    });
+
+    const confirmed = await call("post", `${TABLES}/${id}/confirm`, boss, {
+      checkedWith: "Maria Santos",
+    });
+    expect(confirmed.status).toBe(200);
+    await expectLatestEntry(3, {
+      by: boss,
+      action: "table.confirm",
+      record: "SSS table from 2027-01-01",
+      recordId: id,
+      note: "Checked with Maria Santos",
+    });
+
+    const checked = await call("post", `${TABLES}/${id}/checked`, boss);
+    expect(checked.status).toBe(200);
+    await expectLatestEntry(4, {
+      by: boss,
+      action: "table.checked",
+      record: "SSS table from 2027-01-01",
+      recordId: id,
+    });
+
+    await expectNoFigures();
+    // The figures themselves are saved on the table, not in the log
+    expect((await DeductionTable.findById(id).lean()).rows[1]).toMatchObject({
+      over: 6400,
+      employeeFixed: 433.85,
+      employeeRate: 8.45,
+    });
+  });
+
+  it("an edit names the table as it is after the edit and lists every changed field; the same draft again lists none", async () => {
+    const added = await call("post", TABLES, boss, table());
+    const { id } = added.body.table;
+
+    const moved = await call(
+      "put",
+      `${TABLES}/${id}`,
+      boss,
+      table({
+        kind: "tax",
+        effectiveFrom: "2027-07-01",
+        base: "cutoffGross",
+        deductOn: "2nd",
+      }),
+    );
+    expect(moved.status).toBe(200);
+    await expectLatestEntry(2, {
+      by: boss,
+      action: "table.edit",
+      record: "Withholding tax table from 2027-07-01",
+      recordId: id,
+      changed: ["kind", "effective date", "base", "cut-off taken on"],
+    });
+
+    const same = await call("put", `${TABLES}/${id}`, boss, moved.body.table);
+    expect(same.status).toBe(200);
+    await expectLatestEntry(3, {
+      by: boss,
+      action: "table.edit",
+      record: "Withholding tax table from 2027-07-01",
+      recordId: id,
+      changed: [],
+    });
+    await expectNoFigures();
+  });
+
+  it("deleting a draft names the table that was deleted", async () => {
+    const added = await call(
+      "post",
+      TABLES,
+      boss,
+      table({ kind: "pagibig", effectiveFrom: "2027-03-01" }),
+    );
+    const removed = await call("delete", `${TABLES}/${added.body.table.id}`, boss);
+    expect(removed.status).toBe(200);
+
+    await expectLatestEntry(2, {
+      by: boss,
+      action: "table.delete",
+      record: "Pag-IBIG table from 2027-03-01",
+      recordId: added.body.table.id,
+    });
+    await expectNoFigures();
+  });
+
+  it("switching deductions off names the kinds that are off, or that none is", async () => {
+    const off = await call("put", OFF, boss, { kinds: ["tax", "sss"] });
+    expect(off.status).toBe(200);
+    const entry = await expectOneEntry({
+      by: boss,
+      action: "statutory.off",
+      record: "Statutory deductions",
+      note: "Switched off: SSS, Withholding tax",
+    });
+    expect(entry.targetId).toBeUndefined();
+
+    const on = await call("put", OFF, boss, { kinds: [] });
+    expect(on.status).toBe(200);
+    await expectLatestEntry(2, {
+      by: boss,
+      action: "statutory.off",
+      record: "Statutory deductions",
+      note: "None switched off",
+    });
+  });
+
+  it("rule 2: a refused request writes nothing more: a bad table (400), a taken date (409), a missing table (404), a confirmed table (409), no checker (400), a draft marked as checked (409), a bad kind to switch off (400)", async () => {
+    const draft = await call("post", TABLES, boss, table());
+    const locked = await call(
+      "post",
+      TABLES,
+      boss,
+      table({ effectiveFrom: "2026-01-01" }),
+    );
+    const lockedId = locked.body.table.id;
+    expect(
+      (
+        await call("post", `${TABLES}/${lockedId}/confirm`, boss, {
+          checkedWith: "Maria Santos",
+        })
+      ).status,
+    ).toBe(200);
+    // Three good requests so far
+    expect(await ActivityLog.countDocuments()).toBe(3);
+
+    const refusals = [
+      ["post", TABLES, table({ effectiveFrom: "2027-02-01", source: "" }), 400],
+      ["post", TABLES, table({ effectiveFrom: "2027-02-01", rows: [{ over: 0, employeeFixed: -412.35 }] }), 400],
+      ["post", TABLES, table(), 409],
+      ["put", `${TABLES}/${missingId()}`, table(), 404],
+      ["put", `${TABLES}/${draft.body.table.id}`, table({ kind: "loan" }), 400],
+      ["put", `${TABLES}/${lockedId}`, table({ effectiveFrom: "2026-01-01" }), 409],
+      ["delete", `${TABLES}/${lockedId}`, undefined, 409],
+      ["delete", `${TABLES}/${missingId()}`, undefined, 404],
+      ["post", `${TABLES}/${draft.body.table.id}/confirm`, { checkedWith: " " }, 400],
+      ["post", `${TABLES}/${lockedId}/confirm`, { checkedWith: "Maria Santos" }, 409],
+      ["post", `${TABLES}/${draft.body.table.id}/checked`, undefined, 409],
+      ["post", `${TABLES}/${missingId()}/checked`, undefined, 404],
+      ["put", OFF, { kinds: ["loan"] }, 400],
+    ];
+    for (const [method, url, sent, status] of refusals) {
+      const res = await call(method, url, boss, sent);
+      expect([method, url, res.status]).toEqual([method, url, status]);
+    }
+
+    expect(await ActivityLog.countDocuments()).toBe(3);
+  });
+
+  it("rule 2: an Admin with every tick is refused each write (403), and nothing is written", async () => {
+    const seeded = await DeductionTable.create({
+      kind: "sss",
+      effectiveFrom: new Date("2027-01-01T00:00:00Z"),
+      source: "Test issuance A",
+      rows: ROWS,
+    });
+    const writes = [
+      ["post", TABLES, table({ kind: "tax" })],
+      ["put", `${TABLES}/${seeded._id}`, table({ source: "Test issuance B" })],
+      ["post", `${TABLES}/${seeded._id}/confirm`, { checkedWith: "Maria Santos" }],
+      ["post", `${TABLES}/${seeded._id}/checked`, undefined],
+      ["delete", `${TABLES}/${seeded._id}`, undefined],
+      ["put", OFF, { kinds: ["sss"] }],
+    ];
+    for (const [method, url, sent] of writes) {
+      const res = await call(method, url, rhea, sent);
+      expect([method, url, res.status]).toEqual([method, url, 403]);
+      expect(res.body).toEqual(DENIED);
+    }
+
+    await expectNoEntry();
+    expect(await DeductionTable.countDocuments({ status: "Draft" })).toBe(1);
+  });
+
+  it("rule 2: a server error (500) writes nothing", async () => {
+    quietLog();
+    jest
+      .spyOn(DeductionTable, "create")
+      .mockRejectedValueOnce(new Error("disk full"));
+    const res = await call("post", TABLES, boss, table());
+    expect(res.status).toBe(500);
+    await expectNoEntry();
+  });
+});
+
 describe("who is named as the one who acted (rule 5)", () => {
   it("an account with an employee record is named by that name, without the Employee ID", async () => {
     await Employee.create({
@@ -1418,6 +1670,7 @@ describe("rule 4: reading writes nothing", () => {
       "/api/admins",
       "/api/admins/activity",
       "/api/holidays",
+      "/api/deductions/tables",
     ];
     for (const who of [boss, rhea]) {
       for (const url of urls) {

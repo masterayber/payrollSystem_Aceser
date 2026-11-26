@@ -20,6 +20,7 @@ export const GROUPS = [
   { key: "lists", label: "Lists" },
   { key: "admins", label: "Admin accounts" },
   { key: "holidays", label: "Holidays" },
+  { key: "deductions", label: "Deductions" },
 ];
 
 // `by`: "" (everyone), "me" or an Admin account id; `group`: "" or a GROUPS key;

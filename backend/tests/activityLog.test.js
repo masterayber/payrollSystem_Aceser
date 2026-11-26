@@ -20,6 +20,8 @@ const {
   leaveNote,
   holidayName,
   holidayImportNote,
+  tableName,
+  statutoryOffNote,
   changedFields,
   personName,
   dayRange,
@@ -32,7 +34,7 @@ const {
 const id = () => String(new mongoose.Types.ObjectId());
 
 describe("the table of logged actions", () => {
-  it("lists the nine groups in the order the screen shows them", () => {
+  it("lists the ten groups in the order the screen shows them", () => {
     expect(GROUPS).toEqual([
       { key: "employees", label: "Employees" },
       { key: "signups", label: "Sign-ups" },
@@ -43,6 +45,7 @@ describe("the table of logged actions", () => {
       { key: "lists", label: "Lists" },
       { key: "admins", label: "Admin accounts" },
       { key: "holidays", label: "Holidays" },
+      { key: "deductions", label: "Deductions" },
     ]);
     expect(GROUP_KEYS).toEqual(GROUPS.map((group) => group.key));
   });
@@ -86,7 +89,21 @@ describe("the table of logged actions", () => {
       ["holiday.add", "Added holiday", "holidays"],
       ["holiday.remove", "Removed holiday", "holidays"],
       ["holiday.import", "Imported holidays", "holidays"],
+      ["table.add", "Added deduction table", "deductions"],
+      ["table.edit", "Edited draft table", "deductions"],
+      ["table.delete", "Deleted draft table", "deductions"],
+      ["table.confirm", "Confirmed deduction table", "deductions"],
+      ["table.checked", "Marked table as checked", "deductions"],
+      ["statutory.off", "Changed switched-off deductions", "deductions"],
     ]);
+  });
+
+  it("switching deductions off is recorded against one fixed record, not an account", () => {
+    expect(ACTIONS["statutory.off"].targetName).toBe("Statutory deductions");
+  });
+
+  it("no label, group or record name holds a figure: an amount or a rate has nowhere to sit", () => {
+    expect(JSON.stringify([GROUPS, ACTIONS, CHANGE_LABELS])).not.toMatch(/\d/);
   });
 
   it.each(Object.entries(ACTIONS))(
@@ -250,6 +267,33 @@ describe("the notes the routes build", () => {
     expect(holidayImportNote(10, 2)).toBe("10 holidays imported, 2 skipped");
   });
 
+  it.each([
+    ["sss", "SSS table from 2027-01-01"],
+    ["philhealth", "PhilHealth table from 2027-01-01"],
+    ["pagibig", "Pag-IBIG table from 2027-01-01"],
+    ["tax", "Withholding tax table from 2027-01-01"],
+  ])("tableName: a %s table by its kind and the day it takes effect", (kind, name) => {
+    // The figures are made up for the test (not official); none of them is in the name
+    const table = {
+      kind,
+      effectiveFrom: new Date("2027-01-01T00:00:00Z"),
+      source: "Test issuance",
+      rows: [{ over: 0, upTo: null, employeeFixed: 412.35, employerRate: 7.25 }],
+    };
+    expect(tableName(table)).toBe(name);
+    expect(tableName({ ...table, effectiveFrom: "2027-01-01" })).toBe(name);
+    expect(tableName(table)).not.toMatch(/412|7\.25/);
+  });
+
+  it("statutoryOffNote: the kinds that are off by name, in the screen's order, or that none is", () => {
+    expect(statutoryOffNote(["tax", "sss"])).toBe(
+      "Switched off: SSS, Withholding tax",
+    );
+    expect(statutoryOffNote(["pagibig"])).toBe("Switched off: Pag-IBIG");
+    expect(statutoryOffNote([])).toBe("None switched off");
+    expect(statutoryOffNote(undefined)).toBe("None switched off");
+  });
+
   it("clip: a record name or note is trimmed and cut at 200 characters; a missing one is blank", () => {
     expect(MAX_TEXT_LENGTH).toBe(200);
     expect(clip("  Departments list ")).toBe("Departments list");
@@ -260,9 +304,16 @@ describe("the notes the routes build", () => {
   });
 
   it("no note helper prints undefined for a missing record", () => {
-    for (const note of [leaveNote(undefined), holidayName(undefined)]) {
+    for (const note of [
+      leaveNote(undefined),
+      holidayName(undefined),
+      tableName(undefined),
+      tableName({ kind: "loans" }),
+      statutoryOffNote(undefined),
+    ]) {
       expect(note).not.toContain("undefined");
     }
+    expect(tableName(undefined)).toBe("");
   });
 });
 
@@ -498,6 +549,71 @@ describe("changedFields", () => {
     expect(
       changedFields(before, { ...before }, CHANGE_LABELS.attendance),
     ).toEqual([]);
+  });
+
+  describe("a draft deduction table (figures made up for the test, not official)", () => {
+    const draft = (extra = {}) => ({
+      kind: "sss",
+      effectiveFrom: new Date("2027-01-01T00:00:00Z"),
+      source: "Test issuance A",
+      base: "monthlyBasic",
+      deductOn: "both",
+      rows: [
+        { over: 0, upTo: 1000, employeeFixed: 11, employeeRate: 0, employerFixed: 22, employerRate: 0, excessOver: 0 },
+        { over: 1000, upTo: null, employeeFixed: 11, employeeRate: 7, employerFixed: 22, employerRate: 9, excessOver: 1000 },
+      ],
+      ...extra,
+    });
+    const changed = (extra) =>
+      changedFields(draft(), draft(extra), CHANGE_LABELS.table);
+
+    it("saving it unchanged lists nothing, also with the date as text", () => {
+      expect(changed({})).toEqual([]);
+      expect(changed({ effectiveFrom: "2027-01-01" })).toEqual([]);
+    });
+
+    it.each([
+      ["kind", { kind: "tax" }],
+      ["effective date", { effectiveFrom: "2027-02-01" }],
+      ["source", { source: "Test issuance B" }],
+      ["base", { base: "cutoffGross" }],
+      ["cut-off taken on", { deductOn: "2nd" }],
+    ])("lists %s when its saved value differs", (label, extra) => {
+      expect(changed(extra)).toEqual([label]);
+    });
+
+    it("a changed amount, a changed rate, a moved edge and an added row are each just 'rows'", () => {
+      const rows = () => draft().rows.map((row) => ({ ...row }));
+      const amount = rows();
+      amount[0].employeeFixed = 12.5;
+      const rate = rows();
+      rate[1].employerRate = 9.75;
+      const edge = rows();
+      edge[0].upTo = 1500;
+      edge[1].over = 1500;
+      const added = [
+        ...rows().slice(0, 1),
+        { ...rows()[1], upTo: 2500 },
+        { over: 2500, upTo: null, employeeFixed: 123.45, employeeRate: 0, employerFixed: 234.56, employerRate: 0, excessOver: 0 },
+      ];
+
+      for (const changedRows of [amount, rate, edge, added]) {
+        const labels = changed({ rows: changedRows });
+        expect(labels).toEqual(["rows"]);
+        expect(JSON.stringify(labels)).not.toMatch(/\d/);
+      }
+    });
+
+    it("follows the order of the table when several fields change", () => {
+      expect(
+        changed({
+          rows: [{ ...draft().rows[0], upTo: null }],
+          deductOn: "1st",
+          source: "Test issuance B",
+          kind: "pagibig",
+        }),
+      ).toEqual(["kind", "source", "cut-off taken on", "rows"]);
+    });
   });
 
   it("gives an empty list when a record could not be read, or no labels are given", () => {

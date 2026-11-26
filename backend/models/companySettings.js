@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { KIND_KEYS } = require("../utils/deductionTables");
 
 // Company-wide settings. There is only one record; the unique key stops a second one.
 const companySettingsSchema = new mongoose.Schema(
@@ -16,6 +17,15 @@ const companySettingsSchema = new mongoose.Schema(
       type: String,
       enum: ["12 Hour", "24 Hour"],
       default: "12 Hour",
+    },
+    // The statutory deductions the Super Admin switched off ("sss", "philhealth",
+    // "pagibig", "tax"); none by default. Set only by PUT /api/deductions/statutory-off.
+    // Left out of every read unless it is asked for by name (select: "+statutoryOff"),
+    // so the Settings > Company routes neither send nor accept it.
+    statutoryOff: {
+      type: [{ type: String, enum: KIND_KEYS }],
+      default: [],
+      select: false,
     },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,

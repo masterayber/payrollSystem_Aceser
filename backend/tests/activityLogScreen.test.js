@@ -133,6 +133,7 @@ describe("the Person and Kind choices", () => {
       { value: "lists", label: "Lists" },
       { value: "admins", label: "Admin accounts" },
       { value: "holidays", label: "Holidays" },
+      { value: "deductions", label: "Deductions" },
     ]);
     for (const option of kindOptions().slice(1)) {
       expect(server.checkActivityQuery({ group: option.value }).error).toBeUndefined();
