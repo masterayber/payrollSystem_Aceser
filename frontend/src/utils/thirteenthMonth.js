@@ -55,6 +55,19 @@ export const basisNote = (payHistoryStart) => {
 export const YEAR_END_NOTE =
   "1–10 and 26–31: the two parts of the year-end cut-off, worth one cut-off together.";
 
+// The legend's projected line, one text for the Reports card and the Excel sheet. Only
+// the first words differ: the screen greys a projected amount, the sheet shades it.
+export const PROJECTED_LEAD = {
+  screen: "Grey italics",
+  sheet: "Shaded italics",
+};
+export const PROJECTED_RULE =
+  "projected. An amount is final once its cut-off has ended or, for a resigned employee, once the last working day has passed. A total stays grey until its cut-off ends.";
+
+// "Grey italics: projected. ..." (screen) or "Shaded italics: projected. ..." (sheet)
+export const projectedLegend = (where = "screen") =>
+  `${PROJECTED_LEAD[where]}: ${PROJECTED_RULE}`;
+
 // Same rule as the server's `kind`: a cut-off is computed once it has ended (its last
 // day is before the as-of date) and projected until then, including on its last day.
 // Only used to style the totals row; each employee's cells use the server's `kind`.

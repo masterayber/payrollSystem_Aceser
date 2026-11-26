@@ -8,6 +8,8 @@ import Dropdown from "../Dropdown/Dropdown";
 import { formatPeso } from "../../utils/money";
 import {
   CUTOFF_NOTE,
+  PROJECTED_LEAD,
+  PROJECTED_RULE,
   YEAR_END_NOTE,
   asOfNote,
   basisNote,
@@ -324,8 +326,8 @@ const ThirteenthMonthReport = () => {
 
           <ul className="thirteenth-legend">
             <li>
-              <span className="is-projected">Grey italics</span>: projected
-              (cut-off not yet ended).
+              <span className="is-projected">{PROJECTED_LEAD.screen}</span>
+              {`: ${PROJECTED_RULE}`}
             </li>
             <li>{DASH}: not employed during that cut-off.</li>
             <li>{YEAR_END_NOTE}</li>

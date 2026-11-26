@@ -20,6 +20,7 @@ import {
   groupCutoffsByMonth,
   incompleteNote,
   isProjectedCutoff,
+  projectedLegend,
   totalsLabel,
 } from "../thirteenthMonth";
 
@@ -42,6 +43,10 @@ const FIXED_HEADERS = [
   "MONTHLY BASIC",
 ];
 const SUMMARY_HEADERS = ["COMPUTED", "PROJECTED", "TOTAL FOR THE YEAR", "NOTES"];
+
+// Sheet only: the screen marks a Resigned row with its status badge
+const RESIGNED_LEGEND =
+  "Shaded row: resigned employee, counted up to the last working day.";
 
 const NOTE_ROWS = 4; // title, as of, cut-offs, basis
 const HEADER_ROW = NOTE_ROWS + 1; // one blank row between the notes and the table
@@ -248,7 +253,21 @@ export const ThirteenthMonthSheet = (data) => {
     border: allBorders,
     alignment: centerAlign,
   });
-  setCell(ws, r, 1, "Shaded italics: projected (cut-off not yet ended)", "s", {
+  setCell(ws, r, 1, projectedLegend("sheet"), "s", {
+    font: { sz: 11, ...blackFont },
+    alignment: leftAlign,
+  });
+  r += 1;
+  // Same shade as a Resigned employee's row
+  setCell(
+    ws,
+    r,
+    0,
+    "Resigned",
+    "s",
+    textStyle(centerAlign, { fill: resignedFill }),
+  );
+  setCell(ws, r, 1, RESIGNED_LEGEND, "s", {
     font: { sz: 11, ...blackFont },
     alignment: leftAlign,
   });

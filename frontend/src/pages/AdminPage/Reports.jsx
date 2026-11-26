@@ -32,6 +32,9 @@ const Reports = () => {
   const [selectedOption, setSelectedOption] = useState(cutoffOptions[0].value);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [loading, setLoading] = useState(false);
+  // Without the records every employee would show as without pay, so nothing is
+  // exported after a failed read
+  const [attendanceFailed, setAttendanceFailed] = useState(false);
   // null until the holiday list arrives. The sheet shows HOL, not LWOP, on a non-working
   // holiday, so nothing is exported without the list.
   const [holidays, setHolidays] = useState(null);
@@ -49,9 +52,11 @@ const Reports = () => {
       try {
         setLoading(true);
         const response = await API.get("/api/attendance/attendance");
+        if (!Array.isArray(response.data)) throw new Error("Not a list");
         setAttendanceRecords(response.data);
       } catch (error) {
         console.error("Error fetching attendance records:", error);
+        setAttendanceFailed(true);
       } finally {
         setLoading(false);
       }
@@ -74,7 +79,7 @@ const Reports = () => {
   }, []);
 
   const handleDownload = () => {
-    if (!holidays) return;
+    if (!holidays || attendanceFailed) return;
 
     const { start, end, label, monthName, cutoff } = getDateRange(
       reportType,
@@ -210,6 +215,7 @@ const Reports = () => {
               disabled={
                 preparing ||
                 !holidays ||
+                attendanceFailed ||
                 employeeData.length === 0 ||
                 !selectedOption
               }
@@ -219,6 +225,12 @@ const Reports = () => {
             </button>
           </div>
         </div>
+
+        {attendanceFailed && (
+          <p className="feedback-message error" role="alert">
+            Could not load the attendance records. Reload the page.
+          </p>
+        )}
 
         {holidaysFailed && (
           <p className="feedback-message error" role="alert">
