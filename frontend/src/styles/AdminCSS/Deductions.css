@@ -75,10 +75,12 @@
 .admin-deductions-page .employee-deduction-table .table-header,
 .admin-deductions-page .employee-deduction-table .table-content {
   display: grid;
+  /* Employee ID, Employee Name (with the Resigned badge), Withholding Tax, Deductions,
+     Loans, Pay Items */
   grid-template-columns:
-    minmax(110px, 0.9fr) repeat(2, minmax(135px, 1fr))
-    repeat(3, minmax(115px, 1fr));
-  min-width: 820px;
+    minmax(110px, 0.8fr) minmax(220px, 1.6fr) repeat(3, minmax(115px, 1fr))
+    minmax(95px, 0.7fr);
+  min-width: 860px;
 }
 
 .admin-deductions-page .deduction-options-table .table-header-container,
@@ -179,11 +181,13 @@
   cursor: not-allowed;
 }
 
-.admin-deductions-page .deduction-config-card .feedback-message {
+.admin-deductions-page .deduction-config-card .feedback-message,
+.admin-deductions-page .employee-deduction-log .feedback-message {
   margin: 0;
 }
 
-.admin-deductions-page .deduction-card-note {
+.admin-deductions-page .deduction-card-note,
+.pay-items-modal .deduction-card-note {
   color: var(--neutral-color-80);
   font-size: 13px;
   line-height: 1.5;
@@ -205,8 +209,11 @@
 }
 
 /* Status badges: Confirmed / In force (ok), Draft waiting (waiting), No table and Check
-   due (missing), Switched off and Past (off) */
-.admin-deductions-page .deduction-status-badge {
+   due (missing), Switched off and Past (off); the pay items' Active (ok), Paused
+   (waiting), Stopped and Completed (off), and Resigned. The items box is drawn on the
+   page's body, so the rules hang on its class too. */
+.admin-deductions-page .deduction-status-badge,
+.pay-items-modal .deduction-status-badge {
   display: inline-block;
   padding: 3px 9px;
   border: 1px solid var(--gray-200);
@@ -218,25 +225,31 @@
   white-space: nowrap;
 }
 
-.admin-deductions-page .deduction-status-badge.ok {
+.admin-deductions-page .deduction-status-badge.ok,
+.pay-items-modal .deduction-status-badge.ok {
   border-color: #a7f3d0;
   background: #ecfdf5;
   color: #065f46;
 }
 
-.admin-deductions-page .deduction-status-badge.waiting {
+.admin-deductions-page .deduction-status-badge.waiting,
+.pay-items-modal .deduction-status-badge.waiting {
   border-color: #fde68a;
   background: #fffbeb;
   color: #92400e;
 }
 
-.admin-deductions-page .deduction-status-badge.off {
+.admin-deductions-page .deduction-status-badge.off,
+.pay-items-modal .deduction-status-badge.off {
   border-color: var(--gray-200);
   background: var(--neutral-color-20);
   color: var(--neutral-color-80);
 }
 
-.admin-deductions-page .deduction-status-badge.missing {
+.admin-deductions-page .deduction-status-badge.missing,
+.admin-deductions-page .deduction-status-badge.resigned,
+.pay-items-modal .deduction-status-badge.missing,
+.pay-items-modal .deduction-status-badge.resigned {
   border-color: #fecaca;
   background: #fef2f2;
   color: #991b1b;
@@ -604,6 +617,203 @@
   cursor: not-allowed;
 }
 
+/* ---- Employee Deduction Log (DeductionLogCard) ---- */
+
+/* A row opens the employee's pay items */
+.admin-deductions-page .employee-deduction-table .deduction-log-row {
+  cursor: pointer;
+}
+
+.admin-deductions-page
+  .employee-deduction-table
+  .deduction-log-row:hover
+  .table-content-container {
+  background: var(--neutral-color-20);
+}
+
+.admin-deductions-page .employee-deduction-table .deduction-log-row:focus-visible {
+  outline: 2px solid var(--main-color-1);
+  outline-offset: -2px;
+}
+
+.admin-deductions-page
+  .employee-deduction-table
+  .deduction-log-row.resigned
+  .table-content-container {
+  color: var(--neutral-color-80);
+}
+
+.admin-deductions-page
+  .employee-deduction-table
+  .table-content-container.deduction-name-cell {
+  gap: 8px;
+}
+
+.admin-deductions-page .deduction-name-cell .deduction-status-badge {
+  flex: 0 0 auto;
+}
+
+/* ---- The pay items box and the Add or Edit box ---- */
+
+.modal-content.pay-items-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(1180px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  padding: 28px;
+}
+
+.modal-content.pay-item-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(760px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  padding: 28px;
+}
+
+.pay-items-modal h3,
+.pay-item-modal > h3 {
+  color: var(--neutral-color-100);
+  font-size: 22px;
+  line-height: 1.3;
+}
+
+.pay-items-modal .feedback-message,
+.pay-item-modal .feedback-message {
+  margin: 0;
+}
+
+.pay-items-modal .modal-buttons,
+.pay-item-modal .modal-buttons {
+  margin-top: 8px;
+}
+
+.pay-items-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pay-items-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  color: var(--neutral-color-80);
+  font-size: 14px;
+}
+
+.pay-items-modal .action-button {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  background: var(--gray-50);
+  color: var(--default-button-color);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pay-items-modal .action-button:hover:not(:disabled) {
+  background: var(--neutral-color-20);
+}
+
+.pay-items-modal .action-button:disabled {
+  color: var(--neutral-color-70);
+  cursor: not-allowed;
+}
+
+.pay-items-table {
+  width: 100%;
+  min-width: 1080px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.pay-items-table th,
+.pay-items-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--gray-200);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.pay-items-table th {
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-90);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pay-items-table td {
+  color: var(--neutral-color-90);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.pay-items-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* The item's name, then its kind and note on smaller lines, cut short when long */
+.pay-items-table td:first-child {
+  max-width: 240px;
+}
+
+.pay-items-table td:first-child strong,
+.pay-item-kind {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pay-items-table td:first-child strong {
+  color: var(--neutral-color-100);
+  font-weight: 600;
+}
+
+.pay-item-kind {
+  margin-top: 2px;
+  color: var(--neutral-color-80);
+  font-size: 12px;
+}
+
+.pay-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pay-items-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  padding: 20px;
+  color: var(--neutral-color-80);
+  font-size: 14px;
+  text-align: center;
+}
+
+.pay-item-modal .deduction-switch-item input {
+  width: 18px;
+  height: 18px;
+}
+
+.pay-item-modal .deduction-field input:disabled,
+.pay-item-modal .deduction-field select:disabled {
+  background: var(--neutral-color-20);
+  color: var(--neutral-color-80);
+}
+
 @media (max-width: 640px) {
   .admin-deductions-page .deduction-config-card,
   .admin-deductions-page .employee-deduction-log {
@@ -623,5 +833,17 @@
     align-self: stretch;
     justify-content: center;
     flex-wrap: wrap;
+  }
+
+  .modal-content.pay-items-modal,
+  .modal-content.pay-item-modal {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+    padding: 18px;
+  }
+
+  .pay-items-modal h3,
+  .pay-item-modal > h3 {
+    font-size: 19px;
   }
 }

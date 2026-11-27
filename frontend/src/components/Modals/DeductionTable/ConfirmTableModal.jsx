@@ -112,10 +112,13 @@ export const ConfirmBox = ({
 }) => {
   const titleId = useId();
 
+  // Put back what was there before, so a box opened over another box (a pay item's Stop
+  // over the employee's items) leaves the page locked while the first box stays open
   useEffect(() => {
+    const before = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
     return () => {
-      document.documentElement.style.overflow = "";
+      document.documentElement.style.overflow = before;
     };
   }, []);
 
