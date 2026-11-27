@@ -50,6 +50,13 @@ export const getPreviousCutoff = ({ year, monthIndex, half }) => {
     : { year, monthIndex: monthIndex - 1, half: "2nd" };
 };
 
+export const getNextCutoff = ({ year, monthIndex, half }) => {
+  if (half === "1st") return { year, monthIndex, half: "2nd" };
+  return monthIndex === 11
+    ? { year: year + 1, monthIndex: 0, half: "1st" }
+    : { year, monthIndex: monthIndex + 1, half: "1st" };
+};
+
 // First and last day, both included, as "YYYY-MM-DD"
 export const getCutoffRange = ({ year, monthIndex, half }) =>
   half === "1st"
