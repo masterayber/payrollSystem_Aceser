@@ -86,6 +86,14 @@ const tableName = (table) => {
     .join(" ");
 };
 
+// "Company Loan for Angelica Ramos (AC-008)": a pay item by its type and the employee
+// it is for (personName), never by an amount or its label
+const payItemName = (item, employee, account) => {
+  const type = text(item?.type);
+  const person = employee || account ? personName(employee, account) : "";
+  return [type, person && `for ${person}`].filter(Boolean).join(" ");
+};
+
 // "Switched off: SSS, Withholding tax", or "None switched off"
 const statutoryOffNote = (kinds) => {
   const labels = kindsIn(kinds).map(kindLabel);
@@ -246,6 +254,15 @@ const ACTIONS = {
     group: "deductions",
     targetName: "Statutory deductions",
   },
+
+  // Pay items (routes/deductions.js). The route names the item (payItemName) and, for
+  // an edit, lists the changed fields (CHANGE_LABELS.payItem).
+  "payItem.add": { label: "Added pay item", group: "deductions" },
+  "payItem.edit": { label: "Edited pay item", group: "deductions" },
+  "payItem.pause": { label: "Paused pay item", group: "deductions" },
+  "payItem.resume": { label: "Resumed pay item", group: "deductions" },
+  "payItem.stop": { label: "Stopped pay item", group: "deductions" },
+  "payItem.delete": { label: "Deleted pay item", group: "deductions" },
 };
 
 // The key for a leave or overtime decision ("leave" or "overtime", and the status sent)
@@ -329,6 +346,14 @@ const CHANGE_LABELS = {
     { label: "base", paths: ["base"] },
     { label: "cut-off taken on", paths: ["deductOn"] },
     { label: "rows", paths: ["rows"] },
+  ],
+  // A pay item: the entry says the amount or the total changed, never what it is
+  payItem: [
+    { label: "amount per cut-off", paths: ["amountPerCutoff"] },
+    { label: "total", paths: ["total"] },
+    { label: "schedule", paths: ["schedule"] },
+    { label: "label", paths: ["label"] },
+    { label: "note", paths: ["note"] },
   ],
 };
 
@@ -522,6 +547,7 @@ module.exports = {
   holidayName,
   holidayImportNote,
   tableName,
+  payItemName,
   statutoryOffNote,
   changedFields,
   personName,
