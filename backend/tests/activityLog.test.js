@@ -21,6 +21,7 @@ const {
   holidayName,
   holidayImportNote,
   tableName,
+  payItemName,
   statutoryOffNote,
   changedFields,
   personName,
@@ -95,6 +96,12 @@ describe("the table of logged actions", () => {
       ["table.confirm", "Confirmed deduction table", "deductions"],
       ["table.checked", "Marked table as checked", "deductions"],
       ["statutory.off", "Changed switched-off deductions", "deductions"],
+      ["payItem.add", "Added pay item", "deductions"],
+      ["payItem.edit", "Edited pay item", "deductions"],
+      ["payItem.pause", "Paused pay item", "deductions"],
+      ["payItem.resume", "Resumed pay item", "deductions"],
+      ["payItem.stop", "Stopped pay item", "deductions"],
+      ["payItem.delete", "Deleted pay item", "deductions"],
     ]);
   });
 
@@ -283,6 +290,23 @@ describe("the notes the routes build", () => {
     expect(tableName(table)).toBe(name);
     expect(tableName({ ...table, effectiveFrom: "2027-01-01" })).toBe(name);
     expect(tableName(table)).not.toMatch(/412|7\.25/);
+  });
+
+  it("payItemName: a pay item by its type and the employee, never by an amount or its label", () => {
+    const item = {
+      type: "Company Loan",
+      label: "Loan 7 for the car",
+      amountPerCutoff: 1234.56,
+      total: 6543.21,
+    };
+    const employee = { firstName: "Angelica", lastName: "Ramos", employeeId: "AC-008" };
+
+    expect(payItemName(item, employee)).toBe("Company Loan for Angelica Ramos (AC-008)");
+    expect(payItemName(item, employee)).not.toMatch(/1234|1,234|6543|6,543|car/);
+    // An account with no employee record is named by its account
+    expect(payItemName(item, null, { username: "liza" })).toBe("Company Loan for liza");
+    expect(payItemName(item)).toBe("Company Loan");
+    expect(payItemName(undefined)).toBe("");
   });
 
   it("statutoryOffNote: the kinds that are off by name, in the screen's order, or that none is", () => {
@@ -613,6 +637,44 @@ describe("changedFields", () => {
           kind: "pagibig",
         }),
       ).toEqual(["kind", "source", "cut-off taken on", "rows"]);
+    });
+  });
+
+  describe("a pay item (figures made up for the test)", () => {
+    const item = (extra = {}) => ({
+      kind: "deduction",
+      type: "Company Loan",
+      label: "",
+      note: "",
+      amountPerCutoff: 1234.56,
+      total: 6543.21,
+      repeat: "instalments",
+      schedule: "every",
+      startCutoff: "2026-12-1st",
+      status: "Active",
+      ...extra,
+    });
+    const changed = (extra) =>
+      changedFields(item(), item(extra), CHANGE_LABELS.payItem);
+
+    it("saving it unchanged lists nothing", () => {
+      expect(changed({})).toEqual([]);
+    });
+
+    it.each([
+      ["amount per cut-off", { amountPerCutoff: 2345.67 }],
+      ["total", { total: 7654.32 }],
+      ["schedule", { schedule: "2nd" }],
+      ["label", { label: "Car loan" }],
+      ["note", { note: "Agreed with HR" }],
+    ])("lists %s when its saved value differs, never the value", (label, extra) => {
+      const labels = changed(extra);
+      expect(labels).toEqual([label]);
+      expect(JSON.stringify(labels)).not.toMatch(/\d/);
+    });
+
+    it("a pause is not an edit: the status is not one of its fields", () => {
+      expect(changed({ status: "Paused" })).toEqual([]);
     });
   });
 

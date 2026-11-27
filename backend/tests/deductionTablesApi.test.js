@@ -1249,10 +1249,9 @@ describe("where the tables are kept", () => {
     expect(DeductionTable.collection.name).toBe("deductionTables");
   });
 
-  it("no pay item, payroll or payslip route exists yet (DED-4 onward)", async () => {
+  it("no payroll or payslip route exists yet (DED-5 onward; pay items are DED-4, in payItemsApi.test.js)", async () => {
     for (const url of [
       "/api/deductions",
-      "/api/deductions/items",
       "/api/payroll/preview",
       "/api/payroll/payslips",
     ]) {
