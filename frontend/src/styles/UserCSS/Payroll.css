@@ -57,6 +57,7 @@
 .employee-payroll-page .finance-metric-card .data-value {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 10px;
@@ -76,12 +77,9 @@
 }
 
 .employee-payroll-page .toggle {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 6px;
   border: 0;
   border-radius: var(--border-radius);
   background: transparent;
@@ -105,6 +103,9 @@
 }
 
 .employee-payroll-page .user-track-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 16px;
 }
 
@@ -161,7 +162,9 @@
   background: var(--gray-50);
 }
 
-.employee-payroll-page .payroll-period-summary .pay-period-container:last-of-type {
+.employee-payroll-page
+  .payroll-period-summary
+  .pay-period-container:last-of-type {
   border-right: 0;
 }
 
@@ -191,7 +194,9 @@
 .employee-payroll-page .payroll-history-table .table-header,
 .employee-payroll-page .payroll-history-table .table-content {
   display: grid;
-  grid-template-columns: minmax(115px, 0.9fr) minmax(160px, 1.2fr) repeat(3, minmax(125px, 1fr)) minmax(90px, 0.7fr);
+  grid-template-columns:
+    minmax(115px, 0.9fr) minmax(160px, 1.2fr) repeat(3, minmax(125px, 1fr))
+    minmax(90px, 0.7fr);
   min-width: 850px;
 }
 
