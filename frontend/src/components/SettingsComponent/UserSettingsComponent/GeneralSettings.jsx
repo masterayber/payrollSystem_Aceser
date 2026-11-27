@@ -16,6 +16,7 @@ import {
   isAccountOnly,
   toAccountPayload,
   checkAccountForm,
+  checkProfileForm,
 } from "../../Profile/profileForm.js";
 import PasswordSettings from "./PasswordSettings";
 import ConfirmModal from "../../Modals/Confirm/ConfirmModal";
@@ -49,9 +50,9 @@ const GeneralSettings = ({ showEmployment = true, showPassword = false }) => {
     setMessage(null);
   };
 
-  // An Admin account's form is checked before the confirm box opens
+  // The names and email are checked before the confirm box opens
   const handleSaveClick = () => {
-    const problem = accountOnly ? checkAccountForm(form) : "";
+    const problem = accountOnly ? checkAccountForm(form) : checkProfileForm(form);
     if (problem) {
       setMessage({ type: "warning", text: problem });
       return;
@@ -102,9 +103,8 @@ const GeneralSettings = ({ showEmployment = true, showPassword = false }) => {
       setIsConfirmOpen(false);
       const refusal =
         error.response?.data?.message || "Could not save the changes.";
-      // An Admin account sees the server's words on the form; the others keep the popup
-      if (accountOnly) setMessage({ type: "error", text: refusal });
-      else alert(refusal);
+      // The server's words show on the form, above Save
+      setMessage({ type: "error", text: refusal });
     }
   };
 

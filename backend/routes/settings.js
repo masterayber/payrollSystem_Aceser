@@ -144,6 +144,26 @@ const ACCOUNT_DETAILS_REQUIRED = "First name, last name and email are required."
 // Trimmed text, or "" for a blank, missing or non-text value
 const trimmedText = (value) => (typeof value === "string" ? value.trim() : "");
 
+// The names and email a save through `employee` sends (the top-level email and
+// employee.firstName, lastName and email), trimmed, or `refusal` for a blank one.
+// A field not sent stays undefined, so a partial body still saves. No email shape
+// check here yet: decision 3 of the 2026-11-13 Friday batch keeps it to Admin accounts
+// until the odd emails already stored are counted (adminGeneralSettings.test.js).
+const sentDetails = (email, employee) => {
+  const trim = (value) => (value === undefined ? undefined : trimmedText(value));
+  const details = {
+    email: trim(email),
+    employee: {
+      firstName: trim(employee?.firstName),
+      lastName: trim(employee?.lastName),
+      email: trim(employee?.email),
+    },
+  };
+  const sent = [details.email, ...Object.values(details.employee)];
+  if (sent.includes("")) return { refusal: ACCOUNT_DETAILS_REQUIRED };
+  return details;
+};
+
 const EDITABLE_EMPLOYEE_FIELDS = [
   "firstName",
   "lastName",
@@ -164,8 +184,7 @@ router.put(
   async (req, res) => {
     try {
       const userId = req.params.id;
-      const { employee } = req.body;
-      let { email } = req.body;
+      let { employee, email } = req.body;
 
       // An Admin account (not the Super Admin) made by Add Admin has no employee
       // record, so its own name lives on the account: top-level firstName and
@@ -189,6 +208,20 @@ router.put(
           return res.status(400).json({ message: EMAIL_SHAPE_MESSAGE });
         }
         accountNames = { firstName, lastName };
+      }
+
+      // Everyone else saves through `employee` (an Employee, the Super Admin, an older
+      // Admin with an employee record, an admin editing someone): a name or email that
+      // is sent must not be blank and is saved trimmed; one not sent is left alone.
+      if (!isOwnAdminAccount) {
+        const details = sentDetails(email, employee);
+        if (details.refusal) {
+          return res.status(400).json({ message: details.refusal });
+        }
+        if (details.email !== undefined) email = details.email;
+        for (const [field, value] of Object.entries(details.employee)) {
+          if (value !== undefined) employee = { ...employee, [field]: value };
+        }
       }
 
       // An email another account uses, in any case (the account email and the

@@ -121,3 +121,14 @@ export const checkAccountForm = (form) => {
   }
   return isEmailShape(body.email) ? "" : ACCOUNT_FORM_MESSAGES.email;
 };
+
+// The same check for everyone else's General form (an Employee, the main account, an
+// older Admin with an employee record): the names and email must not be blank, with
+// the server's words (sentDetails in backend/routes/settings.js). No email shape check
+// yet, like the server (decision 3 of the 2026-11-13 Friday batch).
+export const checkProfileForm = (form) => {
+  const body = toAccountPayload(form);
+  return body.firstName && body.lastName && body.email
+    ? ""
+    : ACCOUNT_FORM_MESSAGES.required;
+};
